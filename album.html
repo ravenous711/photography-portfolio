@@ -101,15 +101,24 @@
           <p class="mt-1 text-xs tracking-widest uppercase" id="album-count" style="color:rgba(240,237,232,0.3)"></p>
         </div>
 
-        <!-- Download button -->
-        <button id="download-btn" class="btn-primary shrink-0" onclick="downloadAlbum()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Download Album
-        </button>
+        <!-- Download / Select buttons -->
+        <div class="flex items-center gap-3 shrink-0">
+          <button id="select-btn" class="btn-ghost" onclick="toggleSelectMode()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            Select
+          </button>
+          <button id="download-btn" class="btn-primary" onclick="downloadPhotos(album.photos)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download All
+          </button>
+        </div>
       </div>
       <div class="gold-rule" style="margin-left:0;margin-top:2rem"></div>
     </header>
@@ -121,6 +130,23 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- ── Selection action bar ── -->
+  <div id="selection-bar">
+    <span id="selection-count">0 selected</span>
+    <div class="flex items-center gap-3">
+      <button id="select-all-btn" onclick="toggleSelectAll()">Select all</button>
+      <button id="download-selected-btn" class="btn-primary" onclick="downloadSelected()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download Selected
+      </button>
+      <button id="cancel-select-btn" onclick="toggleSelectMode()">Cancel</button>
+    </div>
   </div>
 
   <!-- ── Lightbox ── -->
@@ -243,6 +269,61 @@
 
     // ── Render album grid ──
     let currentIndex = 0;
+    let selectMode   = false;
+    const selected   = new Set();
+
+    function toggleSelectMode() {
+      selectMode = !selectMode;
+      selected.clear();
+
+      document.getElementById('selection-bar').classList.toggle('show', selectMode);
+      document.getElementById('photo-grid').classList.toggle('select-mode', selectMode);
+      document.getElementById('select-btn').classList.toggle('active', selectMode);
+
+      // Reset all thumb selected state
+      document.querySelectorAll('.photo-thumb').forEach(t => t.classList.remove('selected'));
+      updateSelectionBar();
+    }
+
+    function toggleThumb(index, thumb) {
+      if (selected.has(index)) {
+        selected.delete(index);
+        thumb.classList.remove('selected');
+      } else {
+        selected.add(index);
+        thumb.classList.add('selected');
+      }
+      updateSelectionBar();
+    }
+
+    function toggleSelectAll() {
+      const thumbs = Array.from(document.querySelectorAll('.photo-thumb'));
+      if (selected.size === album.photos.length) {
+        // Deselect all
+        selected.clear();
+        thumbs.forEach(t => t.classList.remove('selected'));
+      } else {
+        // Select all
+        album.photos.forEach((_, i) => selected.add(i));
+        thumbs.forEach(t => t.classList.add('selected'));
+      }
+      updateSelectionBar();
+    }
+
+    function updateSelectionBar() {
+      const count = selected.size;
+      const total = album.photos.length;
+      document.getElementById('selection-count').textContent =
+        count === 0 ? 'No photos selected' : `${count} of ${total} selected`;
+      document.getElementById('download-selected-btn').disabled = count === 0;
+      document.getElementById('select-all-btn').textContent =
+        count === total ? 'Deselect all' : 'Select all';
+    }
+
+    function downloadSelected() {
+      const urls = Array.from(selected).sort((a, b) => a - b).map(i => album.photos[i]);
+      downloadPhotos(urls);
+    }
 
     function showAlbum() {
       document.getElementById('album-content').style.display = 'block';
@@ -266,19 +347,34 @@
         img.addEventListener('load', () => img.classList.add('loaded'));
         img.src = url;
 
-        const overlay = document.createElement('div');
-        overlay.className = 'photo-thumb-overlay';
-        overlay.innerHTML = `
+        const expandOverlay = document.createElement('div');
+        expandOverlay.className = 'photo-thumb-overlay';
+        expandOverlay.innerHTML = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
             <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
           </svg>`;
 
-        thumb.appendChild(img);
-        thumb.appendChild(overlay);
+        // Checkmark overlay for select mode
+        const checkOverlay = document.createElement('div');
+        checkOverlay.className = 'photo-thumb-check';
+        checkOverlay.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>`;
 
-        const open = () => openLightbox(i);
-        thumb.addEventListener('click', open);
-        thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
+        thumb.appendChild(img);
+        thumb.appendChild(expandOverlay);
+        thumb.appendChild(checkOverlay);
+
+        const handleClick = () => {
+          if (selectMode) {
+            toggleThumb(i, thumb);
+          } else {
+            openLightbox(i);
+          }
+        };
+        thumb.addEventListener('click', handleClick);
+        thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleClick(); });
 
         grid.appendChild(thumb);
       });
@@ -405,20 +501,22 @@
     //       AllowedOrigins: ["https://yourdomain.com"]
     //       AllowedMethods: ["GET"]
 
-    async function downloadAlbum() {
-      const btn      = document.getElementById('download-btn');
+    async function downloadPhotos(photos) {
+      const dlBtn    = document.getElementById('download-btn');
+      const selDlBtn = document.getElementById('download-selected-btn');
       const progress = document.getElementById('download-progress');
       const label    = document.getElementById('dl-label');
       const bar      = document.getElementById('dl-bar');
 
-      btn.disabled   = true;
-      btn.textContent = 'Preparing…';
+      const isAll = photos === album.photos;
+      if (dlBtn)    { dlBtn.disabled = true; }
+      if (selDlBtn) { selDlBtn.disabled = true; }
       progress.classList.add('show');
-      label.textContent = `Downloading ${album.photos.length} photos…`;
+      label.textContent = `Downloading ${photos.length} photo${photos.length !== 1 ? 's' : ''}…`;
 
-      const zip     = new JSZip();
-      const folder  = zip.folder(album.title);
-      const total   = album.photos.length;
+      const zip    = new JSZip();
+      const folder = zip.folder(album.title);
+      const total  = photos.length;
       let completed = 0;
 
       const fetchPhoto = async (url, index) => {
@@ -426,33 +524,26 @@
           const response = await fetch(url, { mode: 'cors' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const blob = await response.blob();
-
-          // Determine file extension from MIME type or URL
           const ext = url.split('.').pop().split('?')[0] || 'jpg';
-          const safeName = String(index + 1).padStart(3, '0') + '.' + ext;
-          folder.file(safeName, blob);
+          folder.file(String(index + 1).padStart(3, '0') + '.' + ext, blob);
         } catch (err) {
           console.warn(`Could not fetch photo ${index + 1}:`, err.message);
         }
-
         completed++;
-        const pct = Math.round((completed / total) * 100);
-        bar.style.width  = pct + '%';
+        bar.style.width   = Math.round((completed / total) * 100) + '%';
         label.textContent = `${completed} of ${total} photos…`;
       };
 
-      // Fetch in batches of 4 to respect rate limits
       const BATCH = 4;
       for (let i = 0; i < total; i += BATCH) {
-        const batch = album.photos.slice(i, i + BATCH).map((url, j) => fetchPhoto(url, i + j));
-        await Promise.all(batch);
+        await Promise.all(photos.slice(i, i + BATCH).map((url, j) => fetchPhoto(url, i + j)));
       }
 
       label.textContent = 'Creating ZIP file…';
-
       try {
         const blob     = await zip.generateAsync({ type: 'blob' });
-        const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-photos.zip`;
+        const suffix   = isAll ? 'photos' : 'selection';
+        const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${suffix}.zip`;
         saveAs(blob, filename);
         label.textContent = 'Download started!';
       } catch (err) {
@@ -463,14 +554,17 @@
       setTimeout(() => {
         progress.classList.remove('show');
         bar.style.width = '0%';
-        btn.disabled = false;
-        btn.innerHTML = `
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Download Album`;
+        if (dlBtn) {
+          dlBtn.disabled = false;
+          dlBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download All`;
+        }
+        if (selDlBtn) { selDlBtn.disabled = selected.size === 0; }
       }, 2500);
     }
   </script>
@@ -481,6 +575,88 @@
       20%, 60%  { transform: translateX(-8px); }
       40%, 80%  { transform: translateX(8px); }
     }
+
+    /* ── Selection bar ── */
+    #selection-bar {
+      position: fixed;
+      bottom: -80px;
+      left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      background: rgba(18,18,18,0.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-wrap: wrap;
+    }
+    #selection-bar.show { bottom: 0; }
+    #selection-count {
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--color-muted);
+    }
+    #select-all-btn, #cancel-select-btn {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      background: transparent;
+      border: 1px solid var(--color-border);
+      padding: 0.4rem 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #select-all-btn:hover, #cancel-select-btn:hover {
+      color: var(--color-text);
+      border-color: rgba(255,255,255,0.2);
+    }
+    #cancel-select-btn { border-color: transparent; }
+
+    /* ── Select mode thumbnail states ── */
+    .photo-thumb-check {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.3);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+      pointer-events: none;
+    }
+    .select-mode .photo-thumb-check { opacity: 1; }
+    .select-mode .photo-thumb { cursor: pointer; }
+    .select-mode .photo-thumb-overlay { opacity: 0 !important; }
+    .select-mode .photo-thumb:hover .photo-thumb-check {
+      border-color: rgba(255,255,255,0.8);
+      background: rgba(0,0,0,0.5);
+    }
+    .photo-thumb.selected .photo-thumb-check {
+      background: var(--color-gold) !important;
+      border-color: var(--color-gold) !important;
+      opacity: 1;
+    }
+    .photo-thumb.selected::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(201,169,110,0.15);
+      pointer-events: none;
+    }
+
+    /* ── Select button active state ── */
+    #select-btn.active {
+      border-color: var(--color-gold);
+      color: var(--color-gold);
+    }
+
+    /* Add padding to grid when selection bar is visible */
+    .select-mode ~ * { padding-bottom: 80px; }
   </style>
 </body>
 </html>
