@@ -10,12 +10,12 @@
 :root {
   --font-serif:  'Cormorant Garamond', Georgia, serif;
   --font-sans:   'Inter', system-ui, sans-serif;
-  --color-bg:    #0c0c0c;
-  --color-surface: #161616;
-  --color-border: rgba(255,255,255,0.08);
-  --color-text:  #f0ede8;
-  --color-muted: rgba(240,237,232,0.5);
-  --color-gold:  #c9a96e;
+  --color-bg:    #f8f7f5;
+  --color-surface: #efefed;
+  --color-border: rgba(0,0,0,0.1);
+  --color-text:  #1a1a1a;
+  --color-muted: rgba(26,26,26,0.5);
+  --color-gold:  #b8924a;
   --nav-height:  72px;
   --transition:  0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -44,8 +44,8 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 /* ── Custom scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
 
 /* ============================================================
    NAVIGATION
@@ -65,7 +65,7 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 }
 
 #main-nav.nav-scrolled {
-  background: rgba(12, 12, 12, 0.92);
+  background: rgba(248, 247, 245, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom-color: var(--color-border);
@@ -155,7 +155,7 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(12, 12, 12, 0.97);
+  background: rgba(248, 247, 245, 0.97);
   backdrop-filter: blur(20px);
   z-index: 99;
   flex-direction: column;
@@ -620,7 +620,7 @@ textarea.form-field {
   align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 1.5rem;
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.04);
   border: 1px solid var(--color-border);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -634,8 +634,8 @@ textarea.form-field {
 }
 
 .btn-ghost:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.2);
 }
 
 /* ── Download progress overlay ── */

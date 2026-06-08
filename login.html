@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/config.js"></script>
   <style>
-    body { background: #0a0a0a; }
+    body { background: #f8f7f5; }
     input:focus { outline: none; }
     .shake { animation: shake 0.4s ease; }
     @keyframes shake {
@@ -19,8 +19,8 @@
 </head>
 <body class="min-h-screen flex items-center justify-center px-4">
   <div class="w-full max-w-sm text-center">
-    <p class="text-white/30 text-xs tracking-[0.2em] uppercase mb-3">Preview Access</p>
-    <h1 class="text-white text-2xl font-light tracking-widest mb-10" id="site-name">–</h1>
+    <p class="text-black/30 text-xs tracking-[0.2em] uppercase mb-3">Preview Access</p>
+    <h1 class="text-black text-2xl font-light tracking-widest mb-10" id="site-name">–</h1>
 
     <form id="login-form" class="space-y-4" novalidate>
       <input
@@ -28,15 +28,15 @@
         type="password"
         placeholder="Enter password"
         autocomplete="current-password"
-        class="w-full bg-white/5 border border-white/10 text-white placeholder-white/30 rounded px-4 py-3 text-center tracking-widest focus:border-white/40 transition-colors"
+        class="w-full bg-black/5 border border-black/10 text-black placeholder-black/30 rounded px-4 py-3 text-center tracking-widest focus:border-black/40 transition-colors"
       />
       <button
         type="submit"
-        class="w-full bg-white text-black font-medium py-3 rounded hover:bg-white/90 active:scale-95 transition-all"
+        class="w-full bg-black text-white font-medium py-3 rounded hover:bg-black/80 active:scale-95 transition-all"
       >
         Enter
       </button>
-      <p id="error-msg" class="text-red-400/80 text-sm hidden">Incorrect password</p>
+      <p id="error-msg" class="text-red-500/80 text-sm hidden">Incorrect password</p>
     </form>
   </div>
 
