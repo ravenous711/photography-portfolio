@@ -7,9 +7,14 @@ A minimalist static photography portfolio site built with HTML, Tailwind CSS, an
 - Cloudflare R2 for image hosting
 - Vercel for deployment
 
-## Site password
-The site is gated with a preview password stored as a SHA-256 hash in `js/config.js` under `sitePasswordHash`.  
-To change the password, generate a new hash:
+## Passwords (temporary)
+
+| Gate | Password |
+|---|---|
+| Site preview | `preview2026` |
+| Italy Film group | `film-test` |
+
+These are temporary. To change any password, generate a new SHA-256 hash and update `js/config.js`:
 ```bash
 python3 -c "import hashlib; print(hashlib.sha256(b'yourpassword').hexdigest())"
 ```
