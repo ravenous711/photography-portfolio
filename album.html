@@ -344,6 +344,8 @@
       progress.classList.add('show');
       label.textContent = `Downloading ${photos.length} photo${photos.length !== 1 ? 's' : ''}…`;
 
+      // Try fetch+blob first (requires R2 CORS). Fall back to direct tab open if blocked.
+      let usedFallback = false;
       for (let i = 0; i < photos.length; i++) {
         try {
           const response = await fetch(photos[i], { mode: 'cors' });
@@ -358,11 +360,17 @@
           document.body.removeChild(a);
           setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
         } catch (err) {
-          console.warn(`Could not download photo ${i + 1}:`, err.message);
+          // CORS not configured — open directly in new tab so user can save manually
+          usedFallback = true;
+          window.open(photos[i], '_blank');
         }
         bar.style.width = Math.round(((i + 1) / photos.length) * 100) + '%';
-        label.textContent = `${i + 1} of ${photos.length} downloaded…`;
-        if (i < photos.length - 1) await new Promise(r => setTimeout(r, 400));
+        label.textContent = `${i + 1} of ${photos.length} opened…`;
+        if (i < photos.length - 1) await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (usedFallback) {
+        label.textContent = 'Opened in tabs — right-click each to save';
       }
 
       label.textContent = 'Done!';
