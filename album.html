@@ -212,12 +212,17 @@
       document.getElementById('footer-copyright').textContent =
         `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-      // If this is a sub-album, back link goes to the parent group
+      // If this is a sub-album, update back link and enforce parent group lock
       if (album.parentId) {
         const parent = ALBUMS.find(a => a.id === album.parentId);
         if (parent) {
           document.getElementById('back-link').href = `album-group.html?id=${album.parentId}`;
           document.getElementById('back-label').textContent = parent.title;
+
+          // If the parent group is password-protected and not yet unlocked, gate here
+          if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
+            window.location.replace(`album-group.html?id=${album.parentId}`);
+          }
         }
       }
 

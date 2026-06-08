@@ -57,7 +57,9 @@ const ALBUMS = [
     title: 'Italy Film',
     description: 'Film photography from Italy, 2026.',
     type: 'group',
-    protected: false,
+    protected: true,
+    // Password: "film-test"
+    passwordHash: '78cc5547668122fb80386a825330fe2c2361662299ae2cde105062fafa2b2317',
     subAlbums: ['film-1', 'film-2'],
     coverImage: `${R2_BASE_URL}/Film-Test/ultramax_01.jpg`,
   },
@@ -67,9 +69,7 @@ const ALBUMS = [
     title: 'Film 1',
     description: 'Kodak Ultramax 400 — Roll 1.',
     parentId: 'italy-film',
-    protected: true,
-    // Password: "film-test"
-    passwordHash: '78cc5547668122fb80386a825330fe2c2361662299ae2cde105062fafa2b2317',
+    protected: false,
     coverImage: `${R2_BASE_URL}/Film-Test/ultramax_01.jpg`,
     photos: [
       `${R2_BASE_URL}/Film-Test/ultramax_01.jpg`,
@@ -117,9 +117,7 @@ const ALBUMS = [
     title: 'Film 2',
     description: 'FP4 — Roll 2.',
     parentId: 'italy-film',
-    protected: true,
-    // Password: "film-test"
-    passwordHash: '78cc5547668122fb80386a825330fe2c2361662299ae2cde105062fafa2b2317',
+    protected: false,
     coverImage: `${R2_BASE_URL}/Film2/Fernando000799-R1-E001.jpg`,
     photos: [
       `${R2_BASE_URL}/Film2/Fernando000799-R1-E001.jpg`,
