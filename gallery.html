@@ -103,9 +103,18 @@
     // ── Render album grid ──
     const grid = document.getElementById('album-grid');
 
-    ALBUMS.forEach(album => {
+    // Only show top-level albums (not sub-albums)
+    const topLevel = ALBUMS.filter(a => !a.parentId);
+
+    topLevel.forEach(album => {
+      const isGroup = album.type === 'group';
+      const href = isGroup ? `album-group.html?id=${album.id}` : `album.html?id=${album.id}`;
+      const meta = isGroup
+        ? `${album.subAlbums.length} Albums`
+        : `${album.photos.length} Photos${album.protected ? ' · Private' : ''}`;
+
       const card = document.createElement('a');
-      card.href = `album.html?id=${album.id}`;
+      card.href = href;
       card.className = 'album-card fade-in';
       card.dataset.type = album.protected ? 'private' : 'public';
       card.innerHTML = `
@@ -121,8 +130,15 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>` : ''}
+          ${isGroup ? `
+            <div class="album-card-lock" style="background:rgba(201,169,110,0.15);border-color:rgba(201,169,110,0.3)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5">
+                <rect x="2" y="6" width="8" height="6" rx="1"/><rect x="14" y="6" width="8" height="6" rx="1"/>
+                <rect x="2" y="15" width="8" height="6" rx="1"/><rect x="14" y="15" width="8" height="6" rx="1"/>
+              </svg>
+            </div>` : ''}
           <h2 class="album-card-title">${album.title}</h2>
-          <p class="album-card-meta">${album.photos.length} Photos${album.protected ? ' · Private' : ''}</p>
+          <p class="album-card-meta">${meta}</p>
           <p class="album-card-desc">${album.description}</p>
         </div>
       `;

@@ -117,4 +117,66 @@ const ALBUMS = [
     ]
   },
 
+  // ── GROUP ALBUMS ──────────────────────────────────────────
+  // type: 'group' albums show a sub-album index page instead of photos.
+  // Add photo URLs to each sub-album's photos array once uploaded to R2.
+  {
+    id: 'italy-2026',
+    title: 'Italy 2026',
+    description: 'Venice, Florence, Assisi, and Rome.',
+    type: 'group',
+    protected: false,
+    subAlbums: ['italy-venice', 'italy-florence', 'italy-assisi', 'italy-rome'],
+    // R2: set to first sub-album cover once photos are uploaded
+    coverImage: 'https://picsum.photos/seed/italy-cover/800/600',
+  },
+
+  {
+    id: 'italy-venice',
+    title: 'Venice',
+    parentId: 'italy-2026',
+    description: 'Canals, gondolas, and golden light.',
+    protected: false,
+    coverImage: 'https://picsum.photos/seed/venice-cover/800/600',
+    photos: [
+      // R2: `${R2_BASE_URL}/Italy-2026/Venice/filename.jpg`
+    ],
+  },
+
+  {
+    id: 'italy-florence',
+    title: 'Florence',
+    parentId: 'italy-2026',
+    description: 'Renaissance architecture and Tuscan light.',
+    protected: false,
+    coverImage: 'https://picsum.photos/seed/florence-cover/800/600',
+    photos: [
+      // R2: `${R2_BASE_URL}/Italy-2026/Florence/filename.jpg`
+    ],
+  },
+
+  {
+    id: 'italy-assisi',
+    title: 'Assisi',
+    parentId: 'italy-2026',
+    description: 'Stone streets and hilltop views.',
+    protected: false,
+    coverImage: 'https://picsum.photos/seed/assisi-cover/800/600',
+    photos: [
+      // R2: `${R2_BASE_URL}/Italy-2026/Assisi/filename.jpg`
+    ],
+  },
+
+  {
+    id: 'italy-rome',
+    title: 'Rome',
+    parentId: 'italy-2026',
+    description: 'Ancient ruins, piazzas, and the eternal city.',
+    protected: false,
+    coverImage: 'https://picsum.photos/seed/rome-cover/800/600',
+    photos: [
+      // R2: `${R2_BASE_URL}/Italy-2026/Rome/filename.jpg`
+    ],
+  },
+
 ];
