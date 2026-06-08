@@ -351,14 +351,8 @@
           const response = await fetch(photos[i], { mode: 'cors' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const blob = await response.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = objectUrl;
-          a.download = photos[i].split('/').pop().split('?')[0];
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+          const filename = photos[i].split('/').pop().split('?')[0];
+          saveAs(blob, filename);
         } catch (err) {
           // CORS not configured — open directly in new tab so user can save manually
           usedFallback = true;
