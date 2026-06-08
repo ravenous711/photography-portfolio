@@ -172,7 +172,7 @@
         const photoCount = album.photos ? album.photos.length : 0;
         const card = document.createElement('a');
         card.href = `album.html?id=${album.id}`;
-        card.className = 'album-card fade-in';
+        card.className = 'album-card fade-in visible';
         card.innerHTML = `
           <img class="album-card-img"
                src="${album.coverImage}"
