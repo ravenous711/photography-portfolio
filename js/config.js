@@ -263,7 +263,7 @@ const ALBUMS = [
   // Add photo URLs to each sub-album's photos array once uploaded to R2.
   {
     id: 'italy-2026',
-    title: 'Italy 2026',
+    title: 'Italy 2026 — Coming Soon',
     description: 'Venice, Florence, Assisi, and Rome.',
     type: 'group',
     protected: false,
