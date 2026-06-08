@@ -215,7 +215,7 @@ const ALBUMS = [
     description: 'Kodak Portra — Roll 4.',
     parentId: 'italy-film',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Film4/Raveen_portra_01.jpg`,
+    coverImage: `${R2_BASE_URL}/Film4/Raveen_portra_04.jpg`,
     photos: [
       `${R2_BASE_URL}/Film4/Raveen_portra_01.jpg`,
       `${R2_BASE_URL}/Film4/Raveen_portra_02.jpg`,
