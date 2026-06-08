@@ -51,27 +51,22 @@ const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 // ============================================================
 const ALBUMS = [
 
-  // ── R2-CONNECTED ALBUMS ───────────────────────────────────
-  //
-  // Dynamic albums: photos are loaded at runtime by fetching
-  // an index.json file stored in the same R2 folder.
-  //
-  // To set up a dynamic album:
-  //   1. Upload your photos to R2 at:  portfolio-images/Film-Test/
-  //   2. Upload an index.json to:      portfolio-images/Film-Test/index.json
-  //
-  //   index.json format (just a JSON array of filenames):
-  //   ["IMG_001.jpg", "IMG_002.jpg", "DSC_0042.jpg", ...]
-  //
-  //   To regenerate index.json locally from a folder of images, run:
-  //   ls portfolio-images/Film-Test/ | grep -E '\.(jpg|jpeg|png|webp)$' \
-  //     | sort | python3 -c "import sys,json; print(json.dumps(sys.stdin.read().split()))" \
-  //     > index.json
-  //
+  // ── ITALY FILM GROUP ─────────────────────────────────────
   {
-    id: 'film-test',
-    title: 'Film Test',
-    description: 'Analog film test shots.',
+    id: 'italy-film',
+    title: 'Italy Film',
+    description: 'Film photography from Italy, 2026.',
+    type: 'group',
+    protected: false,
+    subAlbums: ['film-1', 'film-2'],
+    coverImage: `${R2_BASE_URL}/Film-Test/ultramax_01.jpg`,
+  },
+
+  {
+    id: 'film-1',
+    title: 'Film 1',
+    description: 'Kodak Ultramax 400 — Roll 1.',
+    parentId: 'italy-film',
     protected: true,
     // Password: "film-test"
     passwordHash: '78cc5547668122fb80386a825330fe2c2361662299ae2cde105062fafa2b2317',
@@ -114,6 +109,57 @@ const ALBUMS = [
       `${R2_BASE_URL}/Film-Test/ultramax_35.jpg`,
       `${R2_BASE_URL}/Film-Test/ultramax_36.jpg`,
       `${R2_BASE_URL}/Film-Test/ultramax_37.jpg`,
+    ]
+  },
+
+  {
+    id: 'film-2',
+    title: 'Film 2',
+    description: 'FP4 — Roll 2.',
+    parentId: 'italy-film',
+    protected: true,
+    // Password: "film-test"
+    passwordHash: '78cc5547668122fb80386a825330fe2c2361662299ae2cde105062fafa2b2317',
+    coverImage: `${R2_BASE_URL}/Film2/Fernando000799-R1-E001.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E001.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E002.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E003.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E004.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E005.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E006.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E007.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E008.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E009.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E010.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E011.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E012.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E013.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E014.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E015.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E016.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E017.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E018.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E019.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E020.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E021.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E022.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E023.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E024.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E025.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E026.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E027.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E028.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E029.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E030.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E031.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E032.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E033.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E034.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E035.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E036.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E037.jpg`,
+      `${R2_BASE_URL}/Film2/Fernando000799-R1-E038.jpg`,
     ]
   },
 
