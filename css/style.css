@@ -16,8 +16,23 @@
   --color-text:  #1a1a1a;
   --color-muted: rgba(26,26,26,0.5);
   --color-gold:  #b8924a;
+  --nav-scrolled-bg: rgba(248,247,245,0.92);
+  --mobile-menu-bg:  rgba(248,247,245,0.97);
   --nav-height:  72px;
   --transition:  0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg:    #0c0c0c;
+    --color-surface: #161616;
+    --color-border: rgba(255,255,255,0.08);
+    --color-text:  #f0ede8;
+    --color-muted: rgba(240,237,232,0.5);
+    --color-gold:  #c9a96e;
+    --nav-scrolled-bg: rgba(12,12,12,0.92);
+    --mobile-menu-bg:  rgba(12,12,12,0.97);
+  }
 }
 
 /* ── Base Reset ── */
@@ -65,7 +80,7 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 }
 
 #main-nav.nav-scrolled {
-  background: rgba(248, 247, 245, 0.92);
+  background: var(--nav-scrolled-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom-color: var(--color-border);
@@ -155,7 +170,7 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(248, 247, 245, 0.97);
+  background: var(--mobile-menu-bg);
   backdrop-filter: blur(20px);
   z-index: 99;
   flex-direction: column;

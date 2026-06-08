@@ -7,7 +7,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/config.js"></script>
   <style>
-    body { background: #f8f7f5; }
+    body { background: #f8f7f5; color: #1a1a1a; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0c0c0c; color: #f0ede8; }
+      input { background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.1) !important; color: #f0ede8 !important; }
+      input::placeholder { color: rgba(240,237,232,0.3) !important; }
+      button[type=submit] { background: #f0ede8 !important; color: #0c0c0c !important; }
+      p.text-black\/30 { color: rgba(240,237,232,0.3) !important; }
+    }
     input:focus { outline: none; }
     .shake { animation: shake 0.4s ease; }
     @keyframes shake {
