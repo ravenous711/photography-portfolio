@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raveen Fernando — Photography</title>
+  <meta name="description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { gold: '#c9a96e' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="overflow-x-hidden">
+
+  <!-- ── Navigation ── -->
+  <nav id="main-nav">
+    <a href="index.html" class="nav-logo">RF<span>.</span></a>
+
+    <!-- Desktop links -->
+    <ul class="nav-links">
+      <li><a href="index.html"   data-nav-link>Home</a></li>
+      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
+      <li><a href="about.html"   data-nav-link>About</a></li>
+      <li><a href="contact.html" data-nav-link>Contact</a></li>
+    </ul>
+
+    <!-- Hamburger -->
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </div>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <!-- R2: Set background-image to your R2 hero URL in config.js — injected below -->
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <p class="hero-tagline" id="hero-tagline"></p>
+      <div class="hero-divider"></div>
+      <h1 class="hero-name" id="hero-name"></h1>
+      <div class="hero-divider"></div>
+      <a href="gallery.html" class="btn-primary mt-8 inline-flex" style="margin-top:2rem">
+        View Gallery
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:0.5rem">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-indicator">
+      <span>Scroll</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- ── Featured Albums Preview ── -->
+  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div class="text-center mb-16 fade-in">
+      <p class="text-xs tracking-widest uppercase mb-4" style="color:var(--color-muted)">Selected Work</p>
+      <h2 class="font-serif text-4xl md:text-5xl font-light" style="letter-spacing:0.04em">Recent Albums</h2>
+      <div class="gold-rule"></div>
+    </div>
+
+    <!-- 3-up preview grid (first 3 public albums) -->
+    <div id="featured-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in fade-in-delay-1">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="text-center mt-14 fade-in fade-in-delay-2">
+      <a href="gallery.html" class="btn-ghost">View All Albums</a>
+    </div>
+  </section>
+
+  <!-- ── Philosophy Quote ── -->
+  <section class="py-24 px-6 text-center" style="border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
+    <div class="max-w-2xl mx-auto fade-in">
+      <p class="font-serif text-2xl md:text-3xl font-light italic leading-relaxed" style="color:rgba(240,237,232,0.85)">
+        "Photography is the art of frozen time — the ability to store emotion and feelings within a frame."
+      </p>
+      <p class="mt-6 text-xs tracking-widest uppercase" style="color:var(--color-muted)">Meshack Otieno</p>
+    </div>
+  </section>
+
+  <!-- ── About Teaser ── -->
+  <section class="py-24 px-6 md:px-12">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <div class="fade-in order-2 md:order-1">
+        <p class="text-xs tracking-widest uppercase mb-4" style="color:var(--color-muted)">The Photographer</p>
+        <h2 class="font-serif text-4xl font-light mb-6" id="about-name-teaser" style="letter-spacing:0.04em"></h2>
+        <p class="text-sm leading-relaxed mb-8" style="color:rgba(240,237,232,0.65);max-width:420px" id="about-bio-teaser"></p>
+        <a href="about.html" class="btn-primary">About Me</a>
+      </div>
+      <div class="fade-in fade-in-delay-1 order-1 md:order-2">
+        <div class="about-photo-wrap" style="position:relative">
+          <img id="about-img-teaser" src="" alt="Raveen Fernando" class="w-full object-cover"
+               style="aspect-ratio:3/4;filter:grayscale(20%) contrast(1.05)" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p id="footer-name"></p>
+    <p class="mt-1">
+      <a href="gallery.html">Gallery</a>
+      <span style="margin:0 1rem;opacity:0.3">·</span>
+      <a href="about.html">About</a>
+      <span style="margin:0 1rem;opacity:0.3">·</span>
+      <a href="contact.html">Contact</a>
+    </p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script>SiteAuth.guard();</script>
+  <script>
+    // ── Inject config values ──
+    document.getElementById('hero-bg').style.backgroundImage = `url('${SITE_CONFIG.heroImage}')`;
+    document.getElementById('hero-name').textContent = SITE_CONFIG.photographerName;
+    document.getElementById('hero-tagline').textContent = SITE_CONFIG.tagline;
+    document.getElementById('about-name-teaser').textContent = SITE_CONFIG.photographerName;
+    document.getElementById('about-bio-teaser').textContent = SITE_CONFIG.aboutBio.slice(0, 220) + '…';
+    document.getElementById('about-img-teaser').src = SITE_CONFIG.aboutPhoto;
+    document.getElementById('about-img-teaser').alt = SITE_CONFIG.photographerName;
+    document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+    document.title = `${SITE_CONFIG.photographerName} — Photography`;
+
+    // ── Render first 3 public albums as featured ──
+    const publicAlbums = ALBUMS.filter(a => !a.protected).slice(0, 3);
+    const grid = document.getElementById('featured-grid');
+
+    publicAlbums.forEach((album, i) => {
+      const card = document.createElement('a');
+      card.href = `album.html?id=${album.id}`;
+      card.className = 'album-card block';
+      card.style.animationDelay = `${i * 0.1}s`;
+      card.innerHTML = `
+        <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}" />
+        <div class="album-card-overlay">
+          <h3 class="album-card-title">${album.title}</h3>
+          <p class="album-card-meta">${album.photos.length} Photos</p>
+          <p class="album-card-desc">${album.description}</p>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>

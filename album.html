@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Album — Raveen Fernando</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
+
+  <!-- JSZip for album download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- FileSaver for triggering the download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- Flickr justified-layout: all images scaled to equal row height -->
+  <script src="js/justified-layout.js"></script>
+</head>
+<body class="overflow-x-hidden">
+
+  <!-- ── Navigation ── -->
+  <nav id="main-nav" class="nav-scrolled">
+    <a href="index.html" class="nav-logo">RF<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html"   data-nav-link>Home</a></li>
+      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
+      <li><a href="about.html"   data-nav-link>About</a></li>
+      <li><a href="contact.html" data-nav-link>Contact</a></li>
+    </ul>
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </div>
+
+  <!-- ── Password Modal (shown for protected albums) ── -->
+  <div id="password-modal" style="display:none">
+    <div class="password-modal-inner">
+      <!-- Lock icon -->
+      <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+
+      <h1 class="font-serif text-3xl font-light mb-2" id="modal-album-title">Private Album</h1>
+      <p class="text-sm mb-8" style="color:var(--color-muted)">Enter the password to view this album.</p>
+
+      <form id="password-form" novalidate>
+        <div style="position:relative;margin-bottom:0.5rem">
+          <input
+            type="password"
+            id="password-input"
+            class="form-field text-center text-lg tracking-widest"
+            placeholder="············"
+            autocomplete="current-password"
+            style="text-align:center;letter-spacing:0.3em"
+            aria-label="Album password"
+          />
+        </div>
+        <p class="password-error" id="password-error" role="alert"></p>
+        <button type="submit" class="btn-primary mt-6 w-full justify-center"
+                style="width:100%;margin-top:1.5rem;justify-content:center">
+          Unlock Album
+        </button>
+      </form>
+
+      <a href="gallery.html" class="block mt-6 text-xs tracking-widest uppercase"
+         style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
+        ← Back to Gallery
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Album Content (revealed after auth) ── -->
+  <div id="album-content" style="display:none">
+
+    <!-- Album header -->
+    <header class="px-6 md:px-12 pt-28 pb-10 max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <a href="gallery.html" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
+             style="color:var(--color-muted);text-decoration:none;transition:color 0.3s"
+             onmouseover="this.style.color='var(--color-text)'"
+             onmouseout="this.style.color='var(--color-muted)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            All Albums
+          </a>
+          <h1 class="font-serif text-4xl md:text-5xl font-light" id="album-title" style="letter-spacing:0.04em"></h1>
+          <p class="mt-2 text-sm" id="album-description" style="color:var(--color-muted)"></p>
+          <p class="mt-1 text-xs tracking-widest uppercase" id="album-count" style="color:rgba(240,237,232,0.3)"></p>
+        </div>
+
+        <!-- Download button -->
+        <button id="download-btn" class="btn-primary shrink-0" onclick="downloadAlbum()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download Album
+        </button>
+      </div>
+      <div class="gold-rule" style="margin-left:0;margin-top:2rem"></div>
+    </header>
+
+    <!-- Photo grid -->
+    <main class="px-6 md:px-12 pb-24 max-w-7xl mx-auto">
+      <div class="photo-grid" id="photo-grid">
+        <!-- Populated by JS -->
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ── Lightbox ── -->
+  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button id="lightbox-close" aria-label="Close lightbox" onclick="closeLightbox()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <button class="lightbox-nav" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+
+    <img id="lightbox-img" src="" alt="Photo" />
+
+    <button class="lightbox-nav" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+
+    <p id="lightbox-counter"></p>
+  </div>
+
+  <!-- ── Download Progress Toast ── -->
+  <div id="download-progress">
+    <p id="dl-label" class="font-sans text-sm" style="color:var(--color-text)">Preparing download…</p>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="dl-bar"></div>
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p id="footer-copyright"></p>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script>SiteAuth.guard();</script>
+  <script>
+    // ════════════════════════════════════════════════════════
+    // ALBUM PAGE LOGIC
+    // ════════════════════════════════════════════════════════
+
+    // ── Get album from URL param ──
+    const params    = new URLSearchParams(window.location.search);
+    const albumId   = params.get('id');
+    const album     = ALBUMS.find(a => a.id === albumId);
+
+    if (!album) {
+      document.body.innerHTML = `
+        <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
+          <p class="font-serif text-3xl font-light">Album not found</p>
+          <a href="gallery.html" class="btn-ghost">Back to Gallery</a>
+        </div>`;
+    } else {
+      // Update page title
+      document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
+      document.getElementById('footer-copyright').textContent =
+        `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+      // ── Auth check ──
+      if (!album.protected || AlbumAuth.isUnlocked(album.id)) {
+        showAlbum();
+      } else {
+        showPasswordModal();
+      }
+    }
+
+    // ── Show password modal ──
+    function showPasswordModal() {
+      document.getElementById('modal-album-title').textContent = album.title;
+      document.getElementById('password-modal').style.display = 'flex';
+
+      const form  = document.getElementById('password-form');
+      const input = document.getElementById('password-input');
+      const error = document.getElementById('password-error');
+
+      input.focus();
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        error.textContent = '';
+        const btn = form.querySelector('button[type="submit"]');
+        btn.textContent = 'Checking…';
+        btn.disabled = true;
+
+        const hash = await hashPassword(input.value.trim());
+
+        if (hash === album.passwordHash) {
+          AlbumAuth.unlock(album.id);
+          document.getElementById('password-modal').style.display = 'none';
+          showAlbum();
+        } else {
+          error.textContent = 'Incorrect password. Please try again.';
+          input.value = '';
+          input.focus();
+          btn.textContent = 'Unlock Album';
+          btn.disabled = false;
+
+          // Shake animation
+          input.style.animation = 'shake 0.4s ease';
+          input.addEventListener('animationend', () => { input.style.animation = ''; }, { once: true });
+        }
+      });
+    }
+
+    // ── Render album grid ──
+    let currentIndex = 0;
+
+    function showAlbum() {
+      document.getElementById('album-content').style.display = 'block';
+      document.getElementById('album-title').textContent       = album.title;
+      document.getElementById('album-description').textContent = album.description;
+      document.getElementById('album-count').textContent       = `${album.photos.length} Photos`;
+
+      const grid = document.getElementById('photo-grid');
+      grid.innerHTML = '';
+
+      album.photos.forEach((url, i) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb';
+        thumb.setAttribute('tabindex', '0');
+        thumb.setAttribute('role', 'button');
+        thumb.setAttribute('aria-label', `Open photo ${i + 1}`);
+
+        const img = document.createElement('img');
+        img.alt     = `${album.title} — photo ${i + 1}`;
+        img.loading = i < 6 ? 'eager' : 'lazy';
+        img.addEventListener('load', () => img.classList.add('loaded'));
+        img.src = url;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'photo-thumb-overlay';
+        overlay.innerHTML = `
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+          </svg>`;
+
+        thumb.appendChild(img);
+        thumb.appendChild(overlay);
+
+        const open = () => openLightbox(i);
+        thumb.addEventListener('click', open);
+        thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
+
+        grid.appendChild(thumb);
+      });
+
+      // ── Justified row layout (Flickr-style) ──
+      // Every row is scaled to the same height; images fill the full row width.
+      function runJustifiedLayout() {
+        const items = Array.from(grid.querySelectorAll('.photo-thumb'));
+        if (!items.length) return;
+
+        const containerWidth = grid.offsetWidth;
+        if (!containerWidth) return;
+
+        const aspectRatios = items.map(item => {
+          const img = item.querySelector('img');
+          if (img.naturalWidth && img.naturalHeight) {
+            return img.naturalWidth / img.naturalHeight;
+          }
+          return 1.5; // default landscape fallback before images load
+        });
+
+        const layout = justifiedLayout(aspectRatios, {
+          containerWidth: containerWidth,
+          targetRowHeight: 300,
+          boxSpacing: 4,
+          containerPadding: 0,
+        });
+
+        grid.style.height = layout.containerHeight + 'px';
+
+        items.forEach((item, i) => {
+          const box = layout.boxes[i];
+          item.style.left   = box.left + 'px';
+          item.style.top    = box.top  + 'px';
+          item.style.width  = box.width + 'px';
+          item.style.height = box.height + 'px';
+        });
+      }
+
+      // Run immediately with fallback aspect ratios, then re-run as each image loads
+      runJustifiedLayout();
+
+      const allImgs = grid.querySelectorAll('img');
+      allImgs.forEach(img => {
+        if (img.complete && img.naturalWidth) { runJustifiedLayout(); }
+        else { img.addEventListener('load', runJustifiedLayout); }
+      });
+
+      window.addEventListener('resize', runJustifiedLayout);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // LIGHTBOX
+    // ════════════════════════════════════════════════════════
+    const lightbox    = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const counter     = document.getElementById('lightbox-counter');
+
+    function openLightbox(index) {
+      currentIndex = index;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      loadLightboxImage(index);
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+      lightboxImg.classList.remove('loaded');
+    }
+
+    function loadLightboxImage(index) {
+      lightboxImg.classList.remove('loaded');
+      const url = album.photos[index];
+      const tmp = new Image();
+      tmp.onload = () => {
+        lightboxImg.src = url;
+        lightboxImg.classList.add('loaded');
+      };
+      tmp.src = url;
+      counter.textContent = `${index + 1} / ${album.photos.length}`;
+
+      // Show/hide nav arrows
+      document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
+      document.getElementById('lightbox-next').style.visibility = index === album.photos.length - 1 ? 'hidden' : 'visible';
+    }
+
+    function lightboxNav(dir) {
+      const newIndex = currentIndex + dir;
+      if (newIndex >= 0 && newIndex < album.photos.length) {
+        currentIndex = newIndex;
+        loadLightboxImage(currentIndex);
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (!lightbox.classList.contains('open')) return;
+      if (e.key === 'Escape')     closeLightbox();
+      if (e.key === 'ArrowLeft')  lightboxNav(-1);
+      if (e.key === 'ArrowRight') lightboxNav(1);
+    });
+
+    // Click backdrop to close
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    // Touch swipe support
+    let touchStartX = 0;
+    lightbox.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+    lightbox.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) lightboxNav(dx < 0 ? 1 : -1);
+    });
+
+    // ════════════════════════════════════════════════════════
+    // ALBUM DOWNLOAD (ZIP)
+    // ════════════════════════════════════════════════════════
+    // ⚠️  R2 CORS: Your R2 bucket must allow cross-origin GET
+    //     requests from this domain. Add a CORS rule in the
+    //     Cloudflare R2 dashboard under Settings → CORS.
+    //     Example rule:
+    //       AllowedOrigins: ["https://yourdomain.com"]
+    //       AllowedMethods: ["GET"]
+
+    async function downloadAlbum() {
+      const btn      = document.getElementById('download-btn');
+      const progress = document.getElementById('download-progress');
+      const label    = document.getElementById('dl-label');
+      const bar      = document.getElementById('dl-bar');
+
+      btn.disabled   = true;
+      btn.textContent = 'Preparing…';
+      progress.classList.add('show');
+      label.textContent = `Downloading ${album.photos.length} photos…`;
+
+      const zip     = new JSZip();
+      const folder  = zip.folder(album.title);
+      const total   = album.photos.length;
+      let completed = 0;
+
+      const fetchPhoto = async (url, index) => {
+        try {
+          const response = await fetch(url, { mode: 'cors' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const blob = await response.blob();
+
+          // Determine file extension from MIME type or URL
+          const ext = url.split('.').pop().split('?')[0] || 'jpg';
+          const safeName = String(index + 1).padStart(3, '0') + '.' + ext;
+          folder.file(safeName, blob);
+        } catch (err) {
+          console.warn(`Could not fetch photo ${index + 1}:`, err.message);
+        }
+
+        completed++;
+        const pct = Math.round((completed / total) * 100);
+        bar.style.width  = pct + '%';
+        label.textContent = `${completed} of ${total} photos…`;
+      };
+
+      // Fetch in batches of 4 to respect rate limits
+      const BATCH = 4;
+      for (let i = 0; i < total; i += BATCH) {
+        const batch = album.photos.slice(i, i + BATCH).map((url, j) => fetchPhoto(url, i + j));
+        await Promise.all(batch);
+      }
+
+      label.textContent = 'Creating ZIP file…';
+
+      try {
+        const blob     = await zip.generateAsync({ type: 'blob' });
+        const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-photos.zip`;
+        saveAs(blob, filename);
+        label.textContent = 'Download started!';
+      } catch (err) {
+        label.textContent = 'Error creating ZIP. Try again.';
+        console.error(err);
+      }
+
+      setTimeout(() => {
+        progress.classList.remove('show');
+        bar.style.width = '0%';
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download Album`;
+      }, 2500);
+    }
+  </script>
+
+  <style>
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60%  { transform: translateX(-8px); }
+      40%, 80%  { transform: translateX(8px); }
+    }
+  </style>
+</body>
+</html>
