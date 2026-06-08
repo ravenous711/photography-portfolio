@@ -314,16 +314,63 @@
     function updateSelectionBar() {
       const count = selected.size;
       const total = album.photos.length;
-      document.getElementById('selection-count').textContent =
-        count === 0 ? 'No photos selected' : `${count} of ${total} selected`;
+      let countText = count === 0 ? 'No photos selected' : `${count} of ${total} selected`;
+      if (count > 0 && count <= INDIVIDUAL_THRESHOLD) countText += ' · downloads individually';
+      else if (count > INDIVIDUAL_THRESHOLD) countText += ' · downloads as ZIP';
+      document.getElementById('selection-count').textContent = countText;
       document.getElementById('download-selected-btn').disabled = count === 0;
       document.getElementById('select-all-btn').textContent =
         count === total ? 'Deselect all' : 'Select all';
     }
 
+    const INDIVIDUAL_THRESHOLD = 5;
+
     function downloadSelected() {
       const urls = Array.from(selected).sort((a, b) => a - b).map(i => album.photos[i]);
-      downloadPhotos(urls);
+      if (urls.length <= INDIVIDUAL_THRESHOLD) {
+        downloadIndividually(urls);
+      } else {
+        downloadPhotos(urls);
+      }
+    }
+
+    async function downloadIndividually(photos) {
+      const label    = document.getElementById('dl-label');
+      const bar      = document.getElementById('dl-bar');
+      const progress = document.getElementById('download-progress');
+      const selDlBtn = document.getElementById('download-selected-btn');
+
+      selDlBtn.disabled = true;
+      progress.classList.add('show');
+      label.textContent = `Downloading ${photos.length} photo${photos.length !== 1 ? 's' : ''}…`;
+
+      for (let i = 0; i < photos.length; i++) {
+        try {
+          const response = await fetch(photos[i], { mode: 'cors' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = objectUrl;
+          a.download = photos[i].split('/').pop().split('?')[0];
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        } catch (err) {
+          console.warn(`Could not download photo ${i + 1}:`, err.message);
+        }
+        bar.style.width = Math.round(((i + 1) / photos.length) * 100) + '%';
+        label.textContent = `${i + 1} of ${photos.length} downloaded…`;
+        if (i < photos.length - 1) await new Promise(r => setTimeout(r, 400));
+      }
+
+      label.textContent = 'Done!';
+      setTimeout(() => {
+        progress.classList.remove('show');
+        bar.style.width = '0%';
+        selDlBtn.disabled = selected.size === 0;
+      }, 1500);
     }
 
     function showAlbum() {
