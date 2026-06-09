@@ -42,28 +42,32 @@ There are three album types. All follow the same upload step, then differ only i
 
 ### Step 1 — Upload photos to R2
 
+> **Run all upload commands in Terminal.app, not inside Cursor.** Cursor's sandboxed shell cuts off sustained network connections mid-loop. Terminal.app has no restrictions and will run the full upload reliably.
+
 **All photos from a folder:**
 ```bash
+export PATH="/opt/homebrew/bin:$PATH"
 FOLDER="/path/to/your/photos"
 DEST="portfolio-images/Your-Album-Name"
 
 for f in "$FOLDER"/*.JPG "$FOLDER"/*.jpg; do
   [ -f "$f" ] || continue
-  wrangler r2 object put "$DEST/$(basename "$f")" --file "$f" --remote
-  echo "✓ $(basename "$f")"
+  wrangler r2 object put "$DEST/$(basename "$f")" --file "$f" --remote \
+    && echo "✓ $(basename "$f")" || echo "✗ FAILED: $(basename "$f")"
 done
 ```
 
 **Only Lightroom-starred photos (Rating > 0):**
 ```bash
+export PATH="/opt/homebrew/bin:$PATH"
 FOLDER="/path/to/your/photos"
 DEST="portfolio-images/Your-Album-Name"
 
 exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null \
   | awk -F'\t' '$1 > 0 {print $2}' | sort \
   | while read fname; do
-      wrangler r2 object put "$DEST/$fname" --file "$FOLDER/$fname" --remote
-      echo "✓ $fname"
+      wrangler r2 object put "$DEST/$fname" --file "$FOLDER/$fname" --remote \
+        && echo "✓ $fname" || echo "✗ FAILED: $fname"
     done
 ```
 
