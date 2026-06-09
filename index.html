@@ -120,19 +120,23 @@
     document.title = `${SITE_CONFIG.photographerName} — Photography`;
 
     // ── Render first 3 public albums as featured ──
-    const publicAlbums = ALBUMS.filter(a => !a.protected).slice(0, 3);
+    const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId).slice(0, 3);
     const grid = document.getElementById('featured-grid');
 
     publicAlbums.forEach((album, i) => {
       const card = document.createElement('a');
-      card.href = `album.html?id=${album.id}`;
+      const isGroup = album.type === 'group';
+      card.href = isGroup ? `album-group.html?id=${album.id}` : `album.html?id=${album.id}`;
       card.className = 'album-card block';
       card.style.animationDelay = `${i * 0.1}s`;
+      const meta = isGroup
+        ? `${album.subAlbums.length} Albums`
+        : `${album.photos.length} Photos`;
       card.innerHTML = `
         <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}" />
         <div class="album-card-overlay">
           <h3 class="album-card-title">${album.title}</h3>
-          <p class="album-card-meta">${album.photos.length} Photos</p>
+          <p class="album-card-meta">${meta}</p>
           <p class="album-card-desc">${album.description}</p>
         </div>
       `;
