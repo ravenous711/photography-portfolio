@@ -51,6 +51,25 @@ const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 // ============================================================
 const ALBUMS = [
 
+  // ── HIDDEN TEST ALBUM ─────────────────────────────────────
+  {
+    id: 'hidden-test',
+    title: 'Hidden Test',
+    description: 'Testing hidden + password protected album.',
+    hidden: true,
+    protected: true,
+    // Password: "test123"
+    passwordHash: 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae',
+    coverImage: 'https://picsum.photos/seed/hidden/800/600',
+    photos: [
+      'https://picsum.photos/seed/h1/1200/800',
+      'https://picsum.photos/seed/h2/800/1200',
+      'https://picsum.photos/seed/h3/1200/800',
+      'https://picsum.photos/seed/h4/900/1200',
+      'https://picsum.photos/seed/h5/1200/900',
+    ],
+  },
+
   // ── ITALY FILM GROUP ─────────────────────────────────────
   {
     id: 'italy-film',
