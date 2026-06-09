@@ -166,7 +166,7 @@
       const grid = document.getElementById('sub-album-grid');
       const subAlbums = group.subAlbums
         .map(id => ALBUMS.find(a => a.id === id))
-        .filter(Boolean);
+        .filter(a => a && !a.hidden);
 
       subAlbums.forEach(album => {
         const photoCount = album.photos ? album.photos.length : 0;

@@ -95,8 +95,8 @@
     // ── Render album grid ──
     const grid = document.getElementById('album-grid');
 
-    // Only show top-level albums (not sub-albums)
-    const topLevel = ALBUMS.filter(a => !a.parentId);
+    // Only show top-level, non-hidden albums
+    const topLevel = ALBUMS.filter(a => !a.parentId && !a.hidden);
 
     topLevel.forEach(album => {
       const isGroup = album.type === 'group';
