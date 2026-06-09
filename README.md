@@ -48,6 +48,69 @@ wrangler r2 object list portfolio-images --prefix FolderName/ --json | grep '"ke
 ```
 Paste that output into Cursor and say "add this as a new album called X" — it will update `config.js` automatically.
 
+---
+
+## Creating a hidden album from Lightroom-starred photos
+
+This is the full self-serve workflow for turning a folder of photos into a hidden, password-protected album.
+
+**Step 1 — Find your starred photos with exiftool:**
+```bash
+# Install exiftool if you don't have it
+brew install exiftool
+
+# Navigate to your photo folder (quote paths with spaces)
+cd "/Volumes/PhotosSSD/Photos/2025/10 - October/Your-Folder"
+
+# Print filenames where Lightroom star rating > 0
+exiftool -Rating -filename -T *.JPG 2>/dev/null | awk -F'\t' '$1 > 0 {print $2}' | sort
+```
+Copy the list of filenames — those are your selects.
+
+**Step 2 — Upload the starred photos to R2:**
+```bash
+FOLDER="/Volumes/PhotosSSD/Photos/2025/10 - October/Your-Folder"
+DEST="portfolio-images/Your-Album-Name"   # e.g. portfolio-images/Joel-Bday-2025
+
+exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null | awk -F'\t' '$1 > 0 {print $2}' | sort | while read fname; do
+  wrangler r2 object put "$DEST/$fname" --file "$FOLDER/$fname" --remote
+  echo "✓ $fname"
+done
+```
+> **Important:** Always include `--remote` — without it, Wrangler uploads to a local simulation instead of real Cloudflare R2.
+
+**Step 3 — Generate a password hash:**
+```bash
+python3 -c "import hashlib; print(hashlib.sha256(b'yourpassword').hexdigest())"
+```
+
+**Step 4 — Add the album to `js/config.js`:**
+```js
+{
+  id: 'your-album-id',
+  title: 'Your Album Title',
+  description: 'Short description.',
+  hidden: true,          // hides it from the gallery grid
+  protected: true,
+  passwordHash: 'paste-hash-here',
+  coverImage: `${R2_BASE_URL}/Your-Album-Name/FIRST_PHOTO.JPG`,
+  photos: [
+    `${R2_BASE_URL}/Your-Album-Name/PHOTO1.JPG`,
+    `${R2_BASE_URL}/Your-Album-Name/PHOTO2.JPG`,
+    // ...
+  ],
+},
+```
+Paste the filenames from Step 1 into the `photos` array (or ask Cursor to do it).
+
+**Step 5 — Share the link:**
+```
+https://photography-portfolio-pi-blush.vercel.app/album.html?id=your-album-id
+```
+The album won't appear anywhere on the site — only people with the direct link and password can access it.
+
+---
+
 **Hidden albums** (accessible by direct link + password only, not shown in gallery):
 Add `hidden: true` to any album in `js/config.js`. Share the link:
 `https://photography-portfolio-pi-blush.vercel.app/album.html?id=album-id`
