@@ -158,12 +158,13 @@ const ALBUMS = [
     ],
   },
 
-  // ── ITALY FILM GROUP ─────────────────────────────────────
+  // ── ITALY FILM (nested under Italy 2026) ─────────────────
   {
     id: 'italy-film',
-    title: 'Italy Film',
+    title: 'Film',
     description: 'Film photography from Italy, 2026.',
     type: 'group',
+    parentId: 'italy-2026',
     protected: false,
     subAlbums: ['film-1', 'film-2', 'film-3', 'film-4'],
     coverImage: `${R2_BASE_URL}/Film-Test/ultramax_01.jpg`,
@@ -368,11 +369,11 @@ const ALBUMS = [
   // Add photo URLs to each sub-album's photos array once uploaded to R2.
   {
     id: 'italy-2026',
-    title: 'Italy 2026 — Coming Soon',
-    description: 'Venice, Florence, Assisi, and Rome.',
+    title: 'Italy 2026',
+    description: 'Venice, Florence, Pisa, Assisi, and Rome.',
     type: 'group',
     protected: false,
-    subAlbums: ['italy-venice', 'italy-florence', 'italy-assisi', 'italy-rome'],
+    subAlbums: ['italy-venice', 'italy-florence', 'italy-pisa', 'italy-assisi', 'italy-rome', 'italy-film'],
     // R2: set to first sub-album cover once photos are uploaded
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_098.jpg`,
   },
@@ -489,9 +490,21 @@ const ALBUMS = [
     parentId: 'italy-2026',
     description: 'Renaissance architecture and Tuscan light.',
     protected: false,
-    coverImage: 'https://picsum.photos/seed/florence-cover/800/600',
+    coverImage: 'images/placeholder-black.svg',
     photos: [
-      // R2: `${R2_BASE_URL}/Italy-2026/Florence/filename.jpg`
+      'images/placeholder-black.svg',
+    ],
+  },
+
+  {
+    id: 'italy-pisa',
+    title: 'Pisa',
+    parentId: 'italy-2026',
+    description: 'The leaning tower and Piazza dei Miracoli.',
+    protected: false,
+    coverImage: 'images/placeholder-black.svg',
+    photos: [
+      'images/placeholder-black.svg',
     ],
   },
 
@@ -501,9 +514,9 @@ const ALBUMS = [
     parentId: 'italy-2026',
     description: 'Stone streets and hilltop views.',
     protected: false,
-    coverImage: 'https://picsum.photos/seed/assisi-cover/800/600',
+    coverImage: 'images/placeholder-black.svg',
     photos: [
-      // R2: `${R2_BASE_URL}/Italy-2026/Assisi/filename.jpg`
+      'images/placeholder-black.svg',
     ],
   },
 
@@ -513,9 +526,9 @@ const ALBUMS = [
     parentId: 'italy-2026',
     description: 'Ancient ruins, piazzas, and the eternal city.',
     protected: false,
-    coverImage: 'https://picsum.photos/seed/rome-cover/800/600',
+    coverImage: 'images/placeholder-black.svg',
     photos: [
-      // R2: `${R2_BASE_URL}/Italy-2026/Rome/filename.jpg`
+      'images/placeholder-black.svg',
     ],
   },
 
