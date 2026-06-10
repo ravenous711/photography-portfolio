@@ -189,26 +189,25 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 
 ### ✅ Done recently
 
-- [x] **Venice** — 95 photos + grid at `Italy/Venice/Digital/`, live in config
-- [x] **GitHub token** — admin deletions auto-update `config.js`
-- [x] **Florence** — 55 photos + grid at `Italy/Florence/Digital/`, live in config
-- [x] **Pisa** — 23 photos + grid at `Italy/Pisa/Digital/`, live in config
-- [x] **Grid tier** — album, admin, and curate use 1200px grid previews
+- [x] **Venice** — 95 photos + grid at `Italy/Venice/Digital/`
+- [x] **Pisa** — 23 photos + grid at `Italy/Pisa/Digital/`
+- [x] **Florence** — 55 photos + grid at `Italy/Florence/Digital/`
 - [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
-
-### 🔄 In progress
-
-_(none)_
+- [x] **Grid tier** — album, admin, and curate use 1200px grid previews
+- [x] **GitHub token** — admin deletions auto-update `config.js`
+- [x] **RF favicon** — tab icon on all pages
+- [x] **Hero image** — `DSCF1566.jpg` (Italy) on home page
 
 ### 🟡 Next — Italy city albums (needs external drive)
 
-Export starred picks to `Italy/Export/<City>/` in Lightroom, then say **"upload Florence"** / **"upload Pisa"** etc.
+Export starred picks to `Italy/Export/<City>/` in Lightroom, then say **"upload Assisi"** or **"upload Rome"**.
 
-| Album | R2 path | Drive source | Export folder | Status |
-|---|---|---|---|---|
-| **Pisa** | `Italy/Pisa/Digital/` | `02_Pisa/` (~165 JPGs) | done (23 exported) | live |
-| **Assisi** | `Italy/Assisi/Digital/` | `04_Assisi/` (~56 JPGs) | not exported yet | empty in config |
-| **Rome** | `Italy/Rome/Digital/` | `05_Rome/` (~607 JPGs) | not exported yet | empty in config — cull/edit first |
+| Album | R2 path | Drive source | Status |
+|---|---|---|---|
+| **Assisi** | `Italy/Assisi/Digital/` | `04_Assisi/` (~56 JPGs) | not exported yet |
+| **Rome** | `Italy/Rome/Digital/` | `05_Rome/` (~607 JPGs) | not exported yet — cull/edit first |
+
+Italy group order on site: Venice → Pisa → Florence → Assisi → Rome → Film.
 
 ### 🟡 Grid backfill — originals already on R2
 
@@ -226,4 +225,4 @@ Do these one at a time when the external drive is connected.
 
 ### 🟢 Nice to have
 
-- [ ] Set a real hero image (currently using a placeholder)
+_(none)_
