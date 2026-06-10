@@ -325,6 +325,7 @@
             thumb.appendChild(overlay);
             grid.appendChild(thumb);
 
+            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
             // Stagger src assignment in batches of 10 to avoid overwhelming R2
             setTimeout(() => { img.src = url; }, Math.floor(i / 10) * 150);
 
