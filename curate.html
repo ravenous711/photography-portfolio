@@ -256,6 +256,25 @@
     #lightbox-vote .vote-btn.cut.active {
       background: #ef4444; border-color: #ef4444; color: white;
     }
+    #lightbox-shortcuts {
+      position: absolute; bottom: 1.25rem; left: 1.5rem;
+      display: flex; flex-direction: column; gap: 0.35rem;
+      font-size: 0.68rem; letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.45);
+      pointer-events: none; user-select: none;
+    }
+    #lightbox-shortcuts kbd {
+      display: inline-block; min-width: 1.35rem;
+      padding: 0.1rem 0.35rem; margin-right: 0.15rem;
+      font-family: var(--font-sans); font-size: 0.65rem;
+      text-align: center; line-height: 1.4;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 3px; color: rgba(255,255,255,0.65);
+    }
+    @media (max-width: 640px) {
+      #lightbox-shortcuts { display: none; }
+    }
     .curate-card .photo-wrap { cursor: zoom-in; }
 
     /* override global style.css — curate lightbox img visible when loaded */
@@ -341,6 +360,12 @@
 
     <button class="lightbox-nav" id="lightbox-next" type="button" aria-label="Next photo"
       onclick="event.stopPropagation(); lightboxNav(1)">›</button>
+
+    <div id="lightbox-shortcuts" aria-hidden="true">
+      <span><kbd>←</kbd><kbd>→</kbd> Navigate</span>
+      <span><kbd>K</kbd> Keep &nbsp; <kbd>C</kbd> Cut</span>
+      <span><kbd>Esc</kbd> Close</span>
+    </div>
   </div>
 
   <div id="toast"></div>
@@ -652,6 +677,8 @@
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') lightboxNav(-1);
       if (e.key === 'ArrowRight') lightboxNav(1);
+      if (e.key === 'k' || e.key === 'K') castVote(photoList[lightboxIndex], 'keep');
+      if (e.key === 'c' || e.key === 'C') castVote(photoList[lightboxIndex], 'cut');
     });
 
     function showToast(msg) {
