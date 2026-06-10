@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'No URLs provided' });
   }
 
-  // Strip base URL to get R2 object keys
+  // Strip base URL to get R2 object keys (path after bucket root)
   const objectKeys = urls
     .filter(u => typeof u === 'string' && u.startsWith(R2_BASE_URL))
     .map(u => u.slice(R2_BASE_URL.length).replace(/^\//, ''));
@@ -44,9 +44,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'No valid R2 URLs found' });
   }
 
+  // Also delete grid/ copies; ignore thumbnails/ (deprecated tier)
+  const allKeys = objectKeys.flatMap(key => [key, `grid/${key}`]);
+
   // ── 1. Delete from Cloudflare R2 ──────────────────────────────────────────
   const deleteResults = await Promise.allSettled(
-    objectKeys.map(key =>
+    allKeys.map(key =>
       fetch(
         `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/${BUCKET}/objects/${encodeURIComponent(key)}`,
         {
@@ -57,9 +60,12 @@ export default async function handler(req, res) {
     )
   );
 
-  const deleted = deleteResults
-    .filter(r => r.status === 'fulfilled' && r.value.ok)
-    .map(r => r.value.key);
+  const deleted = [...new Set(
+    deleteResults
+      .filter(r => r.status === 'fulfilled' && r.value.ok)
+      .map(r => r.value.key)
+      .filter(key => !key.startsWith('grid/'))
+  )];
 
   const deleteFailed = deleteResults
     .filter(r => r.status === 'rejected' || !r.value?.ok)
@@ -85,15 +91,32 @@ export default async function handler(req, res) {
     const fileData = await getRes.json();
     const originalContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
 
-    // Remove deleted URLs — exact string match on backtick template literals
+    // Remove deleted photos from config.js
+    // config.js uses `${R2_BASE_URL}/path/file.jpg` — not the expanded full URL
     let updatedContent = originalContent;
     for (const url of urls) {
-      // Remove photo array entries: `      \`url\`,\n` (with leading spaces)
+      const path = url.startsWith(R2_BASE_URL)
+        ? url.slice(R2_BASE_URL.length).replace(/^\//, '')
+        : null;
+      if (!path) continue;
+
+      const pathPattern = escapeRegex(path);
+
+      // Photo array entry: `${R2_BASE_URL}/path/file.jpg`,
+      updatedContent = updatedContent.replace(
+        new RegExp(`\\s*\`\\$\\{R2_BASE_URL\\}/${pathPattern}\`,\\n`, 'g'),
+        '\n'
+      );
+      // Legacy: full URL string (if any old entries exist)
       updatedContent = updatedContent.replace(
         new RegExp(`\\s*\`${escapeRegex(url)}\`,\\n`, 'g'),
         '\n'
       );
-      // Replace coverImage if it matches
+      // coverImage
+      updatedContent = updatedContent.replace(
+        new RegExp(`(coverImage:\\s*)\`\\$\\{R2_BASE_URL\\}/${pathPattern}\``, 'g'),
+        "$1'images/placeholder-black.svg'"
+      );
       updatedContent = updatedContent.replace(
         new RegExp(`(coverImage:\\s*)\`${escapeRegex(url)}\``, 'g'),
         "$1'images/placeholder-black.svg'"
