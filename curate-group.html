@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Curate — Raveen Fernando</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    #pw-screen {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--color-bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; padding: 2rem; text-align: center;
+    }
+    #pw-screen.hidden { display: none; }
+
+    #picker-ui { display: none; padding-bottom: 3rem; }
+    #picker-ui.visible { display: block; }
+
+    #picker-header {
+      padding: 2rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      text-align: center;
+    }
+    #picker-header h1 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      margin: 0 0 0.25rem;
+    }
+    #picker-header p {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin: 0;
+    }
+    #picker-intro {
+      max-width: 420px;
+      margin: 1.25rem auto 0;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--color-muted);
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+
+    #album-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .picker-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .picker-card:hover:not(.disabled) {
+      border-color: var(--color-text);
+      transform: translateY(-2px);
+    }
+    .picker-card.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+      cursor: default;
+    }
+    .picker-card img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+    }
+    .picker-card-body {
+      padding: 0.85rem 1rem 1rem;
+    }
+    .picker-card-title {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      margin: 0 0 0.25rem;
+    }
+    .picker-card-meta {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin: 0;
+    }
+    .picker-card-desc {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      margin: 0.35rem 0 0;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="pw-screen">
+    <p style="font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--color-muted);margin-bottom:0.75rem">Photo Curation</p>
+    <p style="font-family:var(--font-serif);font-size:2rem;font-weight:300;letter-spacing:0.08em;margin-bottom:0.5rem" id="pw-group-name">–</p>
+    <p style="font-size:0.78rem;color:var(--color-muted);margin-bottom:2rem;max-width:320px">Pick a city album and vote Keep or Cut on each photo.</p>
+    <form id="pw-form" novalidate style="width:100%;max-width:320px">
+      <input id="pw-input" type="password" placeholder="Password"
+        autocomplete="current-password"
+        style="width:100%;background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.75rem 1rem;margin-bottom:0.5rem;font-family:var(--font-sans);font-size:0.9rem;letter-spacing:0.1em;text-align:center;outline:none;transition:border-color 0.2s;border-radius:2px"
+        onfocus="this.style.borderColor='var(--color-text)'"
+        onblur="this.style.borderColor='var(--color-border)'"
+      />
+      <p id="pw-error" style="color:#f87171;font-size:0.8rem;min-height:1.2rem;margin-bottom:0.5rem;text-align:center"></p>
+      <button type="submit" style="width:100%;background:var(--color-text);color:var(--color-bg);border:none;padding:0.75rem;font-family:var(--font-sans);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:2px">
+        Enter
+      </button>
+    </form>
+  </div>
+
+  <div id="picker-ui">
+    <div id="picker-header">
+      <h1 id="group-title">–</h1>
+      <p id="group-desc"></p>
+      <p id="picker-intro">Choose an album below to help pick the best photos.</p>
+    </div>
+    <div id="album-grid"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const groupId = params.get('group');
+    const urlPw   = params.get('pw');
+    const UNLOCK_KEY = `curate_group_unlock_${groupId}`;
+
+    const group = (ALBUMS || []).find(a => a.id === groupId && a.type === 'group');
+
+    function gridUrl(fullUrl) {
+      const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+      return m ? `${m[1]}grid/${m[2]}` : fullUrl;
+    }
+
+    function coverSrc(album) {
+      const src = album.coverImage || '';
+      if (src.includes('r2.dev')) return gridUrl(src);
+      return src;
+    }
+
+    function photoCount(album) {
+      return (album.photos || []).filter(u => u && !u.endsWith('.svg')).length;
+    }
+
+    async function hashPassword(password) {
+      const data = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function gatePassword() {
+      return group?.curatePasswordHash || group?.passwordHash || null;
+    }
+
+    async function tryUnlock(password) {
+      const expected = gatePassword();
+      if (!expected) return true;
+      const hash = await hashPassword(password);
+      return hash === expected;
+    }
+
+    function markUnlocked() {
+      sessionStorage.setItem(UNLOCK_KEY, 'true');
+    }
+
+    function isUnlocked() {
+      if (!gatePassword()) return true;
+      return sessionStorage.getItem(UNLOCK_KEY) === 'true';
+    }
+
+    function showPicker() {
+      document.getElementById('pw-screen').classList.add('hidden');
+      document.getElementById('picker-ui').classList.add('visible');
+      document.title = `Curate ${group.title} — Raveen Fernando`;
+
+      document.getElementById('group-title').textContent = group.title;
+      document.getElementById('group-desc').textContent = group.description || '';
+
+      const grid = document.getElementById('album-grid');
+      const items = (group.subAlbums || [])
+        .map(id => ALBUMS.find(a => a.id === id))
+        .filter(a => a && !a.hidden);
+
+      items.forEach(album => {
+        if (album.type === 'group') {
+          const subCount = (album.subAlbums || []).length;
+          const card = document.createElement('a');
+          card.href = `curate-group.html?group=${album.id}${urlPw ? `&pw=${encodeURIComponent(urlPw)}` : ''}`;
+          card.className = 'picker-card';
+          card.innerHTML = `
+            <img src="${coverSrc(album)}" alt="${album.title}" loading="lazy" />
+            <div class="picker-card-body">
+              <h2 class="picker-card-title">${album.title}</h2>
+              <p class="picker-card-meta">${subCount} album${subCount !== 1 ? 's' : ''}</p>
+              <p class="picker-card-desc">${album.description || ''}</p>
+            </div>
+          `;
+          grid.appendChild(card);
+          return;
+        }
+
+        const count = photoCount(album);
+        const ready = count > 0;
+        const card = document.createElement('a');
+        card.href = ready ? `curate.html?album=${album.id}` : '#';
+        card.className = 'picker-card' + (ready ? '' : ' disabled');
+        card.innerHTML = `
+          <img src="${coverSrc(album)}" alt="${album.title}" loading="lazy" />
+          <div class="picker-card-body">
+            <h2 class="picker-card-title">${album.title}</h2>
+            <p class="picker-card-meta">${ready ? `${count} photos` : 'Coming soon'}</p>
+            <p class="picker-card-desc">${album.description || ''}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function init() {
+      if (!group) {
+        document.getElementById('pw-screen').innerHTML =
+          '<p style="color:var(--color-muted);font-size:0.9rem">Group not found.</p>';
+        return;
+      }
+
+      document.getElementById('pw-group-name').textContent = group.title;
+
+      if (urlPw && await tryUnlock(urlPw)) {
+        markUnlocked();
+        showPicker();
+        return;
+      }
+
+      if (isUnlocked()) {
+        showPicker();
+        return;
+      }
+
+      if (!gatePassword()) {
+        showPicker();
+        return;
+      }
+    }
+
+    document.getElementById('pw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('pw-input').value.trim();
+      if (await tryUnlock(pw)) {
+        markUnlocked();
+        showPicker();
+      } else {
+        const err = document.getElementById('pw-error');
+        err.textContent = 'Incorrect password.';
+        setTimeout(() => { err.textContent = ''; }, 3000);
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

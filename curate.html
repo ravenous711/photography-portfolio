@@ -324,6 +324,7 @@
   <div id="curate-ui" style="display:none">
 
     <div id="curate-header">
+      <a id="curate-back" href="#" style="display:none;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-muted);text-decoration:none;margin-bottom:0.75rem">← Back to albums</a>
       <h1 id="album-title">–</h1>
       <p id="album-desc"></p>
     </div>
@@ -512,6 +513,14 @@
 
       document.getElementById('album-title').textContent = album.title;
       document.getElementById('album-desc').textContent  = album.description || '';
+
+      if (album.parentId) {
+        const parent = (ALBUMS || []).find(a => a.id === album.parentId);
+        const back = document.getElementById('curate-back');
+        back.style.display = 'inline-block';
+        back.href = `curate-group.html?group=${album.parentId}`;
+        back.textContent = parent ? `← Back to ${parent.title}` : '← Back to albums';
+      }
 
       photoList = (album.photos || []).filter(u => !u.endsWith('.svg'));
       renderGrid(photoList);
