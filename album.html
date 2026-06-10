@@ -492,19 +492,24 @@
     }
 
     function loadLightboxImage(index) {
-      lightboxImg.classList.remove('loaded');
       const url = album.photos[index];
-      const tmp = new Image();
-      tmp.onload = () => {
-        lightboxImg.src = url;
-        lightboxImg.classList.add('loaded');
-      };
-      tmp.src = url;
-      counter.textContent = `${index + 1} / ${album.photos.length}`;
+      const grid = gridUrl(url);
 
-      // Show/hide nav arrows
+      counter.textContent = `${index + 1} / ${album.photos.length}`;
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
       document.getElementById('lightbox-next').style.visibility = index === album.photos.length - 1 ? 'hidden' : 'visible';
+
+      // Grid shows instantly; full-res swaps in when ready (often already preloaded)
+      lightboxImg.classList.add('loaded');
+      lightboxImg.src = grid;
+
+      ImagePreload.load(url).then(() => {
+        if (lightbox.classList.contains('open') && currentIndex === index) {
+          lightboxImg.src = url;
+        }
+      }).catch(() => {});
+
+      ImagePreload.preloadAdjacent(album.photos, index);
     }
 
     function lightboxNav(dir) {

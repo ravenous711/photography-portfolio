@@ -93,6 +93,31 @@ function gridUrl(fullUrl) {
 // alias kept for admin/curate call sites
 function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
+// Preload full-res images for instant lightbox navigation
+const ImagePreload = {
+  _cache: new Map(),
+
+  load(url) {
+    if (!url || this._cache.has(url)) return this._cache.get(url);
+    const p = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+    this._cache.set(url, p);
+    return p;
+  },
+
+  preloadAdjacent(urls, index, radius = 2) {
+    for (let o = -radius; o <= radius; o++) {
+      const i = index + o;
+      if (i >= 0 && i < urls.length) this.load(urls[i]).catch(() => {});
+    }
+  },
+};
+
 // ── Site-wide password gate ──
 const SiteAuth = {
   key: 'site_unlocked',

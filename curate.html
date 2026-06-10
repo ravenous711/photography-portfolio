@@ -454,6 +454,28 @@
       return m ? `${m[1]}grid/${m[2]}` : fullUrl;
     }
 
+    const ImagePreload = {
+      _cache: new Map(),
+      load(url) {
+        if (!url || this._cache.has(url)) return this._cache.get(url);
+        const p = new Promise((resolve, reject) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = url;
+        });
+        this._cache.set(url, p);
+        return p;
+      },
+      preloadAdjacent(urls, index, radius = 2) {
+        for (let o = -radius; o <= radius; o++) {
+          const i = index + o;
+          if (i >= 0 && i < urls.length) this.load(urls[i]).catch(() => {});
+        }
+      },
+    };
+
     // ── Render curation grid ────────────────────────────────────────────────
     function showCurate() {
       document.getElementById('pw-screen').classList.add('hidden');
@@ -627,25 +649,19 @@
         lightboxIndex === photoList.length - 1 ? 'hidden' : 'visible';
       syncLightboxVoteButtons();
 
-      img.classList.remove('loaded');
-      img.src = '';
-      spinner.style.display = 'block';
-
-      img.onload = () => { img.classList.add('loaded'); spinner.style.display = 'none'; };
+      spinner.style.display = 'none';
+      img.classList.add('loaded');
       img.onerror = () => { img.src = url; };
       img.src = grid;
 
-      const loader = new Image();
-      loader.onload = () => {
+      ImagePreload.load(url).then(() => {
         if (document.getElementById('lightbox').classList.contains('open') &&
             photoList[lightboxIndex] === url) {
           img.src = url;
-          img.classList.add('loaded');
-          spinner.style.display = 'none';
         }
-      };
-      loader.onerror = () => { spinner.style.display = 'none'; };
-      loader.src = url;
+      }).catch(() => {});
+
+      ImagePreload.preloadAdjacent(photoList, lightboxIndex);
     }
 
     function lightboxNav(dir) {
