@@ -303,6 +303,20 @@
         function loadImages() {
           if (imagesLoaded) return;
           imagesLoaded = true;
+
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (!entry.isIntersecting) return;
+              const img = entry.target.querySelector('img');
+              if (img && img.dataset.src) {
+                img.src = img.dataset.src;
+                delete img.dataset.src;
+                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+              }
+              observer.unobserve(entry.target);
+            });
+          }, { rootMargin: '200px' }); // start loading 200px before entering view
+
           photos.forEach(url => {
             const thumb = document.createElement('div');
             thumb.className = 'photo-thumb';
@@ -310,8 +324,8 @@
 
             const img = document.createElement('img');
             img.alt = '';
-            img.loading = 'eager';
             img.decoding = 'async';
+            img.dataset.src = url; // deferred — set by observer
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.objectFit = 'cover';
@@ -324,9 +338,7 @@
             thumb.appendChild(img);
             thumb.appendChild(overlay);
             grid.appendChild(thumb);
-
-            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-            img.src = url;
+            observer.observe(thumb);
 
             thumb.addEventListener('click', () => {
               if (thumb.classList.toggle('marked')) {
