@@ -303,13 +303,15 @@
         function loadImages() {
           if (imagesLoaded) return;
           imagesLoaded = true;
-          photos.forEach(url => {
+          photos.forEach((url, i) => {
             const thumb = document.createElement('div');
             thumb.className = 'photo-thumb';
             thumb.dataset.url = url;
 
             const img = document.createElement('img');
             img.alt = '';
+            img.loading = 'eager';
+            img.decoding = 'async';
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.objectFit = 'cover';
@@ -322,7 +324,9 @@
             thumb.appendChild(img);
             thumb.appendChild(overlay);
             grid.appendChild(thumb);
-            img.src = url; // set after DOM append to trigger immediate fetch
+
+            // Stagger src assignment in batches of 10 to avoid overwhelming R2
+            setTimeout(() => { img.src = url; }, Math.floor(i / 10) * 150);
 
             thumb.addEventListener('click', () => {
               if (thumb.classList.toggle('marked')) {
