@@ -57,26 +57,48 @@
     .photo-thumb.marked img { opacity: 0.4; }
 
     /* ── Album section ── */
-    .album-section { margin-bottom: 2.5rem; }
-    .album-section h2 {
+    .album-section { margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
+    .album-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.9rem 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .album-header:hover h2 { opacity: 0.7; }
+    .album-header h2 {
       font-family: var(--font-serif);
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 300;
       letter-spacing: 0.04em;
-      margin-bottom: 0.25rem;
+      margin: 0;
       color: var(--color-text);
+      transition: opacity 0.15s;
+      flex: 1;
     }
-    .album-section .album-meta {
-      font-size: 0.72rem;
+    .album-header .album-meta {
+      font-size: 0.7rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--color-muted);
-      margin-bottom: 1rem;
     }
+    .album-header .chevron {
+      width: 16px; height: 16px;
+      color: var(--color-muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .album-section.open .chevron { transform: rotate(180deg); }
+    .album-body {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease;
+    }
+    .album-section.open .album-body { max-height: 9999px; }
     .photo-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 6px;
+      padding-bottom: 1.25rem;
     }
 
     /* ── Buttons ── */
@@ -247,50 +269,75 @@
       }
 
       leafAlbums.forEach(album => {
+        const photos = (album.photos || []).filter(u => !u.endsWith('.svg'));
+        const badge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
+        const count = photos.length;
+
         const section = document.createElement('div');
         section.className = 'album-section';
 
-        const badge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
-        section.innerHTML = `
+        // Header (clickable)
+        const header = document.createElement('div');
+        header.className = 'album-header';
+        header.innerHTML = `
           <h2>${album.title}</h2>
-          <p class="album-meta">${album.description}${badge}</p>
-          <div class="photo-grid" id="grid-${album.id}"></div>
+          <span class="album-meta">${count} photo${count !== 1 ? 's' : ''}${badge}</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         `;
+
+        // Body (collapsible)
+        const body = document.createElement('div');
+        body.className = 'album-body';
+        const grid = document.createElement('div');
+        grid.className = 'photo-grid';
+        body.appendChild(grid);
+
+        section.appendChild(header);
+        section.appendChild(body);
         container.appendChild(section);
 
-        const grid = section.querySelector(`#grid-${album.id}`);
-        album.photos.forEach(url => {
-          if (url.endsWith('.svg')) return;
-          const thumb = document.createElement('div');
-          thumb.className = 'photo-thumb';
-          thumb.dataset.url = url;
+        let imagesLoaded = false;
 
-          const img = document.createElement('img');
-          img.alt = '';
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = 'cover';
-          img.style.display = 'block';
+        function loadImages() {
+          if (imagesLoaded) return;
+          imagesLoaded = true;
+          photos.forEach(url => {
+            const thumb = document.createElement('div');
+            thumb.className = 'photo-thumb';
+            thumb.dataset.url = url;
 
-          const overlay = document.createElement('div');
-          overlay.className = 'mark-overlay';
-          overlay.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+            const img = document.createElement('img');
+            img.alt = '';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
 
-          thumb.appendChild(img);
-          thumb.appendChild(overlay);
-          grid.appendChild(thumb);
+            const overlay = document.createElement('div');
+            overlay.className = 'mark-overlay';
+            overlay.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
-          // Set src after appending to DOM — forces immediate browser fetch
-          img.src = url;
+            thumb.appendChild(img);
+            thumb.appendChild(overlay);
+            grid.appendChild(thumb);
+            img.src = url; // set after DOM append to trigger immediate fetch
 
-          thumb.addEventListener('click', () => {
-            if (thumb.classList.toggle('marked')) {
-              selected.add(url);
-            } else {
-              selected.delete(url);
-            }
-            updateToolbar();
+            thumb.addEventListener('click', () => {
+              if (thumb.classList.toggle('marked')) {
+                selected.add(url);
+              } else {
+                selected.delete(url);
+              }
+              updateToolbar();
+            });
           });
+        }
+
+        header.addEventListener('click', () => {
+          section.classList.toggle('open');
+          if (section.classList.contains('open')) loadImages();
         });
       });
     }
