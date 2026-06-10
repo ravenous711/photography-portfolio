@@ -131,6 +131,26 @@
     }
     .btn-ghost:hover { color: var(--color-text); border-color: var(--color-text); }
 
+    /* ── Lightbox ── */
+    #lightbox {
+      position: fixed; inset: 0; z-index: 800;
+      background: rgba(0,0,0,0.92);
+      display: none; align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 92vw; max-height: 90vh;
+      object-fit: contain; border-radius: 2px; cursor: default;
+    }
+    #lightbox-close {
+      position: absolute; top: 1.25rem; right: 1.5rem;
+      color: rgba(255,255,255,0.7); font-size: 1.75rem;
+      cursor: pointer; line-height: 1; background: none; border: none;
+      transition: color 0.15s;
+    }
+    #lightbox-close:hover { color: white; }
+
     /* ── Toast ── */
     #toast {
       position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
@@ -254,6 +274,12 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- ── Lightbox ── -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
   </div>
 
   <!-- ── Toast notification ── -->
@@ -417,7 +443,9 @@
             grid.appendChild(thumb);
             observer.observe(thumb);
 
-            thumb.addEventListener('click', () => {
+            thumb.addEventListener('click', (e) => {
+              // Click image area → open lightbox; click elsewhere → toggle selection
+              if (e.target === img) { openLightbox(url); return; }
               if (thumb.classList.toggle('marked')) {
                 selected.add(url);
               } else {
@@ -425,6 +453,7 @@
               }
               updateToolbar();
             });
+            img.style.cursor = 'zoom-in';
           });
         }
 
@@ -506,6 +535,17 @@
       el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), duration);
     }
+
+    // ── Lightbox ─────────────────────────────────────────────────────────────
+    function openLightbox(url) {
+      document.getElementById('lightbox-img').src = url;
+      document.getElementById('lightbox').classList.add('open');
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+      document.getElementById('lightbox-img').src = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
     // ── Tab switching ─────────────────────────────────────────────────────────
     let curationLoaded = false;
@@ -633,9 +673,11 @@
           row.appendChild(cutBadge);
           list.appendChild(row);
 
-          // Clicking the row (not checkbox) toggles checkbox
+          // Click image → lightbox; click row → toggle checkbox
+          img.style.cursor = 'zoom-in';
           row.addEventListener('click', (e) => {
             if (e.target === cb) return;
+            if (e.target === img) { openLightbox(photoUrl); return; }
             cb.checked = !cb.checked;
             cb.onchange();
           });

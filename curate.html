@@ -192,6 +192,29 @@
       letter-spacing: 0.06em;
     }
 
+    /* ── Lightbox ── */
+    #lightbox {
+      position: fixed; inset: 0; z-index: 800;
+      background: rgba(0,0,0,0.92);
+      display: none; align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 92vw; max-height: 90vh;
+      object-fit: contain;
+      border-radius: 2px;
+      cursor: default;
+    }
+    #lightbox-close {
+      position: absolute; top: 1.25rem; right: 1.5rem;
+      color: rgba(255,255,255,0.7); font-size: 1.75rem;
+      cursor: pointer; line-height: 1; background: none; border: none;
+      transition: color 0.15s;
+    }
+    #lightbox-close:hover { color: white; }
+    .curate-card .photo-wrap { cursor: zoom-in; }
+
     /* ── Toast ── */
     #toast {
       position: fixed; bottom: 6rem; left: 50%; transform: translateX(-50%);
@@ -251,6 +274,12 @@
       <button id="submit-btn" disabled onclick="submitVotes()">Submit Votes</button>
     </div>
 
+  </div>
+
+  <!-- ── Lightbox ── -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
   </div>
 
   <div id="toast"></div>
@@ -374,6 +403,9 @@
         const btns = document.createElement('div');
         btns.className = 'vote-buttons';
 
+        // Open full-res on photo click
+        wrap.addEventListener('click', () => openLightbox(url));
+
         const keepBtn = document.createElement('button');
         keepBtn.className = 'vote-btn keep';
         keepBtn.textContent = '✓ Keep';
@@ -456,6 +488,20 @@
       document.getElementById('submit-bar').style.display = 'none';
       document.getElementById('thanks-screen').classList.add('visible');
     }
+
+    function openLightbox(url) {
+      const lb = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = url;
+      lb.classList.add('open');
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+      document.getElementById('lightbox-img').src = '';
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
 
     function showToast(msg) {
       const t = document.getElementById('toast');
