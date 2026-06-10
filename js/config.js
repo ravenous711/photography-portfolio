@@ -155,6 +155,13 @@ const ALBUMS = [
       `${R2_BASE_URL}/test/test_1.jpg`,
       `${R2_BASE_URL}/test/test_2.jpg`,
       `${R2_BASE_URL}/test/test_3.jpg`,
+      `${R2_BASE_URL}/test/test_4.jpg`,
+      `${R2_BASE_URL}/test/test_5.jpg`,
+      `${R2_BASE_URL}/test/test_6.jpg`,
+      `${R2_BASE_URL}/test/test_7.jpg`,
+      `${R2_BASE_URL}/test/test_8.jpg`,
+      `${R2_BASE_URL}/test/test_9.jpg`,
+      `${R2_BASE_URL}/test/test_10.jpg`,
     ],
   },
 
