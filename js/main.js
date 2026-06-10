@@ -113,8 +113,24 @@ const ImagePreload = {
   preloadAdjacent(urls, index, radius = 2) {
     for (let o = -radius; o <= radius; o++) {
       const i = index + o;
-      if (i >= 0 && i < urls.length) this.load(urls[i]).catch(() => {});
+      if (i >= 0 && i < urls.length) {
+        const u = urls[i];
+        this.load(u).catch(() => {});
+        this.load(gridUrl(u)).catch(() => {});
+      }
     }
+  },
+
+  async apply(imgEl, src) {
+    await this.load(src);
+    imgEl.src = src;
+    if (!imgEl.complete) {
+      await new Promise((resolve, reject) => {
+        imgEl.onload = () => resolve();
+        imgEl.onerror = reject;
+      });
+    }
+    try { await imgEl.decode(); } catch (_) {}
   },
 };
 

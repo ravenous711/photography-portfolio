@@ -487,6 +487,27 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 
 #lightbox-img.loaded { opacity: 1; }
 
+#lightbox-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90vw;
+  height: 90vh;
+}
+
+#lightbox-stage .lightbox-layer {
+  position: absolute;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  display: block;
+  border: 1px solid rgba(255,255,255,0.05);
+  opacity: 0;
+}
+
+#lightbox-stage .lightbox-layer.active { opacity: 1; }
+
 #lightbox-close {
   position: absolute;
   top: 1.5rem;

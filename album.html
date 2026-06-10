@@ -159,7 +159,10 @@
       </svg>
     </button>
 
-    <img id="lightbox-img" src="" alt="Photo" />
+    <div id="lightbox-stage">
+      <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
+      <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
+    </div>
 
     <button class="lightbox-nav" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -475,8 +478,34 @@
     // LIGHTBOX
     // ════════════════════════════════════════════════════════
     const lightbox    = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxLayers = [
+      document.getElementById('lightbox-img-a'),
+      document.getElementById('lightbox-img-b'),
+    ];
+    let activeLayer = 0;
     const counter     = document.getElementById('lightbox-counter');
+
+    async function swapLightboxImage(src, fullResUrl, index) {
+      const nextLayer = 1 - activeLayer;
+      const nextImg = lightboxLayers[nextLayer];
+      await ImagePreload.apply(nextImg, src);
+      if (!lightbox.classList.contains('open') || currentIndex !== index) return;
+      lightboxLayers[activeLayer].classList.remove('active');
+      nextImg.classList.add('active');
+      activeLayer = nextLayer;
+
+      if (fullResUrl && fullResUrl !== src) {
+        ImagePreload.load(fullResUrl).then(async () => {
+          if (!lightbox.classList.contains('open') || currentIndex !== index) return;
+          const upgradeLayer = 1 - activeLayer;
+          await ImagePreload.apply(lightboxLayers[upgradeLayer], fullResUrl);
+          if (!lightbox.classList.contains('open') || currentIndex !== index) return;
+          lightboxLayers[activeLayer].classList.remove('active');
+          lightboxLayers[upgradeLayer].classList.add('active');
+          activeLayer = upgradeLayer;
+        }).catch(() => {});
+      }
+    }
 
     function openLightbox(index) {
       currentIndex = index;
@@ -488,7 +517,11 @@
     function closeLightbox() {
       lightbox.classList.remove('open');
       document.body.style.overflow = '';
-      lightboxImg.classList.remove('loaded');
+      lightboxLayers.forEach(layer => {
+        layer.classList.remove('active');
+        layer.src = '';
+      });
+      activeLayer = 0;
     }
 
     function loadLightboxImage(index) {
@@ -499,16 +532,7 @@
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
       document.getElementById('lightbox-next').style.visibility = index === album.photos.length - 1 ? 'hidden' : 'visible';
 
-      // Grid shows instantly; full-res swaps in when ready (often already preloaded)
-      lightboxImg.classList.add('loaded');
-      lightboxImg.src = grid;
-
-      ImagePreload.load(url).then(() => {
-        if (lightbox.classList.contains('open') && currentIndex === index) {
-          lightboxImg.src = url;
-        }
-      }).catch(() => {});
-
+      swapLightboxImage(grid, url, index);
       ImagePreload.preloadAdjacent(album.photos, index);
     }
 

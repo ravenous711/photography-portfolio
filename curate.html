@@ -205,13 +205,20 @@
       max-width: 96vw; max-height: 96vh;
       cursor: default;
     }
-    #lightbox img {
+    #lightbox-stage {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      width: 92vw; height: calc(90vh - 100px);
+    }
+    #lightbox-stage .lightbox-layer {
+      position: absolute;
       max-width: 92vw; max-height: calc(90vh - 100px);
       object-fit: contain;
       border-radius: 2px;
       cursor: default;
-      transition: filter 0.3s;
+      opacity: 0;
     }
+    #lightbox-stage .lightbox-layer.active { opacity: 1; }
     #lightbox-spinner {
       position: absolute;
       width: 32px; height: 32px;
@@ -276,9 +283,6 @@
       #lightbox-shortcuts { display: none; }
     }
     .curate-card .photo-wrap { cursor: zoom-in; }
-
-    /* override global style.css — curate lightbox img visible when loaded */
-    #lightbox.open #lightbox-img.loaded { opacity: 1; }
 
     /* ── Toast ── */
     #toast {
@@ -350,7 +354,10 @@
 
     <div id="lightbox-inner" onclick="event.stopPropagation()">
       <div id="lightbox-spinner"></div>
-      <img id="lightbox-img" src="" alt="" />
+      <div id="lightbox-stage">
+        <img id="lightbox-img-a" class="lightbox-layer" alt="" />
+        <img id="lightbox-img-b" class="lightbox-layer" alt="" />
+      </div>
       <p id="lightbox-counter"></p>
       <div id="lightbox-vote">
         <button type="button" class="vote-btn keep" id="lb-keep">✓ Keep</button>
@@ -405,6 +412,11 @@
     const votes = {};
     let photoList = [];
     let lightboxIndex = 0;
+    let activeLayer = 0;
+    const lightboxLayers = [
+      document.getElementById('lightbox-img-a'),
+      document.getElementById('lightbox-img-b'),
+    ];
     const cardRegistry = new Map(); // url → { card, keepBtn, cutBtn }
 
     // ── Auth ────────────────────────────────────────────────────────────────
@@ -471,8 +483,23 @@
       preloadAdjacent(urls, index, radius = 2) {
         for (let o = -radius; o <= radius; o++) {
           const i = index + o;
-          if (i >= 0 && i < urls.length) this.load(urls[i]).catch(() => {});
+          if (i >= 0 && i < urls.length) {
+            const u = urls[i];
+            this.load(u).catch(() => {});
+            this.load(gridUrl(u)).catch(() => {});
+          }
         }
+      },
+      async apply(imgEl, src) {
+        await this.load(src);
+        imgEl.src = src;
+        if (!imgEl.complete) {
+          await new Promise((resolve, reject) => {
+            imgEl.onload = () => resolve();
+            imgEl.onerror = reject;
+          });
+        }
+        try { await imgEl.decode(); } catch (_) {}
       },
     };
 
@@ -628,6 +655,36 @@
       document.getElementById('thanks-screen').classList.add('visible');
     }
 
+    async function swapLightboxImage(src, fullResUrl, index) {
+      const spinner = document.getElementById('lightbox-spinner');
+      const nextLayer = 1 - activeLayer;
+      const nextImg = lightboxLayers[nextLayer];
+
+      try {
+        await ImagePreload.apply(nextImg, src);
+      } catch {
+        if (fullResUrl) await ImagePreload.apply(nextImg, fullResUrl);
+      }
+      if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
+
+      lightboxLayers[activeLayer].classList.remove('active');
+      nextImg.classList.add('active');
+      activeLayer = nextLayer;
+      spinner.style.display = 'none';
+
+      if (fullResUrl && fullResUrl !== src) {
+        ImagePreload.load(fullResUrl).then(async () => {
+          if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
+          const upgradeLayer = 1 - activeLayer;
+          await ImagePreload.apply(lightboxLayers[upgradeLayer], fullResUrl);
+          if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
+          lightboxLayers[activeLayer].classList.remove('active');
+          lightboxLayers[upgradeLayer].classList.add('active');
+          activeLayer = upgradeLayer;
+        }).catch(() => {});
+      }
+    }
+
     function openLightbox(url) {
       lightboxIndex = photoList.indexOf(url);
       if (lightboxIndex < 0) return;
@@ -637,9 +694,7 @@
 
     function loadLightboxPhoto() {
       const url = photoList[lightboxIndex];
-      const img     = document.getElementById('lightbox-img');
-      const spinner = document.getElementById('lightbox-spinner');
-      const grid    = gridUrl(url);
+      const grid = gridUrl(url);
 
       document.getElementById('lightbox-counter').textContent =
         `${lightboxIndex + 1} / ${photoList.length}`;
@@ -649,18 +704,7 @@
         lightboxIndex === photoList.length - 1 ? 'hidden' : 'visible';
       syncLightboxVoteButtons();
 
-      spinner.style.display = 'none';
-      img.classList.add('loaded');
-      img.onerror = () => { img.src = url; };
-      img.src = grid;
-
-      ImagePreload.load(url).then(() => {
-        if (document.getElementById('lightbox').classList.contains('open') &&
-            photoList[lightboxIndex] === url) {
-          img.src = url;
-        }
-      }).catch(() => {});
-
+      swapLightboxImage(grid, url, lightboxIndex);
       ImagePreload.preloadAdjacent(photoList, lightboxIndex);
     }
 
@@ -673,9 +717,11 @@
 
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('open');
-      const img = document.getElementById('lightbox-img');
-      img.src = '';
-      img.classList.remove('loaded');
+      lightboxLayers.forEach(layer => {
+        layer.classList.remove('active');
+        layer.src = '';
+      });
+      activeLayer = 0;
       document.getElementById('lightbox-spinner').style.display = 'none';
     }
 
