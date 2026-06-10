@@ -205,7 +205,18 @@
       object-fit: contain;
       border-radius: 2px;
       cursor: default;
+      transition: filter 0.3s;
     }
+    #lightbox-spinner {
+      position: absolute;
+      width: 32px; height: 32px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     #lightbox-close {
       position: absolute; top: 1.25rem; right: 1.5rem;
       color: rgba(255,255,255,0.7); font-size: 1.75rem;
@@ -279,6 +290,7 @@
   <!-- ── Lightbox ── -->
   <div id="lightbox" onclick="closeLightbox()">
     <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <div id="lightbox-spinner"></div>
     <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
   </div>
 
@@ -490,14 +502,29 @@
     }
 
     function openLightbox(url) {
-      const lb = document.getElementById('lightbox');
-      const img = document.getElementById('lightbox-img');
-      img.src = url;
+      const lb      = document.getElementById('lightbox');
+      const img     = document.getElementById('lightbox-img');
+      const spinner = document.getElementById('lightbox-spinner');
+
+      img.src = '';
+      img.classList.remove('loading');
+      spinner.style.display = 'block';
       lb.classList.add('open');
+
+      const loader = new Image();
+      loader.onload = () => {
+        if (lb.classList.contains('open')) {
+          img.src = url;
+          spinner.style.display = 'none';
+        }
+      };
+      loader.onerror = () => { spinner.style.display = 'none'; };
+      loader.src = url;
     }
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('open');
       document.getElementById('lightbox-img').src = '';
+      document.getElementById('lightbox-spinner').style.display = 'none';
     }
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeLightbox();
