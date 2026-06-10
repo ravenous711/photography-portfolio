@@ -145,6 +145,40 @@ Vercel auto-deploys within ~30 seconds.
 
 ---
 
+---
+
+## Admin Panel (`/admin.html`)
+
+Password-protected panel for deleting photos from R2 and the live site.
+
+### How it works
+1. Go to `/admin.html` and log in with the admin password
+2. Expand an album, click photos to mark them for deletion (they go red)
+3. Hit **Commit Deletions** — this deletes from R2 and auto-updates `config.js` via GitHub API, triggering a Vercel redeploy
+
+### Required Vercel environment variables
+| Variable | Description |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with R2 write access |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (`723c27febd4a099c7884fdf00de2329f`) |
+| `GITHUB_TOKEN` | GitHub personal access token with `repo` scope |
+| `GITHUB_REPO` | e.g. `ravenous711/photography-portfolio` |
+| `ADMIN_PASSWORD_HASH` | SHA-256 hash of your admin password |
+
+### ⚠️ Fixing a broken GitHub token (config.js stops updating after deletions)
+
+GitHub personal access tokens expire. If deletions stop updating `config.js` automatically:
+
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens) → **Generate new token (classic)**
+2. Give it `repo` scope and set expiry to at least 1 year
+3. Copy the new token
+4. Go to your [Vercel project](https://vercel.com) → **Settings → Environment Variables**
+5. Update the `GITHUB_TOKEN` value with the new token
+6. Trigger a redeploy (any new push to `main` will do)
+7. Test by deleting a photo from the **Delete Test** album and confirming `config.js` updates on GitHub
+
+---
+
 ## Notes
 - The hero tagline **"Capturing light, emotion, and the quiet beauty of the world."** has been removed from the live site but is still stored in `SITE_CONFIG.tagline` in `js/config.js` in case you want to bring it back.
 - About and Contact pages (`about.html`, `contact.html`) were removed. They still exist in the git history if needed.
