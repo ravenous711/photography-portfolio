@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Raveen Fernando</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
+  <style>
+    /* ── Auth screen ── */
+    #auth-screen {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--color-bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; padding: 2rem; text-align: center;
+    }
+    #auth-screen.hidden { display: none; }
+
+    /* ── Toolbar ── */
+    #toolbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--nav-scrolled-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0.75rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Photo grid ── */
+    .photo-thumb {
+      position: relative; cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 2px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+      aspect-ratio: 1;
+      background: var(--color-surface);
+    }
+    .photo-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.15s;
+    }
+    .photo-thumb .mark-overlay {
+      position: absolute; inset: 0;
+      background: rgba(220, 38, 38, 0.7);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .photo-thumb.marked {
+      border-color: rgb(220, 38, 38);
+    }
+    .photo-thumb.marked .mark-overlay { opacity: 1; }
+    .photo-thumb.marked img { opacity: 0.4; }
+
+    /* ── Album section ── */
+    .album-section { margin-bottom: 2.5rem; }
+    .album-section h2 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--color-text);
+    }
+    .album-section .album-meta {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 1rem;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 6px;
+    }
+
+    /* ── Buttons ── */
+    .btn-danger {
+      background: rgb(220, 38, 38);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      border-radius: 2px;
+    }
+    .btn-danger:hover { opacity: 0.85; }
+    .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-muted);
+      border: 1px solid var(--color-border);
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      border-radius: 2px;
+    }
+    .btn-ghost:hover { color: var(--color-text); border-color: var(--color-text); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      background: var(--color-text); color: var(--color-bg);
+      padding: 0.75rem 1.5rem;
+      font-size: 0.8rem; letter-spacing: 0.06em;
+      border-radius: 2px; z-index: 500;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+  </style>
+</head>
+<body class="overflow-x-hidden">
+
+  <!-- ── Auth Screen ── -->
+  <div id="auth-screen">
+    <p style="font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--color-muted);margin-bottom:0.75rem">Admin Access</p>
+    <p style="font-family:var(--font-serif);font-size:2rem;font-weight:300;letter-spacing:0.08em;margin-bottom:2.5rem" id="auth-site-name">–</p>
+    <form id="auth-form" novalidate style="width:100%;max-width:320px">
+      <input id="auth-input" type="password" placeholder="Admin password"
+        autocomplete="current-password"
+        style="width:100%;background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.75rem 1rem;margin-bottom:0.5rem;font-family:var(--font-sans);font-size:0.9rem;letter-spacing:0.1em;text-align:center;outline:none;transition:border-color 0.2s;border-radius:2px"
+        onfocus="this.style.borderColor='var(--color-text)'"
+        onblur="this.style.borderColor='var(--color-border)'"
+      />
+      <p id="auth-error" style="color:#f87171;font-size:0.8rem;min-height:1.2rem;margin-bottom:0.5rem;text-align:center"></p>
+      <button type="submit" style="width:100%;background:var(--color-text);color:var(--color-bg);border:none;padding:0.75rem;font-family:var(--font-sans);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s;border-radius:2px" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+        Enter
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Main Admin UI (hidden until auth) ── -->
+  <div id="admin-ui" style="display:none">
+
+    <!-- ── Toolbar ── -->
+    <div id="toolbar">
+      <span style="font-family:var(--font-serif);font-size:1.1rem;letter-spacing:0.06em;color:var(--color-text);flex:1">Admin</span>
+      <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
+      <button class="btn-ghost" onclick="clearSelection()">Clear</button>
+      <button class="btn-danger" id="commit-btn" disabled onclick="commitDeletions()">Commit Deletions</button>
+    </div>
+
+    <!-- ── Album list ── -->
+    <main style="padding: 2rem 1.5rem 4rem">
+      <div id="album-list"></div>
+    </main>
+
+  </div>
+
+  <!-- ── Toast notification ── -->
+  <div id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script>
+    // ── Auth ────────────────────────────────────────────────────────────────
+    document.getElementById('auth-site-name').textContent = SITE_CONFIG.photographerName;
+
+    const SESSION_KEY = 'admin_unlocked';
+
+    async function hashPassword(pw) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+      showAdminUI();
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('auth-input').value.trim();
+      if (!pw) return;
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Checking…'; btn.disabled = true;
+
+      const hash = await hashPassword(pw);
+      if (hash === SITE_CONFIG.adminPasswordHash) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        showAdminUI();
+      } else {
+        document.getElementById('auth-error').textContent = 'Incorrect password.';
+        const input = document.getElementById('auth-input');
+        input.value = '';
+        input.style.animation = 'shake 0.4s ease';
+        input.addEventListener('animationend', () => { input.style.animation = ''; }, { once: true });
+        btn.textContent = 'Enter'; btn.disabled = false;
+      }
+    });
+
+    function showAdminUI() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('admin-ui').style.display = 'block';
+      renderAlbums();
+    }
+
+    // ── Selection state ──────────────────────────────────────────────────────
+    const selected = new Set();
+
+    function updateToolbar() {
+      const count = selected.size;
+      document.getElementById('selection-count').textContent =
+        count === 0 ? '0 selected' : `${count} photo${count !== 1 ? 's' : ''} selected`;
+      document.getElementById('commit-btn').disabled = count === 0;
+    }
+
+    function clearSelection() {
+      selected.clear();
+      document.querySelectorAll('.photo-thumb.marked').forEach(el => el.classList.remove('marked'));
+      updateToolbar();
+    }
+
+    // ── Render ───────────────────────────────────────────────────────────────
+    function renderAlbums() {
+      const container = document.getElementById('album-list');
+
+      // Flatten all albums with actual photos (skip groups, skip placeholder SVG)
+      const leafAlbums = ALBUMS.filter(a =>
+        a.type !== 'group' &&
+        Array.isArray(a.photos) &&
+        a.photos.length > 0 &&
+        !a.photos.every(p => p.endsWith('.svg'))
+      );
+
+      if (leafAlbums.length === 0) {
+        container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No albums with photos found.</p>';
+        return;
+      }
+
+      leafAlbums.forEach(album => {
+        const section = document.createElement('div');
+        section.className = 'album-section';
+
+        const badge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
+        section.innerHTML = `
+          <h2>${album.title}</h2>
+          <p class="album-meta">${album.description}${badge}</p>
+          <div class="photo-grid" id="grid-${album.id}"></div>
+        `;
+        container.appendChild(section);
+
+        const grid = section.querySelector(`#grid-${album.id}`);
+        album.photos.forEach(url => {
+          if (url.endsWith('.svg')) return;
+          const thumb = document.createElement('div');
+          thumb.className = 'photo-thumb';
+          thumb.dataset.url = url;
+          thumb.innerHTML = `
+            <img src="${url}" loading="lazy" alt="" />
+            <div class="mark-overlay">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          `;
+          thumb.addEventListener('click', () => {
+            if (thumb.classList.toggle('marked')) {
+              selected.add(url);
+            } else {
+              selected.delete(url);
+            }
+            updateToolbar();
+          });
+          grid.appendChild(thumb);
+        });
+      });
+    }
+
+    // ── Commit Deletions ─────────────────────────────────────────────────────
+    async function commitDeletions() {
+      if (selected.size === 0) return;
+
+      const confirmMsg = `Permanently delete ${selected.size} photo${selected.size !== 1 ? 's' : ''} from R2 and remove from config.js?\n\nThis cannot be undone.`;
+      if (!confirm(confirmMsg)) return;
+
+      const btn = document.getElementById('commit-btn');
+      btn.textContent = 'Deleting…'; btn.disabled = true;
+
+      const pw = sessionStorage.getItem('_admin_pw_hash');
+
+      // Re-hash is stored separately below; we need the hash to send to the API.
+      // Prompt for password to re-derive hash (we don't store the plaintext).
+      const rawPw = prompt('Re-enter admin password to confirm:');
+      if (!rawPw) { btn.textContent = 'Commit Deletions'; btn.disabled = false; return; }
+
+      const passwordHash = await hashPassword(rawPw);
+      if (passwordHash !== SITE_CONFIG.adminPasswordHash) {
+        showToast('Incorrect password — deletion cancelled.');
+        btn.textContent = 'Commit Deletions'; btn.disabled = false;
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passwordHash, urls: Array.from(selected) }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(`Error: ${data.error || res.statusText}`);
+          btn.textContent = 'Commit Deletions'; btn.disabled = false;
+          return;
+        }
+
+        const { deleted, deleteFailed, configUpdated, configError } = data;
+        let msg = `Deleted ${deleted.length} photo${deleted.length !== 1 ? 's' : ''} from R2.`;
+        if (deleteFailed.length > 0) msg += ` ${deleteFailed.length} failed.`;
+        if (configUpdated) msg += ' config.js updated — Vercel redeploying.';
+        if (configError) msg += ` Config note: ${configError}`;
+
+        showToast(msg, 6000);
+        clearSelection();
+
+        // Remove deleted thumbs from DOM
+        deleted.forEach(key => {
+          const url = `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/${key}`;
+          const thumb = document.querySelector(`.photo-thumb[data-url="${CSS.escape(url)}"]`) ||
+                        document.querySelector(`.photo-thumb[data-url="${url}"]`);
+          if (thumb) thumb.remove();
+        });
+
+      } catch (err) {
+        showToast(`Request failed: ${err.message}`);
+      }
+
+      btn.textContent = 'Commit Deletions';
+      btn.disabled = selected.size === 0;
+    }
+
+    // ── Toast ────────────────────────────────────────────────────────────────
+    function showToast(msg, duration = 4000) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), duration);
+    }
+  </script>
+</body>
+</html>
