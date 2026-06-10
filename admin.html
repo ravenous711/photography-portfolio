@@ -309,13 +309,13 @@
 
   <script src="js/config.js"></script>
   <script>
-    const THUMB_PROXY = 'https://portfolio-image-proxy.raveenfernando.workers.dev';
     const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
 
-    function thumbUrl(fullUrl) {
-      const key = fullUrl.replace(R2_BASE_PATTERN, '');
-      return `${THUMB_PROXY}?key=${encodeURIComponent(key)}&w=400`;
+    function gridUrl(fullUrl) {
+      const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+      return m ? `${m[1]}grid/${m[2]}` : fullUrl;
     }
+    function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
     // ── Auth ────────────────────────────────────────────────────────────────
     document.getElementById('auth-site-name').textContent = SITE_CONFIG.photographerName;
