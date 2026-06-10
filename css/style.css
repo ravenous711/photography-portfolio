@@ -222,11 +222,11 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 
 #main-nav:not(.nav-scrolled) .nav-links a:hover,
 #main-nav:not(.nav-scrolled) .nav-links a.nav-active {
-  color: #fff;
+  color: #e8d5a8;
 }
 
 #main-nav:not(.nav-scrolled) .nav-links a::after {
-  background: #fff;
+  background: #c9a96e;
 }
 
 #main-nav:not(.nav-scrolled) .bar {
@@ -297,7 +297,7 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 .hero-divider {
   width: 40px;
   height: 1px;
-  background: rgba(255,255,255,0.75);
+  background: #c9a96e;
   margin: 1.5rem auto;
 }
 
@@ -682,22 +682,19 @@ textarea.form-field {
   color: #000;
 }
 
-/* Hero CTA — solid white pill, must follow .btn-primary */
+/* Hero CTA — gold fill for contrast + brand color */
 .hero .btn-primary {
-  background: #fff;
-  border: 2px solid #fff;
+  background: #c9a96e;
+  border: 2px solid #c9a96e;
   color: #1a1a1a;
   font-weight: 500;
-  font-size: 0.8rem;
-  padding: 0.9rem 2.25rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .hero .btn-primary:hover {
-  background: rgba(255,255,255,0.92);
-  border-color: #fff;
+  background: #dfc088;
+  border-color: #dfc088;
   color: #1a1a1a;
-  box-shadow: 0 6px 28px rgba(0,0,0,0.45);
 }
 
 .btn-ghost {
