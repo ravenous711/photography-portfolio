@@ -188,11 +188,12 @@
         const card = document.createElement('a');
         card.href = href;
         card.className = 'album-card fade-in visible';
+        const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
         card.innerHTML = `
           <img class="album-card-img"
                src="${album.coverImage}"
                alt="${album.title}"
-               loading="lazy" />
+               loading="lazy"${posStyle} />
           <div class="album-card-overlay">
             <h2 class="album-card-title">${album.title}</h2>
             <p class="album-card-meta">${meta}</p>

@@ -110,11 +110,12 @@
       card.href = href;
       card.className = 'album-card fade-in';
       card.dataset.type = album.protected ? 'private' : 'public';
+      const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
       card.innerHTML = `
         <img class="album-card-img"
              src="${album.coverImage}"
              alt="${album.title}"
-             loading="lazy" />
+             loading="lazy"${posStyle} />
         <div class="album-card-overlay">
           ${album.protected ? `
             <div class="album-card-lock">

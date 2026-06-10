@@ -133,8 +133,9 @@
       const meta = isGroup
         ? `${album.subAlbums.length} Albums`
         : `${album.photos.length} Photos`;
+      const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
       card.innerHTML = `
-        <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}" />
+        <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
         <div class="album-card-overlay">
           <h3 class="album-card-title">${album.title}</h3>
           <p class="album-card-meta">${meta}</p>

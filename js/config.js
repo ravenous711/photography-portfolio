@@ -514,6 +514,7 @@ const ALBUMS = [
     description: 'Florence, 1–2 June 2026.',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
+    coverPosition: '50% 35%',
     photos: [
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_006.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_016.jpg`,
@@ -580,6 +581,7 @@ const ALBUMS = [
     description: 'Pisa, 1 June 2026.',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
+    coverPosition: '50% 35%',
     photos: [
       `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_005.jpg`,
       `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_007.jpg`,

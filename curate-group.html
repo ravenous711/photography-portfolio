@@ -206,8 +206,9 @@
           const card = document.createElement('a');
           card.href = `curate-group.html?group=${album.id}${urlPw ? `&pw=${encodeURIComponent(urlPw)}` : ''}`;
           card.className = 'picker-card';
+          const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
           card.innerHTML = `
-            <img src="${coverSrc(album)}" alt="${album.title}" loading="lazy" />
+            <img src="${coverSrc(album)}" alt="${album.title}" loading="lazy"${posStyle} />
             <div class="picker-card-body">
               <h2 class="picker-card-title">${album.title}</h2>
               <p class="picker-card-meta">${subCount} album${subCount !== 1 ? 's' : ''}</p>
@@ -223,8 +224,9 @@
         const card = document.createElement('a');
         card.href = ready ? `curate.html?album=${album.id}` : '#';
         card.className = 'picker-card' + (ready ? '' : ' disabled');
+        const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
         card.innerHTML = `
-          <img src="${coverSrc(album)}" alt="${album.title}" loading="lazy" />
+          <img src="${coverSrc(album)}" alt="${album.title}" loading="lazy"${posStyle} />
           <div class="picker-card-body">
             <h2 class="picker-card-title">${album.title}</h2>
             <p class="picker-card-meta">${ready ? `${count} photos` : 'Coming soon'}</p>
