@@ -264,14 +264,25 @@
           const thumb = document.createElement('div');
           thumb.className = 'photo-thumb';
           thumb.dataset.url = url;
-          thumb.innerHTML = `
-            <img src="${url}" loading="eager" alt="" />
-            <div class="mark-overlay">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </div>
-          `;
+
+          const img = document.createElement('img');
+          img.alt = '';
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.display = 'block';
+
+          const overlay = document.createElement('div');
+          overlay.className = 'mark-overlay';
+          overlay.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+          thumb.appendChild(img);
+          thumb.appendChild(overlay);
+          grid.appendChild(thumb);
+
+          // Set src after appending to DOM — forces immediate browser fetch
+          img.src = url;
+
           thumb.addEventListener('click', () => {
             if (thumb.classList.toggle('marked')) {
               selected.add(url);
@@ -280,7 +291,6 @@
             }
             updateToolbar();
           });
-          grid.appendChild(thumb);
         });
       });
     }
