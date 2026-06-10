@@ -194,6 +194,14 @@
 
   <script src="js/config.js"></script>
   <script>
+    const THUMB_PROXY = 'https://portfolio-image-proxy.raveenfernando.workers.dev';
+    const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
+
+    function thumbUrl(fullUrl) {
+      const key = fullUrl.replace(R2_BASE_PATTERN, '');
+      return `${THUMB_PROXY}?key=${encodeURIComponent(key)}&w=400`;
+    }
+
     // ── Auth ────────────────────────────────────────────────────────────────
     document.getElementById('auth-site-name').textContent = SITE_CONFIG.photographerName;
 
@@ -309,7 +317,7 @@
               if (!entry.isIntersecting) return;
               const img = entry.target.querySelector('img');
               if (img && img.dataset.src) {
-                img.src = img.dataset.src;
+                img.src = thumbUrl(img.dataset.src);
                 delete img.dataset.src;
                 img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
               }
