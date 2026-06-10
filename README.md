@@ -14,7 +14,6 @@ A minimalist static photography portfolio site built with HTML, Tailwind CSS, an
 | Gate | Password |
 |---|---|
 | Site preview | `preview2026` |
-| Italy Film group | `film-test` |
 | Joel Birthday 2025 | `joeli-oli-ravioli` |
 
 To change any password, generate a new SHA-256 hash and update `js/config.js`:
