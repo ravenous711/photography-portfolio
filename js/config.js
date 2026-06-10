@@ -160,8 +160,6 @@ const ALBUMS = [
       `${R2_BASE_URL}/test/test_6.jpg`,
       `${R2_BASE_URL}/test/test_7.jpg`,
       `${R2_BASE_URL}/test/test_8.jpg`,
-      `${R2_BASE_URL}/test/test_9.jpg`,
-      `${R2_BASE_URL}/test/test_10.jpg`,
     ],
   },
 
