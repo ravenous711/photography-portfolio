@@ -226,6 +226,9 @@
     #lightbox-close:hover { color: white; }
     .curate-card .photo-wrap { cursor: zoom-in; }
 
+    /* override global style.css — curate lightbox img visible when loaded */
+    #lightbox.open #lightbox-img.loaded { opacity: 1; }
+
     /* ── Toast ── */
     #toast {
       position: fixed; bottom: 6rem; left: 50%; transform: translateX(-50%);
@@ -371,6 +374,12 @@
         .join('');
     }
 
+    // ── R2 grid URL helper ───────────────────────────────────────────────────
+    function gridUrl(fullUrl) {
+      const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+      return m ? `${m[1]}grid/${m[2]}` : fullUrl;
+    }
+
     // ── Render curation grid ────────────────────────────────────────────────
     function showCurate() {
       document.getElementById('pw-screen').classList.add('hidden');
@@ -391,9 +400,11 @@
           if (!entry.isIntersecting) return;
           const img = entry.target.querySelector('img');
           if (img && img.dataset.src) {
+            const full = img.dataset.full;
+            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+            img.addEventListener('error', () => { img.src = full; }, { once: true });
             img.src = img.dataset.src;
             delete img.dataset.src;
-            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
           }
           observer.unobserve(entry.target);
         });
@@ -410,7 +421,8 @@
         const img = document.createElement('img');
         img.alt = '';
         img.decoding = 'async';
-        img.dataset.src = url;
+        img.dataset.full = url;
+        img.dataset.src = gridUrl(url);
 
         const btns = document.createElement('div');
         btns.className = 'vote-buttons';
@@ -505,16 +517,23 @@
       const lb      = document.getElementById('lightbox');
       const img     = document.getElementById('lightbox-img');
       const spinner = document.getElementById('lightbox-spinner');
+      const grid    = gridUrl(url);
 
+      img.classList.remove('loaded');
       img.src = '';
-      img.classList.remove('loading');
       spinner.style.display = 'block';
       lb.classList.add('open');
+
+      // Show grid version immediately, upgrade to full-res when ready
+      img.onload = () => { img.classList.add('loaded'); spinner.style.display = 'none'; };
+      img.onerror = () => { img.src = url; };
+      img.src = grid;
 
       const loader = new Image();
       loader.onload = () => {
         if (lb.classList.contains('open')) {
           img.src = url;
+          img.classList.add('loaded');
           spinner.style.display = 'none';
         }
       };
@@ -523,7 +542,9 @@
     }
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('open');
-      document.getElementById('lightbox-img').src = '';
+      const img = document.getElementById('lightbox-img');
+      img.src = '';
+      img.classList.remove('loaded');
       document.getElementById('lightbox-spinner').style.display = 'none';
     }
     document.addEventListener('keydown', (e) => {
