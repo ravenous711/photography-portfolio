@@ -389,7 +389,8 @@
         img.alt     = `${album.title} — photo ${i + 1}`;
         img.loading = i < 6 ? 'eager' : 'lazy';
         img.addEventListener('load', () => img.classList.add('loaded'));
-        img.src = url;
+        img.addEventListener('error', () => { img.src = url; }, { once: true });
+        img.src = gridUrl(url);
 
         const expandOverlay = document.createElement('div');
         expandOverlay.className = 'photo-thumb-overlay';

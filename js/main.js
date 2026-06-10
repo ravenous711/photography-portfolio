@@ -81,6 +81,21 @@ function initScrollAnimations() {
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 }
 
+// ── R2 image URL helpers ──
+// grid/  = 1200px for album grid display
+// thumbnails/ = 600px for admin/curate
+const R2_URL_RE = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/;
+
+function gridUrl(fullUrl) {
+  const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+  return m ? `${m[1]}grid/${m[2]}` : fullUrl;
+}
+
+function thumbUrl(fullUrl) {
+  const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+  return m ? `${m[1]}thumbnails/${m[2]}` : fullUrl;
+}
+
 // ── Site-wide password gate ──
 const SiteAuth = {
   key: 'site_unlocked',
