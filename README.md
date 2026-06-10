@@ -196,7 +196,7 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 - [x] **Grid tier** — album, admin, and curate use 1200px grid previews
 - [x] **GitHub token** — admin deletions auto-update `config.js`
 - [x] **RF favicon** — tab icon on all pages
-- [x] **Hero image** — `DSCF1566.jpg` (Italy) on home page
+- [x] **Hero image** — `DSCF1569.jpg` (Italy) on home page
 
 ### 🟡 Next — Italy city albums (needs external drive)
 

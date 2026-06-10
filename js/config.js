@@ -13,8 +13,8 @@ const SITE_CONFIG = {
   adminPasswordHash: '5be8a85ba815c0473d9a609eb5a6d7dbeaf1e32045456bda1ea209ebecd211d8',
   tagline: 'Capturing light, emotion, and the quiet beauty of the world.',
   // ── Hero background (home page) ──
-  heroImage: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/hero/DSCF1566.jpg',
-  heroPosition: '50% 40%',
+  heroImage: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/hero/DSCF1569.jpg',
+  heroPosition: '50% 50%',
 
   // ── R2: Upload your about/profile photo and set the URL below ──
   aboutPhoto: 'https://picsum.photos/seed/about-portrait/800/1000',
