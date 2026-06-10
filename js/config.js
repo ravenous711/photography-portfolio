@@ -512,7 +512,7 @@ const ALBUMS = [
     parentId: 'italy-2026',
     description: 'Florence, 1–2 June 2026.',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Italy/Florence/Digital/florence_217.jpg`,
+    coverImage: `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
     photos: [
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_006.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_016.jpg`,
