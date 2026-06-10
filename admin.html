@@ -49,6 +49,7 @@
       background: rgba(220, 38, 38, 0.7);
       display: flex; align-items: center; justify-content: center;
       opacity: 0; transition: opacity 0.15s;
+      pointer-events: none;
     }
     .photo-thumb.marked {
       border-color: rgb(220, 38, 38);
@@ -475,11 +476,9 @@
             // Click image → lightbox
             img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url); });
 
-            // Click checkbox corner → toggle selection
+            // Click checkbox corner or anywhere on card except image → toggle selection
             checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
-
-            // Click anywhere else on card → also toggle selection
-            thumb.addEventListener('click', () => toggleThumb(thumb, url));
+            thumb.addEventListener('click', (e) => { if (e.target !== img) toggleThumb(thumb, url); });
           });
         }
 
