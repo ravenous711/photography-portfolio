@@ -191,13 +191,13 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 
 - [x] **Venice** — 95 photos + grid at `Italy/Venice/Digital/`, live in config
 - [x] **GitHub token** — admin deletions auto-update `config.js`
+- [x] **Florence** — 55 photos + grid at `Italy/Florence/Digital/`, live in config
 - [x] **Grid tier** — album, admin, and curate use 1200px grid previews
 - [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
 
 ### 🔄 In progress
 
-- [ ] **Florence** — 55 photos, config pushed; R2 upload running (`Italy/Florence/Digital/` + grid)
-  - Source: `Italy/Export/Florence/` on external drive
+_(none)_
 
 ### 🟡 Next — Italy city albums (needs external drive)
 
