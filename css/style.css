@@ -205,6 +205,34 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   #mobile-menu { display: flex; }
 }
 
+/* Over hero (home page, before scroll) — always light text on dark photo */
+#main-nav:not(.nav-scrolled) .nav-logo {
+  color: #fff;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.35);
+}
+
+#main-nav:not(.nav-scrolled) .nav-logo span {
+  color: #e8d5a8;
+}
+
+#main-nav:not(.nav-scrolled) .nav-links a {
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 1px 10px rgba(0,0,0,0.3);
+}
+
+#main-nav:not(.nav-scrolled) .nav-links a:hover,
+#main-nav:not(.nav-scrolled) .nav-links a.nav-active {
+  color: #fff;
+}
+
+#main-nav:not(.nav-scrolled) .nav-links a::after {
+  background: #fff;
+}
+
+#main-nav:not(.nav-scrolled) .bar {
+  background: #fff;
+}
+
 /* ============================================================
    HERO
    ============================================================ */
@@ -269,7 +297,7 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 .hero-divider {
   width: 40px;
   height: 1px;
-  background: var(--color-gold);
+  background: rgba(255,255,255,0.75);
   margin: 1.5rem auto;
 }
 
@@ -290,7 +318,8 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.4);
 }
 
 .scroll-arrow {
@@ -651,6 +680,24 @@ textarea.form-field {
 .btn-primary:hover {
   background: var(--color-gold);
   color: #000;
+}
+
+/* Hero CTA — solid white pill, must follow .btn-primary */
+.hero .btn-primary {
+  background: #fff;
+  border: 2px solid #fff;
+  color: #1a1a1a;
+  font-weight: 500;
+  font-size: 0.8rem;
+  padding: 0.9rem 2.25rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+
+.hero .btn-primary:hover {
+  background: rgba(255,255,255,0.92);
+  border-color: #fff;
+  color: #1a1a1a;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.45);
 }
 
 .btn-ghost {
