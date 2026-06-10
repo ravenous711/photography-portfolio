@@ -200,8 +200,13 @@
       cursor: zoom-out;
     }
     #lightbox.open { display: flex; }
+    #lightbox-inner {
+      display: flex; flex-direction: column; align-items: center;
+      max-width: 96vw; max-height: 96vh;
+      cursor: default;
+    }
     #lightbox img {
-      max-width: 92vw; max-height: 90vh;
+      max-width: 92vw; max-height: calc(90vh - 100px);
       object-fit: contain;
       border-radius: 2px;
       cursor: default;
@@ -224,6 +229,33 @@
       transition: color 0.15s;
     }
     #lightbox-close:hover { color: white; }
+    #lightbox-counter {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0.75rem 0 0.5rem;
+    }
+    #lightbox-vote {
+      display: flex; gap: 8px; width: 280px;
+    }
+    #lightbox-vote .vote-btn {
+      flex: 1;
+      padding: 0.55rem 0;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.7);
+    }
+    #lightbox-vote .vote-btn:hover {
+      color: white; border-color: rgba(255,255,255,0.5);
+    }
+    #lightbox-vote .vote-btn.keep.active {
+      background: #22c55e; border-color: #22c55e; color: white;
+    }
+    #lightbox-vote .vote-btn.cut.active {
+      background: #ef4444; border-color: #ef4444; color: white;
+    }
     .curate-card .photo-wrap { cursor: zoom-in; }
 
     /* override global style.css — curate lightbox img visible when loaded */
@@ -292,9 +324,23 @@
 
   <!-- ── Lightbox ── -->
   <div id="lightbox" onclick="closeLightbox()">
-    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-    <div id="lightbox-spinner"></div>
-    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
+    <button id="lightbox-close" type="button" onclick="event.stopPropagation(); closeLightbox()">✕</button>
+
+    <button class="lightbox-nav" id="lightbox-prev" type="button" aria-label="Previous photo"
+      onclick="event.stopPropagation(); lightboxNav(-1)">‹</button>
+
+    <div id="lightbox-inner" onclick="event.stopPropagation()">
+      <div id="lightbox-spinner"></div>
+      <img id="lightbox-img" src="" alt="" />
+      <p id="lightbox-counter"></p>
+      <div id="lightbox-vote">
+        <button type="button" class="vote-btn keep" id="lb-keep">✓ Keep</button>
+        <button type="button" class="vote-btn cut" id="lb-cut">✕ Cut</button>
+      </div>
+    </div>
+
+    <button class="lightbox-nav" id="lightbox-next" type="button" aria-label="Next photo"
+      onclick="event.stopPropagation(); lightboxNav(1)">›</button>
   </div>
 
   <div id="toast"></div>
@@ -332,6 +378,9 @@
 
     // votes map: photoUrl → 'keep' | 'cut'
     const votes = {};
+    let photoList = [];
+    let lightboxIndex = 0;
+    const cardRegistry = new Map(); // url → { card, keepBtn, cutBtn }
 
     // ── Auth ────────────────────────────────────────────────────────────────
     async function tryUnlock(password) {
@@ -388,9 +437,9 @@
       document.getElementById('album-title').textContent = album.title;
       document.getElementById('album-desc').textContent  = album.description || '';
 
-      const photos = (album.photos || []).filter(u => !u.endsWith('.svg'));
-      renderGrid(photos);
-      updateProgress(photos.length);
+      photoList = (album.photos || []).filter(u => !u.endsWith('.svg'));
+      renderGrid(photoList);
+      updateProgress(photoList.length);
     }
 
     function renderGrid(photos) {
@@ -433,12 +482,12 @@
         const keepBtn = document.createElement('button');
         keepBtn.className = 'vote-btn keep';
         keepBtn.textContent = '✓ Keep';
-        keepBtn.onclick = () => castVote(url, 'keep', card, keepBtn, cutBtn);
+        keepBtn.onclick = (e) => { e.stopPropagation(); castVote(url, 'keep'); };
 
         const cutBtn = document.createElement('button');
         cutBtn.className = 'vote-btn cut';
         cutBtn.textContent = '✕ Cut';
-        cutBtn.onclick = () => castVote(url, 'cut', card, keepBtn, cutBtn);
+        cutBtn.onclick = (e) => { e.stopPropagation(); castVote(url, 'cut'); };
 
         wrap.appendChild(img);
         card.appendChild(wrap);
@@ -446,27 +495,46 @@
         btns.appendChild(cutBtn);
         card.appendChild(btns);
         grid.appendChild(card);
+        cardRegistry.set(url, { card, keepBtn, cutBtn });
         observer.observe(card);
       });
     }
 
-    function castVote(url, vote, card, keepBtn, cutBtn) {
-      const prev = votes[url];
-      if (prev === vote) {
-        // Toggle off
+    function applyVoteUI(url, vote) {
+      const entry = cardRegistry.get(url);
+      if (!entry) return;
+      const { card, keepBtn, cutBtn } = entry;
+      card.classList.remove('voted-keep', 'voted-cut');
+      keepBtn.classList.remove('active');
+      cutBtn.classList.remove('active');
+      if (vote === 'keep') {
+        card.classList.add('voted-keep');
+        keepBtn.classList.add('active');
+      } else if (vote === 'cut') {
+        card.classList.add('voted-cut');
+        cutBtn.classList.add('active');
+      }
+    }
+
+    function syncLightboxVoteButtons() {
+      const url = photoList[lightboxIndex];
+      const vote = votes[url];
+      document.getElementById('lb-keep').classList.toggle('active', vote === 'keep');
+      document.getElementById('lb-cut').classList.toggle('active', vote === 'cut');
+    }
+
+    function castVote(url, vote) {
+      if (votes[url] === vote) {
         delete votes[url];
-        card.classList.remove('voted-keep', 'voted-cut');
-        keepBtn.classList.remove('active');
-        cutBtn.classList.remove('active');
+        applyVoteUI(url, null);
       } else {
         votes[url] = vote;
-        card.classList.toggle('voted-keep', vote === 'keep');
-        card.classList.toggle('voted-cut', vote === 'cut');
-        keepBtn.classList.toggle('active', vote === 'keep');
-        cutBtn.classList.toggle('active', vote === 'cut');
+        applyVoteUI(url, vote);
       }
-      const total = (album.photos || []).filter(u => !u.endsWith('.svg')).length;
-      updateProgress(total);
+      if (document.getElementById('lightbox').classList.contains('open')) {
+        syncLightboxVoteButtons();
+      }
+      updateProgress(photoList.length);
     }
 
     function updateProgress(total) {
@@ -514,24 +582,38 @@
     }
 
     function openLightbox(url) {
-      const lb      = document.getElementById('lightbox');
+      lightboxIndex = photoList.indexOf(url);
+      if (lightboxIndex < 0) return;
+      document.getElementById('lightbox').classList.add('open');
+      loadLightboxPhoto();
+    }
+
+    function loadLightboxPhoto() {
+      const url = photoList[lightboxIndex];
       const img     = document.getElementById('lightbox-img');
       const spinner = document.getElementById('lightbox-spinner');
       const grid    = gridUrl(url);
 
+      document.getElementById('lightbox-counter').textContent =
+        `${lightboxIndex + 1} / ${photoList.length}`;
+      document.getElementById('lightbox-prev').style.visibility =
+        lightboxIndex === 0 ? 'hidden' : 'visible';
+      document.getElementById('lightbox-next').style.visibility =
+        lightboxIndex === photoList.length - 1 ? 'hidden' : 'visible';
+      syncLightboxVoteButtons();
+
       img.classList.remove('loaded');
       img.src = '';
       spinner.style.display = 'block';
-      lb.classList.add('open');
 
-      // Show grid version immediately, upgrade to full-res when ready
       img.onload = () => { img.classList.add('loaded'); spinner.style.display = 'none'; };
       img.onerror = () => { img.src = url; };
       img.src = grid;
 
       const loader = new Image();
       loader.onload = () => {
-        if (lb.classList.contains('open')) {
+        if (document.getElementById('lightbox').classList.contains('open') &&
+            photoList[lightboxIndex] === url) {
           img.src = url;
           img.classList.add('loaded');
           spinner.style.display = 'none';
@@ -540,6 +622,14 @@
       loader.onerror = () => { spinner.style.display = 'none'; };
       loader.src = url;
     }
+
+    function lightboxNav(dir) {
+      const next = lightboxIndex + dir;
+      if (next < 0 || next >= photoList.length) return;
+      lightboxIndex = next;
+      loadLightboxPhoto();
+    }
+
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('open');
       const img = document.getElementById('lightbox-img');
@@ -547,8 +637,21 @@
       img.classList.remove('loaded');
       document.getElementById('lightbox-spinner').style.display = 'none';
     }
+
+    document.getElementById('lb-keep').addEventListener('click', (e) => {
+      e.stopPropagation();
+      castVote(photoList[lightboxIndex], 'keep');
+    });
+    document.getElementById('lb-cut').addEventListener('click', (e) => {
+      e.stopPropagation();
+      castVote(photoList[lightboxIndex], 'cut');
+    });
+
     document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('lightbox').classList.contains('open')) return;
       if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') lightboxNav(-1);
+      if (e.key === 'ArrowRight') lightboxNav(1);
     });
 
     function showToast(msg) {
