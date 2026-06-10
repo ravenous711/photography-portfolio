@@ -504,9 +504,11 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   display: block;
   border: 1px solid rgba(255,255,255,0.05);
   opacity: 0;
+  z-index: 1;
+  transition: none;
 }
 
-#lightbox-stage .lightbox-layer.active { opacity: 1; }
+#lightbox-stage .lightbox-layer.active { opacity: 1; z-index: 2; }
 
 #lightbox-close {
   position: absolute;

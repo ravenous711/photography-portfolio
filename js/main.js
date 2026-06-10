@@ -110,7 +110,7 @@ const ImagePreload = {
     return p;
   },
 
-  preloadAdjacent(urls, index, radius = 2) {
+  preloadAdjacent(urls, index, radius = 3) {
     for (let o = -radius; o <= radius; o++) {
       const i = index + o;
       if (i >= 0 && i < urls.length) {

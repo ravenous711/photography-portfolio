@@ -485,24 +485,31 @@
     let activeLayer = 0;
     const counter     = document.getElementById('lightbox-counter');
 
-    async function swapLightboxImage(src, fullResUrl, index) {
+    async function showLightboxPhoto(fullResUrl, index) {
+      const grid = gridUrl(fullResUrl);
       const nextLayer = 1 - activeLayer;
       const nextImg = lightboxLayers[nextLayer];
-      await ImagePreload.apply(nextImg, src);
+      const currentImg = lightboxLayers[activeLayer];
+      let isFull = false;
+
+      try {
+        await ImagePreload.load(fullResUrl);
+        await ImagePreload.apply(nextImg, fullResUrl);
+        isFull = true;
+      } catch {
+        await ImagePreload.apply(nextImg, grid);
+      }
+
       if (!lightbox.classList.contains('open') || currentIndex !== index) return;
-      lightboxLayers[activeLayer].classList.remove('active');
+
       nextImg.classList.add('active');
+      currentImg.classList.remove('active');
       activeLayer = nextLayer;
 
-      if (fullResUrl && fullResUrl !== src) {
+      if (!isFull) {
         ImagePreload.load(fullResUrl).then(async () => {
           if (!lightbox.classList.contains('open') || currentIndex !== index) return;
-          const upgradeLayer = 1 - activeLayer;
-          await ImagePreload.apply(lightboxLayers[upgradeLayer], fullResUrl);
-          if (!lightbox.classList.contains('open') || currentIndex !== index) return;
-          lightboxLayers[activeLayer].classList.remove('active');
-          lightboxLayers[upgradeLayer].classList.add('active');
-          activeLayer = upgradeLayer;
+          await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
         }).catch(() => {});
       }
     }
@@ -526,13 +533,12 @@
 
     function loadLightboxImage(index) {
       const url = album.photos[index];
-      const grid = gridUrl(url);
 
       counter.textContent = `${index + 1} / ${album.photos.length}`;
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
       document.getElementById('lightbox-next').style.visibility = index === album.photos.length - 1 ? 'hidden' : 'visible';
 
-      swapLightboxImage(grid, url, index);
+      showLightboxPhoto(url, index);
       ImagePreload.preloadAdjacent(album.photos, index);
     }
 

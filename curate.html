@@ -217,8 +217,10 @@
       border-radius: 2px;
       cursor: default;
       opacity: 0;
+      z-index: 1;
+      transition: none;
     }
-    #lightbox-stage .lightbox-layer.active { opacity: 1; }
+    #lightbox-stage .lightbox-layer.active { opacity: 1; z-index: 2; }
     #lightbox-spinner {
       position: absolute;
       width: 32px; height: 32px;
@@ -480,7 +482,7 @@
         this._cache.set(url, p);
         return p;
       },
-      preloadAdjacent(urls, index, radius = 2) {
+      preloadAdjacent(urls, index, radius = 3) {
         for (let o = -radius; o <= radius; o++) {
           const i = index + o;
           if (i >= 0 && i < urls.length) {
@@ -655,32 +657,33 @@
       document.getElementById('thanks-screen').classList.add('visible');
     }
 
-    async function swapLightboxImage(src, fullResUrl, index) {
+    async function showLightboxPhoto(fullResUrl, index) {
       const spinner = document.getElementById('lightbox-spinner');
+      const grid = gridUrl(fullResUrl);
       const nextLayer = 1 - activeLayer;
       const nextImg = lightboxLayers[nextLayer];
+      const currentImg = lightboxLayers[activeLayer];
+      let isFull = false;
 
       try {
-        await ImagePreload.apply(nextImg, src);
+        await ImagePreload.load(fullResUrl);
+        await ImagePreload.apply(nextImg, fullResUrl);
+        isFull = true;
       } catch {
-        if (fullResUrl) await ImagePreload.apply(nextImg, fullResUrl);
+        await ImagePreload.apply(nextImg, grid);
       }
+
       if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
 
-      lightboxLayers[activeLayer].classList.remove('active');
       nextImg.classList.add('active');
+      currentImg.classList.remove('active');
       activeLayer = nextLayer;
       spinner.style.display = 'none';
 
-      if (fullResUrl && fullResUrl !== src) {
+      if (!isFull) {
         ImagePreload.load(fullResUrl).then(async () => {
           if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
-          const upgradeLayer = 1 - activeLayer;
-          await ImagePreload.apply(lightboxLayers[upgradeLayer], fullResUrl);
-          if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
-          lightboxLayers[activeLayer].classList.remove('active');
-          lightboxLayers[upgradeLayer].classList.add('active');
-          activeLayer = upgradeLayer;
+          await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
         }).catch(() => {});
       }
     }
@@ -694,7 +697,6 @@
 
     function loadLightboxPhoto() {
       const url = photoList[lightboxIndex];
-      const grid = gridUrl(url);
 
       document.getElementById('lightbox-counter').textContent =
         `${lightboxIndex + 1} / ${photoList.length}`;
@@ -704,7 +706,7 @@
         lightboxIndex === photoList.length - 1 ? 'hidden' : 'visible';
       syncLightboxVoteButtons();
 
-      swapLightboxImage(grid, url, lightboxIndex);
+      showLightboxPhoto(url, lightboxIndex);
       ImagePreload.preloadAdjacent(photoList, lightboxIndex);
     }
 
