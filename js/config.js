@@ -142,11 +142,27 @@ const ALBUMS = [
     ],
   },
 
+  // ── ADMIN DELETE TEST ALBUM ───────────────────────────────
+  // Safe to delete — dedicated throwaway files in R2 test/ folder
+  {
+    id: 'delete-test',
+    title: 'Delete Test',
+    description: 'Safe to delete — practice album for the admin panel.',
+    hidden: true,
+    protected: false,
+    coverImage: `${R2_BASE_URL}/test/test_1.jpg`,
+    photos: [
+      `${R2_BASE_URL}/test/test_1.jpg`,
+      `${R2_BASE_URL}/test/test_2.jpg`,
+      `${R2_BASE_URL}/test/test_3.jpg`,
+    ],
+  },
+
   // ── HIDDEN TEST ALBUM ─────────────────────────────────────
   {
     id: 'hidden-test',
     title: 'Hidden Test',
-    description: 'Testing hidden + password protected album.',
+    description: 'Old hidden test album.',
     hidden: true,
     protected: true,
     // Password: "test123"
