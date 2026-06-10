@@ -56,6 +56,27 @@
     .photo-thumb.marked .mark-overlay { opacity: 1; }
     .photo-thumb.marked img { opacity: 0.4; }
 
+    /* ── Selection checkbox corner ── */
+    .thumb-check {
+      position: absolute; top: 5px; left: 5px; z-index: 2;
+      width: 20px; height: 20px;
+      background: rgba(255,255,255,0.9);
+      border: 1.5px solid rgba(0,0,0,0.2);
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .photo-thumb:hover .thumb-check,
+    .photo-thumb.marked .thumb-check { opacity: 1; }
+    .photo-thumb.marked .thumb-check {
+      background: rgb(220,38,38);
+      border-color: rgb(220,38,38);
+    }
+    .thumb-check svg { display: none; }
+    .photo-thumb.marked .thumb-check svg { display: block; }
+
     /* ── Album section ── */
     .album-section { margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
     .album-header {
@@ -438,22 +459,27 @@
             overlay.className = 'mark-overlay';
             overlay.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
+            // Corner checkbox for deletion
+            const checkEl = document.createElement('div');
+            checkEl.className = 'thumb-check';
+            checkEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
             thumb.appendChild(img);
             thumb.appendChild(overlay);
+            thumb.appendChild(checkEl);
             grid.appendChild(thumb);
             observer.observe(thumb);
 
-            thumb.addEventListener('click', (e) => {
-              // Click image area → open lightbox; click elsewhere → toggle selection
-              if (e.target === img) { openLightbox(url); return; }
-              if (thumb.classList.toggle('marked')) {
-                selected.add(url);
-              } else {
-                selected.delete(url);
-              }
-              updateToolbar();
-            });
             img.style.cursor = 'zoom-in';
+
+            // Click image → lightbox
+            img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url); });
+
+            // Click checkbox corner → toggle selection
+            checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
+
+            // Click anywhere else on card → also toggle selection
+            thumb.addEventListener('click', () => toggleThumb(thumb, url));
           });
         }
 
@@ -534,6 +560,15 @@
       el.textContent = msg;
       el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), duration);
+    }
+
+    function toggleThumb(thumb, url) {
+      if (thumb.classList.toggle('marked')) {
+        selected.add(url);
+      } else {
+        selected.delete(url);
+      }
+      updateToolbar();
     }
 
     // ── Lightbox ─────────────────────────────────────────────────────────────
