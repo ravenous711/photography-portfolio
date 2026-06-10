@@ -317,9 +317,11 @@
               if (!entry.isIntersecting) return;
               const img = entry.target.querySelector('img');
               if (img && img.dataset.src) {
-                img.src = thumbUrl(img.dataset.src);
+                const original = img.dataset.src;
                 delete img.dataset.src;
                 img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                img.addEventListener('error', () => { img.src = original; }, { once: true });
+                img.src = thumbUrl(original);
               }
               observer.unobserve(entry.target);
             });
