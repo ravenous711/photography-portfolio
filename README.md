@@ -192,6 +192,7 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 - [x] **Venice** — 95 photos + grid at `Italy/Venice/Digital/`, live in config
 - [x] **GitHub token** — admin deletions auto-update `config.js`
 - [x] **Florence** — 55 photos + grid at `Italy/Florence/Digital/`, live in config
+- [x] **Pisa** — 23 photos + grid at `Italy/Pisa/Digital/`, live in config
 - [x] **Grid tier** — album, admin, and curate use 1200px grid previews
 - [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
 
@@ -205,7 +206,7 @@ Export starred picks to `Italy/Export/<City>/` in Lightroom, then say **"upload 
 
 | Album | R2 path | Drive source | Export folder | Status |
 |---|---|---|---|---|
-| **Pisa** | `Italy/Pisa/Digital/` | `02_Pisa/` (~165 JPGs) | not exported yet | empty in config |
+| **Pisa** | `Italy/Pisa/Digital/` | `02_Pisa/` (~165 JPGs) | done (23 exported) | live |
 | **Assisi** | `Italy/Assisi/Digital/` | `04_Assisi/` (~56 JPGs) | not exported yet | empty in config |
 | **Rome** | `Italy/Rome/Digital/` | `05_Rome/` (~607 JPGs) | not exported yet | empty in config — cull/edit first |
 

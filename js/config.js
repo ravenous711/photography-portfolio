@@ -396,7 +396,7 @@ const ALBUMS = [
     type: 'group',
     protected: false,
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
-    subAlbums: ['italy-venice', 'italy-florence', 'italy-pisa', 'italy-assisi', 'italy-rome', 'italy-film'],
+    subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome', 'italy-film'],
     // R2: set to first sub-album cover once photos are uploaded
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_098.jpg`,
   },
@@ -581,7 +581,7 @@ const ALBUMS = [
     description: 'Pisa, 1 June 2026.',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
-    coverPosition: '50% 35%',
+    coverPosition: '50% 22%',
     photos: [
       `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_005.jpg`,
       `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_007.jpg`,
