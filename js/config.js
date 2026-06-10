@@ -162,7 +162,7 @@ const ALBUMS = [
   {
     id: 'italy-film',
     title: 'Film',
-    description: 'Film photography from Italy, 2026.',
+    description: 'June 2026.',
     type: 'group',
     parentId: 'italy-2026',
     protected: false,
@@ -172,8 +172,8 @@ const ALBUMS = [
 
   {
     id: 'film-1',
-    title: 'Film 1',
-    description: 'Kodak Ultramax 400 — Roll 1.',
+    title: 'Roll 1',
+    description: 'Kodak Ultramax 400, June 2026.',
     parentId: 'italy-film',
     protected: false,
     coverImage: `${R2_BASE_URL}/Film-Test/ultramax_01.jpg`,
@@ -220,8 +220,8 @@ const ALBUMS = [
 
   {
     id: 'film-2',
-    title: 'Film 2',
-    description: 'FP4 — Roll 2.',
+    title: 'Roll 2',
+    description: 'FP4, June 2026.',
     parentId: 'italy-film',
     protected: false,
     coverImage: `${R2_BASE_URL}/Film2/Fernando000799-R1-E001.jpg`,
@@ -269,8 +269,8 @@ const ALBUMS = [
 
   {
     id: 'film-3',
-    title: 'Film 3',
-    description: 'Kodak T-MAX — Roll 3.',
+    title: 'Roll 3',
+    description: 'Kodak T-MAX, June 2026.',
     parentId: 'italy-film',
     protected: false,
     coverImage: `${R2_BASE_URL}/Film3/Fernando000800-R1-E001.jpg`,
@@ -317,8 +317,8 @@ const ALBUMS = [
 
   {
     id: 'film-4',
-    title: 'Film 4',
-    description: 'Kodak Portra — Roll 4.',
+    title: 'Roll 4',
+    description: 'Kodak Portra, June 2026.',
     parentId: 'italy-film',
     protected: false,
     coverImage: `${R2_BASE_URL}/Film4/Raveen_portra_04.jpg`,
@@ -370,7 +370,7 @@ const ALBUMS = [
   {
     id: 'italy-2026',
     title: 'Italy 2026',
-    description: 'Venice, Florence, Pisa, Assisi, and Rome.',
+    description: 'Italy, 30 May – 5 June 2026.',
     type: 'group',
     protected: false,
     subAlbums: ['italy-venice', 'italy-florence', 'italy-pisa', 'italy-assisi', 'italy-rome', 'italy-film'],
@@ -382,7 +382,7 @@ const ALBUMS = [
     id: 'italy-venice',
     title: 'Venice',
     parentId: 'italy-2026',
-    description: 'Canals, gondolas, and golden light.',
+    description: 'Venice, 30–31 May 2026.',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_098.jpg`,
     photos: [
@@ -488,48 +488,40 @@ const ALBUMS = [
     id: 'italy-florence',
     title: 'Florence',
     parentId: 'italy-2026',
-    description: 'Renaissance architecture and Tuscan light.',
+    description: 'Florence, 1–2 June 2026.',
     protected: false,
     coverImage: 'images/placeholder-black.svg',
-    photos: [
-      'images/placeholder-black.svg',
-    ],
+    photos: [],
   },
 
   {
     id: 'italy-pisa',
     title: 'Pisa',
     parentId: 'italy-2026',
-    description: 'The leaning tower and Piazza dei Miracoli.',
+    description: 'Pisa, 1 June 2026.',
     protected: false,
     coverImage: 'images/placeholder-black.svg',
-    photos: [
-      'images/placeholder-black.svg',
-    ],
+    photos: [],
   },
 
   {
     id: 'italy-assisi',
     title: 'Assisi',
     parentId: 'italy-2026',
-    description: 'Stone streets and hilltop views.',
+    description: 'Assisi, 3 June 2026.',
     protected: false,
     coverImage: 'images/placeholder-black.svg',
-    photos: [
-      'images/placeholder-black.svg',
-    ],
+    photos: [],
   },
 
   {
     id: 'italy-rome',
     title: 'Rome',
     parentId: 'italy-2026',
-    description: 'Ancient ruins, piazzas, and the eternal city.',
+    description: 'Rome, 3–5 June 2026.',
     protected: false,
     coverImage: 'images/placeholder-black.svg',
-    photos: [
-      'images/placeholder-black.svg',
-    ],
+    photos: [],
   },
 
 ];
