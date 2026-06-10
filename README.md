@@ -182,3 +182,31 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 ## Notes
 - The hero tagline **"Capturing light, emotion, and the quiet beauty of the world."** has been removed from the live site but is still stored in `SITE_CONFIG.tagline` in `js/config.js` in case you want to bring it back.
 - About and Contact pages (`about.html`, `contact.html`) were removed. They still exist in the git history if needed.
+
+---
+
+## TODO
+
+### 🔴 Needs doing soon
+
+- [ ] **Refresh GitHub token in Vercel** — admin deletions work (R2) but `config.js` doesn't auto-update because the GitHub token expired.
+  1. Go to [github.com/settings/tokens](https://github.com/settings/tokens) → Generate new token (classic), `repo` scope, 1 year expiry
+  2. Vercel → Settings → Environment Variables → update `GITHUB_TOKEN`
+  3. Redeploy, then test with the Delete Test album
+
+### 🟡 Needs external drive
+
+- [ ] **Backfill thumbnails — Venice** (`Italy/Venice/Digital/`, ~95 photos)
+- [ ] **Backfill thumbnails — Joel Birthday 2025** (`Joel-Bday-2025/`, 74 photos)
+- [ ] **Backfill thumbnails — Film Roll 1** (`Film1/`)
+- [ ] **Backfill thumbnails — Film Roll 2** (`Film2/`)
+- [ ] **Backfill thumbnails — Film Roll 3** (`Film3/`)
+- [ ] **Backfill thumbnails — Film Roll 4** (`Film4/`)
+
+  Once the drive is connected, say "backfill thumbnails for Venice" and the upload skill will handle it automatically. Do them one at a time.
+
+  After all albums are backfilled, update the admin panel and curate page to use thumbnail URLs instead of full-res (will make them dramatically faster).
+
+### 🟢 Nice to have
+- [ ] Add remaining Italy 2026 albums: Florence, Assisi, Rome (waiting on edits)
+- [ ] Set a real hero image (currently using a placeholder)
