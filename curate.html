@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Curate — Raveen Fernando</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Password screen ── */
+    #pw-screen {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--color-bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; padding: 2rem; text-align: center;
+    }
+    #pw-screen.hidden { display: none; }
+
+    /* ── Header ── */
+    #curate-header {
+      padding: 2rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+    #curate-header h1 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      margin: 0 0 0.25rem;
+    }
+    #curate-header p {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin: 0;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar-wrap {
+      padding: 1rem 1.5rem 0;
+    }
+    #progress-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.4rem;
+    }
+    #progress-track {
+      height: 3px;
+      background: var(--color-border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%;
+      background: var(--color-gold);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    /* ── Photo grid ── */
+    #photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+      padding: 1.5rem;
+    }
+
+    /* ── Photo card ── */
+    .curate-card {
+      position: relative;
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--color-surface);
+    }
+    .curate-card .photo-wrap {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+    .curate-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .curate-card img.loaded { opacity: 1; }
+
+    /* voted overlay tint */
+    .curate-card.voted-keep .photo-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(34,197,94,0.15);
+      pointer-events: none;
+    }
+    .curate-card.voted-cut .photo-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(239,68,68,0.15);
+      pointer-events: none;
+    }
+
+    /* ── Vote buttons ── */
+    .vote-buttons {
+      display: flex;
+      gap: 4px;
+      padding: 6px;
+    }
+    .vote-btn {
+      flex: 1;
+      padding: 0.45rem 0;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-muted);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.15s;
+    }
+    .vote-btn:hover { color: var(--color-text); border-color: var(--color-text); }
+
+    .vote-btn.keep.active {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: white;
+    }
+    .vote-btn.cut.active {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: white;
+    }
+
+    /* ── Submit bar ── */
+    #submit-bar {
+      position: sticky; bottom: 0; z-index: 50;
+      background: var(--color-bg);
+      border-top: 1px solid var(--color-border);
+      padding: 1rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      flex-wrap: wrap;
+    }
+    #submit-info {
+      flex: 1;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--color-muted);
+    }
+    #submit-btn {
+      background: var(--color-text);
+      color: var(--color-bg);
+      border: none;
+      padding: 0.65rem 1.75rem;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: opacity 0.2s;
+    }
+    #submit-btn:hover { opacity: 0.8; }
+    #submit-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Thank you screen ── */
+    #thanks-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      padding: 2rem;
+    }
+    #thanks-screen.visible { display: flex; }
+    #thanks-screen h2 {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+    #thanks-screen p {
+      color: var(--color-muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 6rem; left: 50%; transform: translateX(-50%);
+      background: var(--color-text); color: var(--color-bg);
+      padding: 0.65rem 1.25rem;
+      font-size: 0.78rem; letter-spacing: 0.06em;
+      border-radius: 2px; z-index: 500;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Password Screen ── -->
+  <div id="pw-screen">
+    <p style="font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--color-muted);margin-bottom:0.75rem">Photo Curation</p>
+    <p style="font-family:var(--font-serif);font-size:2rem;font-weight:300;letter-spacing:0.08em;margin-bottom:0.5rem" id="pw-album-name">–</p>
+    <p style="font-size:0.78rem;color:var(--color-muted);margin-bottom:2rem;max-width:320px">Help pick the best photos by voting Keep or Cut on each one.</p>
+    <form id="pw-form" novalidate style="width:100%;max-width:320px">
+      <input id="pw-input" type="password" placeholder="Album password"
+        autocomplete="current-password"
+        style="width:100%;background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.75rem 1rem;margin-bottom:0.5rem;font-family:var(--font-sans);font-size:0.9rem;letter-spacing:0.1em;text-align:center;outline:none;transition:border-color 0.2s;border-radius:2px"
+        onfocus="this.style.borderColor='var(--color-text)'"
+        onblur="this.style.borderColor='var(--color-border)'"
+      />
+      <p id="pw-error" style="color:#f87171;font-size:0.8rem;min-height:1.2rem;margin-bottom:0.5rem;text-align:center"></p>
+      <button type="submit" style="width:100%;background:var(--color-text);color:var(--color-bg);border:none;padding:0.75rem;font-family:var(--font-sans);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s;border-radius:2px">
+        Enter
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Main Curate UI ── -->
+  <div id="curate-ui" style="display:none">
+
+    <div id="curate-header">
+      <h1 id="album-title">–</h1>
+      <p id="album-desc"></p>
+    </div>
+
+    <div id="progress-bar-wrap">
+      <div id="progress-label">0 of 0 voted</div>
+      <div id="progress-track"><div id="progress-fill"></div></div>
+    </div>
+
+    <div id="photo-grid"></div>
+
+    <div id="thanks-screen">
+      <h2>Thank you!</h2>
+      <p>Your votes have been submitted.</p>
+    </div>
+
+    <div id="submit-bar">
+      <span id="submit-info">Vote on each photo, then submit.</span>
+      <button id="submit-btn" disabled onclick="submitVotes()">Submit Votes</button>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL  = 'https://dgajyvjxvobmnqxticvh.supabase.co';
+    const SUPABASE_KEY  = 'sb_publishable_pwy5JTpQQG9VjrSmbBG4_Q_WWY8_NFa';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ── Parse URL params ────────────────────────────────────────────────────
+    const params  = new URLSearchParams(location.search);
+    const albumId = params.get('album');
+    const urlPw   = params.get('pw'); // optional auto-unlock
+
+    if (!albumId) {
+      document.getElementById('pw-screen').innerHTML = '<p style="color:var(--color-muted);font-size:0.9rem">No album specified.</p>';
+    }
+
+    const album = (ALBUMS || []).find(a => a.id === albumId);
+    if (!album) {
+      document.getElementById('pw-screen').innerHTML = '<p style="color:var(--color-muted);font-size:0.9rem">Album not found.</p>';
+    }
+
+    document.getElementById('pw-album-name').textContent = album ? album.title : '';
+
+    // ── Session ID (unique per browser, per album) ───────────────────────
+    const SESSION_KEY = `curate_session_${albumId}`;
+    let sessionId = localStorage.getItem(SESSION_KEY);
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem(SESSION_KEY, sessionId);
+    }
+
+    // votes map: photoUrl → 'keep' | 'cut'
+    const votes = {};
+
+    // ── Auth ────────────────────────────────────────────────────────────────
+    async function tryUnlock(password) {
+      if (!album.protected) return true;
+      const hash = await hashPassword(password);
+      return hash === album.passwordHash;
+    }
+
+    async function init() {
+      // Auto-unlock from URL param
+      if (urlPw) {
+        const ok = await tryUnlock(urlPw);
+        if (ok) { showCurate(); return; }
+      }
+      // No password required
+      if (!album.protected) { showCurate(); return; }
+      // Show password form
+    }
+
+    document.getElementById('pw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('pw-input').value.trim();
+      const ok = await tryUnlock(pw);
+      if (ok) {
+        showCurate();
+      } else {
+        const err = document.getElementById('pw-error');
+        err.textContent = 'Incorrect password.';
+        setTimeout(() => { err.textContent = ''; }, 3000);
+      }
+    });
+
+    // ── SHA-256 (from main.js — inlined here since we skip main.js) ────────
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    // ── Render curation grid ────────────────────────────────────────────────
+    function showCurate() {
+      document.getElementById('pw-screen').classList.add('hidden');
+      document.getElementById('curate-ui').style.display = 'block';
+
+      document.getElementById('album-title').textContent = album.title;
+      document.getElementById('album-desc').textContent  = album.description || '';
+
+      const photos = (album.photos || []).filter(u => !u.endsWith('.svg'));
+      renderGrid(photos);
+      updateProgress(photos.length);
+    }
+
+    function renderGrid(photos) {
+      const grid = document.getElementById('photo-grid');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const img = entry.target.querySelector('img');
+          if (img && img.dataset.src) {
+            img.src = img.dataset.src;
+            delete img.dataset.src;
+            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+          }
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '200px' });
+
+      photos.forEach(url => {
+        const card = document.createElement('div');
+        card.className = 'curate-card';
+        card.dataset.url = url;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'photo-wrap';
+
+        const img = document.createElement('img');
+        img.alt = '';
+        img.decoding = 'async';
+        img.dataset.src = url;
+
+        const btns = document.createElement('div');
+        btns.className = 'vote-buttons';
+
+        const keepBtn = document.createElement('button');
+        keepBtn.className = 'vote-btn keep';
+        keepBtn.textContent = '✓ Keep';
+        keepBtn.onclick = () => castVote(url, 'keep', card, keepBtn, cutBtn);
+
+        const cutBtn = document.createElement('button');
+        cutBtn.className = 'vote-btn cut';
+        cutBtn.textContent = '✕ Cut';
+        cutBtn.onclick = () => castVote(url, 'cut', card, keepBtn, cutBtn);
+
+        wrap.appendChild(img);
+        card.appendChild(wrap);
+        btns.appendChild(keepBtn);
+        btns.appendChild(cutBtn);
+        card.appendChild(btns);
+        grid.appendChild(card);
+        observer.observe(card);
+      });
+    }
+
+    function castVote(url, vote, card, keepBtn, cutBtn) {
+      const prev = votes[url];
+      if (prev === vote) {
+        // Toggle off
+        delete votes[url];
+        card.classList.remove('voted-keep', 'voted-cut');
+        keepBtn.classList.remove('active');
+        cutBtn.classList.remove('active');
+      } else {
+        votes[url] = vote;
+        card.classList.toggle('voted-keep', vote === 'keep');
+        card.classList.toggle('voted-cut', vote === 'cut');
+        keepBtn.classList.toggle('active', vote === 'keep');
+        cutBtn.classList.toggle('active', vote === 'cut');
+      }
+      const total = (album.photos || []).filter(u => !u.endsWith('.svg')).length;
+      updateProgress(total);
+    }
+
+    function updateProgress(total) {
+      const voted  = Object.keys(votes).length;
+      const pct    = total > 0 ? (voted / total) * 100 : 0;
+      document.getElementById('progress-label').textContent = `${voted} of ${total} voted`;
+      document.getElementById('progress-fill').style.width = `${pct}%`;
+      document.getElementById('submit-info').textContent =
+        voted === 0 ? 'Vote on each photo, then submit.' :
+        voted < total ? `${total - voted} photo${total - voted !== 1 ? 's' : ''} left to vote on.` :
+        'All photos voted — ready to submit!';
+      document.getElementById('submit-btn').disabled = voted === 0;
+    }
+
+    // ── Submit to Supabase ──────────────────────────────────────────────────
+    async function submitVotes() {
+      const btn = document.getElementById('submit-btn');
+      btn.textContent = 'Submitting…';
+      btn.disabled = true;
+
+      const rows = Object.entries(votes).map(([photo_url, vote]) => ({
+        album_id:   albumId,
+        photo_url,
+        vote,
+        session_id: sessionId,
+      }));
+
+      const { error } = await sb.from('votes').upsert(rows, {
+        onConflict: 'session_id,photo_url',
+      });
+
+      if (error) {
+        console.error(error);
+        showToast('Something went wrong. Please try again.');
+        btn.textContent = 'Submit Votes';
+        btn.disabled = false;
+        return;
+      }
+
+      // Show thank you
+      document.getElementById('photo-grid').style.display = 'none';
+      document.getElementById('progress-bar-wrap').style.display = 'none';
+      document.getElementById('submit-bar').style.display = 'none';
+      document.getElementById('thanks-screen').classList.add('visible');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    init();
+  </script>
+</body>
+</html>
