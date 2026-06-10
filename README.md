@@ -187,26 +187,42 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 
 ## TODO
 
-### 🔴 Needs doing soon
+### ✅ Done recently
 
-- [ ] **Refresh GitHub token in Vercel** — admin deletions work (R2) but `config.js` doesn't auto-update because the GitHub token expired.
-  1. Go to [github.com/settings/tokens](https://github.com/settings/tokens) → Generate new token (classic), `repo` scope, 1 year expiry
-  2. Vercel → Settings → Environment Variables → update `GITHUB_TOKEN`
-  3. Redeploy, then test with the Delete Test album
+- [x] **Venice** — 95 photos + grid at `Italy/Venice/Digital/`, live in config
+- [x] **GitHub token** — admin deletions auto-update `config.js`
+- [x] **Grid tier** — album, admin, and curate use 1200px grid previews
+- [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
 
-### 🟡 Needs external drive
+### 🔄 In progress
 
-- [ ] **Backfill thumbnails — Venice** (`Italy/Venice/Digital/`, ~95 photos)
-- [ ] **Backfill thumbnails — Joel Birthday 2025** (`Joel-Bday-2025/`, 74 photos)
-- [ ] **Backfill thumbnails — Film Roll 1** (`Film1/`)
-- [ ] **Backfill thumbnails — Film Roll 2** (`Film2/`)
-- [ ] **Backfill thumbnails — Film Roll 3** (`Film3/`)
-- [ ] **Backfill thumbnails — Film Roll 4** (`Film4/`)
+- [ ] **Florence** — 55 photos, config pushed; R2 upload running (`Italy/Florence/Digital/` + grid)
+  - Source: `Italy/Export/Florence/` on external drive
 
-  Once the drive is connected, say "backfill thumbnails for Venice" and the upload skill will handle it automatically. Do them one at a time.
+### 🟡 Next — Italy city albums (needs external drive)
 
-  After all albums are backfilled, update the admin panel and curate page to use thumbnail URLs instead of full-res (will make them dramatically faster).
+Export starred picks to `Italy/Export/<City>/` in Lightroom, then say **"upload Florence"** / **"upload Pisa"** etc.
+
+| Album | R2 path | Drive source | Export folder | Status |
+|---|---|---|---|---|
+| **Pisa** | `Italy/Pisa/Digital/` | `02_Pisa/` (~165 JPGs) | not exported yet | empty in config |
+| **Assisi** | `Italy/Assisi/Digital/` | `04_Assisi/` (~56 JPGs) | not exported yet | empty in config |
+| **Rome** | `Italy/Rome/Digital/` | `05_Rome/` (~607 JPGs) | not exported yet | empty in config — cull/edit first |
+
+### 🟡 Grid backfill — originals already on R2
+
+These albums work but load slow without grid images. Say **"backfill grid for Joel Birthday"** etc.
+
+| Album | R2 folder | Photos |
+|---|---|---|
+| **Joel Birthday 2025** | `Joel-Bday-2025/` | 74 |
+| **Film Roll 1** | `Film1/` | 37 |
+| **Film Roll 2** | `Film2/` | 38 |
+| **Film Roll 3** | `Film3/` | 38 |
+| **Film Roll 4** | `Film4/` | 39 |
+
+Do these one at a time when the external drive is connected.
 
 ### 🟢 Nice to have
-- [ ] Add remaining Italy 2026 albums: Florence, Assisi, Rome (waiting on edits)
+
 - [ ] Set a real hero image (currently using a placeholder)
