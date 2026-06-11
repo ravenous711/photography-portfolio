@@ -10,13 +10,15 @@ async function hashPassword(password) {
     .join('');
 }
 
-// ── Navigation: transparent → opaque on scroll ──
+// ── Navigation: transparent → opaque on scroll (home hero only) ──
 function initNav() {
   const nav = document.getElementById('main-nav');
   if (!nav) return;
 
+  const overHero = document.querySelector('.hero');
+
   const updateNav = () => {
-    if (window.scrollY > 60) {
+    if (!overHero || window.scrollY > 60) {
       nav.classList.add('nav-scrolled');
     } else {
       nav.classList.remove('nav-scrolled');
@@ -100,8 +102,54 @@ function locationMatchesTitle(album) {
   return norm(album.location) === norm(album.title);
 }
 
+function getAlbumFilmSections(album) {
+  if (!album) return [];
+  if (album.filmSections?.length) return album.filmSections;
+  if (album.filmPhotos?.length) {
+    return [{ label: album.filmLabel || 'On film', photos: album.filmPhotos }];
+  }
+  return [];
+}
+
+function getAlbumSectionNavItems(album) {
+  if (!album || album.type === 'group') return [];
+
+  const items = [];
+  const digitalPhotos = album.photos || [];
+  const filmSections = getAlbumFilmSections(album);
+
+  if (digitalPhotos.length && filmSections.length) {
+    items.push({
+      id: 'digital-section',
+      label: album.digitalNavLabel || 'Digital',
+    });
+  }
+
+  filmSections.forEach((section, index) => {
+    items.push({
+      id: `album-section-film-${index}`,
+      label: section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : (section.label || 'Film')),
+    });
+  });
+
+  return items.length >= 2 ? items : [];
+}
+
+function getAlbumAllPhotos(album) {
+  if (!album) return [];
+  const digital = album.photos || [];
+  if (album.filmSections?.length) {
+    return [...digital, ...album.filmSections.flatMap(section => section.photos || [])];
+  }
+  return [...digital, ...(album.filmPhotos || [])];
+}
+
+function getAlbumPhotoCount(album) {
+  return getAlbumAllPhotos(album).length;
+}
+
 function isEmptyAlbum(album) {
-  return album.type !== 'group' && !album.photos?.length;
+  return album.type !== 'group' && !getAlbumPhotoCount(album);
 }
 
 function albumDateline(album, { withDesc = false } = {}) {
@@ -120,8 +168,9 @@ function albumDateline(album, { withDesc = false } = {}) {
 
   if (album.type === 'group' && album.subAlbums?.length) {
     parts.push(`${album.subAlbums.length} albums`);
-  } else if (album.photos?.length) {
-    parts.push(`${album.photos.length} frames`);
+  } else {
+    const count = getAlbumPhotoCount(album);
+    if (count) parts.push(`${count} frames`);
   }
 
   return parts.join(' · ');
