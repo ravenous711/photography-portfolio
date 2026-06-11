@@ -196,7 +196,7 @@ const ALBUMS = [
     type: 'group',
     protected: false,
     subAlbums: ['california-santa-cruz', 'california-yosemite'],
-    coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-098.jpg`,
+    coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
   },
 
   {
@@ -206,7 +206,7 @@ const ALBUMS = [
     location: 'Santa Cruz & Big Sur',
     date: 'July 2025',
     protected: false,
-    coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-098.jpg`,
+    coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-141.jpg`,
     photos: [
 `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-009.jpg`,
       `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-011.jpg`,
@@ -271,7 +271,7 @@ const ALBUMS = [
     location: 'Yosemite',
     date: 'July 2025',
     protected: false,
-    coverImage: `${R2_BASE_URL}/California/Yosemite/California-538.jpg`,
+    coverImage: `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
     photos: [
       `${R2_BASE_URL}/California/Yosemite/California-339.jpg`,
       `${R2_BASE_URL}/California/Yosemite/California-344.jpg`,
@@ -573,8 +573,8 @@ const ALBUMS = [
     protected: false,
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
     subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome', 'italy-film'],
-    // R2: set to first sub-album cover once photos are uploaded
-    coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_098.jpg`,
+    coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
+    coverPosition: '50% 22%',
   },
 
   {
@@ -585,7 +585,7 @@ const ALBUMS = [
     location: 'Venice',
     date: 'May 2026',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_098.jpg`,
+    coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
     photos: [
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_042.jpg`,
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_069.jpg`,
