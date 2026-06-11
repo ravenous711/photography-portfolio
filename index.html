@@ -149,20 +149,18 @@
     const grid = document.getElementById('featured-grid');
 
     publicAlbums.forEach((album, i) => {
-      const card = document.createElement('a');
       const isGroup = album.type === 'group';
+      const card = document.createElement('a');
       card.href = isGroup ? `album-group.html?id=${album.id}` : `album.html?id=${album.id}`;
       card.className = 'album-card block';
       card.style.animationDelay = `${i * 0.1}s`;
-      const meta = isGroup
-        ? `${album.subAlbums.length} Albums`
-        : `${album.photos.length} Photos`;
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
+      const dateline = albumDateline(album);
       card.innerHTML = `
         <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
         <div class="album-card-overlay">
+          ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h3 class="album-card-title">${album.title}</h3>
-          <p class="album-card-meta">${meta}</p>
           <p class="album-card-desc">${album.description}</p>
         </div>
       `;

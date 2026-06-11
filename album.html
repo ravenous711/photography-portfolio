@@ -93,9 +93,9 @@
             </svg>
             <span id="back-label">All Albums</span>
           </a>
+          <p class="album-page-dateline" id="album-dateline"></p>
           <h1 class="font-serif text-4xl md:text-5xl font-light" id="album-title" style="letter-spacing:0.04em"></h1>
           <p class="mt-2 text-sm" id="album-description" style="color:var(--color-muted)"></p>
-          <p class="mt-1 text-xs tracking-widest uppercase" id="album-count" style="color:rgba(240,237,232,0.3)"></p>
         </div>
 
         <!-- Download / Select buttons -->
@@ -376,8 +376,8 @@
     function showAlbum() {
       document.getElementById('album-content').style.display = 'block';
       document.getElementById('album-title').textContent       = album.title;
+      document.getElementById('album-dateline').textContent    = albumDateline(album);
       document.getElementById('album-description').textContent = album.description;
-      document.getElementById('album-count').textContent       = `${album.photos.length} Photos`;
 
       const grid = document.getElementById('photo-grid');
       grid.innerHTML = '';

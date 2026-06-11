@@ -102,15 +102,13 @@
     topLevel.forEach(album => {
       const isGroup = album.type === 'group';
       const href = isGroup ? `album-group.html?id=${album.id}` : `album.html?id=${album.id}`;
-      const meta = isGroup
-        ? `${album.subAlbums.length} Albums`
-        : `${album.photos.length} Photos${album.protected ? ' · Private' : ''}`;
 
       const card = document.createElement('a');
       card.href = href;
       card.className = 'album-card fade-in';
       card.dataset.type = album.protected ? 'private' : 'public';
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
+      const dateline = albumDateline(album);
       card.innerHTML = `
         <img class="album-card-img"
              src="${album.coverImage}"
@@ -131,8 +129,8 @@
                 <rect x="2" y="15" width="8" height="6" rx="1"/><rect x="14" y="15" width="8" height="6" rx="1"/>
               </svg>
             </div>` : ''}
+          ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h2 class="album-card-title">${album.title}</h2>
-          <p class="album-card-meta">${meta}</p>
           <p class="album-card-desc">${album.description}</p>
         </div>
       `;

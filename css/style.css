@@ -440,6 +440,36 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   letter-spacing: 0.03em;
 }
 
+.album-card-dateline {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin: 0 0 0.4rem;
+}
+
+.album-page-dateline {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 0.75rem;
+}
+
+.group-page-dateline {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 0.75rem;
+}
+
 .album-card-meta {
   font-size: 0.72rem;
   letter-spacing: 0.15em;
@@ -510,6 +540,13 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   margin: 0 0 0.2rem;
   transform: translateY(0);
   transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+.editorial-grid .album-card-dateline {
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 0.35rem;
 }
 
 .editorial-grid .album-card:hover .album-card-title {

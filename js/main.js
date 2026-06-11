@@ -93,6 +93,23 @@ function gridUrl(fullUrl) {
 // alias kept for admin/curate call sites
 function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
+// Journal-style dateline: "Venice · May 2026 · 95 frames"
+function albumDateline(album) {
+  if (album.dateline) return album.dateline;
+
+  const parts = [];
+  if (album.location) parts.push(album.location);
+  if (album.date) parts.push(album.date);
+
+  if (album.type === 'group' && album.subAlbums?.length) {
+    parts.push(`${album.subAlbums.length} albums`);
+  } else if (album.photos?.length) {
+    parts.push(`${album.photos.length} frames`);
+  }
+
+  return parts.join(' · ');
+}
+
 // Preload full-res images for instant lightbox navigation
 const ImagePreload = {
   _cache: new Map(),

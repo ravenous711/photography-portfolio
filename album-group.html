@@ -41,6 +41,7 @@
       <span id="back-link-label">Gallery</span>
     </a>
     <div class="gold-rule" style="margin-top:1.5rem"></div>
+    <p class="group-page-dateline" id="group-dateline"></p>
     <h1 class="page-title" id="group-title">–</h1>
     <p class="mt-4 text-sm" id="group-desc" style="color:var(--color-muted);max-width:420px;margin-left:auto;margin-right:auto"></p>
   </header>
@@ -161,6 +162,7 @@
     }
 
     function showGroup() {
+      document.getElementById('group-dateline').textContent = albumDateline(group);
       document.getElementById('group-title').textContent = group.title;
       document.getElementById('group-desc').textContent = group.description;
 
@@ -181,22 +183,20 @@
         const href = isGroup
           ? `album-group.html?id=${album.id}`
           : `album.html?id=${album.id}`;
-        const meta = isGroup
-          ? `${album.subAlbums.length} Albums`
-          : (album.photos?.length > 0 ? `${album.photos.length} Photos` : 'Coming soon');
 
         const card = document.createElement('a');
         card.href = href;
         card.className = 'album-card fade-in visible';
         const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
+        const dateline = albumDateline(album);
         card.innerHTML = `
           <img class="album-card-img"
                src="${album.coverImage}"
                alt="${album.title}"
                loading="lazy"${posStyle} />
           <div class="album-card-overlay">
+            ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
             <h2 class="album-card-title">${album.title}</h2>
-            <p class="album-card-meta">${meta}</p>
             <p class="album-card-desc">${album.description}</p>
           </div>
         `;
