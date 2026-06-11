@@ -120,11 +120,8 @@
       <div class="gold-rule" style="margin-left:0;margin-top:2rem"></div>
     </header>
 
-    <!-- Photo grid -->
-    <main class="px-6 md:px-8 pb-24">
-      <div class="photo-grid" id="photo-grid">
-        <!-- Populated by JS -->
-      </div>
+    <!-- Photo grid (or chapter sections) — populated by JS -->
+    <main class="px-6 md:px-8 pb-24" id="album-main">
     </main>
 
   </div>
@@ -282,7 +279,7 @@
       selected.clear();
 
       document.getElementById('selection-bar').classList.toggle('show', selectMode);
-      document.getElementById('photo-grid').classList.toggle('select-mode', selectMode);
+      document.querySelectorAll('.photo-grid').forEach(g => g.classList.toggle('select-mode', selectMode));
       document.getElementById('select-btn').classList.toggle('active', selectMode);
 
       // Reset all thumb selected state
@@ -373,25 +370,59 @@
       }, 1500);
     }
 
-    function showAlbum() {
-      document.getElementById('album-content').style.display = 'block';
-      document.getElementById('album-title').textContent       = album.title;
-      document.getElementById('album-dateline').textContent    = albumDateline(album);
-      document.getElementById('album-description').textContent = album.description;
+    // ── Justified layout helper (called per grid) ──
+    function setupJustifiedLayout(grid) {
+      function runLayout() {
+        const items = Array.from(grid.querySelectorAll('.photo-thumb'));
+        if (!items.length) return;
+        const containerWidth = grid.offsetWidth;
+        if (!containerWidth) return;
 
-      const grid = document.getElementById('photo-grid');
-      grid.innerHTML = '';
+        const aspectRatios = items.map(item => {
+          const img = item.querySelector('img');
+          return (img.naturalWidth && img.naturalHeight)
+            ? img.naturalWidth / img.naturalHeight
+            : 1.5;
+        });
 
-      album.photos.forEach((url, i) => {
+        const layout = justifiedLayout(aspectRatios, {
+          containerWidth,
+          targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
+          boxSpacing:      window.innerWidth <= 640 ? 6  : 12,
+          containerPadding: 0,
+        });
+
+        grid.style.height = layout.containerHeight + 'px';
+        items.forEach((item, i) => {
+          const box = layout.boxes[i];
+          item.style.left   = box.left   + 'px';
+          item.style.top    = box.top    + 'px';
+          item.style.width  = box.width  + 'px';
+          item.style.height = box.height + 'px';
+        });
+      }
+
+      runLayout();
+      grid.querySelectorAll('img').forEach(img => {
+        if (img.complete && img.naturalWidth) runLayout();
+        else img.addEventListener('load', runLayout);
+      });
+      window.addEventListener('resize', runLayout);
+    }
+
+    // ── Render a list of photo URLs into a grid, starting at globalOffset ──
+    function renderPhotosToGrid(photos, grid, albumTitle, globalOffset) {
+      photos.forEach((url, i) => {
+        const globalIndex = globalOffset + i;
         const thumb = document.createElement('div');
         thumb.className = 'photo-thumb';
         thumb.setAttribute('tabindex', '0');
         thumb.setAttribute('role', 'button');
-        thumb.setAttribute('aria-label', `Open photo ${i + 1}`);
+        thumb.setAttribute('aria-label', `Open photo ${globalIndex + 1}`);
 
         const img = document.createElement('img');
-        img.alt     = `${album.title} — photo ${i + 1}`;
-        img.loading = i < 6 ? 'eager' : 'lazy';
+        img.alt     = `${albumTitle} — photo ${globalIndex + 1}`;
+        img.loading = globalIndex < 6 ? 'eager' : 'lazy';
         img.addEventListener('load', () => img.classList.add('loaded'));
         img.addEventListener('error', () => { img.src = url; }, { once: true });
         img.src = gridUrl(url);
@@ -403,7 +434,6 @@
             <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
           </svg>`;
 
-        // Checkmark overlay for select mode
         const checkOverlay = document.createElement('div');
         checkOverlay.className = 'photo-thumb-check';
         checkOverlay.innerHTML = `
@@ -417,9 +447,9 @@
 
         const handleClick = () => {
           if (selectMode) {
-            toggleThumb(i, thumb);
+            toggleThumb(globalIndex, thumb);
           } else {
-            openLightbox(i);
+            openLightbox(globalIndex);
           }
         };
         thumb.addEventListener('click', handleClick);
@@ -427,52 +457,65 @@
 
         grid.appendChild(thumb);
       });
+    }
 
-      // ── Justified row layout (Flickr-style) ──
-      // Every row is scaled to the same height; images fill the full row width.
-      function runJustifiedLayout() {
-        const items = Array.from(grid.querySelectorAll('.photo-thumb'));
-        if (!items.length) return;
+    function showAlbum() {
+      document.getElementById('album-content').style.display   = 'block';
+      document.getElementById('album-title').textContent       = album.title;
+      document.getElementById('album-dateline').textContent    = albumDateline(album);
+      document.getElementById('album-description').textContent = album.description;
 
-        const containerWidth = grid.offsetWidth;
-        if (!containerWidth) return;
+      const main = document.getElementById('album-main');
+      main.innerHTML = '';
 
-        const aspectRatios = items.map(item => {
-          const img = item.querySelector('img');
-          if (img.naturalWidth && img.naturalHeight) {
-            return img.naturalWidth / img.naturalHeight;
+      if (album.chapters) {
+        // ── Chapter album: one section per city ──
+        let globalOffset = 0;
+        album.chapters.forEach(chapter => {
+          const section = document.createElement('section');
+          section.className = 'chapter-section';
+          section.id = `chapter-${chapter.id}`;
+
+          const header = document.createElement('div');
+          header.className = 'chapter-header';
+          header.innerHTML = `
+            <p class="chapter-dateline">${albumDateline(chapter)}</p>
+            <h2 class="chapter-title">${chapter.title}</h2>
+            <div class="gold-rule" style="margin-left:0;margin-top:1.25rem"></div>`;
+
+          const grid = document.createElement('div');
+          grid.className = 'photo-grid';
+
+          section.appendChild(header);
+          section.appendChild(grid);
+          main.appendChild(section);
+
+          if (chapter.photos.length) {
+            renderPhotosToGrid(chapter.photos, grid, album.title, globalOffset);
+            setupJustifiedLayout(grid);
+          } else {
+            grid.innerHTML = `<p class="chapter-coming-soon">Coming soon.</p>`;
           }
-          return 1.5; // default landscape fallback before images load
+
+          globalOffset += chapter.photos.length;
         });
 
-        const layout = justifiedLayout(aspectRatios, {
-          containerWidth: containerWidth,
-          targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
-          boxSpacing: window.innerWidth <= 640 ? 6 : 12,
-          containerPadding: 0,
-        });
-
-        grid.style.height = layout.containerHeight + 'px';
-
-        items.forEach((item, i) => {
-          const box = layout.boxes[i];
-          item.style.left   = box.left + 'px';
-          item.style.top    = box.top  + 'px';
-          item.style.width  = box.width + 'px';
-          item.style.height = box.height + 'px';
-        });
+        // Scroll to hash chapter after render
+        const hash = window.location.hash;
+        if (hash) {
+          const target = document.querySelector(hash);
+          if (target) {
+            setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
+          }
+        }
+      } else {
+        // ── Standard single-grid album ──
+        const grid = document.createElement('div');
+        grid.className = 'photo-grid';
+        main.appendChild(grid);
+        renderPhotosToGrid(album.photos, grid, album.title, 0);
+        setupJustifiedLayout(grid);
       }
-
-      // Run immediately with fallback aspect ratios, then re-run as each image loads
-      runJustifiedLayout();
-
-      const allImgs = grid.querySelectorAll('img');
-      allImgs.forEach(img => {
-        if (img.complete && img.naturalWidth) { runJustifiedLayout(); }
-        else { img.addEventListener('load', runJustifiedLayout); }
-      });
-
-      window.addEventListener('resize', runJustifiedLayout);
     }
 
     // ════════════════════════════════════════════════════════
