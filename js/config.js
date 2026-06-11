@@ -49,7 +49,9 @@ const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 //                   hashPassword('your-password').then(h => console.log(h))
 //                 (hashPassword is defined in js/main.js)
 //   coverImage  – path relative to R2_BASE_URL, or full URL for placeholders
-//   photos      – array of photo URLs inside the album
+//   photos      – array of digital photo URLs inside the album
+//   filmPhotos  – optional film frames appended after photos (separate grid section)
+//   filmLabel   – optional heading for the film section (default: "On film")
 // ============================================================
 const ALBUMS = [
 

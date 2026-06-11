@@ -100,8 +100,17 @@ function locationMatchesTitle(album) {
   return norm(album.location) === norm(album.title);
 }
 
+function getAlbumAllPhotos(album) {
+  if (!album) return [];
+  return [...(album.photos || []), ...(album.filmPhotos || [])];
+}
+
+function getAlbumPhotoCount(album) {
+  return getAlbumAllPhotos(album).length;
+}
+
 function isEmptyAlbum(album) {
-  return album.type !== 'group' && !album.photos?.length;
+  return album.type !== 'group' && !getAlbumPhotoCount(album);
 }
 
 function albumDateline(album, { withDesc = false } = {}) {
@@ -120,8 +129,9 @@ function albumDateline(album, { withDesc = false } = {}) {
 
   if (album.type === 'group' && album.subAlbums?.length) {
     parts.push(`${album.subAlbums.length} albums`);
-  } else if (album.photos?.length) {
-    parts.push(`${album.photos.length} frames`);
+  } else {
+    const count = getAlbumPhotoCount(album);
+    if (count) parts.push(`${count} frames`);
   }
 
   return parts.join(' · ');

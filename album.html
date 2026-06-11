@@ -107,7 +107,7 @@
             </svg>
             Select
           </button>
-          <button id="download-btn" class="btn-primary" onclick="downloadPhotos(album.photos)">
+          <button id="download-btn" class="btn-primary" onclick="downloadPhotos(allPhotos)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -120,10 +120,16 @@
       <div class="gold-rule" style="margin-left:0;margin-top:2rem"></div>
     </header>
 
-    <!-- Photo grid -->
+    <!-- Photo grids -->
     <main class="px-6 md:px-8 pb-24">
       <div class="photo-grid" id="photo-grid">
-        <!-- Populated by JS -->
+        <!-- Digital photos populated by JS -->
+      </div>
+      <div id="film-section" class="album-film-section" hidden>
+        <p class="album-film-label" id="film-section-label">On film</p>
+        <div class="photo-grid" id="film-grid">
+          <!-- Film photos populated by JS -->
+        </div>
       </div>
       <nav id="album-next-nav" class="album-next-nav" aria-label="Next album" hidden></nav>
     </main>
@@ -200,6 +206,7 @@
     const params    = new URLSearchParams(window.location.search);
     const albumId   = params.get('id');
     const album     = ALBUMS.find(a => a.id === albumId);
+    let allPhotos   = [];
 
     if (!album) {
       document.body.innerHTML = `
@@ -208,6 +215,8 @@
           <a href="gallery.html" class="btn-ghost">Back to Gallery</a>
         </div>`;
     } else {
+      allPhotos = getAlbumAllPhotos(album);
+
       // Update page title
       document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
       document.getElementById('footer-copyright').textContent =
@@ -284,6 +293,7 @@
 
       document.getElementById('selection-bar').classList.toggle('show', selectMode);
       document.getElementById('photo-grid').classList.toggle('select-mode', selectMode);
+      document.getElementById('film-grid').classList.toggle('select-mode', selectMode);
       document.getElementById('select-btn').classList.toggle('active', selectMode);
 
       // Reset all thumb selected state
@@ -304,13 +314,13 @@
 
     function toggleSelectAll() {
       const thumbs = Array.from(document.querySelectorAll('.photo-thumb'));
-      if (selected.size === album.photos.length) {
+      if (selected.size === allPhotos.length) {
         // Deselect all
         selected.clear();
         thumbs.forEach(t => t.classList.remove('selected'));
       } else {
         // Select all
-        album.photos.forEach((_, i) => selected.add(i));
+        allPhotos.forEach((_, i) => selected.add(i));
         thumbs.forEach(t => t.classList.add('selected'));
       }
       updateSelectionBar();
@@ -318,7 +328,7 @@
 
     function updateSelectionBar() {
       const count = selected.size;
-      const total = album.photos.length;
+      const total = allPhotos.length;
       let countText = count === 0 ? 'No photos selected' : `${count} of ${total} selected`;
       if (count > 0 && count <= INDIVIDUAL_THRESHOLD) countText += ' · downloads individually';
       else if (count > INDIVIDUAL_THRESHOLD) countText += ' · downloads as ZIP';
@@ -331,7 +341,7 @@
     const INDIVIDUAL_THRESHOLD = 5;
 
     function downloadSelected() {
-      const urls = Array.from(selected).sort((a, b) => a - b).map(i => album.photos[i]);
+      const urls = Array.from(selected).sort((a, b) => a - b).map(i => allPhotos[i]);
       if (urls.length <= INDIVIDUAL_THRESHOLD) {
         downloadIndividually(urls);
       } else {
@@ -374,6 +384,96 @@
       }, 1500);
     }
 
+    function createPhotoThumb(url, index, sectionTitle) {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.setAttribute('tabindex', '0');
+      thumb.setAttribute('role', 'button');
+      thumb.setAttribute('aria-label', `Open photo ${index + 1}`);
+
+      const img = document.createElement('img');
+      img.alt     = `${sectionTitle} — photo ${index + 1}`;
+      img.loading = index < 6 ? 'eager' : 'lazy';
+      img.addEventListener('load', () => img.classList.add('loaded'));
+      img.addEventListener('error', () => { img.src = url; }, { once: true });
+      img.src = gridUrl(url);
+
+      const expandOverlay = document.createElement('div');
+      expandOverlay.className = 'photo-thumb-overlay';
+      expandOverlay.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        </svg>`;
+
+      const checkOverlay = document.createElement('div');
+      checkOverlay.className = 'photo-thumb-check';
+      checkOverlay.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>`;
+
+      thumb.appendChild(img);
+      thumb.appendChild(expandOverlay);
+      thumb.appendChild(checkOverlay);
+
+      const handleClick = () => {
+        if (selectMode) {
+          toggleThumb(index, thumb);
+        } else {
+          openLightbox(index);
+        }
+      };
+      thumb.addEventListener('click', handleClick);
+      thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleClick(); });
+
+      return thumb;
+    }
+
+    function runJustifiedLayout(grid) {
+      const items = Array.from(grid.querySelectorAll('.photo-thumb'));
+      if (!items.length) {
+        grid.style.height = '0px';
+        return;
+      }
+
+      const containerWidth = grid.offsetWidth;
+      if (!containerWidth) return;
+
+      const aspectRatios = items.map(item => {
+        const img = item.querySelector('img');
+        if (img.naturalWidth && img.naturalHeight) {
+          return img.naturalWidth / img.naturalHeight;
+        }
+        return 1.5;
+      });
+
+      const layout = justifiedLayout(aspectRatios, {
+        containerWidth: containerWidth,
+        targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
+        boxSpacing: window.innerWidth <= 640 ? 6 : 12,
+        containerPadding: 0,
+      });
+
+      grid.style.height = layout.containerHeight + 'px';
+
+      items.forEach((item, i) => {
+        const box = layout.boxes[i];
+        item.style.left   = box.left + 'px';
+        item.style.top    = box.top  + 'px';
+        item.style.width  = box.width + 'px';
+        item.style.height = box.height + 'px';
+      });
+    }
+
+    function bindGridLayout(grid) {
+      runJustifiedLayout(grid);
+
+      grid.querySelectorAll('img').forEach(img => {
+        if (img.complete && img.naturalWidth) { runJustifiedLayout(grid); }
+        else { img.addEventListener('load', () => runJustifiedLayout(grid)); }
+      });
+    }
+
     function showAlbum() {
       document.getElementById('album-content').style.display = 'block';
       document.getElementById('album-title').textContent       = album.title;
@@ -388,100 +488,36 @@
         descEl.style.display = 'none';
       }
 
-      const grid = document.getElementById('photo-grid');
-      grid.innerHTML = '';
+      const digitalGrid = document.getElementById('photo-grid');
+      const filmSection = document.getElementById('film-section');
+      const filmGrid = document.getElementById('film-grid');
+      digitalGrid.innerHTML = '';
+      filmGrid.innerHTML = '';
 
-      album.photos.forEach((url, i) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'photo-thumb';
-        thumb.setAttribute('tabindex', '0');
-        thumb.setAttribute('role', 'button');
-        thumb.setAttribute('aria-label', `Open photo ${i + 1}`);
-
-        const img = document.createElement('img');
-        img.alt     = `${album.title} — photo ${i + 1}`;
-        img.loading = i < 6 ? 'eager' : 'lazy';
-        img.addEventListener('load', () => img.classList.add('loaded'));
-        img.addEventListener('error', () => { img.src = url; }, { once: true });
-        img.src = gridUrl(url);
-
-        const expandOverlay = document.createElement('div');
-        expandOverlay.className = 'photo-thumb-overlay';
-        expandOverlay.innerHTML = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
-            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-          </svg>`;
-
-        // Checkmark overlay for select mode
-        const checkOverlay = document.createElement('div');
-        checkOverlay.className = 'photo-thumb-check';
-        checkOverlay.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>`;
-
-        thumb.appendChild(img);
-        thumb.appendChild(expandOverlay);
-        thumb.appendChild(checkOverlay);
-
-        const handleClick = () => {
-          if (selectMode) {
-            toggleThumb(i, thumb);
-          } else {
-            openLightbox(i);
-          }
-        };
-        thumb.addEventListener('click', handleClick);
-        thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleClick(); });
-
-        grid.appendChild(thumb);
+      const digitalPhotos = album.photos || [];
+      digitalPhotos.forEach((url, i) => {
+        digitalGrid.appendChild(createPhotoThumb(url, i, album.title));
       });
 
-      // ── Justified row layout (Flickr-style) ──
-      // Every row is scaled to the same height; images fill the full row width.
-      function runJustifiedLayout() {
-        const items = Array.from(grid.querySelectorAll('.photo-thumb'));
-        if (!items.length) return;
-
-        const containerWidth = grid.offsetWidth;
-        if (!containerWidth) return;
-
-        const aspectRatios = items.map(item => {
-          const img = item.querySelector('img');
-          if (img.naturalWidth && img.naturalHeight) {
-            return img.naturalWidth / img.naturalHeight;
-          }
-          return 1.5; // default landscape fallback before images load
+      const filmPhotos = album.filmPhotos || [];
+      if (filmPhotos.length) {
+        filmSection.hidden = false;
+        document.getElementById('film-section-label').textContent = album.filmLabel || 'On film';
+        filmPhotos.forEach((url, i) => {
+          filmGrid.appendChild(createPhotoThumb(url, digitalPhotos.length + i, album.title));
         });
-
-        const layout = justifiedLayout(aspectRatios, {
-          containerWidth: containerWidth,
-          targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
-          boxSpacing: window.innerWidth <= 640 ? 6 : 12,
-          containerPadding: 0,
-        });
-
-        grid.style.height = layout.containerHeight + 'px';
-
-        items.forEach((item, i) => {
-          const box = layout.boxes[i];
-          item.style.left   = box.left + 'px';
-          item.style.top    = box.top  + 'px';
-          item.style.width  = box.width + 'px';
-          item.style.height = box.height + 'px';
-        });
+      } else {
+        filmSection.hidden = true;
       }
 
-      // Run immediately with fallback aspect ratios, then re-run as each image loads
-      runJustifiedLayout();
+      bindGridLayout(digitalGrid);
+      if (filmPhotos.length) bindGridLayout(filmGrid);
 
-      const allImgs = grid.querySelectorAll('img');
-      allImgs.forEach(img => {
-        if (img.complete && img.naturalWidth) { runJustifiedLayout(); }
-        else { img.addEventListener('load', runJustifiedLayout); }
+      window.addEventListener('resize', () => {
+        runJustifiedLayout(digitalGrid);
+        if (filmPhotos.length) runJustifiedLayout(filmGrid);
       });
 
-      window.addEventListener('resize', runJustifiedLayout);
       renderNextAlbumNav();
     }
 
@@ -572,19 +608,19 @@
     }
 
     function loadLightboxImage(index) {
-      const url = album.photos[index];
+      const url = allPhotos[index];
 
-      counter.textContent = `${index + 1} / ${album.photos.length}`;
+      counter.textContent = `${index + 1} / ${allPhotos.length}`;
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
-      document.getElementById('lightbox-next').style.visibility = index === album.photos.length - 1 ? 'hidden' : 'visible';
+      document.getElementById('lightbox-next').style.visibility = index === allPhotos.length - 1 ? 'hidden' : 'visible';
 
       showLightboxPhoto(url, index);
-      ImagePreload.preloadAdjacent(album.photos, index);
+      ImagePreload.preloadAdjacent(allPhotos, index);
     }
 
     function lightboxNav(dir) {
       const newIndex = currentIndex + dir;
-      if (newIndex >= 0 && newIndex < album.photos.length) {
+      if (newIndex >= 0 && newIndex < allPhotos.length) {
         currentIndex = newIndex;
         loadLightboxImage(currentIndex);
       }
@@ -655,7 +691,7 @@
       const label    = document.getElementById('dl-label');
       const bar      = document.getElementById('dl-bar');
 
-      const isAll = photos === album.photos;
+      const isAll = photos === allPhotos;
       if (dlBtn)    { dlBtn.disabled = true; }
       if (selDlBtn) { selDlBtn.disabled = true; }
       progress.classList.add('show');
