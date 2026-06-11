@@ -192,22 +192,29 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 - [x] **Venice** — 95 photos + grid at `Italy/Venice/Digital/`
 - [x] **Pisa** — 23 photos + grid at `Italy/Pisa/Digital/`
 - [x] **Florence** — 55 photos + grid at `Italy/Florence/Digital/`
+- [x] **Assisi** — 11 photos + grid at `Italy/Assisi/Digital/` (from `Export/Assisi/`)
+- [x] **California 2025** — 111 photos + grid (`California/Santa-Cruz-Big-Sur/`, `California/Yosemite/`)
+- [x] **On Film** — 4 rolls, 150 photos + grid at `Italy/Film/Ultramax/`, `FP4/`, `TMAX/`, `Portra/`
 - [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
 - [x] **Grid tier** — album, admin, and curate use 1200px grid previews
 - [x] **GitHub token** — admin deletions auto-update `config.js`
 - [x] **RF favicon** — tab icon on all pages
 - [x] **Hero image** — `DSCF1569.jpg` (Italy) on home page
+- [x] **Editorial album cards** — full-bleed grid, datelines, `(TBD)` placeholders
+- [x] **London 2025 placeholder** — TBD album card on gallery (no photos yet)
 
-### 🟡 Next — Italy city albums (needs external drive)
+### 🟡 Next — albums needing photos (external drive)
 
-Export starred picks to `Italy/Export/<City>/` in Lightroom, then say **"upload Assisi"** or **"upload Rome"**.
+Export starred picks to `Italy/Export/<City>/` in Lightroom (or equivalent), then say **"upload Rome"** or **"upload London"**.
 
 | Album | R2 path | Drive source | Status |
 |---|---|---|---|
-| **Assisi** | `Italy/Assisi/Digital/` | `04_Assisi/` (~56 JPGs) | not exported yet |
 | **Rome** | `Italy/Rome/Digital/` | `05_Rome/` (~607 JPGs) | not exported yet — cull/edit first |
+| **London 2025** | `London/2025/` (TBD) | not on drive yet | placeholder on site |
 
-Italy group order on site: Venice → Pisa → Florence → Assisi → Rome → Film.
+Italy group order on site: Venice → Pisa → Florence → Assisi → Rome → On Film.
+
+Gallery order: California 2025 → London 2025 → Italy 2026.
 
 ### 🟡 Grid backfill — originals already on R2
 
@@ -216,12 +223,8 @@ These albums work but load slow without grid images. Say **"backfill grid for Jo
 | Album | R2 folder | Photos |
 |---|---|---|
 | **Joel Birthday 2025** | `Joel-Bday-2025/` | 74 |
-| **Film Roll 1** | `Italy/Film/Ultramax/` | 37 |
-| **Film Roll 2** | `Italy/Film/FP4/` | 38 |
-| **Film Roll 3** | `Italy/Film/TMAX/` | 37 |
-| **Film Roll 4** | `Italy/Film/Portra/` | 38 |
 
-Do these one at a time when the external drive is connected.
+Do one at a time when the external drive is connected.
 
 ### 🟢 Nice to have
 
