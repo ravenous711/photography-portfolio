@@ -126,10 +126,7 @@
         <!-- Digital photos populated by JS -->
       </div>
       <div id="film-section" class="album-film-section" hidden>
-        <p class="album-film-label" id="film-section-label">On film</p>
-        <div class="photo-grid" id="film-grid">
-          <!-- Film photos populated by JS -->
-        </div>
+        <!-- Film subsections populated by JS -->
       </div>
       <nav id="album-next-nav" class="album-next-nav" aria-label="Next album" hidden></nav>
     </main>
@@ -293,7 +290,9 @@
 
       document.getElementById('selection-bar').classList.toggle('show', selectMode);
       document.getElementById('photo-grid').classList.toggle('select-mode', selectMode);
-      document.getElementById('film-grid').classList.toggle('select-mode', selectMode);
+      document.querySelectorAll('#film-section .photo-grid').forEach(grid => {
+        grid.classList.toggle('select-mode', selectMode);
+      });
       document.getElementById('select-btn').classList.toggle('active', selectMode);
 
       // Reset all thumb selected state
@@ -490,32 +489,50 @@
 
       const digitalGrid = document.getElementById('photo-grid');
       const filmSection = document.getElementById('film-section');
-      const filmGrid = document.getElementById('film-grid');
       digitalGrid.innerHTML = '';
-      filmGrid.innerHTML = '';
+      filmSection.innerHTML = '';
 
       const digitalPhotos = album.photos || [];
       digitalPhotos.forEach((url, i) => {
         digitalGrid.appendChild(createPhotoThumb(url, i, album.title));
       });
 
-      const filmPhotos = album.filmPhotos || [];
-      if (filmPhotos.length) {
+      const filmSections = getAlbumFilmSections(album);
+      let photoOffset = digitalPhotos.length;
+
+      if (filmSections.length) {
         filmSection.hidden = false;
-        document.getElementById('film-section-label').textContent = album.filmLabel || 'On film';
-        filmPhotos.forEach((url, i) => {
-          filmGrid.appendChild(createPhotoThumb(url, digitalPhotos.length + i, album.title));
+
+        filmSections.forEach((section, sectionIndex) => {
+          const block = document.createElement('div');
+          block.className = 'album-film-block';
+          if (sectionIndex > 0) block.classList.add('album-film-block--continued');
+
+          const label = document.createElement('p');
+          label.className = 'album-film-label';
+          label.textContent = section.label || 'On film';
+          block.appendChild(label);
+
+          const grid = document.createElement('div');
+          grid.className = 'photo-grid';
+          (section.photos || []).forEach((url, i) => {
+            grid.appendChild(createPhotoThumb(url, photoOffset + i, album.title));
+          });
+          block.appendChild(grid);
+          filmSection.appendChild(block);
+
+          bindGridLayout(grid);
+          photoOffset += (section.photos || []).length;
         });
       } else {
         filmSection.hidden = true;
       }
 
       bindGridLayout(digitalGrid);
-      if (filmPhotos.length) bindGridLayout(filmGrid);
 
       window.addEventListener('resize', () => {
         runJustifiedLayout(digitalGrid);
-        if (filmPhotos.length) runJustifiedLayout(filmGrid);
+        filmSection.querySelectorAll('.photo-grid').forEach(runJustifiedLayout);
       });
 
       renderNextAlbumNav();

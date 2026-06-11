@@ -100,9 +100,22 @@ function locationMatchesTitle(album) {
   return norm(album.location) === norm(album.title);
 }
 
+function getAlbumFilmSections(album) {
+  if (!album) return [];
+  if (album.filmSections?.length) return album.filmSections;
+  if (album.filmPhotos?.length) {
+    return [{ label: album.filmLabel || 'On film', photos: album.filmPhotos }];
+  }
+  return [];
+}
+
 function getAlbumAllPhotos(album) {
   if (!album) return [];
-  return [...(album.photos || []), ...(album.filmPhotos || [])];
+  const digital = album.photos || [];
+  if (album.filmSections?.length) {
+    return [...digital, ...album.filmSections.flatMap(section => section.photos || [])];
+  }
+  return [...digital, ...(album.filmPhotos || [])];
 }
 
 function getAlbumPhotoCount(album) {
