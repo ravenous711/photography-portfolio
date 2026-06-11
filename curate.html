@@ -87,8 +87,13 @@
       display: block;
       opacity: 0;
       transition: opacity 0.3s;
+      -webkit-user-drag: none;
+      user-select: none;
     }
     .curate-card img.loaded { opacity: 1; }
+    .curate-card .photo-wrap {
+      -webkit-tap-highlight-color: transparent;
+    }
 
     /* voted overlay tint */
     .curate-card.voted-keep .photo-wrap::after {
@@ -193,15 +198,22 @@
       letter-spacing: 0.06em;
     }
 
-    /* ── Lightbox ── */
+    /* ── Lightbox (override global style.css fade/position rules) ── */
     #lightbox {
       position: fixed; inset: 0; z-index: 800;
       background: rgba(0,0,0,0.92);
       display: none; align-items: center; justify-content: center;
       cursor: zoom-out;
+      opacity: 1 !important;
+      transition: none !important;
+      pointer-events: none;
     }
-    #lightbox.open { display: flex; }
+    #lightbox.open {
+      display: flex;
+      pointer-events: auto;
+    }
     #lightbox-inner {
+      position: relative;
       display: flex; flex-direction: column; align-items: center;
       max-width: 96vw; max-height: 96vh;
       cursor: default;
@@ -210,6 +222,7 @@
       position: relative;
       display: flex; align-items: center; justify-content: center;
       width: 92vw; height: calc(90vh - 100px);
+      pointer-events: none;
     }
     #lightbox-stage .lightbox-layer {
       position: absolute;
@@ -218,28 +231,45 @@
       border-radius: 2px;
       cursor: default;
       opacity: 0;
+      visibility: hidden;
       z-index: 1;
       transition: none;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      user-select: none;
     }
-    #lightbox-stage .lightbox-layer.active { opacity: 1; z-index: 2; }
+    #lightbox-stage .lightbox-layer.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 2;
+      pointer-events: auto;
+    }
     #lightbox-spinner {
+      display: none;
       position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
       width: 32px; height: 32px;
       border: 2px solid rgba(255,255,255,0.2);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       pointer-events: none;
+      z-index: 3;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     #lightbox-close {
       position: absolute; top: 1.25rem; right: 1.5rem;
+      z-index: 10;
       color: rgba(255,255,255,0.7); font-size: 1.75rem;
       cursor: pointer; line-height: 1; background: none; border: none;
       transition: color 0.15s;
     }
+    #lightbox .lightbox-nav { z-index: 10; }
     #lightbox-close:hover { color: white; }
     #lightbox-counter {
+      position: static;
+      transform: none;
       color: rgba(255,255,255,0.6);
       font-size: 0.72rem;
       letter-spacing: 0.12em;
@@ -362,10 +392,10 @@
       onclick="event.stopPropagation(); lightboxNav(-1)">‹</button>
 
     <div id="lightbox-inner" onclick="event.stopPropagation()">
-      <div id="lightbox-spinner"></div>
       <div id="lightbox-stage">
-        <img id="lightbox-img-a" class="lightbox-layer" alt="" />
-        <img id="lightbox-img-b" class="lightbox-layer" alt="" />
+        <div id="lightbox-spinner"></div>
+        <img id="lightbox-img-a" class="lightbox-layer" alt="" draggable="false" />
+        <img id="lightbox-img-b" class="lightbox-layer" alt="" draggable="false" />
       </div>
       <p id="lightbox-counter"></p>
       <div id="lightbox-vote">
@@ -560,6 +590,7 @@
 
         const img = document.createElement('img');
         img.alt = '';
+        img.draggable = false;
         img.decoding = 'async';
         img.dataset.full = url;
         img.dataset.src = gridUrl(url);
@@ -567,7 +598,8 @@
         const btns = document.createElement('div');
         btns.className = 'vote-buttons';
 
-        // Open full-res on photo click
+        // Open full-res on photo click (prevent blue selection/drag overlay)
+        wrap.addEventListener('mousedown', (e) => e.preventDefault());
         wrap.addEventListener('click', () => openLightbox(url));
 
         const keepBtn = document.createElement('button');
@@ -680,32 +712,39 @@
       const currentImg = lightboxLayers[activeLayer];
       let isFull = false;
 
+      spinner.style.display = 'block';
+
       try {
-        await ImagePreload.load(fullResUrl);
-        await ImagePreload.apply(nextImg, fullResUrl);
-        isFull = true;
-      } catch {
-        await ImagePreload.apply(nextImg, grid);
-      }
+        try {
+          await ImagePreload.load(fullResUrl);
+          await ImagePreload.apply(nextImg, fullResUrl);
+          isFull = true;
+        } catch {
+          await ImagePreload.apply(nextImg, grid);
+        }
 
-      if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
+        if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
 
-      nextImg.classList.add('active');
-      currentImg.classList.remove('active');
-      activeLayer = nextLayer;
-      spinner.style.display = 'none';
+        nextImg.classList.add('active');
+        currentImg.classList.remove('active');
+        activeLayer = nextLayer;
 
-      if (!isFull) {
-        ImagePreload.load(fullResUrl).then(async () => {
-          if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
-          await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
-        }).catch(() => {});
+        if (!isFull) {
+          ImagePreload.load(fullResUrl).then(async () => {
+            if (!document.getElementById('lightbox').classList.contains('open') || lightboxIndex !== index) return;
+            await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
+          }).catch(() => {});
+        }
+      } finally {
+        if (lightboxIndex === index) spinner.style.display = 'none';
       }
     }
 
     function openLightbox(url) {
       lightboxIndex = photoList.indexOf(url);
       if (lightboxIndex < 0) return;
+      document.activeElement?.blur();
+      window.getSelection()?.removeAllRanges();
       document.getElementById('lightbox').classList.add('open');
       loadLightboxPhoto();
     }

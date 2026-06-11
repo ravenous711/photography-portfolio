@@ -10,13 +10,15 @@ async function hashPassword(password) {
     .join('');
 }
 
-// ── Navigation: transparent → opaque on scroll ──
+// ── Navigation: transparent → opaque on scroll (home hero only) ──
 function initNav() {
   const nav = document.getElementById('main-nav');
   if (!nav) return;
 
+  const overHero = document.querySelector('.hero');
+
   const updateNav = () => {
-    if (window.scrollY > 60) {
+    if (!overHero || window.scrollY > 60) {
       nav.classList.add('nav-scrolled');
     } else {
       nav.classList.remove('nav-scrolled');
@@ -107,6 +109,30 @@ function getAlbumFilmSections(album) {
     return [{ label: album.filmLabel || 'On film', photos: album.filmPhotos }];
   }
   return [];
+}
+
+function getAlbumSectionNavItems(album) {
+  if (!album || album.type === 'group') return [];
+
+  const items = [];
+  const digitalPhotos = album.photos || [];
+  const filmSections = getAlbumFilmSections(album);
+
+  if (digitalPhotos.length && filmSections.length) {
+    items.push({
+      id: 'digital-section',
+      label: album.digitalNavLabel || 'Digital',
+    });
+  }
+
+  filmSections.forEach((section, index) => {
+    items.push({
+      id: `album-section-film-${index}`,
+      label: section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : (section.label || 'Film')),
+    });
+  });
+
+  return items.length >= 2 ? items : [];
 }
 
 function getAlbumAllPhotos(album) {
