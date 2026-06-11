@@ -799,7 +799,7 @@ const ALBUMS = [
     location: 'Assisi',
     date: 'June 2026',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_055.jpg`,
+    coverImage: `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
     photos: [
       `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_004.jpg`,
       `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_011.jpg`,
