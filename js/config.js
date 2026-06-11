@@ -347,7 +347,7 @@ const ALBUMS = [
   // ── ITALY FILM (nested under Italy 2026) ─────────────────
   {
     id: 'italy-film',
-    title: 'Film',
+    title: 'On Film',
     description: 'June 2026.',
     location: 'Italy',
     date: 'June 2026',
@@ -795,11 +795,24 @@ const ALBUMS = [
     id: 'italy-assisi',
     title: 'Assisi',
     parentId: 'italy-2026',
+    description: 'Assisi, 3 June 2026.',
     location: 'Assisi',
     date: 'June 2026',
     protected: false,
-    coverImage: 'images/placeholder-black.svg',
-    photos: [],
+    coverImage: `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_036.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_004.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_011.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_014.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_024.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_025.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_031.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_036.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_039.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_050.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_055.jpg`,
+    ],
   },
 
   {
