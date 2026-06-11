@@ -33,6 +33,55 @@ wrangler login                                   # opens browser to authorize Cl
 brew install exiftool                            # for reading Lightroom star ratings
 ```
 
+### Wrangler auth — when you need to redo it
+
+Wrangler credentials live **on your Mac**, not in Cursor or this repo. Re-run setup if uploads fail with auth errors, you switch machines, or you use a new Cursor account on a clean install.
+
+**Token location:** `~/Library/Preferences/.wrangler/config/default.toml`
+
+**Redo auth (most common fix):**
+```bash
+export PATH="/opt/homebrew/bin:$PATH"
+wrangler login
+wrangler whoami          # should show your Cloudflare account
+```
+
+**Verify R2 access:**
+```bash
+wrangler r2 bucket list --remote
+# should include: portfolio-images
+```
+
+**Test a read against the public bucket:**
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -r 0-0 \
+  "https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_098.jpg"
+# expect: 206 or 200
+```
+
+**New Mac?** Copy the whole Wrangler config folder, or just run `wrangler login` again on the new machine:
+```bash
+# optional backup from old Mac
+cp -R ~/Library/Preferences/.wrangler ~/Desktop/wrangler-backup
+```
+
+**Important:** Always pass `--remote` on uploads. Without it, Wrangler writes to a local simulation and nothing appears in R2:
+```bash
+wrangler r2 object put "portfolio-images/test.txt" --file /tmp/test.txt --remote
+```
+
+**GitHub CLI** (for PRs / `gh` commands) is separate — re-run `gh auth login` if push or PR commands fail.
+
+---
+
+## Cursor agent skill
+
+This repo includes a project skill at `.cursor/skills/add-portfolio-album/SKILL.md` that teaches the Cursor agent the full album workflow (two-phase upload, rate limits, grid generation, config update).
+
+It loads automatically when you open this project in Cursor — no copy step needed if you clone from GitHub. The agent also uses `scripts/upload-album.sh` for the retry helper.
+
+To ask the agent: **"upload Rome"**, **"add London album"**, etc.
+
 ---
 
 ## Adding a new album
