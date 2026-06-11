@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("/login/?return="+encodeURIComponent(window.location.href));}</script>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Album — Raveen Fernando</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
 
   <!-- JSZip for album download -->
@@ -16,16 +16,16 @@
   <!-- FileSaver for triggering the download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <!-- Flickr justified-layout: all images scaled to equal row height -->
-  <script src="/js/justified-layout.js"></script>
+  <script src="js/justified-layout.js"></script>
 </head>
 <body class="overflow-x-hidden">
 
   <!-- ── Navigation ── -->
   <nav id="main-nav" class="nav-scrolled">
-    <a href="/" class="nav-logo">RF<span>.</span></a>
+    <a href="index.html" class="nav-logo">RF<span>.</span></a>
     <ul class="nav-links">
-      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
+      <li><a href="index.html"   data-nav-link>Home</a></li>
+      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -35,8 +35,8 @@
   </nav>
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
-    <a href="/">Home</a>
-    <a href="/gallery/">Gallery</a>
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
   </div>
 
   <!-- ── Password Modal (shown for protected albums) ── -->
@@ -70,7 +70,7 @@
         </button>
       </form>
 
-      <a href="/gallery/" class="block mt-6 text-xs tracking-widest uppercase"
+      <a href="gallery.html" class="block mt-6 text-xs tracking-widest uppercase"
          style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
         ← Back to Gallery
       </a>
@@ -83,7 +83,7 @@
     <!-- Album header -->
     <header class="album-page-header px-6 md:px-12">
       <div class="album-header-identity">
-        <a id="back-link" href="/gallery/" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
+        <a id="back-link" href="gallery.html" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
            style="color:var(--color-muted);text-decoration:none;transition:color 0.3s"
            onmouseover="this.style.color='var(--color-text)'"
            onmouseout="this.style.color='var(--color-muted)'">
@@ -103,7 +103,7 @@
 
     <div id="album-toolbar-sentinel" aria-hidden="true"></div>
     <div id="album-header-toolbar" class="album-header-toolbar px-6 md:px-12">
-        <a id="back-link-sticky" class="album-toolbar-back" href="/gallery/">
+        <a id="back-link-sticky" class="album-toolbar-back" href="gallery.html">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
@@ -205,18 +205,17 @@
     <p id="footer-copyright"></p>
   </footer>
 
-  <script src="/js/config.js"></script>
-  <script src="/js/routes.js"></script>
-  <script src="/js/main.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
   <script>SiteAuth.guard();</script>
   <script>
     // ════════════════════════════════════════════════════════
     // ALBUM PAGE LOGIC
     // ════════════════════════════════════════════════════════
 
-    // ── Get album from URL ──
-    Routes.canonicalize('album', ['id']);
-    const albumId   = Routes.parsePathId('album', ['id']);
+    // ── Get album from URL param ──
+    const params    = new URLSearchParams(window.location.search);
+    const albumId   = params.get('id');
     const album     = ALBUMS.find(a => a.id === albumId);
     let allPhotos   = [];
 
@@ -224,7 +223,7 @@
       document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
-          <a href="/gallery/" class="btn-ghost">Back to Gallery</a>
+          <a href="gallery.html" class="btn-ghost">Back to Gallery</a>
         </div>`;
     } else {
       allPhotos = getAlbumAllPhotos(album);
@@ -238,7 +237,7 @@
       if (album.parentId) {
         const parent = ALBUMS.find(a => a.id === album.parentId);
         if (parent) {
-          const backHref = Routes.group(album.parentId);
+          const backHref = `album-group.html?id=${album.parentId}`;
           document.getElementById('back-link').href = backHref;
           document.getElementById('back-label').textContent = parent.title;
           document.getElementById('back-link-sticky').href = backHref;
@@ -246,7 +245,7 @@
 
           // If the parent group is password-protected and not yet unlocked, gate here
           if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
-            window.location.replace(Routes.group(album.parentId));
+            window.location.replace(`album-group.html?id=${album.parentId}`);
           }
         }
       }

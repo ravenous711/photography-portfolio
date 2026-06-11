@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("/login/?return="+encodeURIComponent(window.location.href));}</script>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -9,17 +9,17 @@
   <meta name="description" content="Browse photo albums — travel, landscapes, and street photography." />
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
 </head>
 <body class="overflow-x-hidden">
 
   <!-- ── Navigation ── -->
   <nav id="main-nav" class="nav-scrolled">
-    <a href="/" class="nav-logo">RF<span>.</span></a>
+    <a href="index.html" class="nav-logo">RF<span>.</span></a>
     <ul class="nav-links">
-      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
+      <li><a href="index.html"   data-nav-link>Home</a></li>
+      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -29,8 +29,8 @@
   </nav>
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
-    <a href="/">Home</a>
-    <a href="/gallery/">Gallery</a>
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
   </div>
 
   <!-- ── Page Header ── -->
@@ -51,7 +51,7 @@
   <footer>
     <p id="footer-copyright"></p>
     <p class="mt-1">
-      <a href="/">Home</a>
+      <a href="index.html">Home</a>
     </p>
   </footer>
 
@@ -59,9 +59,8 @@
     .album-card { display: block; text-decoration: none; }
   </style>
 
-  <script src="/js/config.js"></script>
-  <script src="/js/routes.js"></script>
-  <script src="/js/main.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
   <script>SiteAuth.guard();</script>
   <script>
     // Footer
@@ -76,7 +75,7 @@
 
     topLevel.forEach(album => {
       const isGroup = album.type === 'group';
-      const href = albumPageUrl(album);
+      const href = isGroup ? `album-group.html?id=${album.id}` : `album.html?id=${album.id}`;
 
       const card = document.createElement('a');
       card.href = href;
