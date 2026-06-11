@@ -155,13 +155,14 @@
       card.className = 'album-card block';
       card.style.animationDelay = `${i * 0.1}s`;
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
-      const dateline = albumDateline(album);
+      const dateline = albumDateline(album, { withDesc: !isGroup });
+      const desc = albumCardDesc(album);
       card.innerHTML = `
         <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
         <div class="album-card-overlay">
           ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h3 class="album-card-title">${album.title}</h3>
-          ${!isGroup && album.description ? `<p class="album-card-desc">${album.description}</p>` : ''}
+          ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
         </div>
       `;
       grid.appendChild(card);

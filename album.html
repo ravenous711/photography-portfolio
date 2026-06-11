@@ -379,8 +379,9 @@
       document.getElementById('album-title').textContent       = album.title;
       document.getElementById('album-dateline').textContent    = albumDateline(album);
       const descEl = document.getElementById('album-description');
-      if (album.description) {
-        descEl.textContent = album.description;
+      const desc = albumCardDesc(album);
+      if (desc) {
+        descEl.textContent = desc;
         descEl.style.display = '';
       } else {
         descEl.textContent = '';
