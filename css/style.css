@@ -299,13 +299,6 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   margin: 0;
 }
 
-.hero-divider {
-  width: 40px;
-  height: 1px;
-  background: #c9a96e;
-  margin: 1.5rem auto;
-}
-
 .scroll-indicator {
   position: absolute;
   bottom: 2.5rem;
@@ -467,6 +460,94 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 .album-card:hover .album-card-desc {
   max-height: 60px;
   opacity: 1;
+}
+
+/* ============================================================
+   EDITORIAL GRID — home page full-bleed 3-up
+   ============================================================ */
+.editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+.editorial-grid .album-card {
+  aspect-ratio: unset;
+  height: 60vh;
+  min-height: 340px;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.editorial-grid .album-card:last-child {
+  border-right: none;
+}
+
+/* Always-visible title — compact, slides up on hover */
+.editorial-grid .album-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.75) 0%,
+    rgba(0,0,0,0.3) 45%,
+    transparent 100%
+  );
+  justify-content: flex-end;
+  padding: 2rem;
+  transition: background 0.4s ease;
+}
+
+.editorial-grid .album-card:hover .album-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.88) 0%,
+    rgba(0,0,0,0.45) 55%,
+    rgba(0,0,0,0.1) 100%
+  );
+}
+
+.editorial-grid .album-card-title {
+  font-size: 1.75rem;
+  margin: 0 0 0.2rem;
+  transform: translateY(0);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+.editorial-grid .album-card:hover .album-card-title {
+  transform: translateY(-4px);
+}
+
+.editorial-grid .album-card-meta {
+  color: rgba(255,255,255,0.65);
+  transition: opacity 0.3s ease;
+}
+
+.editorial-grid .album-card-desc {
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+  margin-top: 0;
+}
+
+.editorial-grid .album-card:hover .album-card-desc {
+  max-height: 80px;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+
+/* Mobile: stack vertically, shorter */
+@media (max-width: 768px) {
+  .editorial-grid {
+    grid-template-columns: 1fr;
+  }
+  .editorial-grid .album-card {
+    height: 55vw;
+    min-height: 220px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .editorial-grid .album-card:last-child {
+    border-bottom: none;
+  }
 }
 
 /* ============================================================

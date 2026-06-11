@@ -58,7 +58,6 @@
 
     <div class="hero-content">
       <h1 class="hero-name" id="hero-name"></h1>
-      <div class="hero-divider"></div>
       <a href="gallery.html" class="btn-primary mt-8 inline-flex" style="margin-top:2rem">
         View Gallery
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:0.5rem">
@@ -75,27 +74,40 @@
   </section>
 
   <!-- ── Featured Albums Preview ── -->
-  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
-    <div class="text-center mb-16 fade-in">
+  <section>
+    <div class="text-center py-16 px-6 fade-in">
       <p class="text-xs tracking-widest uppercase mb-4" style="color:var(--color-muted)">Selected Work</p>
       <h2 class="font-serif text-4xl md:text-5xl font-light" style="letter-spacing:0.04em">Recent Albums</h2>
       <div class="gold-rule"></div>
     </div>
 
-    <!-- 3-up preview grid (first 3 public albums) -->
-    <div id="featured-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in fade-in-delay-1">
+    <!-- Full-bleed editorial 3-up grid -->
+    <div id="featured-grid" class="editorial-grid fade-in fade-in-delay-1">
       <!-- Populated by JS -->
     </div>
 
-    <div class="text-center mt-14 fade-in fade-in-delay-2">
+    <div class="text-center py-14 fade-in fade-in-delay-2">
       <a href="gallery.html" class="btn-ghost">View All Albums</a>
+    </div>
+  </section>
+
+  <!-- ── About blurb ── -->
+  <section class="py-20 px-6 text-center" style="border-top:1px solid var(--color-border)">
+    <div class="max-w-xl mx-auto fade-in">
+      <p class="text-xs tracking-widest uppercase mb-6" style="color:var(--color-muted)">About</p>
+      <p class="font-serif text-2xl md:text-3xl font-light leading-relaxed" style="letter-spacing:0.02em">
+        Thank you for visiting.
+      </p>
+      <p class="mt-5 text-sm leading-loose" style="color:var(--color-muted); max-width:36ch; margin-left:auto; margin-right:auto">
+        I'm a hobby photographer based in Detroit, Michigan. These are some photos from my travels and everyday life.
+      </p>
     </div>
   </section>
 
   <!-- ── Philosophy Quote ── -->
   <section class="py-24 px-6 text-center" style="border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
     <div class="max-w-2xl mx-auto fade-in">
-      <p class="font-serif text-2xl md:text-3xl font-light italic leading-relaxed" style="color:rgba(240,237,232,0.85)">
+      <p class="font-serif text-2xl md:text-3xl font-light italic leading-relaxed" style="color:var(--color-text)">
         "Photography is the art of frozen time — the ability to store emotion and feelings within a frame."
       </p>
       <p class="mt-6 text-xs tracking-widest uppercase" style="color:var(--color-muted)">Meshack Otieno</p>
