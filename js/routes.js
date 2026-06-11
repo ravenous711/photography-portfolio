@@ -8,12 +8,11 @@ const Routes = {
   },
 
   album(id) {
-    return `/album/${encodeURIComponent(id)}/`;
+    return `/album/${encodeURIComponent(id)}`;
   },
 
-  /** Album group (e.g. Italy 2026) — lives under /gallery/:id/, not /group/ */
   group(id) {
-    return `/gallery/${encodeURIComponent(id)}/`;
+    return `/group/${encodeURIComponent(id)}`;
   },
 
   curate(albumId) {
@@ -65,18 +64,8 @@ const Routes = {
 
     params.delete(usedKey);
     const qs = params.toString();
-    window.location.replace(`/${segment}/${encodeURIComponent(legacyId)}/${qs ? `?${qs}` : ''}`);
+    window.location.replace(`/${segment}/${encodeURIComponent(legacyId)}${qs ? `?${qs}` : ''}`);
     return legacyId;
-  },
-
-  /** Legacy /group/:id → /gallery/:id */
-  redirectOldGroupPaths() {
-    const match = window.location.pathname.match(/^\/group\/([^/]+)\/?$/);
-    if (match) {
-      window.location.replace(`/gallery/${encodeURIComponent(match[1])}/`);
-      return true;
-    }
-    return false;
   },
 
   parseNestedPath(prefix, segment, queryKeys) {
