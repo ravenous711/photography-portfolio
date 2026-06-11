@@ -103,6 +103,10 @@ function locationMatchesTitle(album) {
 function albumDateline(album) {
   if (album.dateline) return album.dateline;
 
+  if (album.type !== 'group' && !album.photos?.length) {
+    return '(TBD)';
+  }
+
   const parts = [];
   // Skip location when the title already names the place (e.g. "Venice", "Italy 2026")
   if (album.type !== 'group' && album.location && !locationMatchesTitle(album)) {

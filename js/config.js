@@ -337,7 +337,6 @@ const ALBUMS = [
   {
     id: 'london-2025',
     title: 'London 2025',
-    description: 'London, September 2025.',
     location: 'London',
     date: 'September 2025',
     protected: false,
@@ -796,7 +795,6 @@ const ALBUMS = [
     id: 'italy-assisi',
     title: 'Assisi',
     parentId: 'italy-2026',
-    description: 'Assisi, 3 June 2026.',
     location: 'Assisi',
     date: 'June 2026',
     protected: false,
@@ -808,7 +806,6 @@ const ALBUMS = [
     id: 'italy-rome',
     title: 'Rome',
     parentId: 'italy-2026',
-    description: 'Rome, 3–5 June 2026.',
     location: 'Rome',
     date: 'June 2026',
     protected: false,
