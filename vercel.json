@@ -8,32 +8,36 @@
     {
       "source": "/album.html",
       "has": [{ "type": "query", "key": "id", "value": "(?<id>.*)" }],
-      "destination": "/album/:id",
+      "destination": "/album/:id/",
       "permanent": true
     },
     {
       "source": "/album-group.html",
       "has": [{ "type": "query", "key": "id", "value": "(?<id>.*)" }],
-      "destination": "/group/:id",
+      "destination": "/group/:id/",
       "permanent": true
     },
     {
       "source": "/curate.html",
       "has": [{ "type": "query", "key": "album", "value": "(?<id>.*)" }],
-      "destination": "/curate/:id",
+      "destination": "/curate/:id/",
       "permanent": true
     },
     {
       "source": "/curate-group.html",
       "has": [{ "type": "query", "key": "group", "value": "(?<id>.*)" }],
-      "destination": "/curate/group/:id",
+      "destination": "/curate/group/:id/",
       "permanent": true
     }
   ],
   "rewrites": [
+    { "source": "/curate/group/:id/", "destination": "/curate/group/index.html" },
     { "source": "/curate/group/:id", "destination": "/curate/group/index.html" },
+    { "source": "/album/:id/", "destination": "/album/index.html" },
     { "source": "/album/:id", "destination": "/album/index.html" },
+    { "source": "/group/:id/", "destination": "/group/index.html" },
     { "source": "/group/:id", "destination": "/group/index.html" },
+    { "source": "/curate/:id/", "destination": "/curate/index.html" },
     { "source": "/curate/:id", "destination": "/curate/index.html" }
   ]
 }
