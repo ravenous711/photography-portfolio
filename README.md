@@ -224,7 +224,7 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 4. Go to your [Vercel project](https://vercel.com) → **Settings → Environment Variables**
 5. Update the `GITHUB_TOKEN` value with the new token
 6. Trigger a redeploy (any new push to `main` will do)
-7. Test by deleting a photo from the **Delete Test** album and confirming `config.js` updates on GitHub
+7. Test by deleting a photo from any album and confirming `config.js` updates on GitHub
 
 ---
 

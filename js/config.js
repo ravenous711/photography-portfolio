@@ -4,9 +4,8 @@
 
 const SITE_CONFIG = {
   photographerName: 'Raveen Fernando',
-  // ── Site-wide preview password (SHA-256 hash of the password) ──
-  // Default password: preview2026
-  // To change: run: python3 -c "import hashlib; print(hashlib.sha256(b'yourpassword').hexdigest())"
+  // ── Site-wide preview password (SHA-256 hash) ──
+  // To change: python3 -c "import hashlib; print(hashlib.sha256(b'yourpassword').hexdigest())"
   sitePasswordHash: '36e11b86750178bc2d659d7779dbfdf28cee8c60a6a804e47d3ef1ae85f4a70c',
   // Admin panel password hash — protect /admin.html
   // Password stored separately; to change: python3 -c "import hashlib; print(hashlib.sha256(b'newpassword').hexdigest())"
@@ -51,10 +50,6 @@ const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 //                 (hashPassword is defined in js/main.js)
 //   coverImage  – path relative to R2_BASE_URL, or full URL for placeholders
 //   photos      – array of photo URLs inside the album
-//
-// PASSWORD-PROTECTED DEMO CREDENTIALS:
-//   Family album       → password: "family2024"
-//   Nieces & Nephews   → password: "sunshine"
 // ============================================================
 const ALBUMS = [
 
@@ -67,7 +62,6 @@ const ALBUMS = [
     date: 'October 2025',
     hidden: true,
     protected: true,
-    // Password: "joeli-oli-ravioli"
     passwordHash: '2d2b01d274945379effbc06b47517c211bee6f4f57ea4be7c15e76d334386862',
     coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
     photos: [
@@ -145,44 +139,6 @@ const ALBUMS = [
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF7088.JPG`,
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF7093.JPG`,
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF7095.JPG`,
-    ],
-  },
-
-  // ── ADMIN DELETE TEST ALBUM ───────────────────────────────
-  // Safe to delete — dedicated throwaway files in R2 test/ folder
-  {
-    id: 'delete-test',
-    title: 'Delete Test',
-    description: 'Safe to delete — practice album for the admin panel.',
-    hidden: true,
-    protected: false,
-    coverImage: `${R2_BASE_URL}/test/test_1.jpg`,
-    photos: [
-      `${R2_BASE_URL}/test/test_1.jpg`,
-      `${R2_BASE_URL}/test/test_2.jpg`,
-      `${R2_BASE_URL}/test/test_3.jpg`,
-      `${R2_BASE_URL}/test/test_4.jpg`,
-      `${R2_BASE_URL}/test/test_5.jpg`,
-      `${R2_BASE_URL}/test/test_6.jpg`,
-    ],
-  },
-
-  // ── HIDDEN TEST ALBUM ─────────────────────────────────────
-  {
-    id: 'hidden-test',
-    title: 'Hidden Test',
-    description: 'Old hidden test album.',
-    hidden: true,
-    protected: true,
-    // Password: "test123"
-    passwordHash: 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae',
-    coverImage: 'https://picsum.photos/seed/hidden/800/600',
-    photos: [
-      'https://picsum.photos/seed/h1/1200/800',
-      'https://picsum.photos/seed/h2/800/1200',
-      'https://picsum.photos/seed/h3/1200/800',
-      'https://picsum.photos/seed/h4/900/1200',
-      'https://picsum.photos/seed/h5/1200/900',
     ],
   },
 
