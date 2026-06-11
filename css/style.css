@@ -470,55 +470,6 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   margin: 0 0 0.75rem;
 }
 
-/* ── Chapter album sections (album.html) ────────────────── */
-.chapter-section {
-  margin-bottom: 5rem;
-}
-.chapter-section:last-child {
-  margin-bottom: 0;
-}
-
-.chapter-header {
-  padding: 0 0 2rem;
-}
-
-.chapter-dateline {
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  margin: 0 0 0.5rem;
-}
-
-.chapter-title {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-weight: 300;
-  letter-spacing: 0.06em;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.chapter-coming-soon {
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  padding: 3rem 0;
-}
-
-@media (max-width: 640px) {
-  .chapter-title {
-    font-size: 1.5rem;
-  }
-  .chapter-section {
-    margin-bottom: 3.5rem;
-  }
-}
-
 .album-card-meta {
   font-size: 0.72rem;
   letter-spacing: 0.15em;
