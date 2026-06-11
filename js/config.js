@@ -7,7 +7,7 @@ const SITE_CONFIG = {
   // ── Site-wide preview password (SHA-256 hash) ──
   // To change: python3 -c "import hashlib; print(hashlib.sha256(b'yourpassword').hexdigest())"
   sitePasswordHash: '36e11b86750178bc2d659d7779dbfdf28cee8c60a6a804e47d3ef1ae85f4a70c',
-  // Admin panel password hash — protect /admin.html
+  // Admin panel password hash — protect /admin/
   // Password stored separately; to change: python3 -c "import hashlib; print(hashlib.sha256(b'newpassword').hexdigest())"
   adminPasswordHash: '5be8a85ba815c0473d9a609eb5a6d7dbeaf1e32045456bda1ea209ebecd211d8',
   tagline: 'Capturing light, emotion, and the quiet beauty of the world.',

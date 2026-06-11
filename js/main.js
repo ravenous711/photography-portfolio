@@ -57,10 +57,10 @@ function initMobileMenu() {
 
 // ── Set active nav link based on current page ──
 function setActiveNavLink() {
-  const page = window.location.pathname.split('/').pop() || 'index.html';
+  const section = window.location.pathname.split('/').filter(Boolean)[0] || 'home';
   document.querySelectorAll('[data-nav-link]').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href && (href === page || (page === '' && href === 'index.html'))) {
+    const nav = link.dataset.nav;
+    if (nav && nav === section) {
       link.classList.add('nav-active');
     }
   });
@@ -182,9 +182,7 @@ function albumCardDesc(album) {
 }
 
 function albumPageUrl(album) {
-  return album.type === 'group'
-    ? `album-group.html?id=${album.id}`
-    : `album.html?id=${album.id}`;
+  return Routes.albumPageUrl(album);
 }
 
 function isItalyAlbum(album) {
@@ -272,11 +270,10 @@ const SiteAuth = {
     sessionStorage.setItem(this.key, 'true');
   },
 
-  // Call on every protected page — redirects to login.html if not unlocked
+  // Call on every protected page — redirects to login if not unlocked
   guard() {
     if (!this.isUnlocked()) {
-      const returnTo = encodeURIComponent(window.location.href);
-      window.location.replace(`login.html?return=${returnTo}`);
+      window.location.replace(Routes.login(window.location.href));
     }
   },
 };

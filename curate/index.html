@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Curate — Raveen Fernando</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
   <style>
     /* ── Password screen ── */
     #pw-screen {
@@ -416,17 +416,18 @@
 
   <div id="toast"></div>
 
-  <script src="js/config.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL  = 'https://dgajyvjxvobmnqxticvh.supabase.co';
     const SUPABASE_KEY  = 'sb_publishable_pwy5JTpQQG9VjrSmbBG4_Q_WWY8_NFa';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ── Parse URL params ────────────────────────────────────────────────────
-    const params  = new URLSearchParams(location.search);
-    const albumId = params.get('album');
-    const urlPw   = params.get('pw'); // optional auto-unlock
+    // ── Parse URL ───────────────────────────────────────────────────────────
+    Routes.canonicalize('curate', ['album']);
+    const albumId = Routes.parsePathId('curate', ['album']);
+    const urlPw   = new URLSearchParams(location.search).get('pw'); // optional auto-unlock
 
     if (!albumId) {
       document.getElementById('pw-screen').innerHTML = '<p style="color:var(--color-muted);font-size:0.9rem">No album specified.</p>';
@@ -554,7 +555,7 @@
         const parent = (ALBUMS || []).find(a => a.id === album.parentId);
         const back = document.getElementById('curate-back');
         back.style.display = 'inline-block';
-        back.href = `curate-group.html?group=${album.parentId}`;
+        back.href = Routes.curateGroup(album.parentId);
         back.textContent = parent ? `← Back to ${parent.title}` : '← Back to albums';
       }
 

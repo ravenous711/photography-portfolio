@@ -1,0 +1,12 @@
+/gallery.html           /gallery/                 301
+/index.html             /                         301
+/login.html             /login/                   301
+/admin.html             /admin/                   301
+/album-group.html       /gallery/                 301
+/curate.html            /gallery/                 301
+/curate-group.html      /gallery/                 301
+
+/curate/group/:id       /curate/group/index.html  200
+/album/:id              /album/index.html         200
+/group/:id              /group/index.html         200
+/curate/:id             /curate/index.html        200
