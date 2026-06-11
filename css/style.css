@@ -477,6 +477,101 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   color: rgba(255,255,255,0.55);
 }
 
+/* ── Next album nav (album.html) ─────────────────────────── */
+.album-next-nav {
+  margin-top: 4rem;
+}
+
+.album-next-link {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 0;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.album-next-link:hover {
+  opacity: 0.85;
+}
+
+.album-next-link:hover .album-next-title {
+  color: var(--color-gold);
+}
+
+.album-next-thumb {
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: 3.5rem;
+  overflow: hidden;
+  background: var(--color-border);
+}
+
+.album-next-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-next-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.album-next-label {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.album-next-title {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  transition: color 0.2s;
+}
+
+.album-next-meta {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.album-next-arrow {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  transition: transform 0.2s, color 0.2s;
+}
+
+.album-next-link:hover .album-next-arrow {
+  color: var(--color-gold);
+  transform: translateX(4px);
+}
+
+@media (max-width: 640px) {
+  .album-next-nav {
+    margin-top: 3rem;
+  }
+
+  .album-next-thumb {
+    width: 4.5rem;
+    height: 3rem;
+  }
+
+  .album-next-title {
+    font-size: 1.15rem;
+  }
+}
+
 .album-card-desc {
   font-size: 0.82rem;
   color: rgba(255,255,255,0.7);

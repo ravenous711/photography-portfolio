@@ -110,6 +110,44 @@ function albumDateline(album) {
   return parts.join(' · ');
 }
 
+function albumPageUrl(album) {
+  return album.type === 'group'
+    ? `album-group.html?id=${album.id}`
+    : `album.html?id=${album.id}`;
+}
+
+function isItalyAlbum(album) {
+  if (!album) return false;
+  if (album.id === 'italy-2026') return true;
+  if (!album.parentId) return false;
+  return isItalyAlbum(ALBUMS.find(a => a.id === album.parentId));
+}
+
+function getItalyNavSequence() {
+  const root = ALBUMS.find(a => a.id === 'italy-2026');
+  if (!root?.subAlbums) return [];
+
+  return root.subAlbums.flatMap(id => {
+    const album = ALBUMS.find(a => a.id === id && !a.hidden);
+    if (!album) return [];
+    if (album.type === 'group' && album.subAlbums?.length) {
+      const rolls = album.subAlbums
+        .map(subId => ALBUMS.find(a => a.id === subId && !a.hidden))
+        .filter(Boolean);
+      return [album, ...rolls];
+    }
+    return [album];
+  });
+}
+
+function getNextAlbum(album) {
+  if (!isItalyAlbum(album)) return null;
+  const sequence = getItalyNavSequence();
+  const index = sequence.findIndex(a => a.id === album.id);
+  if (index === -1 || index >= sequence.length - 1) return null;
+  return sequence[index + 1];
+}
+
 // Preload full-res images for instant lightbox navigation
 const ImagePreload = {
   _cache: new Map(),

@@ -125,6 +125,7 @@
       <div class="photo-grid" id="photo-grid">
         <!-- Populated by JS -->
       </div>
+      <nav id="album-next-nav" class="album-next-nav" aria-label="Next album" hidden></nav>
     </main>
 
   </div>
@@ -473,6 +474,36 @@
       });
 
       window.addEventListener('resize', runJustifiedLayout);
+      renderNextAlbumNav();
+    }
+
+    function renderNextAlbumNav() {
+      const nav = document.getElementById('album-next-nav');
+      const next = getNextAlbum(album);
+      if (!next) {
+        nav.hidden = true;
+        nav.innerHTML = '';
+        return;
+      }
+
+      const posStyle = next.coverPosition ? ` style="object-position:${next.coverPosition}"` : '';
+      nav.hidden = false;
+      nav.innerHTML = `
+        <div class="gold-rule" style="margin-left:0;margin-bottom:2.5rem"></div>
+        <a href="${albumPageUrl(next)}" class="album-next-link">
+          <div class="album-next-thumb">
+            <img src="${next.coverImage}" alt="" loading="lazy"${posStyle} />
+          </div>
+          <div class="album-next-text">
+            <span class="album-next-label">Next</span>
+            <span class="album-next-title">${next.title}</span>
+            ${albumDateline(next) ? `<span class="album-next-meta">${albumDateline(next)}</span>` : ''}
+          </div>
+          <svg class="album-next-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </a>
+      `;
     }
 
     // ════════════════════════════════════════════════════════

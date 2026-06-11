@@ -216,10 +216,10 @@ These albums work but load slow without grid images. Say **"backfill grid for Jo
 | Album | R2 folder | Photos |
 |---|---|---|
 | **Joel Birthday 2025** | `Joel-Bday-2025/` | 74 |
-| **Film Roll 1** | `Film1/` | 37 |
-| **Film Roll 2** | `Film2/` | 38 |
-| **Film Roll 3** | `Film3/` | 38 |
-| **Film Roll 4** | `Film4/` | 39 |
+| **Film Roll 1** | `Italy/Film/Ultramax/` | 37 |
+| **Film Roll 2** | `Italy/Film/FP4/` | 38 |
+| **Film Roll 3** | `Italy/Film/TMAX/` | 37 |
+| **Film Roll 4** | `Italy/Film/Portra/` | 38 |
 
 Do these one at a time when the external drive is connected.
 
