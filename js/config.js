@@ -15,6 +15,7 @@ const SITE_CONFIG = {
   // ── Hero background (home page) — served from /images/ for same-origin preload ──
   heroImage: '/images/hero.jpg',
   heroPosition: '50% 50%',
+  heroPositionMobile: '50% 40%',
 
   // ── R2: Upload your about/profile photo and set the URL below ──
   aboutPhoto: 'https://picsum.photos/seed/about-portrait/800/1000',

@@ -117,8 +117,17 @@
   <script>
     // ── Inject config values ──
     const heroBg = document.getElementById('hero-bg');
-    heroBg.style.backgroundImage = `url('${SITE_CONFIG.heroImage}')`;
-    if (SITE_CONFIG.heroPosition) heroBg.style.backgroundPosition = SITE_CONFIG.heroPosition;
+    const heroImg = document.createElement('img');
+    heroImg.src = SITE_CONFIG.heroImage;
+    heroImg.alt = '';
+    heroImg.decoding = 'async';
+    heroImg.fetchPriority = 'high';
+    const isMobileHero = window.matchMedia('(max-width: 768px)').matches;
+    const heroPos = isMobileHero && SITE_CONFIG.heroPositionMobile
+      ? SITE_CONFIG.heroPositionMobile
+      : SITE_CONFIG.heroPosition;
+    if (heroPos) heroImg.style.objectPosition = heroPos;
+    heroBg.appendChild(heroImg);
     document.getElementById('hero-name').textContent = SITE_CONFIG.photographerName;
     document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
     document.title = `${SITE_CONFIG.photographerName} — Photography`;

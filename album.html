@@ -447,8 +447,8 @@
 
         const layout = justifiedLayout(aspectRatios, {
           containerWidth: containerWidth,
-          targetRowHeight: 420,
-          boxSpacing: 12,
+          targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
+          boxSpacing: window.innerWidth <= 640 ? 6 : 12,
           containerPadding: 0,
         });
 

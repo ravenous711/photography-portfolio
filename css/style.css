@@ -249,10 +249,15 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 .hero-bg {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  will-change: transform;
+  overflow: hidden;
+}
+
+.hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .hero-overlay {
@@ -333,6 +338,26 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
   50% { transform: translateX(-50%) translateY(8px); }
 }
 
+@media (max-width: 768px) {
+  .hero {
+    min-height: 0;
+    height: 85svh;
+  }
+
+  /* Slightly zoom out so more of the scene fits on narrow screens */
+  .hero-bg img {
+    width: 118%;
+    height: 118%;
+    max-width: none;
+    margin-left: -9%;
+    margin-top: -9%;
+  }
+
+  .hero-name {
+    font-size: clamp(2.25rem, 11vw, 3.5rem);
+  }
+}
+
 /* ============================================================
    FADE-IN ANIMATIONS
    ============================================================ */
@@ -361,7 +386,10 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); }
 }
 
 @media (max-width: 1024px) { .album-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px)  { .album-grid { grid-template-columns: 1fr; gap: 1rem; } }
+@media (max-width: 640px)  {
+  .album-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .album-card { aspect-ratio: 16/9; }
+}
 
 .album-card {
   position: relative;

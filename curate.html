@@ -283,6 +283,11 @@
       border-radius: 3px; color: rgba(255,255,255,0.65);
     }
     @media (max-width: 640px) {
+      #photo-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 6px;
+        padding: 1rem;
+      }
       #lightbox-shortcuts { display: none; }
     }
     .curate-card .photo-wrap { cursor: zoom-in; }
