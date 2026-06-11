@@ -47,7 +47,7 @@
   </header>
 
   <!-- ── Password Modal (shown for protected groups) ── -->
-  <div id="password-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(10,10,10,0.97);display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center">
+  <div id="password-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(10,10,10,0.97);align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center">
     <svg style="width:2.5rem;height:2.5rem;margin-bottom:1.5rem;opacity:0.4" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -112,15 +112,18 @@
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-    if (Routes.redirectOldGroupPaths()) return;
+    (function initGroupPage() {
+      if (Routes.redirectOldGroupPaths()) return;
 
-    Routes.canonicalize('gallery', ['id']);
-    const groupId = Routes.parsePathId('gallery', ['id']);
-    const group = ALBUMS.find(a => a.id === groupId && a.type === 'group');
+      Routes.canonicalize('gallery', ['id']);
+      const groupId = Routes.parseGalleryGroupId(['id']);
+      const group = ALBUMS.find(a => a.id === groupId && a.type === 'group');
 
-    if (!group) {
-      window.location.replace(Routes.gallery);
-    } else {
+      if (!group) {
+        window.location.replace(Routes.gallery);
+        return;
+      }
+
       document.title = `${group.title} — ${SITE_CONFIG.photographerName}`;
       document.getElementById('modal-group-title').textContent = group.title;
 
@@ -129,9 +132,8 @@
       } else {
         showGroup();
       }
-    }
 
-    function showPasswordModal() {
+      function showPasswordModal() {
       const modal = document.getElementById('password-modal');
       modal.style.display = 'flex';
 
@@ -210,6 +212,7 @@
         grid.appendChild(card);
       });
     }
+    })();
   </script>
 </body>
 </html>
