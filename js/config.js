@@ -20,7 +20,7 @@ const SITE_CONFIG = {
   // ── R2: Upload your about/profile photo and set the URL below ──
   aboutPhoto: 'https://picsum.photos/seed/about-portrait/800/1000',
   aboutBio: `I'm a photographer based in Detroit, Michigan.`,
-  email: 'hello@raveenfernando.com',
+  email: 'raveen.l.fernando@gmail.com',
 };
 
 // ============================================================
