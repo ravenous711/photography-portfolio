@@ -112,8 +112,10 @@
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-    Routes.canonicalize('group', ['id']);
-    const groupId = Routes.parsePathId('group', ['id']);
+    if (Routes.redirectOldGroupPaths()) return;
+
+    Routes.canonicalize('gallery', ['id']);
+    const groupId = Routes.parsePathId('gallery', ['id']);
     const group = ALBUMS.find(a => a.id === groupId && a.type === 'group');
 
     if (!group) {
