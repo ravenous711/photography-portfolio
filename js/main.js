@@ -94,11 +94,20 @@ function gridUrl(fullUrl) {
 function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
 // Journal-style dateline: "Venice · May 2026 · 95 frames"
+function locationMatchesTitle(album) {
+  if (!album.location || !album.title) return false;
+  const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  return norm(album.location) === norm(album.title);
+}
+
 function albumDateline(album) {
   if (album.dateline) return album.dateline;
 
   const parts = [];
-  if (album.location) parts.push(album.location);
+  // Skip location when the title already names the place (e.g. "Venice", "Italy 2026")
+  if (album.type !== 'group' && album.location && !locationMatchesTitle(album)) {
+    parts.push(album.location);
+  }
   if (album.date) parts.push(album.date);
 
   if (album.type === 'group' && album.subAlbums?.length) {

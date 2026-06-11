@@ -161,7 +161,7 @@
         <div class="album-card-overlay">
           ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h3 class="album-card-title">${album.title}</h3>
-          <p class="album-card-desc">${album.description}</p>
+          ${!isGroup && album.description ? `<p class="album-card-desc">${album.description}</p>` : ''}
         </div>
       `;
       grid.appendChild(card);

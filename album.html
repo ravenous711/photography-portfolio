@@ -378,7 +378,14 @@
       document.getElementById('album-content').style.display = 'block';
       document.getElementById('album-title').textContent       = album.title;
       document.getElementById('album-dateline').textContent    = albumDateline(album);
-      document.getElementById('album-description').textContent = album.description;
+      const descEl = document.getElementById('album-description');
+      if (album.description) {
+        descEl.textContent = album.description;
+        descEl.style.display = '';
+      } else {
+        descEl.textContent = '';
+        descEl.style.display = 'none';
+      }
 
       const grid = document.getElementById('photo-grid');
       grid.innerHTML = '';
@@ -595,13 +602,40 @@
       if (e.target === lightbox) closeLightbox();
     });
 
-    // Touch swipe support
+    // Touch swipe — ignore pinch/multi-touch; require clear horizontal flick
     let touchStartX = 0;
-    lightbox.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
-    lightbox.addEventListener('touchend', e => {
+    let touchStartY = 0;
+    let touchMulti  = false;
+
+    lightbox.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 1) {
+        touchMulti = true;
+        return;
+      }
+      touchMulti = false;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    lightbox.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) touchMulti = true;
+    }, { passive: true });
+
+    lightbox.addEventListener('touchend', (e) => {
+      if (touchMulti || e.touches.length > 0) {
+        touchMulti = e.touches.length > 0;
+        return;
+      }
+
       const dx = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(dx) > 50) lightboxNav(dx < 0 ? 1 : -1);
-    });
+      const dy = e.changedTouches[0].clientY - touchStartY;
+
+      // Must be a deliberate horizontal swipe, not pinch drift or scroll
+      if (Math.abs(dx) < 60) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+      lightboxNav(dx < 0 ? 1 : -1);
+    }, { passive: true });
 
     // ════════════════════════════════════════════════════════
     // ALBUM DOWNLOAD (ZIP)

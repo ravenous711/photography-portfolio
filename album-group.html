@@ -164,7 +164,14 @@
     function showGroup() {
       document.getElementById('group-dateline').textContent = albumDateline(group);
       document.getElementById('group-title').textContent = group.title;
-      document.getElementById('group-desc').textContent = group.description;
+      const groupDesc = document.getElementById('group-desc');
+      if (group.subAlbums?.length) {
+        groupDesc.style.display = 'none';
+        groupDesc.textContent = '';
+      } else {
+        groupDesc.style.display = '';
+        groupDesc.textContent = group.description || '';
+      }
 
       const backLink = document.getElementById('back-link');
       if (group.parentId) {
@@ -197,7 +204,6 @@
           <div class="album-card-overlay">
             ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
             <h2 class="album-card-title">${album.title}</h2>
-            <p class="album-card-desc">${album.description}</p>
           </div>
         `;
         grid.appendChild(card);
