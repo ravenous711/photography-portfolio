@@ -110,7 +110,10 @@
           <span id="back-label-sticky">All Albums</span>
         </a>
         <div class="album-toolbar-main">
-        <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
+        <div class="album-toolbar-title-group">
+          <span id="album-toolbar-title" class="album-toolbar-title"></span>
+          <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
+        </div>
         <div class="album-header-actions">
           <button id="select-btn" class="btn-ghost" onclick="toggleSelectMode()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -128,7 +131,7 @@
             Download All
           </button>
         </div>
-        </div>
+      </div>
     </div>
 
     <!-- Photo grids -->
@@ -499,8 +502,9 @@
 
     function showAlbum() {
       document.getElementById('album-content').style.display = 'block';
-      document.getElementById('album-title').textContent       = album.title;
-      document.getElementById('album-dateline').textContent    = albumDateline(album);
+      document.getElementById('album-title').textContent        = album.title;
+      document.getElementById('album-dateline').textContent     = albumDateline(album);
+      document.getElementById('album-toolbar-title').textContent = album.title;
 
       const digitalGrid = document.getElementById('photo-grid');
       const filmSection = document.getElementById('film-section');
@@ -614,38 +618,84 @@
 
     let sectionNavScrollSeq = 0;
 
+    // Height of nav + stuck toolbar + gap. Constant regardless of scroll position,
+    // so we measure it once per scroll in a single reflow.
+    function measureStickyOffset() {
+      const nav     = document.getElementById('main-nav');
+      const toolbar = document.getElementById('album-header-toolbar');
+      if (!nav || !toolbar) return 112;
+
+      const wasStuck = toolbar.classList.contains('is-stuck');
+      toolbar.style.transition = 'none';
+      toolbar.classList.add('is-stuck');
+      void toolbar.offsetHeight;
+      const offset = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
+      toolbar.classList.toggle('is-stuck', wasStuck);
+      toolbar.style.transition = '';
+
+      document.documentElement.style.setProperty('--album-sticky-offset', `${offset}px`);
+      return offset;
+    }
+
     function scrollToAlbumSection(sectionId) {
       const el = document.getElementById(sectionId);
       if (!el) return;
 
       const seq = ++sectionNavScrollSeq;
 
-      // Use the visible section label; fall back to section element if label is
-      // display:none (getBoundingClientRect returns all-zero for hidden elements).
-      const labelEl = el.querySelector('.album-section-label');
-      const target = (labelEl && labelEl.offsetParent !== null) ? labelEl : el;
+      const isDigital = sectionId === 'digital-section';
+      const labelEl   = el.querySelector('.album-section-label');
+      const target    = (labelEl && labelEl.offsetParent !== null) ? labelEl : el;
+      const offset    = measureStickyOffset();
 
-      // Override CSS scroll-behavior: smooth so programmatic jumps are instant.
-      document.documentElement.style.scrollBehavior = 'auto';
+      // Destination is re-evaluated every frame: target's live absolute Y minus the
+      // sticky offset. When images load and shift the layout, this updates.
+      const computeDest = () =>
+        isDigital ? 0 : Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
 
-      const jump = () => {
-        syncStickyToolbarState();
-        const offset = getStickyStackHeight();
-        const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
-        window.scrollTo({ top, behavior: 'auto' });
+      // Exponential smoothing toward a (possibly moving) target. This never
+      // overshoots and never restarts, so layout shifts are absorbed smoothly with
+      // no stutter. TAU controls the feel (lower = snappier).
+      const TAU = 80;
+      let last  = performance.now();
+      let settle = 0;
+
+      let aborted = false;
+      const abort = () => { aborted = true; };
+      window.addEventListener('wheel',      abort, { passive: true, once: true });
+      window.addEventListener('touchstart', abort, { passive: true, once: true });
+      window.addEventListener('keydown',    abort, { once: true });
+
+      const step = (now) => {
+        if (aborted || seq !== sectionNavScrollSeq) { cleanup(); return; }
+
+        const dt = Math.min(now - last, 50);
+        last = now;
+
+        const y         = window.scrollY;
+        const dest      = computeDest();
+        const remaining = dest - y;
+
+        if (Math.abs(remaining) < 0.5) {
+          if (++settle >= 3) { window.scrollTo({ top: dest, behavior: 'instant' }); cleanup(); return; }
+        } else {
+          settle = 0;
+        }
+
+        // 'instant' (not 'auto') so we bypass the CSS `scroll-behavior: smooth` —
+        // otherwise each per-frame step becomes a smooth scroll and cancels out.
+        const k = 1 - Math.exp(-dt / TAU);
+        window.scrollTo({ top: y + remaining * k, behavior: 'instant' });
+        rafId = requestAnimationFrame(step);
       };
 
-      jump();
-
-      // One corrective pass: toolbar height settles after the first jump (the
-      // IntersectionObserver may toggle is-stuck, changing toolbar padding).
-      requestAnimationFrame(() => {
-        if (seq !== sectionNavScrollSeq) return;
-        jump();
-        requestAnimationFrame(() => {
-          document.documentElement.style.scrollBehavior = '';
-        });
-      });
+      let rafId = requestAnimationFrame(step);
+      function cleanup() {
+        cancelAnimationFrame(rafId);
+        window.removeEventListener('wheel', abort);
+        window.removeEventListener('touchstart', abort);
+        window.removeEventListener('keydown', abort);
+      }
     }
 
     function setupStickyAlbumHeader() {
