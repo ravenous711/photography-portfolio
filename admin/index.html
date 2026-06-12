@@ -154,25 +154,80 @@
     }
     .btn-ghost:hover { color: var(--color-text); border-color: var(--color-text); }
 
-    /* ── Lightbox ── */
-    #lightbox {
-      position: fixed; inset: 0; z-index: 800;
-      background: rgba(0,0,0,0.92);
-      display: none; align-items: center; justify-content: center;
-      cursor: zoom-out;
+    /* ── Admin Lightbox ── */
+    #admin-lightbox {
+      position: fixed; inset: 0; z-index: 900;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.96);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
     }
-    #lightbox.open { display: flex; }
-    #lightbox img {
-      max-width: 92vw; max-height: 90vh;
-      object-fit: contain; border-radius: 2px; cursor: default;
+    #admin-lightbox.open { opacity: 1; pointer-events: all; }
+
+    #alb-img {
+      max-width: min(88vw, 1400px); max-height: 82vh;
+      object-fit: contain; display: block;
+      opacity: 0; transition: opacity 0.2s ease;
+      user-select: none; pointer-events: none;
     }
-    #lightbox-close {
-      position: absolute; top: 1.25rem; right: 1.5rem;
-      color: rgba(255,255,255,0.7); font-size: 1.75rem;
-      cursor: pointer; line-height: 1; background: none; border: none;
-      transition: color 0.15s;
+    #alb-img.loaded { opacity: 1; }
+    #alb-spinner {
+      position: absolute;
+      width: 28px; height: 28px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: rgba(255,255,255,0.6);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
     }
-    #lightbox-close:hover { color: white; }
+    #admin-lightbox.loading #alb-spinner { display: block; }
+    #admin-lightbox.loading #alb-img { opacity: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #alb-close {
+      position: absolute; top: 1.25rem; right: 1.5rem; z-index: 2;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.75); width: 40px; height: 40px; border-radius: 50%;
+      font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    #alb-close:hover { background: rgba(255,255,255,0.18); color: white; }
+
+    .alb-nav {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.75); width: 52px; height: 52px; border-radius: 50%;
+      font-size: 1.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .alb-nav:hover { background: rgba(255,255,255,0.2); color: white; }
+    .alb-nav[disabled] { opacity: 0.2; cursor: default; pointer-events: none; }
+    #alb-prev { left: 1.25rem; }
+    #alb-next { right: 1.25rem; }
+
+    #alb-footer {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; padding: 1.25rem 1.5rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+    }
+    #alb-counter {
+      font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(255,255,255,0.4); flex-shrink: 0;
+    }
+    #alb-mark {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.22); background: transparent;
+      color: rgba(255,255,255,0.65); padding: 0.4rem 1rem; border-radius: 2px;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    #alb-mark:hover { border-color: #ef4444; color: #f87171; }
+    #alb-mark.marked { background: rgba(220,38,38,0.2); border-color: #ef4444; color: #f87171; }
+    #alb-hint {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.22); text-align: right;
+    }
+    @media (max-width: 640px) { #alb-hint { display: none; } }
 
     /* ── Toast ── */
     #toast {
@@ -303,10 +358,23 @@
 
   </div>
 
-  <!-- ── Lightbox ── -->
-  <div id="lightbox" onclick="closeLightbox()">
-    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
+  <!-- ── Admin Lightbox ── -->
+  <div id="admin-lightbox" role="dialog" aria-modal="true">
+    <button id="alb-close" aria-label="Close" onclick="lbClose()">✕</button>
+    <button class="alb-nav" id="alb-prev" aria-label="Previous" onclick="lbNav(-1)">‹</button>
+
+    <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+      <img id="alb-img" alt="" />
+      <div id="alb-spinner"></div>
+    </div>
+
+    <button class="alb-nav" id="alb-next" aria-label="Next" onclick="lbNav(1)">›</button>
+
+    <div id="alb-footer">
+      <span id="alb-counter"></span>
+      <button id="alb-mark" onclick="lbToggleMark()">Mark for deletion</button>
+      <span id="alb-hint">← → navigate &nbsp;·&nbsp; D mark &nbsp;·&nbsp; Esc close</span>
+    </div>
   </div>
 
   <!-- ── Toast notification ── -->
@@ -479,10 +547,10 @@
 
             img.style.cursor = 'zoom-in';
 
-            // Click image → lightbox
-            img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url); });
+            // Click image → lightbox (pass full album photo list for nav)
+            img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url, photos); });
 
-            // Click checkbox corner or anywhere on card except image → toggle selection
+            // Click checkbox corner → toggle selection; click elsewhere on card → toggle selection
             checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
             thumb.addEventListener('click', (e) => { if (e.target !== img) toggleThumb(thumb, url); });
           });
@@ -577,22 +645,91 @@
     }
 
     // ── Lightbox ─────────────────────────────────────────────────────────────
-    function openLightbox(url) {
-      const img = document.getElementById('lightbox-img');
+    let lbPhotos = [];   // full-res URL list for current album
+    let lbIndex  = 0;   // current position
+
+    function openLightbox(url, albumPhotos) {
+      lbPhotos = albumPhotos || [url];
+      lbIndex  = lbPhotos.indexOf(url);
+      if (lbIndex < 0) lbIndex = 0;
+      document.getElementById('admin-lightbox').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      lbShow();
+    }
+
+    function lbShow() {
+      const lb  = document.getElementById('admin-lightbox');
+      const img = document.getElementById('alb-img');
+      const url = lbPhotos[lbIndex];
+
+      lb.classList.add('loading');
       img.classList.remove('loaded');
-      img.onload = () => img.classList.add('loaded');
+      img.onload = () => { img.classList.add('loaded'); lb.classList.remove('loading'); };
+      img.onerror = () => { lb.classList.remove('loading'); };
       img.src = url;
-      if (img.complete) img.classList.add('loaded');
-      document.getElementById('lightbox').classList.add('open');
+      if (img.complete && img.naturalWidth) { img.classList.add('loaded'); lb.classList.remove('loading'); }
+
+      // Counter
+      document.getElementById('alb-counter').textContent =
+        lbPhotos.length > 1 ? `${lbIndex + 1} / ${lbPhotos.length}` : '';
+
+      // Prev / Next
+      document.getElementById('alb-prev').disabled = lbIndex === 0;
+      document.getElementById('alb-next').disabled = lbIndex === lbPhotos.length - 1;
+
+      // Mark button state
+      lbSyncMark();
     }
-    function closeLightbox() {
-      document.getElementById('lightbox').classList.remove('open');
-      const img = document.getElementById('lightbox-img');
+
+    function lbSyncMark() {
+      const btn = document.getElementById('alb-mark');
+      const isMarked = selected.has(lbPhotos[lbIndex]);
+      btn.textContent = isMarked ? '✕ Marked for deletion' : 'Mark for deletion';
+      btn.classList.toggle('marked', isMarked);
+    }
+
+    function lbNav(dir) {
+      const next = lbIndex + dir;
+      if (next < 0 || next >= lbPhotos.length) return;
+      lbIndex = next;
+      lbShow();
+    }
+
+    function lbToggleMark() {
+      const url   = lbPhotos[lbIndex];
+      const thumb = document.querySelector(`.photo-thumb[data-url="${CSS.escape(url)}"]`) ||
+                    document.querySelector(`.photo-thumb[data-url="${url}"]`);
+      if (thumb) {
+        toggleThumb(thumb, url);
+      } else {
+        // curation photos have no thumb — toggle directly
+        if (selected.has(url)) selected.delete(url); else selected.add(url);
+        updateToolbar();
+      }
+      lbSyncMark();
+    }
+
+    function lbClose() {
+      document.getElementById('admin-lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+      const img = document.getElementById('alb-img');
+      img.onload = null; img.onerror = null; img.src = '';
       img.classList.remove('loaded');
-      img.onload = null;
-      img.src = '';
+      document.getElementById('admin-lightbox').classList.remove('loading');
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    // Close on backdrop click
+    document.getElementById('admin-lightbox').addEventListener('click', e => {
+      if (e.target === document.getElementById('admin-lightbox')) lbClose();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('admin-lightbox').classList.contains('open')) return;
+      if (e.key === 'Escape')      { lbClose(); }
+      else if (e.key === 'ArrowLeft')  { lbNav(-1); }
+      else if (e.key === 'ArrowRight') { lbNav(1); }
+      else if (e.key === 'd' || e.key === 'D') { lbToggleMark(); }
+    });
 
     // ── Tab switching ─────────────────────────────────────────────────────────
     let curationLoaded = false;
@@ -740,11 +877,11 @@
           row.appendChild(cutBadge);
           list.appendChild(row);
 
-          // Click image → lightbox; click row → toggle checkbox
+          // Click image → lightbox (no album nav list for curation); click row → toggle checkbox
           img.style.cursor = 'zoom-in';
           row.addEventListener('click', (e) => {
             if (e.target === cb) return;
-            if (e.target === img) { openLightbox(photoUrl); return; }
+            if (e.target === img) { openLightbox(photoUrl, [photoUrl]); return; }
             cb.checked = !cb.checked;
             cb.onchange();
           });
