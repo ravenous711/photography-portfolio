@@ -574,62 +574,101 @@
       return height;
     }
 
-    function getAlbumScrollOffset() {
+    function getStickyStackHeight() {
       const nav = document.getElementById('main-nav');
       const toolbar = document.getElementById('album-header-toolbar');
-      const navH = nav?.getBoundingClientRect().height ?? 72;
-      const toolbarH = measureStuckToolbarHeight(toolbar);
-      const gap = 8;
-      const offset = navH + toolbarH + gap;
-      document.documentElement.style.setProperty('--album-sticky-offset', `${offset}px`);
-      return offset;
+      if (!nav || !toolbar) return 112;
+
+      const wasStuck = toolbar.classList.contains('is-stuck');
+      // Suppress CSS transition so getBoundingClientRect returns the final stuck
+      // height immediately, not an in-progress intermediate value.
+      toolbar.style.transition = 'none';
+      toolbar.classList.add('is-stuck');
+      void toolbar.offsetHeight; // force reflow to settled state
+      const height = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
+      if (!wasStuck) toolbar.classList.remove('is-stuck');
+      toolbar.style.transition = '';
+
+      document.documentElement.style.setProperty('--album-sticky-offset', `${height}px`);
+      return height;
+    }
+
+    function getMinScrollForStuckToolbar() {
+      const sentinel = document.getElementById('album-toolbar-sentinel');
+      const navH = document.getElementById('main-nav')?.offsetHeight ?? 72;
+      if (!sentinel) return 0;
+      return Math.max(0, sentinel.getBoundingClientRect().top + window.scrollY - navH);
+    }
+
+    function syncStickyToolbarState() {
+      const toolbar = document.getElementById('album-header-toolbar');
+      const sentinel = document.getElementById('album-toolbar-sentinel');
+      const navH = document.getElementById('main-nav')?.offsetHeight ?? 72;
+      if (!toolbar || !sentinel) return;
+      toolbar.classList.toggle('is-stuck', sentinel.getBoundingClientRect().top <= navH);
+      getStickyStackHeight();
     }
 
     function updateAlbumStickyOffset() {
-      getAlbumScrollOffset();
+      getStickyStackHeight();
     }
 
-    function setupStickyAlbumHeader() {
-      const toolbar = document.getElementById('album-header-toolbar');
-      const sentinel = document.getElementById('album-toolbar-sentinel');
-      if (!toolbar || !sentinel) return;
-
-      updateAlbumStickyOffset();
-
-      const navHeight = () => document.getElementById('main-nav')?.offsetHeight || 72;
-      const observer = new IntersectionObserver(([entry]) => {
-        toolbar.classList.toggle('is-stuck', !entry.isIntersecting);
-        updateAlbumStickyOffset();
-      }, {
-        rootMargin: `-${navHeight()}px 0px 0px 0px`,
-        threshold: 0,
-      });
-
-      observer.observe(sentinel);
-      window.addEventListener('resize', updateAlbumStickyOffset, { passive: true });
-    }
+    let sectionNavScrollSeq = 0;
 
     function scrollToAlbumSection(sectionId) {
       const el = document.getElementById(sectionId);
       if (!el) return;
 
-      const toolbar = document.getElementById('album-header-toolbar');
-      const navH = document.getElementById('main-nav')?.getBoundingClientRect().height ?? 72;
-      const sentinel = document.getElementById('album-toolbar-sentinel');
+      const seq = ++sectionNavScrollSeq;
 
-      // Section jumps land below the header — use stuck toolbar height for offset
-      if (sentinel && sentinel.getBoundingClientRect().top <= navH) {
-        toolbar?.classList.add('is-stuck');
-      }
+      // Use the visible section label; fall back to section element if label is
+      // display:none (getBoundingClientRect returns all-zero for hidden elements).
+      const labelEl = el.querySelector('.album-section-label');
+      const target = (labelEl && labelEl.offsetParent !== null) ? labelEl : el;
 
-      const target = el.querySelector('.album-section-label') || el;
-      const offset = getAlbumScrollOffset();
-      const top = window.scrollY + target.getBoundingClientRect().top - offset;
+      // Override CSS scroll-behavior: smooth so programmatic jumps are instant.
+      document.documentElement.style.scrollBehavior = 'auto';
 
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      const jump = () => {
+        syncStickyToolbarState();
+        const offset = getStickyStackHeight();
+        const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
+        window.scrollTo({ top, behavior: 'auto' });
+      };
+
+      jump();
+
+      // One corrective pass: toolbar height settles after the first jump (the
+      // IntersectionObserver may toggle is-stuck, changing toolbar padding).
+      requestAnimationFrame(() => {
+        if (seq !== sectionNavScrollSeq) return;
+        jump();
+        requestAnimationFrame(() => {
+          document.documentElement.style.scrollBehavior = '';
+        });
+      });
     }
 
-    function renderSectionNav() {
+    function setupStickyAlbumHeader() {
+      const toolbar = document.getElementById('album-header-toolbar');
+      const sentinel = document.getElementById('album-toolbar-sentinel');
+
+      if (toolbar && sentinel) {
+        updateAlbumStickyOffset();
+
+        const navHeight = () => document.getElementById('main-nav')?.offsetHeight || 72;
+        const observer = new IntersectionObserver(([entry]) => {
+          toolbar.classList.toggle('is-stuck', !entry.isIntersecting);
+          getStickyStackHeight();
+        }, {
+          rootMargin: `-${navHeight()}px 0px 0px 0px`,
+          threshold: 0,
+        });
+
+        observer.observe(sentinel);
+        window.addEventListener('resize', updateAlbumStickyOffset, { passive: true });
+      }
+
       const nav = document.getElementById('album-section-nav');
       const items = getAlbumSectionNavItems(album);
 
