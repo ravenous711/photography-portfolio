@@ -102,12 +102,32 @@ collect_photo_files() {
   fi
 
   if ((${#FILES[@]})); then
-    local sorted=()
+    sort_photo_files "$folder"
+  fi
+}
+
+# Sort by capture time so duplicate exports like _DSF0461(1).jpg land in order.
+sort_photo_files() {
+  local folder="${1:-}"
+  local sorted=()
+  if [[ -n "$folder" ]] && command -v exiftool >/dev/null 2>&1; then
+    while IFS= read -r line; do
+      [[ -n "$line" ]] && sorted+=("$line")
+    done < <(
+      for fname in "${FILES[@]}"; do
+        if [[ -f "$folder/$fname" ]]; then
+          exiftool -DateTimeOriginal -filename -T "$folder/$fname" 2>/dev/null
+        else
+          printf '0000:00:00 00:00:00\t%s\n' "$fname"
+        fi
+      done | sort -t$'\t' -k1,1 -k2,2 | awk -F'\t' '{print $2}'
+    )
+  else
     while IFS= read -r line; do
       sorted+=("$line")
     done < <(printf '%s\n' "${FILES[@]}" | sort -u)
-    FILES=("${sorted[@]}")
   fi
+  FILES=("${sorted[@]}")
 }
 
 grid_dir_for_prefix() {
@@ -167,21 +187,24 @@ upload_with_retry() {
   local dest="$1"
   local file="$2"
   local label="$3"
+  local progress="${4:-}"
   local wait attempt
+  local prefix=""
+  [[ -n "$progress" ]] && prefix="[$progress] "
 
   if [[ ! -f "$file" ]]; then
-    upload_status "$label  failed (missing local file)"
+    upload_status "${prefix}${label}  failed (missing local file)"
     return 1
   fi
 
   if [[ "$DRY_RUN" == "1" ]]; then
-    upload_status "$label  ok (dry-run)"
+    upload_status "${prefix}${label}  ok (dry-run)"
     return 0
   fi
 
   for attempt in 1 2 3 4; do
     if wrangler r2 object put "$dest" --file "$file" --remote >/dev/null 2>&1; then
-      upload_status "$label  ok"
+      upload_status "${prefix}${label}  ok"
       # Update local index so later files in the same run see it
       [[ -n "$R2_INDEX_FILE" ]] && echo "$label" >> "$R2_INDEX_FILE"
       return 0
@@ -192,12 +215,12 @@ upload_with_retry() {
         2) wait=30 ;;
         3) wait=60 ;;
       esac
-      upload_status "$label  retry $attempt"
+      upload_status "${prefix}${label}  retry $attempt"
       sleep "$wait"
     fi
   done
 
-  upload_status "$label  failed"
+  upload_status "${prefix}${label}  failed"
   return 1
 }
 
@@ -205,22 +228,27 @@ generate_grids() {
   local folder="$1"
   local grid_dir="$2"
   local fname ok=0 fail=0 skipped=0
+  local total=${#FILES[@]} i=0
 
   mkdir -p "$grid_dir"
 
   for fname in "${FILES[@]}"; do
+    i=$((i + 1))
     if [[ -f "$grid_dir/$fname" ]]; then
+      upload_status "[$i/$total] $fname  ok (grid cached)"
       skipped=$((skipped + 1))
       continue
     fi
     if [[ "$DRY_RUN" == "1" ]]; then
+      upload_status "[$i/$total] $fname  ok (grid dry-run)"
       ok=$((ok + 1))
       continue
     fi
     if sips -Z 1200 "$folder/$fname" --out "$grid_dir/$fname" --setProperty formatOptions 80 >/dev/null 2>&1; then
+      upload_status "[$i/$total] $fname  ok (grid)"
       ok=$((ok + 1))
     else
-      upload_status "$fname  failed (grid generation)"
+      upload_status "[$i/$total] $fname  failed (grid generation)"
       fail=$((fail + 1))
     fi
   done
@@ -239,6 +267,7 @@ upload_originals() {
   local folder="$1"
   local r2_prefix="$2"
   local fname fail=0 skipped=0
+  local total=${#FILES[@]} i=0 progress=""
 
   upload_log "originals -> $R2_BUCKET/$r2_prefix/"
   if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
@@ -246,12 +275,14 @@ upload_originals() {
   fi
 
   for fname in "${FILES[@]}"; do
+    i=$((i + 1))
+    progress="$i/$total"
     if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${r2_prefix}/${fname}"; then
-      upload_status "$fname  ok (exists)"
+      upload_status "[$progress] $fname  ok (exists)"
       skipped=$((skipped + 1))
       continue
     fi
-    upload_with_retry "$R2_BUCKET/$r2_prefix/$fname" "$folder/$fname" "$fname" || fail=$((fail + 1))
+    upload_with_retry "$R2_BUCKET/$r2_prefix/$fname" "$folder/$fname" "$fname" "$progress" || fail=$((fail + 1))
     if [[ "$ORIG_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
       sleep "$ORIG_SLEEP"
     fi
@@ -266,6 +297,7 @@ upload_grids() {
   local r2_prefix="$2"
   local fname fail=0 skipped=0
   local grid_prefix="grid/$r2_prefix"
+  local total=${#FILES[@]} i=0 progress=""
 
   upload_log "grids -> $R2_BUCKET/$grid_prefix/"
   if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
@@ -273,12 +305,14 @@ upload_grids() {
   fi
 
   for fname in "${FILES[@]}"; do
+    i=$((i + 1))
+    progress="$i/$total"
     if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${grid_prefix}/${fname}"; then
-      upload_status "$fname  ok (exists)"
+      upload_status "[$progress] $fname  ok (exists)"
       skipped=$((skipped + 1))
       continue
     fi
-    upload_with_retry "$R2_BUCKET/$grid_prefix/$fname" "$grid_dir/$fname" "$fname" || fail=$((fail + 1))
+    upload_with_retry "$R2_BUCKET/$grid_prefix/$fname" "$grid_dir/$fname" "$fname" "$progress" || fail=$((fail + 1))
     if [[ "$GRID_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
       sleep "$GRID_SLEEP"
     fi
