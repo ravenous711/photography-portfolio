@@ -452,12 +452,10 @@
     function renderAlbums() {
       const container = document.getElementById('album-list');
 
-      // Flatten all albums with actual photos (skip groups, skip placeholder SVG)
+      // Flatten all albums with actual photos (digital + all film sections, skip groups/placeholders)
       const leafAlbums = ALBUMS.filter(a =>
         a.type !== 'group' &&
-        Array.isArray(a.photos) &&
-        a.photos.length > 0 &&
-        !a.photos.every(p => p.endsWith('.svg'))
+        getAlbumAllPhotos(a).some(p => !p.endsWith('.svg'))
       );
 
       if (leafAlbums.length === 0) {
@@ -466,7 +464,7 @@
       }
 
       leafAlbums.forEach(album => {
-        const photos = (album.photos || []).filter(u => !u.endsWith('.svg'));
+        const photos = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
         const badge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
         const count = photos.length;
 
