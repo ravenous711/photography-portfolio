@@ -639,7 +639,6 @@ const ALBUMS = [
         label: 'Kodak T-Max 400',
         navLabel: 'Film Roll 3',
         photos: [
-          `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E001.jpg`,
           `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E002.jpg`,
           `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E003.jpg`,
           `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E004.jpg`,
