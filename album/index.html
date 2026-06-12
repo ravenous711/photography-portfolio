@@ -709,6 +709,7 @@
         const observer = new IntersectionObserver(([entry]) => {
           toolbar.classList.toggle('is-stuck', !entry.isIntersecting);
           getStickyStackHeight();
+          window.dispatchEvent(new Event('scroll'));
         }, {
           rootMargin: `-${navHeight()}px 0px 0px 0px`,
           threshold: 0,
@@ -737,16 +738,59 @@
       nav.querySelectorAll('.album-section-nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           scrollToAlbumSection(btn.dataset.target);
-          nav.querySelectorAll('.album-section-nav-btn').forEach(b => b.classList.remove('is-active'));
-          btn.classList.add('is-active');
+          setActiveSectionNav(btn.dataset.target);
         });
       });
 
       if (items.length) {
-        nav.querySelector('.album-section-nav-btn')?.classList.add('is-active');
+        setActiveSectionNav(items[0].id);
       }
 
+      setupSectionNavScrollSpy(items, nav);
+
       updateAlbumStickyOffset();
+    }
+
+    function setActiveSectionNav(sectionId) {
+      const nav = document.getElementById('album-section-nav');
+      if (!nav || !sectionId) return;
+      nav.querySelectorAll('.album-section-nav-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.target === sectionId);
+      });
+    }
+
+    function setupSectionNavScrollSpy(items, nav) {
+      if (!items.length || !nav) return;
+
+      let spyRaf = 0;
+
+      const updateFromScroll = () => {
+        spyRaf = 0;
+        const offset = getStickyStackHeight();
+        const anchor = window.scrollY + offset + 8;
+        let activeId = items[0].id;
+
+        for (const item of items) {
+          const el = document.getElementById(item.id);
+          if (!el) continue;
+
+          const labelEl = el.querySelector('.album-section-label');
+          const marker = (labelEl && labelEl.offsetParent !== null && !labelEl.hidden) ? labelEl : el;
+          const top = marker.getBoundingClientRect().top + window.scrollY;
+          if (top <= anchor) activeId = item.id;
+        }
+
+        setActiveSectionNav(activeId);
+      };
+
+      const scheduleUpdate = () => {
+        if (spyRaf) return;
+        spyRaf = requestAnimationFrame(updateFromScroll);
+      };
+
+      window.addEventListener('scroll', scheduleUpdate, { passive: true });
+      window.addEventListener('resize', scheduleUpdate, { passive: true });
+      scheduleUpdate();
     }
 
     function renderNextAlbumNav() {

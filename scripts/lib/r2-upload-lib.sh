@@ -15,6 +15,8 @@
 : "${FILE_LIST:=}"
 : "${FRAME_PREFIX:=}"
 
+: "${R2_PUBLIC_BASE:=https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev}"
+
 R2_INDEX_FILE=""
 
 upload_log() {
@@ -133,6 +135,19 @@ r2_has_object() {
   [[ -f "$R2_INDEX_FILE" ]] && grep -Fxq "$fname" "$R2_INDEX_FILE"
 }
 
+r2_public_exists() {
+  local key="$1"
+  local code
+  code=$(curl -sI -o /dev/null -w "%{http_code}" "${R2_PUBLIC_BASE}/${key}" 2>/dev/null || echo "000")
+  [[ "$code" == "200" ]]
+}
+
+r2_object_exists() {
+  local key="$1"
+  local fname="${key##*/}"
+  r2_has_object "$fname" || r2_public_exists "$key"
+}
+
 r2_list_objects() {
   local prefix="$1"
   local token
@@ -231,7 +246,7 @@ upload_originals() {
   fi
 
   for fname in "${FILES[@]}"; do
-    if [[ "$SKIP_EXISTING" == "1" ]] && r2_has_object "$fname"; then
+    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${r2_prefix}/${fname}"; then
       upload_status "$fname  ok (exists)"
       skipped=$((skipped + 1))
       continue
@@ -258,7 +273,7 @@ upload_grids() {
   fi
 
   for fname in "${FILES[@]}"; do
-    if [[ "$SKIP_EXISTING" == "1" ]] && r2_has_object "$fname"; then
+    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${grid_prefix}/${fname}"; then
       upload_status "$fname  ok (exists)"
       skipped=$((skipped + 1))
       continue
@@ -305,12 +320,14 @@ for o in result:
     local fname
     for fname in "${FILES[@]}"; do
       local found=0 u
-      for u in "${uploaded[@]}"; do
-        if [[ "$u" == "$fname" ]]; then
-          found=1
-          break
-        fi
-      done
+      if ((${#uploaded[@]})); then
+        for u in "${uploaded[@]}"; do
+          if [[ "$u" == "$fname" ]]; then
+            found=1
+            break
+          fi
+        done
+      fi
       [[ "$found" -eq 0 ]] && missing_list+=("$fname")
     done
 
