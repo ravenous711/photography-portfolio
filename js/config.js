@@ -297,20 +297,9 @@ const ALBUMS = [
   },
 
   {
-    id: 'london-2025',
-    title: 'London 2025',
-    location: 'London',
-    date: 'September 2025',
-    description: 'Photos from this trip are still being edited.',
-    protected: false,
-    coverImage: '/images/placeholder-album.svg',
-    photos: [],
-  },
-
-  {
-    id: 'red-rock-canyon-2026',
-    title: 'Red Rock Canyon 2026',
-    location: 'Red Rock Canyon',
+    id: 'vegas-2026',
+    title: 'Vegas 2026',
+    location: 'Las Vegas',
     date: '2026',
     description: 'Photos from this trip are still being edited.',
     protected: false,
@@ -993,6 +982,17 @@ const ALBUMS = [
       },
 
     ],
+  },
+
+  {
+    id: 'london-2025',
+    title: 'London 2025',
+    location: 'London',
+    date: 'September 2025',
+    description: 'Photos from this trip are still being edited.',
+    protected: false,
+    coverImage: '/images/placeholder-album.svg',
+    photos: [],
   },
 
 ];
