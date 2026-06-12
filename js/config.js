@@ -374,6 +374,7 @@ const ALBUMS = [
           `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_30.jpg`,
           `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_31.jpg`,
           `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_33.jpg`,
+          `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_35.jpg`,
           `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_36.jpg`,
         ],
       },
