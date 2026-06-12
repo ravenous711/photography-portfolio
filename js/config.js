@@ -368,7 +368,6 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_226.jpg`,
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_227.jpg`,
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_228.jpg`,
-      `${R2_BASE_URL}/Italy/Venice/Digital/venice_232.jpg`,
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_235.jpg`,
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_236.jpg`,
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_263.jpg`,
