@@ -125,6 +125,9 @@
     // ── Render first 3 public albums as featured ──
     const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId && isCompleteAlbum(a)).slice(0, 3);
     const grid = document.getElementById('featured-grid');
+    if (publicAlbums.length > 0 && publicAlbums.length < 3) {
+      grid.classList.add(`editorial-grid--count-${publicAlbums.length}`);
+    }
 
     publicAlbums.forEach((album, i) => {
       const isGroup = album.type === 'group';

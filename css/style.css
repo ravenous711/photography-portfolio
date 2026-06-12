@@ -625,6 +625,18 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   gap: 0;
 }
 
+.editorial-grid.editorial-grid--count-2 {
+  grid-template-columns: repeat(2, 1fr);
+  width: min(1200px, 80vw);
+  margin-inline: auto;
+}
+
+.editorial-grid.editorial-grid--count-1 {
+  grid-template-columns: minmax(280px, 560px);
+  justify-content: center;
+  margin-inline: auto;
+}
+
 .editorial-grid .album-card {
   aspect-ratio: unset;
   height: 60vh;
@@ -699,6 +711,10 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 @media (max-width: 768px) {
   .editorial-grid {
     grid-template-columns: 1fr;
+  }
+  .editorial-grid.editorial-grid--count-2,
+  .editorial-grid.editorial-grid--count-1 {
+    width: 100%;
   }
   .editorial-grid .album-card {
     height: 55vw;
