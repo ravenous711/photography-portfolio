@@ -123,7 +123,7 @@
     document.title = `${SITE_CONFIG.photographerName} — Photography`;
 
     // ── Render first 3 public albums as featured ──
-    const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId).slice(0, 3);
+    const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId && isCompleteAlbum(a)).slice(0, 3);
     const grid = document.getElementById('featured-grid');
 
     publicAlbums.forEach((album, i) => {

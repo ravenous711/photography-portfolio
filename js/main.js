@@ -152,6 +152,17 @@ function isEmptyAlbum(album) {
   return album.type !== 'group' && !getAlbumPhotoCount(album);
 }
 
+function isCompleteAlbum(album) {
+  if (!album) return false;
+  if (album.type === 'group') {
+    return (album.subAlbums || []).some(subId => {
+      const sub = ALBUMS.find(a => a.id === subId);
+      return sub && getAlbumPhotoCount(sub) > 0;
+    });
+  }
+  return getAlbumPhotoCount(album) > 0;
+}
+
 function albumDateline(album, { withDesc = false } = {}) {
   if (album.dateline) return album.dateline;
 
