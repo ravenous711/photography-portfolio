@@ -9,12 +9,11 @@ A minimalist static photography portfolio site built with HTML, Tailwind CSS, an
 
 ---
 
-## Passwords (temporary)
+## Passwords
 
 | Gate | Password |
 |---|---|
-| Site preview | `preview2026` |
-| Joel Birthday 2025 | `joeli-oli-ravioli` |
+| Joel Birthday 2025 (hidden album) | `joeli-oli-ravioli` |
 
 To change any password, generate a new SHA-256 hash and update `js/config.js`:
 ```bash

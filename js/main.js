@@ -295,13 +295,8 @@ const SiteAuth = {
     sessionStorage.setItem(this.key, 'true');
   },
 
-  // Call on every protected page — redirects to login.html if not unlocked
-  guard() {
-    if (!this.isUnlocked()) {
-      const returnTo = encodeURIComponent(window.location.href);
-      window.location.replace(`login.html?return=${returnTo}`);
-    }
-  },
+  // No-op — site preview gate removed; album passwords still use AlbumAuth
+  guard() {},
 };
 
 // ── Session-based album unlock store ──

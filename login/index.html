@@ -50,42 +50,7 @@
   </div>
 
   <script>
-    document.getElementById('site-name').textContent = SITE_CONFIG.photographerName;
-
-    const params = new URLSearchParams(window.location.search);
-    const returnTo = params.get('return') || Routes.home;
-
-    // Already unlocked? Go straight through
-    if (sessionStorage.getItem('site_unlocked') === 'true') {
-      window.location.replace(returnTo);
-    }
-
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pw = document.getElementById('password-input').value.trim();
-      if (!pw) return;
-
-      const encoder = new TextEncoder();
-      const data = encoder.encode(pw);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hash = Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-
-      if (hash === SITE_CONFIG.sitePasswordHash) {
-        sessionStorage.setItem('site_unlocked', 'true');
-        window.location.replace(returnTo);
-      } else {
-        const input = document.getElementById('password-input');
-        const err = document.getElementById('error-msg');
-        input.classList.add('shake', 'border-red-500/50');
-        err.classList.remove('hidden');
-        input.value = '';
-        setTimeout(() => {
-          input.classList.remove('shake', 'border-red-500/50');
-        }, 500);
-      }
-    });
+    window.location.replace(Routes.home);
   </script>
 </body>
 </html>
