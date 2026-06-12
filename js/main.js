@@ -190,9 +190,7 @@ function albumCoverUrl(album) {
 }
 
 function albumPageUrl(album) {
-  return album.type === 'group'
-    ? `album-group.html?id=${album.id}`
-    : `album.html?id=${album.id}`;
+  return Routes.albumPageUrl(album);
 }
 
 function isItalyAlbum(album) {
