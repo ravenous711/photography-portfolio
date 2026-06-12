@@ -41,10 +41,8 @@
   </header>
 
   <!-- ── Album Grid ── -->
-  <main class="px-6 md:px-12 pb-24 max-w-7xl mx-auto">
-    <div class="album-grid fade-in fade-in-delay-1" id="album-grid">
-      <!-- Populated by JS -->
-    </div>
+  <main class="px-6 md:px-12 pb-24 max-w-7xl mx-auto" id="gallery-main">
+    <!-- Populated by JS -->
   </main>
 
   <!-- ── Footer ── -->
@@ -68,18 +66,14 @@
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-    // ── Render album grid ──
-    const grid = document.getElementById('album-grid');
-
-    // Only show top-level, non-hidden albums
+    // ── Render album grid grouped by year ──
+    const main = document.getElementById('gallery-main');
     const topLevel = ALBUMS.filter(a => !a.parentId && !a.hidden);
 
-    topLevel.forEach(album => {
+    function renderAlbumCard(album) {
       const isGroup = album.type === 'group';
-      const href = albumPageUrl(album);
-
       const card = document.createElement('a');
-      card.href = href;
+      card.href = albumPageUrl(album);
       card.className = 'album-card fade-in';
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
       const dateline = albumDateline(album, { withDesc: !isGroup });
@@ -102,7 +96,31 @@
           ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
         </div>
       `;
-      grid.appendChild(card);
+      return card;
+    }
+
+    const byYear = new Map();
+    topLevel.forEach(album => {
+      const year = albumYear(album) || 'Other';
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year).push(album);
+    });
+
+    [...byYear.keys()].sort().forEach((year, sectionIndex) => {
+      const section = document.createElement('section');
+      section.className = 'gallery-year-section fade-in';
+      if (sectionIndex > 0) section.classList.add(`fade-in-delay-${Math.min(sectionIndex, 3)}`);
+
+      const heading = document.createElement('h2');
+      heading.className = 'gallery-year-heading';
+      heading.textContent = year;
+      section.appendChild(heading);
+
+      const grid = document.createElement('div');
+      grid.className = 'album-grid';
+      byYear.get(year).forEach(album => grid.appendChild(renderAlbumCard(album)));
+      section.appendChild(grid);
+      main.appendChild(section);
     });
   </script>
 </body>

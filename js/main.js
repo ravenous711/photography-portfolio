@@ -163,6 +163,12 @@ function isCompleteAlbum(album) {
   return getAlbumPhotoCount(album) > 0;
 }
 
+function albumYear(album) {
+  if (!album?.date) return null;
+  const years = album.date.match(/\b(20\d{2})\b/g);
+  return years ? years[years.length - 1] : null;
+}
+
 function albumDateline(album, { withDesc = false } = {}) {
   if (album.dateline) return album.dateline;
 
