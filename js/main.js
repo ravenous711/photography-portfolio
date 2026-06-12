@@ -177,8 +177,16 @@ function albumDateline(album, { withDesc = false } = {}) {
 }
 
 function albumCardDesc(album) {
-  if (isEmptyAlbum(album)) return '(TBD)';
+  if (isEmptyAlbum(album)) return album.description || '(TBD)';
   return album.description || '';
+}
+
+function albumCoverUrl(album) {
+  const src = album?.coverImage || '';
+  if (!src) return '';
+  if (src.startsWith('/')) return src;
+  if (/^https?:\/\//.test(src)) return gridUrl(src);
+  return `/${src.replace(/^\.\/?/, '')}`;
 }
 
 function albumPageUrl(album) {

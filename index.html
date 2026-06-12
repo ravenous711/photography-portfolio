@@ -136,7 +136,7 @@
       const dateline = albumDateline(album, { withDesc: !isGroup });
       const desc = albumCardDesc(album);
       card.innerHTML = `
-        <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
+        <img class="album-card-img" src="${albumCoverUrl(album)}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
         <div class="album-card-overlay">
           ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h3 class="album-card-title">${album.title}</h3>

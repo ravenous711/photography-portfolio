@@ -86,7 +86,7 @@
       const desc = albumCardDesc(album);
       card.innerHTML = `
         <img class="album-card-img"
-             src="${album.coverImage}"
+             src="${albumCoverUrl(album)}"
              alt="${album.title}"
              loading="lazy"${posStyle} />
         <div class="album-card-overlay">
