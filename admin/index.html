@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Admin — Raveen Fernando</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
   <style>
     /* ── Auth screen ── */
@@ -312,7 +312,8 @@
   <!-- ── Toast notification ── -->
   <div id="toast"></div>
 
-  <script src="js/config.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
   <script>
     const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
 
@@ -618,7 +619,7 @@
         return;
       }
       list.innerHTML = groups.map(g => {
-        const url = `${location.origin}/curate-group.html?group=${g.id}`;
+        const url = `${location.origin}${Routes.curateGroup(g.id)}`;
         return `
           <div style="margin-bottom:0.75rem">
             <strong style="font-size:0.85rem">${g.title}</strong>
@@ -669,7 +670,7 @@
         const section = document.createElement('div');
         section.className = 'curation-album';
 
-        const curateUrl = `${location.origin}/curate.html?album=${albumId}`;
+        const curateUrl = `${location.origin}${Routes.curate(albumId)}`;
         section.innerHTML = `
           <h2>${albumTitle}</h2>
           <a class="curate-link" href="${curateUrl}" target="_blank">↗ Share curate link</a>

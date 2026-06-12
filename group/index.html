@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("/login/?return="+encodeURIComponent(window.location.href));}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Album — Raveen Fernando</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
 </head>
 <body class="overflow-x-hidden">
 
   <!-- ── Navigation ── -->
   <nav id="main-nav" class="nav-scrolled">
-    <a href="index.html" class="nav-logo">RF<span>.</span></a>
+    <a href="/" class="nav-logo">RF<span>.</span></a>
     <ul class="nav-links">
-      <li><a href="index.html"   data-nav-link>Home</a></li>
-      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
+      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -28,13 +28,13 @@
   </nav>
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
-    <a href="index.html">Home</a>
-    <a href="gallery.html">Gallery</a>
+    <a href="/">Home</a>
+    <a href="/gallery/">Gallery</a>
   </div>
 
   <!-- ── Page Header ── -->
   <header class="page-header fade-in">
-    <a href="gallery.html" class="back-link" id="back-link">
+    <a href="/gallery/" class="back-link" id="back-link">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
         <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
       </svg>
@@ -47,7 +47,7 @@
   </header>
 
   <!-- ── Password Modal (shown for protected groups) ── -->
-  <div id="password-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(10,10,10,0.97);display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center">
+  <div id="password-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(10,10,10,0.97);align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center">
     <svg style="width:2.5rem;height:2.5rem;margin-bottom:1.5rem;opacity:0.4" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -65,7 +65,7 @@
         Unlock
       </button>
     </form>
-    <a href="gallery.html" style="margin-top:2rem;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(240,237,232,0.3);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='rgba(240,237,232,0.6)'" onmouseout="this.style.color='rgba(240,237,232,0.3)'">Back to Gallery</a>
+    <a href="/gallery/" style="margin-top:2rem;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(240,237,232,0.3);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='rgba(240,237,232,0.6)'" onmouseout="this.style.color='rgba(240,237,232,0.3)'">Back to Gallery</a>
   </div>
 
   <!-- ── Sub-album Grid ── -->
@@ -79,7 +79,7 @@
   <footer>
     <p id="footer-copyright"></p>
     <p class="mt-1">
-      <a href="index.html">Home</a>
+      <a href="/">Home</a>
     </p>
   </footer>
 
@@ -104,20 +104,26 @@
     }
   </style>
 
-  <script src="js/config.js"></script>
-  <script src="js/main.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
   <script>SiteAuth.guard();</script>
   <script>
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-    const params = new URLSearchParams(window.location.search);
-    const groupId = params.get('id');
-    const group = ALBUMS.find(a => a.id === groupId && a.type === 'group');
+    (function initGroupPage() {
+      if (Routes.redirectOldGroupPaths()) return;
 
-    if (!group) {
-      window.location.replace('gallery.html');
-    } else {
+      Routes.canonicalize('gallery', ['id']);
+      const groupId = Routes.parseGalleryGroupId(['id']);
+      const group = ALBUMS.find(a => a.id === groupId && a.type === 'group');
+
+      if (!group) {
+        window.location.replace(Routes.gallery);
+        return;
+      }
+
       document.title = `${group.title} — ${SITE_CONFIG.photographerName}`;
       document.getElementById('modal-group-title').textContent = group.title;
 
@@ -126,9 +132,8 @@
       } else {
         showGroup();
       }
-    }
 
-    function showPasswordModal() {
+      function showPasswordModal() {
       const modal = document.getElementById('password-modal');
       modal.style.display = 'flex';
 
@@ -176,7 +181,7 @@
       const backLink = document.getElementById('back-link');
       if (group.parentId) {
         const parent = ALBUMS.find(a => a.id === group.parentId);
-        backLink.href = `album-group.html?id=${group.parentId}`;
+        backLink.href = Routes.group(group.parentId);
         document.getElementById('back-link-label').textContent = parent ? parent.title : 'Back';
       }
 
@@ -187,9 +192,7 @@
 
       subAlbums.forEach(album => {
         const isGroup = album.type === 'group';
-        const href = isGroup
-          ? `album-group.html?id=${album.id}`
-          : `album.html?id=${album.id}`;
+        const href = albumPageUrl(album);
 
         const card = document.createElement('a');
         card.href = href;
@@ -198,7 +201,7 @@
         const dateline = albumDateline(album);
         card.innerHTML = `
           <img class="album-card-img"
-               src="${album.coverImage}"
+               src="${albumCoverUrl(album)}"
                alt="${album.title}"
                loading="lazy"${posStyle} />
           <div class="album-card-overlay">
@@ -209,6 +212,7 @@
         grid.appendChild(card);
       });
     }
+    })();
   </script>
 </body>
 </html>

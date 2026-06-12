@@ -115,11 +115,11 @@ export default async function handler(req, res) {
       // coverImage
       updatedContent = updatedContent.replace(
         new RegExp(`(coverImage:\\s*)\`\\$\\{R2_BASE_URL\\}/${pathPattern}\``, 'g'),
-        "$1'images/placeholder-black.svg'"
+        "$1'/images/placeholder-album.svg'"
       );
       updatedContent = updatedContent.replace(
         new RegExp(`(coverImage:\\s*)\`${escapeRegex(url)}\``, 'g'),
-        "$1'images/placeholder-black.svg'"
+        "$1'/images/placeholder-album.svg'"
       );
     }
 

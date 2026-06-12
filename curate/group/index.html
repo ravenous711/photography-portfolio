@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Curate — Raveen Fernando</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
   <style>
     #pw-screen {
       position: fixed; inset: 0; z-index: 900;
@@ -135,11 +135,12 @@
     <div id="album-grid"></div>
   </div>
 
-  <script src="js/config.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
   <script>
-    const params  = new URLSearchParams(location.search);
-    const groupId = params.get('group');
-    const urlPw   = params.get('pw');
+    Routes.canonicalizeNested('curate', 'group', ['group']);
+    const groupId = Routes.parseNestedPath('curate', 'group', ['group']);
+    const urlPw   = new URLSearchParams(location.search).get('pw');
     const UNLOCK_KEY = `curate_group_unlock_${groupId}`;
 
     const group = (ALBUMS || []).find(a => a.id === groupId && a.type === 'group');
@@ -204,7 +205,7 @@
         if (album.type === 'group') {
           const subCount = (album.subAlbums || []).length;
           const card = document.createElement('a');
-          card.href = `curate-group.html?group=${album.id}${urlPw ? `&pw=${encodeURIComponent(urlPw)}` : ''}`;
+          card.href = Routes.curateGroup(album.id, urlPw || undefined);
           card.className = 'picker-card';
           const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
           card.innerHTML = `
@@ -222,7 +223,7 @@
         const count = photoCount(album);
         const ready = count > 0;
         const card = document.createElement('a');
-        card.href = ready ? `curate.html?album=${album.id}` : '#';
+        card.href = ready ? Routes.curate(album.id) : '#';
         card.className = 'picker-card' + (ready ? '' : ' disabled');
         const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
         card.innerHTML = `

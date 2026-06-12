@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("/login/?return="+encodeURIComponent(window.location.href));}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Album — Raveen Fernando</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
 
   <!-- JSZip for album download -->
@@ -16,16 +16,16 @@
   <!-- FileSaver for triggering the download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <!-- Flickr justified-layout: all images scaled to equal row height -->
-  <script src="js/justified-layout.js"></script>
+  <script src="/js/justified-layout.js"></script>
 </head>
 <body class="overflow-x-hidden">
 
   <!-- ── Navigation ── -->
   <nav id="main-nav" class="nav-scrolled">
-    <a href="index.html" class="nav-logo">RF<span>.</span></a>
+    <a href="/" class="nav-logo">RF<span>.</span></a>
     <ul class="nav-links">
-      <li><a href="index.html"   data-nav-link>Home</a></li>
-      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
+      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -35,8 +35,8 @@
   </nav>
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
-    <a href="index.html">Home</a>
-    <a href="gallery.html">Gallery</a>
+    <a href="/">Home</a>
+    <a href="/gallery/">Gallery</a>
   </div>
 
   <!-- ── Password Modal (shown for protected albums) ── -->
@@ -70,7 +70,7 @@
         </button>
       </form>
 
-      <a href="gallery.html" class="block mt-6 text-xs tracking-widest uppercase"
+      <a href="/gallery/" class="block mt-6 text-xs tracking-widest uppercase"
          style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
         ← Back to Gallery
       </a>
@@ -83,7 +83,7 @@
     <!-- Album header -->
     <header class="album-page-header px-6 md:px-12">
       <div class="album-header-identity">
-        <a id="back-link" href="gallery.html" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
+        <a id="back-link" href="/gallery/" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
            style="color:var(--color-muted);text-decoration:none;transition:color 0.3s"
            onmouseover="this.style.color='var(--color-text)'"
            onmouseout="this.style.color='var(--color-muted)'">
@@ -103,14 +103,17 @@
 
     <div id="album-toolbar-sentinel" aria-hidden="true"></div>
     <div id="album-header-toolbar" class="album-header-toolbar px-6 md:px-12">
-        <a id="back-link-sticky" class="album-toolbar-back" href="gallery.html">
+        <a id="back-link-sticky" class="album-toolbar-back" href="/gallery/">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
           <span id="back-label-sticky">All Albums</span>
         </a>
         <div class="album-toolbar-main">
-        <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
+        <div class="album-toolbar-title-group">
+          <span id="album-toolbar-title" class="album-toolbar-title"></span>
+          <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
+        </div>
         <div class="album-header-actions">
           <button id="select-btn" class="btn-ghost" onclick="toggleSelectMode()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -128,7 +131,7 @@
             Download All
           </button>
         </div>
-        </div>
+      </div>
     </div>
 
     <!-- Photo grids -->
@@ -205,56 +208,63 @@
     <p id="footer-copyright"></p>
   </footer>
 
-  <script src="js/config.js"></script>
-  <script src="js/main.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
   <script>SiteAuth.guard();</script>
   <script>
     // ════════════════════════════════════════════════════════
     // ALBUM PAGE LOGIC
     // ════════════════════════════════════════════════════════
 
-    // ── Get album from URL param ──
-    const params    = new URLSearchParams(window.location.search);
-    const albumId   = params.get('id');
-    const album     = ALBUMS.find(a => a.id === albumId);
-    let allPhotos   = [];
+    // ── Get album from URL ──
+    let album;
+    let allPhotos = [];
 
-    if (!album) {
-      document.body.innerHTML = `
+    if (Routes.redirectLegacyFlatAlbum()) {
+      // redirecting to nested /gallery/:group/:slug/
+    } else if (Routes.canonicalizeAlbumQuery()) {
+      // redirecting from legacy ?id=
+    } else {
+      album = Routes.resolveAlbumFromPath();
+
+      if (!album) {
+        document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
-          <a href="gallery.html" class="btn-ghost">Back to Gallery</a>
+          <a href="/gallery/" class="btn-ghost">Back to Gallery</a>
         </div>`;
-    } else {
-      allPhotos = getAlbumAllPhotos(album);
+      } else {
+        allPhotos = getAlbumAllPhotos(album);
 
-      // Update page title
-      document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
-      document.getElementById('footer-copyright').textContent =
-        `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+        // Update page title
+        document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
+        document.getElementById('footer-copyright').textContent =
+          `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-      // If this is a sub-album, update back link and enforce parent group lock
-      if (album.parentId) {
-        const parent = ALBUMS.find(a => a.id === album.parentId);
-        if (parent) {
-          const backHref = `album-group.html?id=${album.parentId}`;
-          document.getElementById('back-link').href = backHref;
-          document.getElementById('back-label').textContent = parent.title;
-          document.getElementById('back-link-sticky').href = backHref;
-          document.getElementById('back-label-sticky').textContent = parent.title;
+        // If this is a sub-album, update back link and enforce parent group lock
+        if (album.parentId) {
+          const parent = ALBUMS.find(a => a.id === album.parentId);
+          if (parent) {
+            const backHref = Routes.group(album.parentId);
+            document.getElementById('back-link').href = backHref;
+            document.getElementById('back-label').textContent = parent.title;
+            document.getElementById('back-link-sticky').href = backHref;
+            document.getElementById('back-label-sticky').textContent = parent.title;
 
-          // If the parent group is password-protected and not yet unlocked, gate here
-          if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
-            window.location.replace(`album-group.html?id=${album.parentId}`);
+            // If the parent group is password-protected and not yet unlocked, gate here
+            if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
+              window.location.replace(Routes.group(album.parentId));
+            }
           }
         }
-      }
 
-      // ── Auth check ──
-      if (!album.protected || AlbumAuth.isUnlocked(album.id)) {
-        showAlbum();
-      } else {
-        showPasswordModal();
+        // ── Auth check ──
+        if (!album.protected || AlbumAuth.isUnlocked(album.id)) {
+          showAlbum();
+        } else {
+          showPasswordModal();
+        }
       }
     }
 
@@ -492,8 +502,9 @@
 
     function showAlbum() {
       document.getElementById('album-content').style.display = 'block';
-      document.getElementById('album-title').textContent       = album.title;
-      document.getElementById('album-dateline').textContent    = albumDateline(album);
+      document.getElementById('album-title').textContent        = album.title;
+      document.getElementById('album-dateline').textContent     = albumDateline(album);
+      document.getElementById('album-toolbar-title').textContent = album.title;
 
       const digitalGrid = document.getElementById('photo-grid');
       const filmSection = document.getElementById('film-section');
@@ -553,7 +564,6 @@
         filmSection.querySelectorAll('.photo-grid').forEach(runJustifiedLayout);
       });
 
-      renderSectionNav();
       setupStickyAlbumHeader();
       renderNextAlbumNav();
     }
@@ -567,50 +577,147 @@
       return height;
     }
 
-    function updateAlbumStickyOffset() {
+    function getStickyStackHeight() {
       const nav = document.getElementById('main-nav');
       const toolbar = document.getElementById('album-header-toolbar');
-      const navH = nav?.getBoundingClientRect().height || 72;
-      const toolbarH = toolbar?.classList.contains('is-stuck')
-        ? toolbar.getBoundingClientRect().height
-        : measureStuckToolbarHeight(toolbar);
-      const gap = 16;
-      document.documentElement.style.setProperty('--album-sticky-offset', `${navH + toolbarH + gap}px`);
+      if (!nav || !toolbar) return 112;
+
+      const wasStuck = toolbar.classList.contains('is-stuck');
+      // Suppress CSS transition so getBoundingClientRect returns the final stuck
+      // height immediately, not an in-progress intermediate value.
+      toolbar.style.transition = 'none';
+      toolbar.classList.add('is-stuck');
+      void toolbar.offsetHeight; // force reflow to settled state
+      const height = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
+      if (!wasStuck) toolbar.classList.remove('is-stuck');
+      toolbar.style.transition = '';
+
+      document.documentElement.style.setProperty('--album-sticky-offset', `${height}px`);
+      return height;
     }
 
-    function setupStickyAlbumHeader() {
+    function getMinScrollForStuckToolbar() {
+      const sentinel = document.getElementById('album-toolbar-sentinel');
+      const navH = document.getElementById('main-nav')?.offsetHeight ?? 72;
+      if (!sentinel) return 0;
+      return Math.max(0, sentinel.getBoundingClientRect().top + window.scrollY - navH);
+    }
+
+    function syncStickyToolbarState() {
       const toolbar = document.getElementById('album-header-toolbar');
       const sentinel = document.getElementById('album-toolbar-sentinel');
+      const navH = document.getElementById('main-nav')?.offsetHeight ?? 72;
       if (!toolbar || !sentinel) return;
+      toolbar.classList.toggle('is-stuck', sentinel.getBoundingClientRect().top <= navH);
+      getStickyStackHeight();
+    }
 
-      updateAlbumStickyOffset();
+    function updateAlbumStickyOffset() {
+      getStickyStackHeight();
+    }
 
-      const navHeight = () => document.getElementById('main-nav')?.offsetHeight || 72;
-      const observer = new IntersectionObserver(([entry]) => {
-        toolbar.classList.toggle('is-stuck', !entry.isIntersecting);
-        updateAlbumStickyOffset();
-      }, {
-        rootMargin: `-${navHeight()}px 0px 0px 0px`,
-        threshold: 0,
-      });
+    let sectionNavScrollSeq = 0;
 
-      observer.observe(sentinel);
-      window.addEventListener('resize', updateAlbumStickyOffset, { passive: true });
+    // Height of nav + stuck toolbar + gap. Constant regardless of scroll position,
+    // so we measure it once per scroll in a single reflow.
+    function measureStickyOffset() {
+      const nav     = document.getElementById('main-nav');
+      const toolbar = document.getElementById('album-header-toolbar');
+      if (!nav || !toolbar) return 112;
+
+      const wasStuck = toolbar.classList.contains('is-stuck');
+      toolbar.style.transition = 'none';
+      toolbar.classList.add('is-stuck');
+      void toolbar.offsetHeight;
+      const offset = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
+      toolbar.classList.toggle('is-stuck', wasStuck);
+      toolbar.style.transition = '';
+
+      document.documentElement.style.setProperty('--album-sticky-offset', `${offset}px`);
+      return offset;
     }
 
     function scrollToAlbumSection(sectionId) {
       const el = document.getElementById(sectionId);
       if (!el) return;
 
-      updateAlbumStickyOffset();
+      const seq = ++sectionNavScrollSeq;
 
-      // Scroll the section label into view so stock headers (e.g. Kodak T-Max 400)
-      // sit just below the sticky toolbar — scroll-margin-top handles the offset.
-      const target = el.querySelector('.album-section-label') || el;
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const isDigital = sectionId === 'digital-section';
+      const labelEl   = el.querySelector('.album-section-label');
+      const target    = (labelEl && labelEl.offsetParent !== null) ? labelEl : el;
+      const offset    = measureStickyOffset();
+
+      // Destination is re-evaluated every frame: target's live absolute Y minus the
+      // sticky offset. When images load and shift the layout, this updates.
+      const computeDest = () =>
+        isDigital ? 0 : Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
+
+      // Exponential smoothing toward a (possibly moving) target. This never
+      // overshoots and never restarts, so layout shifts are absorbed smoothly with
+      // no stutter. TAU controls the feel (lower = snappier).
+      const TAU = 80;
+      let last  = performance.now();
+      let settle = 0;
+
+      let aborted = false;
+      const abort = () => { aborted = true; };
+      window.addEventListener('wheel',      abort, { passive: true, once: true });
+      window.addEventListener('touchstart', abort, { passive: true, once: true });
+      window.addEventListener('keydown',    abort, { once: true });
+
+      const step = (now) => {
+        if (aborted || seq !== sectionNavScrollSeq) { cleanup(); return; }
+
+        const dt = Math.min(now - last, 50);
+        last = now;
+
+        const y         = window.scrollY;
+        const dest      = computeDest();
+        const remaining = dest - y;
+
+        if (Math.abs(remaining) < 0.5) {
+          if (++settle >= 3) { window.scrollTo({ top: dest, behavior: 'instant' }); cleanup(); return; }
+        } else {
+          settle = 0;
+        }
+
+        // 'instant' (not 'auto') so we bypass the CSS `scroll-behavior: smooth` —
+        // otherwise each per-frame step becomes a smooth scroll and cancels out.
+        const k = 1 - Math.exp(-dt / TAU);
+        window.scrollTo({ top: y + remaining * k, behavior: 'instant' });
+        rafId = requestAnimationFrame(step);
+      };
+
+      let rafId = requestAnimationFrame(step);
+      function cleanup() {
+        cancelAnimationFrame(rafId);
+        window.removeEventListener('wheel', abort);
+        window.removeEventListener('touchstart', abort);
+        window.removeEventListener('keydown', abort);
+      }
     }
 
-    function renderSectionNav() {
+    function setupStickyAlbumHeader() {
+      const toolbar = document.getElementById('album-header-toolbar');
+      const sentinel = document.getElementById('album-toolbar-sentinel');
+
+      if (toolbar && sentinel) {
+        updateAlbumStickyOffset();
+
+        const navHeight = () => document.getElementById('main-nav')?.offsetHeight || 72;
+        const observer = new IntersectionObserver(([entry]) => {
+          toolbar.classList.toggle('is-stuck', !entry.isIntersecting);
+          getStickyStackHeight();
+        }, {
+          rootMargin: `-${navHeight()}px 0px 0px 0px`,
+          threshold: 0,
+        });
+
+        observer.observe(sentinel);
+        window.addEventListener('resize', updateAlbumStickyOffset, { passive: true });
+      }
+
       const nav = document.getElementById('album-section-nav');
       const items = getAlbumSectionNavItems(album);
 
@@ -657,7 +764,7 @@
         <div class="gold-rule" style="margin-left:0;margin-bottom:2.5rem"></div>
         <a href="${albumPageUrl(next)}" class="album-next-link">
           <div class="album-next-thumb">
-            <img src="${next.coverImage}" alt="" loading="lazy"${posStyle} />
+            <img src="${albumCoverUrl(next)}" alt="" loading="lazy"${posStyle} />
           </div>
           <div class="album-next-text">
             <span class="album-next-label">Next</span>

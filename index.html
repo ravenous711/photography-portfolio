@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("login.html?return="+encodeURIComponent(window.location.href));}</script>
+  <script>if(sessionStorage.getItem("site_unlocked")!=="true"){window.location.replace("/login/?return="+encodeURIComponent(window.location.href));}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -12,7 +12,7 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Custom styles -->
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
 
   <script>
     tailwind.config = {
@@ -28,12 +28,12 @@
 
   <!-- ── Navigation ── -->
   <nav id="main-nav">
-    <a href="index.html" class="nav-logo">RF<span>.</span></a>
+    <a href="/" class="nav-logo">RF<span>.</span></a>
 
     <!-- Desktop links -->
     <ul class="nav-links">
-      <li><a href="index.html"   data-nav-link>Home</a></li>
-      <li><a href="gallery.html" data-nav-link>Gallery</a></li>
+      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
     </ul>
 
     <!-- Hamburger -->
@@ -46,8 +46,8 @@
 
   <!-- Mobile menu overlay -->
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
-    <a href="index.html">Home</a>
-    <a href="gallery.html">Gallery</a>
+    <a href="/">Home</a>
+    <a href="/gallery/">Gallery</a>
   </div>
 
   <!-- ── Hero ── -->
@@ -58,7 +58,7 @@
 
     <div class="hero-content">
       <h1 class="hero-name" id="hero-name"></h1>
-      <a href="gallery.html" class="btn-primary mt-8 inline-flex" style="margin-top:2rem">
+      <a href="/gallery/" class="btn-primary mt-8 inline-flex" style="margin-top:2rem">
         View Gallery
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:0.5rem">
           <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -87,7 +87,7 @@
     </div>
 
     <div class="text-center py-14 fade-in fade-in-delay-2">
-      <a href="gallery.html" class="btn-ghost">View All Albums</a>
+      <a href="/gallery/" class="btn-ghost">View All Albums</a>
     </div>
   </section>
 
@@ -95,13 +95,14 @@
   <footer>
     <p id="footer-name"></p>
     <p class="mt-1">
-      <a href="gallery.html">Gallery</a>
+      <a href="/gallery/">Gallery</a>
     </p>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/config.js"></script>
-  <script src="js/main.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
   <script>SiteAuth.guard();</script>
   <script>
     // ── Inject config values ──
@@ -128,14 +129,14 @@
     publicAlbums.forEach((album, i) => {
       const isGroup = album.type === 'group';
       const card = document.createElement('a');
-      card.href = isGroup ? `album-group.html?id=${album.id}` : `album.html?id=${album.id}`;
+      card.href = albumPageUrl(album);
       card.className = 'album-card block';
       card.style.animationDelay = `${i * 0.1}s`;
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
       const dateline = albumDateline(album, { withDesc: !isGroup });
       const desc = albumCardDesc(album);
       card.innerHTML = `
-        <img class="album-card-img" src="${album.coverImage}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
+        <img class="album-card-img" src="${albumCoverUrl(album)}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
         <div class="album-card-overlay">
           ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h3 class="album-card-title">${album.title}</h3>

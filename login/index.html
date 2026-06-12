@@ -6,7 +6,8 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Raveen Fernando — Preview</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="js/config.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
   <style>
     body { background: #f8f7f5; color: #1a1a1a; }
     @media (prefers-color-scheme: dark) {
@@ -52,7 +53,7 @@
     document.getElementById('site-name').textContent = SITE_CONFIG.photographerName;
 
     const params = new URLSearchParams(window.location.search);
-    const returnTo = params.get('return') || 'index.html';
+    const returnTo = params.get('return') || Routes.home;
 
     // Already unlocked? Go straight through
     if (sessionStorage.getItem('site_unlocked') === 'true') {

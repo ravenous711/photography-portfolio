@@ -802,6 +802,37 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   display: inline-flex;
 }
 
+.album-toolbar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.album-toolbar-title {
+  display: none;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.album-header-toolbar.is-stuck .album-toolbar-title {
+  display: block;
+}
+
+/* Subtle divider between title and section nav when both are visible */
+.album-header-toolbar.is-stuck .album-toolbar-title + .album-section-nav:not([hidden]) {
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--color-border);
+}
+
 .album-toolbar-main {
   display: flex;
   flex: 1;
@@ -885,8 +916,6 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   background: rgba(201, 169, 110, 0.08);
 }
 
-.album-content-section,
-.album-film-block,
 .album-section-label {
   scroll-margin-top: var(--album-sticky-offset, 7rem);
 }
