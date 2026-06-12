@@ -13,9 +13,7 @@ const SITE_CONFIG = {
   heroPosition: '50% 50%',
   heroPositionMobile: '50% 40%',
 
-  // ── R2: Upload your about/profile photo and set the URL below ──
-  aboutPhoto: 'https://picsum.photos/seed/about-portrait/800/1000',
-  aboutBio: `I'm a photographer based in Detroit, Michigan.`,
+  aboutPhoto: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/about/portrait.jpg`,
   email: 'raveen.l.fernando@gmail.com',
 };
 

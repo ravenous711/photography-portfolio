@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>About — Raveen Fernando</title>
+  <meta name="description" content="About Raveen Fernando — photographer based in Detroit, Michigan." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
+  <style>
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-height: 80vh;
+      align-items: start;
+    }
+    .about-photo-col {
+      position: sticky;
+      top: var(--nav-height);
+      height: calc(100vh - var(--nav-height));
+      overflow: hidden;
+    }
+    .about-photo-col img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 20%;
+      display: block;
+    }
+    .about-text-col {
+      padding: 5rem 4rem 6rem;
+      max-width: 560px;
+    }
+    .about-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin: 0 0 1.5rem;
+    }
+    .about-name {
+      font-family: var(--font-serif);
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      margin: 0 0 1.25rem;
+      color: var(--color-text);
+    }
+    .about-rule {
+      width: 40px;
+      height: 1px;
+      background: var(--color-gold);
+      margin: 0 0 2.5rem;
+    }
+    .about-body {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--color-text);
+      opacity: 0.82;
+    }
+    .about-body p + p { margin-top: 1.25rem; }
+    .about-gear {
+      margin-top: 2.75rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--color-border);
+    }
+    .about-gear-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin: 0 0 0.75rem;
+    }
+    .gear-list {
+      list-style: none;
+      padding: 0; margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .gear-list li {
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      color: var(--color-text);
+      opacity: 0.7;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .gear-list li::before {
+      content: '';
+      display: inline-block;
+      width: 18px;
+      height: 1px;
+      background: var(--color-gold);
+      flex-shrink: 0;
+    }
+    .about-contact {
+      margin-top: 2.75rem;
+    }
+    .about-contact a {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(201,169,110,0.3);
+      padding-bottom: 2px;
+      transition: border-color 0.2s;
+    }
+    .about-contact a:hover { border-color: var(--color-gold); }
+
+    @media (max-width: 768px) {
+      .about-grid {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .about-photo-col {
+        position: relative;
+        top: auto;
+        height: 70vw;
+        min-height: 280px;
+      }
+      .about-text-col {
+        padding: 3rem 1.5rem 5rem;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="overflow-x-hidden">
+
+  <!-- ── Navigation ── -->
+  <nav id="main-nav" class="nav-scrolled">
+    <a href="/" class="nav-logo">RF<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
+      <li><a href="/about/" data-nav-link data-nav="about">About</a></li>
+    </ul>
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <a href="/">Home</a>
+    <a href="/gallery/">Gallery</a>
+    <a href="/about/">About</a>
+  </div>
+
+  <main>
+    <div class="about-grid">
+
+      <!-- Photo -->
+      <div class="about-photo-col fade-in">
+        <img id="about-photo" src="" alt="Raveen Fernando" />
+      </div>
+
+      <!-- Text -->
+      <div class="about-text-col fade-in fade-in-delay-1">
+        <p class="about-label">About</p>
+        <h1 class="about-name" id="about-name">–</h1>
+        <div class="about-rule"></div>
+
+        <div class="about-body">
+          <p>I'm a hobby photographer based in Detroit, Michigan. I picked up my first serious camera — a Fujifilm X-T5 — in 2025, and I'm still figuring out exactly what I love to shoot. That's kind of the point.</p>
+          <p>What drew me in wasn't just the images, but the process. There's something satisfying about slowing down, working a manual lens, thinking about the light before you press the shutter. I've been pulling that thread further lately — shooting on film with fully manual cameras where every frame costs something and nothing is automatic.</p>
+          <p>This portfolio is an honest record of where I am right now: learning in public, one trip at a time.</p>
+        </div>
+
+        <div class="about-gear">
+          <p class="about-gear-label">Gear</p>
+          <ul class="gear-list">
+            <li>Fujifilm X-T5</li>
+            <li>Various manual lenses</li>
+            <li>Athena half-frame film camera</li>
+            <li>Kodak Ultramax 400 &amp; Ektar 100</li>
+          </ul>
+        </div>
+
+        <div class="about-contact">
+          <a id="about-email" href="#">Get in touch</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p id="footer-copyright"></p>
+    <p class="mt-1"><a href="/gallery/">Gallery</a></p>
+  </footer>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('about-photo').src = SITE_CONFIG.aboutPhoto;
+    document.getElementById('about-name').textContent = SITE_CONFIG.photographerName;
+    document.getElementById('about-email').href = `mailto:${SITE_CONFIG.email}`;
+    document.getElementById('about-email').textContent = SITE_CONFIG.email;
+    document.getElementById('footer-copyright').textContent =
+      `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+    document.title = `About — ${SITE_CONFIG.photographerName}`;
+  </script>
+</body>
+</html>
