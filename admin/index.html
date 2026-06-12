@@ -578,12 +578,19 @@
 
     // ── Lightbox ─────────────────────────────────────────────────────────────
     function openLightbox(url) {
-      document.getElementById('lightbox-img').src = url;
+      const img = document.getElementById('lightbox-img');
+      img.classList.remove('loaded');
+      img.onload = () => img.classList.add('loaded');
+      img.src = url;
+      if (img.complete) img.classList.add('loaded');
       document.getElementById('lightbox').classList.add('open');
     }
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('open');
-      document.getElementById('lightbox-img').src = '';
+      const img = document.getElementById('lightbox-img');
+      img.classList.remove('loaded');
+      img.onload = null;
+      img.src = '';
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
