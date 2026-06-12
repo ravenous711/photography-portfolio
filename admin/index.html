@@ -677,6 +677,15 @@
       document.getElementById('alb-prev').disabled = lbIndex === 0;
       document.getElementById('alb-next').disabled = lbIndex === lbPhotos.length - 1;
 
+      // Preload adjacent images (2 before, 2 after)
+      [-2, -1, 1, 2].forEach(offset => {
+        const i = lbIndex + offset;
+        if (i >= 0 && i < lbPhotos.length) {
+          const pre = new Image();
+          pre.src = lbPhotos[i];
+        }
+      });
+
       // Mark button state
       lbSyncMark();
     }
