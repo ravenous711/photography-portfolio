@@ -35,6 +35,8 @@
   "rewrites": [
     { "source": "/curate/group/:id/", "destination": "/curate/group/index.html" },
     { "source": "/curate/group/:id", "destination": "/curate/group/index.html" },
+    { "source": "/gallery/:groupId/:slug/", "destination": "/album/index.html" },
+    { "source": "/gallery/:groupId/:slug", "destination": "/album/index.html" },
     { "source": "/gallery/:id/", "destination": "/group/index.html" },
     { "source": "/gallery/:id", "destination": "/group/index.html" },
     { "source": "/album/:id/", "destination": "/album/index.html" },

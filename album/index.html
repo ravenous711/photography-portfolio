@@ -215,47 +215,53 @@
     // ════════════════════════════════════════════════════════
 
     // ── Get album from URL ──
-    Routes.canonicalize('album', ['id']);
-    const albumId   = Routes.parsePathId('album', ['id']);
-    const album     = ALBUMS.find(a => a.id === albumId);
-    let allPhotos   = [];
+    let album;
+    let allPhotos = [];
 
-    if (!album) {
-      document.body.innerHTML = `
+    if (Routes.redirectLegacyFlatAlbum()) {
+      // redirecting to nested /gallery/:group/:slug/
+    } else if (Routes.canonicalizeAlbumQuery()) {
+      // redirecting from legacy ?id=
+    } else {
+      album = Routes.resolveAlbumFromPath();
+
+      if (!album) {
+        document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
           <a href="/gallery/" class="btn-ghost">Back to Gallery</a>
         </div>`;
-    } else {
-      allPhotos = getAlbumAllPhotos(album);
+      } else {
+        allPhotos = getAlbumAllPhotos(album);
 
-      // Update page title
-      document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
-      document.getElementById('footer-copyright').textContent =
-        `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+        // Update page title
+        document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
+        document.getElementById('footer-copyright').textContent =
+          `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
-      // If this is a sub-album, update back link and enforce parent group lock
-      if (album.parentId) {
-        const parent = ALBUMS.find(a => a.id === album.parentId);
-        if (parent) {
-          const backHref = Routes.group(album.parentId);
-          document.getElementById('back-link').href = backHref;
-          document.getElementById('back-label').textContent = parent.title;
-          document.getElementById('back-link-sticky').href = backHref;
-          document.getElementById('back-label-sticky').textContent = parent.title;
+        // If this is a sub-album, update back link and enforce parent group lock
+        if (album.parentId) {
+          const parent = ALBUMS.find(a => a.id === album.parentId);
+          if (parent) {
+            const backHref = Routes.group(album.parentId);
+            document.getElementById('back-link').href = backHref;
+            document.getElementById('back-label').textContent = parent.title;
+            document.getElementById('back-link-sticky').href = backHref;
+            document.getElementById('back-label-sticky').textContent = parent.title;
 
-          // If the parent group is password-protected and not yet unlocked, gate here
-          if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
-            window.location.replace(Routes.group(album.parentId));
+            // If the parent group is password-protected and not yet unlocked, gate here
+            if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
+              window.location.replace(Routes.group(album.parentId));
+            }
           }
         }
-      }
 
-      // ── Auth check ──
-      if (!album.protected || AlbumAuth.isUnlocked(album.id)) {
-        showAlbum();
-      } else {
-        showPasswordModal();
+        // ── Auth check ──
+        if (!album.protected || AlbumAuth.isUnlocked(album.id)) {
+          showAlbum();
+        } else {
+          showPasswordModal();
+        }
       }
     }
 

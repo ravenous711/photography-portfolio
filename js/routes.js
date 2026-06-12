@@ -7,8 +7,14 @@ const Routes = {
     return `/login/?return=${encodeURIComponent(returnTo || this.home)}`;
   },
 
+  /** Flat album URL — used when no parent slug (legacy / standalone albums) */
   album(id) {
     return `/album/${encodeURIComponent(id)}/`;
+  },
+
+  /** Nested city album under a group — /gallery/italy-2026/florence/ */
+  nestedAlbum(groupId, slug) {
+    return `/gallery/${encodeURIComponent(groupId)}/${encodeURIComponent(slug)}/`;
   },
 
   /** Album group (e.g. Italy 2026) — /gallery/:id/, not the /gallery/ index */
@@ -28,7 +34,65 @@ const Routes = {
 
   albumPageUrl(album) {
     if (!album) return this.gallery;
-    return album.type === 'group' ? this.group(album.id) : this.album(album.id);
+    if (album.type === 'group') return this.group(album.id);
+    if (album.parentId && album.slug) {
+      return this.nestedAlbum(album.parentId, album.slug);
+    }
+    return this.album(album.id);
+  },
+
+  _albums() {
+    return typeof ALBUMS !== 'undefined' ? ALBUMS : [];
+  },
+
+  findAlbumByGroupSlug(groupId, slug) {
+    return this._albums().find(
+      a => a.parentId === groupId && a.slug === slug && a.type !== 'group'
+    );
+  },
+
+  /** Resolve album from /gallery/:group/:slug/ or /album/:id/ */
+  resolveAlbumFromPath() {
+    const nested = window.location.pathname.match(/^\/gallery\/([^/]+)\/([^/]+)\/?$/);
+    if (nested) {
+      return this.findAlbumByGroupSlug(
+        decodeURIComponent(nested[1]),
+        decodeURIComponent(nested[2])
+      );
+    }
+
+    const flat = window.location.pathname.match(/^\/album\/([^/]+)\/?$/);
+    if (flat) {
+      const id = decodeURIComponent(flat[1]);
+      return this._albums().find(a => a.id === id);
+    }
+
+    return null;
+  },
+
+  /** /album/italy-florence/ → /gallery/italy-2026/florence/ when slug exists */
+  redirectLegacyFlatAlbum() {
+    const flat = window.location.pathname.match(/^\/album\/([^/]+)\/?$/);
+    if (!flat) return false;
+
+    const album = this._albums().find(a => a.id === decodeURIComponent(flat[1]));
+    if (!album?.parentId || !album?.slug) return false;
+
+    window.location.replace(this.nestedAlbum(album.parentId, album.slug));
+    return true;
+  },
+
+  /** ?id= on album page → canonical nested or flat URL. Returns true if redirecting. */
+  canonicalizeAlbumQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const legacyId = params.get('id');
+    if (!legacyId) return false;
+
+    const album = this._albums().find(a => a.id === legacyId);
+    if (!album) return false;
+
+    window.location.replace(this.albumPageUrl(album));
+    return true;
   },
 
   /** Build /segment/id/ with optional query string */
@@ -50,7 +114,7 @@ const Routes = {
     return null;
   },
 
-  /** Album group at /gallery/:id/ — excludes the /gallery/ listing page */
+  /** Album group at /gallery/:id/ — excludes /gallery/ index and nested albums */
   parseGalleryGroupId(queryKeys = ['id']) {
     const match = window.location.pathname.match(/^\/gallery\/([^/]+)\/?$/);
     if (match) return decodeURIComponent(match[1]);

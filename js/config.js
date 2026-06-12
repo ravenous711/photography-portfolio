@@ -325,6 +325,7 @@ const ALBUMS = [
 
   {
     id: 'italy-venice',
+    slug: 'venice',
     title: 'Venice',
     parentId: 'italy-2026',
     description: 'Venice, 30–31 May 2026.',
@@ -502,6 +503,7 @@ const ALBUMS = [
 
   {
     id: 'italy-florence',
+    slug: 'florence',
     title: 'Florence',
     parentId: 'italy-2026',
     description: 'Florence, 1–2 June 2026.',
@@ -615,6 +617,7 @@ const ALBUMS = [
 
   {
     id: 'italy-pisa',
+    slug: 'pisa',
     title: 'Pisa',
     parentId: 'italy-2026',
     description: 'Pisa, 1 June 2026.',
@@ -670,6 +673,7 @@ const ALBUMS = [
 
   {
     id: 'italy-assisi',
+    slug: 'assisi',
     title: 'Assisi',
     parentId: 'italy-2026',
     description: 'Assisi, 3 June 2026.',
@@ -712,6 +716,7 @@ const ALBUMS = [
 
   {
     id: 'italy-rome',
+    slug: 'rome',
     title: 'Rome',
     parentId: 'italy-2026',
     location: 'Rome',
