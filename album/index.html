@@ -574,15 +574,19 @@
       return height;
     }
 
-    function updateAlbumStickyOffset() {
+    function getAlbumScrollOffset() {
       const nav = document.getElementById('main-nav');
       const toolbar = document.getElementById('album-header-toolbar');
-      const navH = nav?.getBoundingClientRect().height || 72;
-      const toolbarH = toolbar?.classList.contains('is-stuck')
-        ? toolbar.getBoundingClientRect().height
-        : measureStuckToolbarHeight(toolbar);
-      const gap = 16;
-      document.documentElement.style.setProperty('--album-sticky-offset', `${navH + toolbarH + gap}px`);
+      const navH = nav?.getBoundingClientRect().height ?? 72;
+      const toolbarH = measureStuckToolbarHeight(toolbar);
+      const gap = 8;
+      const offset = navH + toolbarH + gap;
+      document.documentElement.style.setProperty('--album-sticky-offset', `${offset}px`);
+      return offset;
+    }
+
+    function updateAlbumStickyOffset() {
+      getAlbumScrollOffset();
     }
 
     function setupStickyAlbumHeader() {
@@ -609,12 +613,20 @@
       const el = document.getElementById(sectionId);
       if (!el) return;
 
-      updateAlbumStickyOffset();
+      const toolbar = document.getElementById('album-header-toolbar');
+      const navH = document.getElementById('main-nav')?.getBoundingClientRect().height ?? 72;
+      const sentinel = document.getElementById('album-toolbar-sentinel');
 
-      // Scroll the section label into view so stock headers (e.g. Kodak T-Max 400)
-      // sit just below the sticky toolbar — scroll-margin-top handles the offset.
+      // Section jumps land below the header — use stuck toolbar height for offset
+      if (sentinel && sentinel.getBoundingClientRect().top <= navH) {
+        toolbar?.classList.add('is-stuck');
+      }
+
       const target = el.querySelector('.album-section-label') || el;
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const offset = getAlbumScrollOffset();
+      const top = window.scrollY + target.getBoundingClientRect().top - offset;
+
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
 
     function renderSectionNav() {

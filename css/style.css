@@ -885,8 +885,6 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   background: rgba(201, 169, 110, 0.08);
 }
 
-.album-content-section,
-.album-film-block,
 .album-section-label {
   scroll-margin-top: var(--album-sticky-offset, 7rem);
 }
