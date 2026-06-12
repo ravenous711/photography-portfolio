@@ -307,6 +307,17 @@ const ALBUMS = [
     photos: [],
   },
 
+  {
+    id: 'red-rock-canyon-2026',
+    title: 'Red Rock Canyon 2026',
+    location: 'Red Rock Canyon',
+    date: '2026',
+    description: 'Photos from this trip are still being edited.',
+    protected: false,
+    coverImage: '/images/placeholder-album.svg',
+    photos: [],
+  },
+
   // ── GROUP ALBUMS ──────────────────────────────────────────
   // type: 'group' albums show a sub-album index page instead of photos.
   // Add photo URLs to each sub-album's photos array once uploaded to R2.

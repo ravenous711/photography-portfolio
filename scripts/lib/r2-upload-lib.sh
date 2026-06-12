@@ -295,40 +295,20 @@ verify_uploads() {
   upload_log "verifying R2 manifest..."
 
   for kind in originals grid; do
-    local prefix
+    local key_prefix
     if [[ "$kind" == "originals" ]]; then
-      prefix="${r2_prefix}/"
+      key_prefix="${r2_prefix}/"
     else
-      prefix="grid/${r2_prefix}/"
+      key_prefix="grid/${r2_prefix}/"
     fi
-
-    local response uploaded=()
-    response=$(r2_list_objects "$prefix") || return 1
-    while IFS= read -r line; do
-      [[ -n "$line" ]] && uploaded+=("$line")
-    done < <(
-      python3 -c '
-import json, sys
-data = json.load(sys.stdin)
-result = data.get("result") or []
-for o in result:
-    print(o["key"].split("/")[-1])
-' <<< "$response"
-    )
 
     local missing_list=()
     local fname
     for fname in "${FILES[@]}"; do
-      local found=0 u
-      if ((${#uploaded[@]})); then
-        for u in "${uploaded[@]}"; do
-          if [[ "$u" == "$fname" ]]; then
-            found=1
-            break
-          fi
-        done
+      if r2_object_exists "${key_prefix}${fname}"; then
+        continue
       fi
-      [[ "$found" -eq 0 ]] && missing_list+=("$fname")
+      missing_list+=("$fname")
     done
 
     if ((${#missing_list[@]})); then
