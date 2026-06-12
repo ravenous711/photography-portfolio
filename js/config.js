@@ -311,7 +311,7 @@ const ALBUMS = [
     description: 'Red Rock Canyon National Conservation Area, Nevada.',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
-    coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260123-_DSF0549.jpg`,
+    coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg`,
     photos: [
       `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0215.jpg`,
       `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0223.jpg`,
