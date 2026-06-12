@@ -390,13 +390,55 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   border-top: 1px solid var(--color-border);
 }
 
+.gallery-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gallery-album-grid {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 920px;
+  width: 100%;
+  margin-inline: auto;
+  margin-bottom: 0.5rem;
+}
+
+.gallery-album-grid--count-1 {
+  grid-template-columns: minmax(260px, 440px);
+  justify-content: center;
+}
+
 .gallery-year-heading {
   font-family: var(--font-serif);
   font-size: 1.35rem;
   font-weight: 300;
   letter-spacing: 0.12em;
   color: var(--color-muted);
-  margin: 0 0 1.5rem;
+  margin: 0 0 1rem;
+  max-width: 920px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.gallery-year-heading:not(.gallery-year-heading--first) {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.gallery-main .album-card {
+  aspect-ratio: 16 / 10;
+}
+
+@media (max-width: 640px) {
+  .gallery-album-grid {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+  .gallery-album-grid--count-1 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .album-card {
@@ -1294,6 +1336,20 @@ textarea.form-field {
   padding-top: calc(var(--nav-height) + 5rem);
   padding-bottom: 3rem;
   text-align: center;
+}
+
+.page-header--compact {
+  padding-top: calc(var(--nav-height) + 2.5rem);
+  padding-bottom: 1.5rem;
+}
+
+.page-header--compact .page-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 0;
+}
+
+.page-header--compact .gold-rule {
+  margin: 0.75rem auto;
 }
 
 .page-title {

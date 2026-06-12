@@ -34,14 +34,14 @@
   </div>
 
   <!-- ── Page Header ── -->
-  <header class="page-header fade-in">
+  <header class="page-header page-header--compact fade-in">
     <p class="page-subtitle">Portfolio</p>
     <div class="gold-rule"></div>
     <h1 class="page-title">Gallery</h1>
   </header>
 
   <!-- ── Album Grid ── -->
-  <main class="px-6 md:px-12 pb-24 max-w-7xl mx-auto" id="gallery-main">
+  <main class="gallery-main px-6 md:px-12 pb-24 max-w-7xl mx-auto" id="gallery-main">
     <!-- Populated by JS -->
   </main>
 
@@ -107,20 +107,24 @@
     });
 
     [...byYear.keys()].sort().forEach((year, sectionIndex) => {
-      const section = document.createElement('section');
-      section.className = 'gallery-year-section fade-in';
-      if (sectionIndex > 0) section.classList.add(`fade-in-delay-${Math.min(sectionIndex, 3)}`);
-
-      const heading = document.createElement('h2');
-      heading.className = 'gallery-year-heading';
-      heading.textContent = year;
-      section.appendChild(heading);
+      if (sectionIndex > 0) {
+        const divider = document.createElement('h2');
+        divider.className = 'gallery-year-heading';
+        divider.textContent = year;
+        main.appendChild(divider);
+      } else {
+        const divider = document.createElement('h2');
+        divider.className = 'gallery-year-heading gallery-year-heading--first';
+        divider.textContent = year;
+        main.appendChild(divider);
+      }
 
       const grid = document.createElement('div');
-      grid.className = 'album-grid';
+      const count = byYear.get(year).length;
+      grid.className = 'album-grid gallery-album-grid fade-in';
+      if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
       byYear.get(year).forEach(album => grid.appendChild(renderAlbumCard(album)));
-      section.appendChild(grid);
-      main.appendChild(section);
+      main.appendChild(grid);
     });
   </script>
 </body>
