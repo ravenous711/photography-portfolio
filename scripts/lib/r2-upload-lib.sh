@@ -234,7 +234,7 @@ generate_grids() {
 
   for fname in "${FILES[@]}"; do
     i=$((i + 1))
-    if [[ -f "$grid_dir/$fname" ]]; then
+    if [[ -f "$grid_dir/$fname" && "$SKIP_EXISTING" == "1" ]]; then
       upload_status "[$i/$total] $fname  ok (grid cached)"
       skipped=$((skipped + 1))
       continue
