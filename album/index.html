@@ -593,37 +593,30 @@
         return filename === name;
       });
 
-      if (index < 0) {
-        // Photo not in this album — land at the album content
-        document.getElementById('digital-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-      }
+      const sectionId = index >= 0 ? getSectionIdForPhotoIndex(index) : 'digital-section';
+      const thumb     = index >= 0 ? document.querySelector(`.photo-thumb[data-photo-index="${index}"]`) : null;
 
-      const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
-      const sectionId = getSectionIdForPhotoIndex(index);
+      // Step 1: scroll to section immediately so user lands in the right area
+      requestAnimationFrame(() => scrollToAlbumSection(sectionId));
+
+      if (!thumb) return;
+
+      // Step 2: once the target image loads (layout will have rerun with real dimensions),
+      // refine the scroll to center that exact photo
+      const img = thumb.querySelector('img');
 
       const centerOnThumb = () => {
-        if (!thumb) {
-          scrollToAlbumSection(sectionId);
-          return;
-        }
-
-        const rect = thumb.getBoundingClientRect();
-        const thumbCenter = rect.top + window.scrollY + rect.height / 2;
-        const y = thumbCenter - window.innerHeight / 2;
-        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        const rect   = thumb.getBoundingClientRect();
+        const center = rect.top + window.scrollY + rect.height / 2;
+        window.scrollTo({ top: Math.max(0, center - window.innerHeight / 2), behavior: 'smooth' });
       };
 
-      // Wait for justified layout to position thumbs before scrolling
-      const tryScroll = (attemptsLeft) => {
-        if (thumb && !thumb.style.width && attemptsLeft > 0) {
-          requestAnimationFrame(() => tryScroll(attemptsLeft - 1));
-          return;
-        }
-        centerOnThumb();
-      };
-
-      requestAnimationFrame(() => tryScroll(30));
+      if (img && img.complete && img.naturalWidth) {
+        // Already loaded — give layout one frame to settle first
+        setTimeout(centerOnThumb, 120);
+      } else if (img) {
+        img.addEventListener('load', () => setTimeout(centerOnThumb, 120), { once: true });
+      }
     }
 
     function measureStuckToolbarHeight(toolbar) {
