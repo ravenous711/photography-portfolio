@@ -8,6 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
+  <script src="/js/justified-layout.js"></script>
   <style>
     /* ── Auth screen ── */
     #auth-screen {
@@ -30,13 +31,16 @@
     }
 
     /* ── Photo grid ── */
+    .photo-grid {
+      position: relative;
+      padding-bottom: 1.25rem;
+    }
     .photo-thumb {
-      position: relative; cursor: pointer;
+      position: absolute; cursor: pointer;
       border: 2px solid transparent;
       border-radius: 2px;
       overflow: hidden;
       transition: border-color 0.15s;
-      aspect-ratio: 1;
       background: var(--color-surface);
     }
     .photo-thumb img {
@@ -116,13 +120,7 @@
       max-height: 0;
       transition: max-height 0.3s ease;
     }
-    .album-section.open .album-body { max-height: 9999px; }
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 6px;
-      padding-bottom: 1.25rem;
-    }
+    .album-section.open .album-body { max-height: 99999px; }
 
     /* ── Buttons ── */
     .btn-danger {
@@ -449,6 +447,41 @@
       updateToolbar();
     }
 
+    // ── Justified layout (mirrors album page) ────────────────────────────────
+    function runJustifiedLayout(grid) {
+      const items = Array.from(grid.querySelectorAll('.photo-thumb'));
+      if (!items.length) { grid.style.height = '0px'; return; }
+      const containerWidth = grid.offsetWidth;
+      if (!containerWidth) return;
+      const aspectRatios = items.map(item => {
+        const img = item.querySelector('img');
+        if (img && img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
+        return 1.5;
+      });
+      const layout = justifiedLayout(aspectRatios, {
+        containerWidth,
+        targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
+        boxSpacing: window.innerWidth <= 640 ? 6 : 12,
+        containerPadding: 0,
+      });
+      grid.style.height = layout.containerHeight + 'px';
+      items.forEach((item, i) => {
+        const box = layout.boxes[i];
+        item.style.left   = box.left   + 'px';
+        item.style.top    = box.top    + 'px';
+        item.style.width  = box.width  + 'px';
+        item.style.height = box.height + 'px';
+      });
+    }
+
+    function bindAdminGridLayout(grid) {
+      runJustifiedLayout(grid);
+      grid.querySelectorAll('img').forEach(img => {
+        if (img.complete && img.naturalWidth) runJustifiedLayout(grid);
+        else img.addEventListener('load', () => runJustifiedLayout(grid));
+      });
+    }
+
     // ── Render ───────────────────────────────────────────────────────────────
     function renderAlbums() {
       const container = document.getElementById('album-list');
@@ -507,7 +540,10 @@
               if (img && img.dataset.src) {
                 const original = img.dataset.src;
                 delete img.dataset.src;
-                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                img.addEventListener('load', () => {
+                  img.classList.add('loaded');
+                  runJustifiedLayout(grid);
+                }, { once: true });
                 img.addEventListener('error', () => { img.src = original; }, { once: true });
                 img.src = thumbUrl(original);
               }
@@ -524,10 +560,6 @@
             img.alt = '';
             img.decoding = 'async';
             img.dataset.src = url; // deferred — set by observer
-            img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
-            img.style.display = 'block';
 
             const overlay = document.createElement('div');
             overlay.className = 'mark-overlay';
@@ -553,6 +585,8 @@
             checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
             thumb.addEventListener('click', (e) => { if (e.target !== img) toggleThumb(thumb, url); });
           });
+
+          bindAdminGridLayout(grid);
         }
 
         header.addEventListener('click', () => {
@@ -560,6 +594,10 @@
           if (section.classList.contains('open')) loadImages();
         });
       });
+
+      window.addEventListener('resize', () => {
+        document.querySelectorAll('#album-list .photo-grid').forEach(runJustifiedLayout);
+      }, { passive: true });
     }
 
     // ── Commit Deletions ─────────────────────────────────────────────────────
