@@ -30,6 +30,7 @@ const SITE_CONFIG = {
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_184.jpg`,
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_328.jpg`,
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_495.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_063.jpg`,
   ],
 };
 
