@@ -19,7 +19,18 @@ const SITE_CONFIG = {
   // ── Featured photos shown on the homepage ──────────────────────────────────
   // Add full R2 URLs of your favourite shots here. In the admin lightbox,
   // use the "Copy URL" button to grab any photo's URL, then paste it below.
-  featuredPhotos: [],
+  featuredPhotos: [
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-106.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-188.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-404.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_36.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Red-Rock-Canyon-2026/20260123-_DSF0630.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_284.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_184.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_328.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_495.jpg`,
+  ],
 };
 
 // ============================================================
