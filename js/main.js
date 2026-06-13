@@ -210,6 +210,10 @@ function albumPageUrl(album) {
   return Routes.albumPageUrl(album);
 }
 
+function albumPhotoUrl(album, photoUrl) {
+  return Routes.albumPhotoUrl(album, photoUrl);
+}
+
 function isItalyAlbum(album) {
   if (!album) return false;
   if (album.id === 'italy-2026') return true;

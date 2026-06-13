@@ -22,8 +22,13 @@
     }
   </script>
   <style>
+    #feat-col-left,
+    #feat-col-right { gap: 56px !important; }
+    #featured-photos-grid { gap: 56px !important; }
     @media (max-width: 640px) {
-      #featured-photos-grid { gap: 16px !important; }
+      #feat-col-left,
+      #feat-col-right { gap: 28px !important; }
+      #featured-photos-grid { gap: 28px !important; }
     }
   </style>
 </head>
@@ -87,10 +92,10 @@
 
     <!-- Featured photos: 2-col grid, random subset each load -->
     <div id="featured-photos-wrap" style="display:none">
-      <div class="fade-in fade-in-delay-1" style="max-width:780px;margin:0 auto;padding:0 2rem 2rem">
-        <div id="featured-photos-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start">
-          <div id="feat-col-left"  style="display:flex;flex-direction:column;gap:32px"></div>
-          <div id="feat-col-right" style="display:flex;flex-direction:column;gap:32px"></div>
+      <div class="fade-in fade-in-delay-1" style="max-width:640px;margin:0 auto;padding:0 2.5rem 2.5rem">
+        <div id="featured-photos-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start">
+          <div id="feat-col-left"  style="display:flex;flex-direction:column;gap:56px"></div>
+          <div id="feat-col-right" style="display:flex;flex-direction:column;gap:56px"></div>
         </div>
       </div>
     </div>
@@ -153,8 +158,8 @@
       const colRight = document.getElementById('feat-col-right');
 
       featShown.forEach((url, i) => {
-        const album   = findAlbumForPhoto(url);
-        const href    = album ? albumPageUrl(album) : '/gallery/';
+        const album = findAlbumForPhoto(url);
+        const href  = album ? albumPhotoUrl(album, url) : '/gallery/';
 
         const link = document.createElement('a');
         link.href  = href;

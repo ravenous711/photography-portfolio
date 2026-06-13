@@ -41,6 +41,18 @@ const Routes = {
     return this.album(album.id);
   },
 
+  photoFilename(url) {
+    if (!url) return '';
+    return url.split('/').pop().split('?')[0];
+  },
+
+  /** Album page URL that opens a specific photo (via ?photo=filename.jpg) */
+  albumPhotoUrl(album, photoUrl) {
+    const base = this.albumPageUrl(album);
+    const name = this.photoFilename(photoUrl);
+    return name ? `${base}?photo=${encodeURIComponent(name)}` : base;
+  },
+
   _albums() {
     return typeof ALBUMS !== 'undefined' ? ALBUMS : [];
   },
