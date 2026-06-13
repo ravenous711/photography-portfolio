@@ -567,10 +567,24 @@
 
       setupStickyAlbumHeader();
       renderNextAlbumNav();
-      openLinkedPhoto();
+      scrollToLinkedPhoto();
     }
 
-    function openLinkedPhoto() {
+    function getSectionIdForPhotoIndex(index) {
+      const digitalCount = (album.photos || []).length;
+      if (index < digitalCount) return 'digital-section';
+
+      const filmSections = getAlbumFilmSections(album);
+      let offset = digitalCount;
+      for (let i = 0; i < filmSections.length; i++) {
+        const count = (filmSections[i].photos || []).length;
+        if (index < offset + count) return `album-section-film-${i}`;
+        offset += count;
+      }
+      return 'digital-section';
+    }
+
+    function scrollToLinkedPhoto() {
       const name = new URLSearchParams(window.location.search).get('photo');
       if (!name) return;
 
@@ -578,26 +592,38 @@
         const filename = url.split('/').pop().split('?')[0];
         return filename === name;
       });
-      if (index < 0) return;
+
+      if (index < 0) {
+        // Photo not in this album — land at the album content
+        document.getElementById('digital-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
 
       const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
-      if (!thumb) return;
+      const sectionId = getSectionIdForPhotoIndex(index);
 
-      // Wait for justified layout to position thumbs before scrolling
-      const tryOpen = (attemptsLeft) => {
-        if (!thumb.style.width && attemptsLeft > 0) {
-          requestAnimationFrame(() => tryOpen(attemptsLeft - 1));
+      const centerOnThumb = () => {
+        if (!thumb) {
+          scrollToAlbumSection(sectionId);
           return;
         }
 
-        const offset = getStickyStackHeight();
-        const y = thumb.getBoundingClientRect().top + window.scrollY - offset - 16;
+        const rect = thumb.getBoundingClientRect();
+        const thumbCenter = rect.top + window.scrollY + rect.height / 2;
+        const y = thumbCenter - window.innerHeight / 2;
         window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-
-        setTimeout(() => openLightbox(index), 450);
       };
 
-      requestAnimationFrame(() => tryOpen(30));
+      // Wait for justified layout to position thumbs before scrolling
+      const tryScroll = (attemptsLeft) => {
+        if (thumb && !thumb.style.width && attemptsLeft > 0) {
+          requestAnimationFrame(() => tryScroll(attemptsLeft - 1));
+          return;
+        }
+        centerOnThumb();
+      };
+
+      requestAnimationFrame(() => tryScroll(30));
     }
 
     function measureStuckToolbarHeight(toolbar) {
