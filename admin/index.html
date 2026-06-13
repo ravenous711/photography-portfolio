@@ -64,11 +64,11 @@
 
     /* ── Selection checkbox corner ── */
     .thumb-check {
-      position: absolute; top: 5px; left: 5px; z-index: 2;
-      width: 20px; height: 20px;
+      position: absolute; top: 7px; left: 7px; z-index: 2;
+      width: 28px; height: 28px;
       background: rgba(255,255,255,0.9);
       border: 1.5px solid rgba(0,0,0,0.2);
-      border-radius: 3px;
+      border-radius: 4px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       opacity: 0;
@@ -568,7 +568,7 @@
             // Corner checkbox for deletion
             const checkEl = document.createElement('div');
             checkEl.className = 'thumb-check';
-            checkEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+            checkEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
             thumb.appendChild(img);
             thumb.appendChild(overlay);
