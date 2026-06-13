@@ -33,6 +33,19 @@ const SITE_CONFIG = {
 // ============================================================
 const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 
+// Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)
+SITE_CONFIG.featuredPhotos = [
+  `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg`,
+  `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
+  `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
+  `${R2_BASE_URL}/Italy/Rome/Digital/rome_495.jpg`,
+  `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
+  `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
+  `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
+  `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
+  `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-324.jpg`,
+];
+
 // ============================================================
 // ALBUM CONFIGURATION
 //
