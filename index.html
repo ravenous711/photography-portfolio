@@ -44,15 +44,18 @@
       padding: 0 1.5rem 1rem;
     }
     #featured-photos-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-      align-items: start;
+      column-count: 3;
+      column-gap: 48px;
     }
     #featured-photos-wrap a {
       display: block;
       position: relative;
       overflow: hidden;
+      break-inside: avoid;
+      margin-bottom: 48px;
+    }
+    #featured-photos-wrap a:last-child {
+      margin-bottom: 0;
     }
     #featured-photos-wrap img {
       width: 100%;
@@ -72,8 +75,11 @@
     }
     @media (max-width: 640px) {
       #featured-photos-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        column-count: 2;
+        column-gap: 24px;
+      }
+      #featured-photos-wrap a {
+        margin-bottom: 24px;
       }
       #featured-photos-wrap .feat-preview-inner {
         padding: 0 1.25rem 0.5rem;
@@ -189,7 +195,7 @@
 
     // ── Featured photos grid ──────────────────────────────────────────────────
     const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
-    const featShown = [...featuredPhotos].sort(() => Math.random() - 0.5).slice(0, 6);
+    const featShown = [...featuredPhotos].sort(() => Math.random() - 0.5).slice(0, 9);
 
     // Find which album a photo URL belongs to
     function findAlbumForPhoto(url) {
