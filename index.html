@@ -22,13 +22,57 @@
     }
   </script>
   <style>
+    #selected-work {
+      padding-bottom: 2rem;
+    }
+    #selected-work .feat-label {
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      color: var(--color-muted);
+      text-transform: none;
+    }
+    #featured-photos-wrap .feat-preview-inner {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0 2rem 1rem;
+    }
+    #featured-photos-grid {
+      gap: 72px !important;
+    }
     #feat-col-left,
-    #feat-col-right { gap: 56px !important; }
-    #featured-photos-grid { gap: 56px !important; }
+    #feat-col-right {
+      gap: 80px !important;
+    }
+    #feat-col-right {
+      padding-top: 100px;
+    }
+    #featured-photos-wrap a {
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    #featured-photos-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    #featured-photos-wrap img.loaded,
+    #featured-photos-wrap img[style*="opacity: 1"] {
+      opacity: 1;
+    }
     @media (max-width: 640px) {
+      #featured-photos-grid { gap: 40px !important; }
       #feat-col-left,
-      #feat-col-right { gap: 28px !important; }
-      #featured-photos-grid { gap: 28px !important; }
+      #feat-col-right { gap: 44px !important; }
+      #feat-col-right { padding-top: 48px; }
+      #featured-photos-wrap .feat-preview-inner {
+        max-width: 100%;
+        padding: 0 1.75rem 0.5rem;
+      }
     }
   </style>
 </head>
@@ -85,17 +129,16 @@
 
   <!-- ── A few shots ── -->
   <section id="selected-work">
-    <div class="text-center py-16 px-6 fade-in">
-      <p class="text-xs tracking-widest uppercase mb-4" style="color:var(--color-muted)">some favorites</p>
-      <div class="gold-rule"></div>
+    <div class="text-center fade-in" style="padding:5rem 1.5rem 3.5rem">
+      <p class="feat-label">some favorites</p>
     </div>
 
-    <!-- Featured photos: 2-col grid, random subset each load -->
+    <!-- Featured photos: offset 2-col preview, random subset each load -->
     <div id="featured-photos-wrap" style="display:none">
-      <div class="fade-in fade-in-delay-1" style="max-width:640px;margin:0 auto;padding:0 2.5rem 2.5rem">
-        <div id="featured-photos-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start">
-          <div id="feat-col-left"  style="display:flex;flex-direction:column;gap:56px"></div>
-          <div id="feat-col-right" style="display:flex;flex-direction:column;gap:56px"></div>
+      <div class="feat-preview-inner fade-in fade-in-delay-1">
+        <div id="featured-photos-grid" style="display:grid;grid-template-columns:1fr 1fr;align-items:start">
+          <div id="feat-col-left"  style="display:flex;flex-direction:column"></div>
+          <div id="feat-col-right" style="display:flex;flex-direction:column"></div>
         </div>
       </div>
     </div>
@@ -107,7 +150,7 @@
       </div>
     </div>
 
-    <div class="text-center py-14 fade-in fade-in-delay-2">
+    <div class="text-center fade-in fade-in-delay-2" style="padding:4rem 1.5rem 5rem">
       <a href="/gallery/" class="btn-ghost">Browse Gallery</a>
     </div>
   </section>
@@ -144,7 +187,7 @@
 
     // ── Featured photos grid ──────────────────────────────────────────────────
     const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
-    const featShown = [...featuredPhotos].sort(() => Math.random() - 0.5).slice(0, 6);
+    const featShown = [...featuredPhotos].sort(() => Math.random() - 0.5).slice(0, 4);
 
     // Find which album a photo URL belongs to
     function findAlbumForPhoto(url) {
@@ -162,24 +205,16 @@
         const href  = album ? albumPhotoUrl(album, url) : '/gallery/';
 
         const link = document.createElement('a');
-        link.href  = href;
-        link.style.cssText = 'display:block;position:relative;overflow:hidden;background:var(--color-surface)';
+        link.href = href;
 
         const img = document.createElement('img');
         img.alt     = album ? album.title : '';
         img.loading = i < 2 ? 'eager' : 'lazy';
-        img.style.cssText = 'width:100%;height:auto;display:block;opacity:0;transition:opacity 0.4s ease,transform 0.5s ease';
-        img.addEventListener('load',  () => { img.style.opacity = '1'; });
+        img.addEventListener('load',  () => { img.classList.add('loaded'); img.style.opacity = '1'; });
         img.addEventListener('error', () => { img.src = url; }, { once: true });
         img.src = gridUrl(url);
 
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.18);opacity:0;transition:opacity 0.25s;pointer-events:none';
-
         link.appendChild(img);
-        link.appendChild(overlay);
-        link.addEventListener('mouseenter', () => { overlay.style.opacity = '1'; img.style.transform = 'scale(1.025)'; });
-        link.addEventListener('mouseleave', () => { overlay.style.opacity = '0'; img.style.transform = ''; });
 
         (i % 2 === 0 ? colLeft : colRight).appendChild(link);
       });
