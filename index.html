@@ -23,8 +23,8 @@
   </script>
   <style>
     @media (max-width: 640px) {
-      #featured-photos-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; }
-      #feat-hero { height: 52vw !important; max-height: 420px !important; }
+      #featured-photos-grid { gap: 12px !important; }
+      #feat-col-right { padding-top: 40px !important; }
     }
   </style>
 </head>
@@ -87,20 +87,13 @@
       <div class="gold-rule"></div>
     </div>
 
-    <!-- Featured photos: rotating hero + 3-col grid (shown when featuredPhotos is populated) -->
+    <!-- Featured photos: staggered 2-col, random subset each load -->
     <div id="featured-photos-wrap" style="display:none">
-      <!-- Hero -->
-      <div class="px-6 md:px-8 mb-2 fade-in fade-in-delay-1">
-        <div id="feat-hero" style="position:relative;width:100%;height:68vh;max-height:780px;overflow:hidden;cursor:pointer;background:var(--color-surface)">
-          <img id="feat-hero-img" alt="" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.6s ease,transform 0.5s ease" />
-          <div id="feat-hero-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.18);opacity:0;transition:opacity 0.25s;display:flex;align-items:center;justify-content:center;pointer-events:none">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-          </div>
+      <div class="px-6 md:px-8 pb-2 fade-in fade-in-delay-1">
+        <div id="featured-photos-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+          <div id="feat-col-left"  style="display:flex;flex-direction:column;gap:24px"></div>
+          <div id="feat-col-right" style="display:flex;flex-direction:column;gap:24px;padding-top:80px"></div>
         </div>
-      </div>
-      <!-- 3-column grid of remaining photos -->
-      <div class="px-6 md:px-8 pb-2 fade-in fade-in-delay-2">
-        <div id="featured-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
       </div>
     </div>
 
@@ -184,45 +177,25 @@
 
     // ── Featured photos grid ──────────────────────────────────────────────────
     const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
+    // Shuffle once — shared by grid builder and lightbox
+    const featShown = [...featuredPhotos].sort(() => Math.random() - 0.5).slice(0, 6);
 
     if (featuredPhotos.length > 0) {
       document.getElementById('work-heading').textContent = 'Featured';
       document.getElementById('featured-photos-wrap').style.display = '';
 
-      // Pick a random photo to be the hero each page load
-      const heroIndex = Math.floor(Math.random() * featuredPhotos.length);
+      const colLeft  = document.getElementById('feat-col-left');
+      const colRight = document.getElementById('feat-col-right');
 
-      // ── Hero ──
-      const featHeroEl      = document.getElementById('feat-hero');
-      const featHeroImg     = document.getElementById('feat-hero-img');
-      const featHeroOverlay = document.getElementById('feat-hero-overlay');
-
-      featHeroImg.src = gridUrl(featuredPhotos[heroIndex]);
-      featHeroImg.addEventListener('load', () => { featHeroImg.style.opacity = '1'; });
-      featHeroEl.addEventListener('mouseenter', () => {
-        featHeroOverlay.style.opacity = '1';
-        featHeroImg.style.transform = 'scale(1.02)';
-      });
-      featHeroEl.addEventListener('mouseleave', () => {
-        featHeroOverlay.style.opacity = '0';
-        featHeroImg.style.transform = '';
-      });
-      featHeroEl.addEventListener('click', () => featLightboxOpen(heroIndex));
-
-      // ── 3-column grid (all photos except hero) ──
-      const photoGrid = document.getElementById('featured-photos-grid');
-
-      featuredPhotos.forEach((url, i) => {
-        if (i === heroIndex) return;
-
+      featShown.forEach((url, i) => {
         const wrap = document.createElement('div');
         wrap.style.cssText = 'position:relative;overflow:hidden;cursor:pointer;background:var(--color-surface)';
 
         const img = document.createElement('img');
         img.alt     = '';
-        img.loading = 'lazy';
+        img.loading = i < 2 ? 'eager' : 'lazy';
         img.style.cssText = 'width:100%;height:auto;display:block;opacity:0;transition:opacity 0.4s ease,transform 0.5s ease';
-        img.addEventListener('load', () => { img.style.opacity = '1'; });
+        img.addEventListener('load',  () => { img.style.opacity = '1'; });
         img.addEventListener('error', () => { img.src = url; }, { once: true });
         img.src = gridUrl(url);
 
@@ -235,7 +208,8 @@
         wrap.addEventListener('mouseenter', () => { overlay.style.opacity = '1'; img.style.transform = 'scale(1.03)'; });
         wrap.addEventListener('mouseleave', () => { overlay.style.opacity = '0'; img.style.transform = ''; });
         wrap.addEventListener('click', () => featLightboxOpen(i));
-        photoGrid.appendChild(wrap);
+
+        (i % 2 === 0 ? colLeft : colRight).appendChild(wrap);
       });
 
     } else {
@@ -269,7 +243,7 @@
       });
     }
 
-    // ── Featured lightbox ─────────────────────────────────────────────────────
+    // ── Featured lightbox (navigates the shown subset) ───────────────────────
     let featIndex = 0;
     const featLb  = document.getElementById('feat-lightbox');
     const featImg = document.getElementById('feat-img');
@@ -291,15 +265,15 @@
     }
 
     function featLbShow() {
-      const url = featuredPhotos[featIndex];
+      const url = featShown[featIndex];
       featImg.style.opacity = '0';
       featImg.onload = () => { featImg.style.opacity = '1'; };
       featImg.src = url;
       if (featImg.complete && featImg.naturalWidth) featImg.style.opacity = '1';
       document.getElementById('feat-counter').textContent =
-        featuredPhotos.length > 1 ? `${featIndex + 1} / ${featuredPhotos.length}` : '';
+        featShown.length > 1 ? `${featIndex + 1} / ${featShown.length}` : '';
       document.getElementById('feat-prev').style.visibility = featIndex === 0 ? 'hidden' : 'visible';
-      document.getElementById('feat-next').style.visibility = featIndex === featuredPhotos.length - 1 ? 'hidden' : 'visible';
+      document.getElementById('feat-next').style.visibility = featIndex === featShown.length - 1 ? 'hidden' : 'visible';
     }
 
     function featLbNav(dir) {
