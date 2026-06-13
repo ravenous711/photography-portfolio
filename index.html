@@ -44,18 +44,12 @@
       padding: 0 1.5rem 1rem;
     }
     #featured-photos-grid {
-      column-count: 3;
-      column-gap: 48px;
+      /* flex layout — see inline style, columns set in HTML */
     }
     #featured-photos-wrap a {
       display: block;
       position: relative;
       overflow: hidden;
-      break-inside: avoid;
-      margin-bottom: 48px;
-    }
-    #featured-photos-wrap a:last-child {
-      margin-bottom: 0;
     }
     #featured-photos-wrap img {
       width: 100%;
@@ -74,13 +68,9 @@
       }
     }
     @media (max-width: 640px) {
-      #featured-photos-grid {
-        column-count: 2;
-        column-gap: 24px;
-      }
-      #featured-photos-wrap a {
-        margin-bottom: 24px;
-      }
+      #featured-photos-grid { gap: 20px !important; }
+      #feat-col-0, #feat-col-1, #feat-col-2 { gap: 20px !important; }
+      #feat-col-2 { display: none; }
       #featured-photos-wrap .feat-preview-inner {
         padding: 0 1.25rem 0.5rem;
       }
@@ -147,7 +137,11 @@
     <!-- Featured photos: 3-col preview, random subset each load -->
     <div id="featured-photos-wrap" style="display:none">
       <div class="feat-preview-inner fade-in fade-in-delay-1">
-        <div id="featured-photos-grid"></div>
+        <div id="featured-photos-grid" style="display:flex;gap:48px;align-items:start">
+          <div id="feat-col-0" style="flex:1;display:flex;flex-direction:column;gap:48px"></div>
+          <div id="feat-col-1" style="flex:1;display:flex;flex-direction:column;gap:48px"></div>
+          <div id="feat-col-2" style="flex:1;display:flex;flex-direction:column;gap:48px"></div>
+        </div>
       </div>
     </div>
 
@@ -205,7 +199,11 @@
     if (featuredPhotos.length > 0) {
       document.getElementById('featured-photos-wrap').style.display = '';
 
-      const grid = document.getElementById('featured-photos-grid');
+      const cols = [
+        document.getElementById('feat-col-0'),
+        document.getElementById('feat-col-1'),
+        document.getElementById('feat-col-2'),
+      ];
 
       featShown.forEach((url, i) => {
         const album = findAlbumForPhoto(url);
@@ -222,7 +220,7 @@
         img.src = gridUrl(url);
 
         link.appendChild(img);
-        grid.appendChild(link);
+        cols[i % 3].appendChild(link);
       });
 
     } else {
