@@ -207,7 +207,7 @@
 
       featShown.forEach((url, i) => {
         const album = findAlbumForPhoto(url);
-        const href  = album ? albumPhotoUrl(album, url) : '/gallery/';
+        const href  = album ? Routes.albumPageUrl(album) : '/gallery/';
 
         const link = document.createElement('a');
         link.href = href;
