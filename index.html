@@ -11,8 +11,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Custom styles -->
   <link rel="stylesheet" href="/css/style.css" />
-  <!-- Justified layout for featured photos grid -->
-  <script src="/js/justified-layout.js"></script>
 
   <script>
     tailwind.config = {
@@ -23,6 +21,12 @@
       }
     }
   </script>
+  <style>
+    @media (max-width: 640px) {
+      #featured-photos-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; }
+      #feat-hero { height: 52vw !important; max-height: 420px !important; }
+    }
+  </style>
 </head>
 <body class="overflow-x-hidden">
 
@@ -83,9 +87,21 @@
       <div class="gold-rule"></div>
     </div>
 
-    <!-- Featured photos justified grid (shown when featuredPhotos is populated) -->
-    <div id="featured-photos-wrap" class="px-6 md:px-8 pb-2 fade-in fade-in-delay-1" style="display:none">
-      <div class="photo-grid" id="featured-photos-grid"></div>
+    <!-- Featured photos: rotating hero + 3-col grid (shown when featuredPhotos is populated) -->
+    <div id="featured-photos-wrap" style="display:none">
+      <!-- Hero -->
+      <div class="px-6 md:px-8 mb-2 fade-in fade-in-delay-1">
+        <div id="feat-hero" style="position:relative;width:100%;height:68vh;max-height:780px;overflow:hidden;cursor:pointer;background:var(--color-surface)">
+          <img id="feat-hero-img" alt="" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.6s ease,transform 0.5s ease" />
+          <div id="feat-hero-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.18);opacity:0;transition:opacity 0.25s;display:flex;align-items:center;justify-content:center;pointer-events:none">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </div>
+        </div>
+      </div>
+      <!-- 3-column grid of remaining photos -->
+      <div class="px-6 md:px-8 pb-2 fade-in fade-in-delay-2">
+        <div id="featured-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+      </div>
     </div>
 
     <!-- Fallback: album cards (shown when featuredPhotos is empty) -->
@@ -170,62 +186,57 @@
     const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
 
     if (featuredPhotos.length > 0) {
-      // Show justified photo grid
       document.getElementById('work-heading').textContent = 'Featured';
       document.getElementById('featured-photos-wrap').style.display = '';
 
+      // Pick a random photo to be the hero each page load
+      const heroIndex = Math.floor(Math.random() * featuredPhotos.length);
+
+      // ── Hero ──
+      const featHeroEl      = document.getElementById('feat-hero');
+      const featHeroImg     = document.getElementById('feat-hero-img');
+      const featHeroOverlay = document.getElementById('feat-hero-overlay');
+
+      featHeroImg.src = gridUrl(featuredPhotos[heroIndex]);
+      featHeroImg.addEventListener('load', () => { featHeroImg.style.opacity = '1'; });
+      featHeroEl.addEventListener('mouseenter', () => {
+        featHeroOverlay.style.opacity = '1';
+        featHeroImg.style.transform = 'scale(1.02)';
+      });
+      featHeroEl.addEventListener('mouseleave', () => {
+        featHeroOverlay.style.opacity = '0';
+        featHeroImg.style.transform = '';
+      });
+      featHeroEl.addEventListener('click', () => featLightboxOpen(heroIndex));
+
+      // ── 3-column grid (all photos except hero) ──
       const photoGrid = document.getElementById('featured-photos-grid');
 
-      function runFeaturedLayout() {
-        const items = Array.from(photoGrid.querySelectorAll('.photo-thumb'));
-        if (!items.length) return;
-        const containerWidth = photoGrid.offsetWidth;
-        if (!containerWidth) return;
-        const ratios = items.map(item => {
-          const img = item.querySelector('img');
-          return (img && img.naturalWidth && img.naturalHeight)
-            ? img.naturalWidth / img.naturalHeight
-            : 1.5;
-        });
-        const layout = justifiedLayout(ratios, {
-          containerWidth,
-          targetRowHeight: window.innerWidth <= 640 ? 220 : window.innerWidth <= 1024 ? 300 : 440,
-          boxSpacing: window.innerWidth <= 640 ? 6 : 12,
-          containerPadding: 0,
-        });
-        photoGrid.style.height = layout.containerHeight + 'px';
-        items.forEach((item, i) => {
-          const b = layout.boxes[i];
-          item.style.left   = b.left   + 'px';
-          item.style.top    = b.top    + 'px';
-          item.style.width  = b.width  + 'px';
-          item.style.height = b.height + 'px';
-        });
-      }
-
       featuredPhotos.forEach((url, i) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'photo-thumb';
+        if (i === heroIndex) return;
+
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;overflow:hidden;cursor:pointer;background:var(--color-surface)';
 
         const img = document.createElement('img');
         img.alt     = '';
-        img.loading = i < 4 ? 'eager' : 'lazy';
-        img.addEventListener('load', () => { img.classList.add('loaded'); runFeaturedLayout(); });
+        img.loading = 'lazy';
+        img.style.cssText = 'width:100%;height:auto;display:block;opacity:0;transition:opacity 0.4s ease,transform 0.5s ease';
+        img.addEventListener('load', () => { img.style.opacity = '1'; });
         img.addEventListener('error', () => { img.src = url; }, { once: true });
         img.src = gridUrl(url);
 
         const overlay = document.createElement('div');
-        overlay.className = 'photo-thumb-overlay';
-        overlay.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+        overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.22);opacity:0;transition:opacity 0.25s;display:flex;align-items:center;justify-content:center;pointer-events:none';
+        overlay.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
 
-        thumb.appendChild(img);
-        thumb.appendChild(overlay);
-        thumb.addEventListener('click', () => featLightboxOpen(i));
-        photoGrid.appendChild(thumb);
+        wrap.appendChild(img);
+        wrap.appendChild(overlay);
+        wrap.addEventListener('mouseenter', () => { overlay.style.opacity = '1'; img.style.transform = 'scale(1.03)'; });
+        wrap.addEventListener('mouseleave', () => { overlay.style.opacity = '0'; img.style.transform = ''; });
+        wrap.addEventListener('click', () => featLightboxOpen(i));
+        photoGrid.appendChild(wrap);
       });
-
-      runFeaturedLayout();
-      window.addEventListener('resize', runFeaturedLayout, { passive: true });
 
     } else {
       // Fallback: show recent album cards
