@@ -15,6 +15,11 @@ const SITE_CONFIG = {
 
   aboutPhoto: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/about/portrait.jpg`,
   email: 'raveen.l.fernando@gmail.com',
+
+  // ── Featured photos shown on the homepage ──────────────────────────────────
+  // Add full R2 URLs of your favourite shots here. In the admin lightbox,
+  // use the "Copy URL" button to grab any photo's URL, then paste it below.
+  featuredPhotos: [],
 };
 
 // ============================================================

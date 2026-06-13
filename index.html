@@ -11,6 +11,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Custom styles -->
   <link rel="stylesheet" href="/css/style.css" />
+  <!-- Justified layout for featured photos grid -->
+  <script src="/js/justified-layout.js"></script>
 
   <script>
     tailwind.config = {
@@ -73,23 +75,66 @@
     </div>
   </section>
 
-  <!-- ── Featured Albums Preview ── -->
-  <section>
+  <!-- ── Selected Work ── -->
+  <section id="selected-work">
     <div class="text-center py-16 px-6 fade-in">
       <p class="text-xs tracking-widest uppercase mb-4" style="color:var(--color-muted)">Selected Work</p>
-      <h2 class="font-serif text-4xl md:text-5xl font-light" style="letter-spacing:0.04em">Recent Albums</h2>
+      <h2 class="font-serif text-4xl md:text-5xl font-light" style="letter-spacing:0.04em" id="work-heading">Featured</h2>
       <div class="gold-rule"></div>
     </div>
 
-    <!-- Full-bleed editorial 3-up grid -->
-    <div id="featured-grid" class="editorial-grid fade-in fade-in-delay-1">
-      <!-- Populated by JS -->
+    <!-- Featured photos justified grid (shown when featuredPhotos is populated) -->
+    <div id="featured-photos-wrap" class="px-6 md:px-8 pb-2 fade-in fade-in-delay-1" style="display:none">
+      <div class="photo-grid" id="featured-photos-grid"></div>
+    </div>
+
+    <!-- Fallback: album cards (shown when featuredPhotos is empty) -->
+    <div id="featured-albums-wrap" class="fade-in fade-in-delay-1" style="display:none">
+      <div id="featured-grid" class="editorial-grid">
+        <!-- Populated by JS -->
+      </div>
     </div>
 
     <div class="text-center py-14 fade-in fade-in-delay-2">
-      <a href="/gallery/" class="btn-ghost">View All Albums</a>
+      <a href="/gallery/" class="btn-ghost" id="gallery-cta">Browse Gallery</a>
     </div>
   </section>
+
+  <!-- ── Featured Photos Lightbox ── -->
+  <div id="feat-lightbox" role="dialog" aria-modal="true" style="
+    position:fixed; inset:0; z-index:300;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.96);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.2s ease;">
+    <button id="feat-close" aria-label="Close" style="
+      position:absolute; top:1.25rem; right:1.5rem; z-index:2;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+      color:rgba(255,255,255,0.75); width:40px; height:40px; border-radius:50%;
+      font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:background 0.15s, color 0.15s;">✕</button>
+    <button id="feat-prev" aria-label="Previous" style="
+      position:absolute; top:50%; left:1.25rem; transform:translateY(-50%); z-index:2;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+      color:rgba(255,255,255,0.75); width:52px; height:52px; border-radius:50%;
+      font-size:1.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:background 0.15s, color 0.15s;">‹</button>
+    <img id="feat-img" alt="" style="
+      max-width:min(88vw,1400px); max-height:82vh;
+      object-fit:contain; display:block;
+      opacity:0; transition:opacity 0.2s ease;
+      user-select:none; pointer-events:none;" />
+    <button id="feat-next" aria-label="Next" style="
+      position:absolute; top:50%; right:1.25rem; transform:translateY(-50%); z-index:2;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+      color:rgba(255,255,255,0.75); width:52px; height:52px; border-radius:50%;
+      font-size:1.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:background 0.15s, color 0.15s;">›</button>
+    <p id="feat-counter" style="
+      position:absolute; bottom:1.5rem; left:50%; transform:translateX(-50%);
+      font-size:0.68rem; letter-spacing:0.16em; text-transform:uppercase;
+      color:rgba(255,255,255,0.35); white-space:nowrap;"></p>
+  </div>
 
   <!-- ── Footer ── -->
   <footer>
@@ -104,6 +149,7 @@
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
   <script>
+    // ── Hero ──────────────────────────────────────────────────────────────────
     const heroBg = document.getElementById('hero-bg');
     const heroImg = document.createElement('img');
     heroImg.src = SITE_CONFIG.heroImage;
@@ -120,31 +166,145 @@
     document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
     document.title = `${SITE_CONFIG.photographerName} — Photography`;
 
-    // ── Render first 3 public albums as featured ──
-    const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId && isCompleteAlbum(a)).slice(0, 3);
-    const grid = document.getElementById('featured-grid');
-    if (publicAlbums.length > 0 && publicAlbums.length < 3) {
-      grid.classList.add(`editorial-grid--count-${publicAlbums.length}`);
+    // ── Featured photos grid ──────────────────────────────────────────────────
+    const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
+
+    if (featuredPhotos.length > 0) {
+      // Show justified photo grid
+      document.getElementById('work-heading').textContent = 'Featured';
+      document.getElementById('featured-photos-wrap').style.display = '';
+
+      const photoGrid = document.getElementById('featured-photos-grid');
+
+      function runFeaturedLayout() {
+        const items = Array.from(photoGrid.querySelectorAll('.photo-thumb'));
+        if (!items.length) return;
+        const containerWidth = photoGrid.offsetWidth;
+        if (!containerWidth) return;
+        const ratios = items.map(item => {
+          const img = item.querySelector('img');
+          return (img && img.naturalWidth && img.naturalHeight)
+            ? img.naturalWidth / img.naturalHeight
+            : 1.5;
+        });
+        const layout = justifiedLayout(ratios, {
+          containerWidth,
+          targetRowHeight: window.innerWidth <= 640 ? 220 : window.innerWidth <= 1024 ? 300 : 440,
+          boxSpacing: window.innerWidth <= 640 ? 6 : 12,
+          containerPadding: 0,
+        });
+        photoGrid.style.height = layout.containerHeight + 'px';
+        items.forEach((item, i) => {
+          const b = layout.boxes[i];
+          item.style.left   = b.left   + 'px';
+          item.style.top    = b.top    + 'px';
+          item.style.width  = b.width  + 'px';
+          item.style.height = b.height + 'px';
+        });
+      }
+
+      featuredPhotos.forEach((url, i) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb';
+
+        const img = document.createElement('img');
+        img.alt     = '';
+        img.loading = i < 4 ? 'eager' : 'lazy';
+        img.addEventListener('load', () => { img.classList.add('loaded'); runFeaturedLayout(); });
+        img.addEventListener('error', () => { img.src = url; }, { once: true });
+        img.src = gridUrl(url);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'photo-thumb-overlay';
+        overlay.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+
+        thumb.appendChild(img);
+        thumb.appendChild(overlay);
+        thumb.addEventListener('click', () => featLightboxOpen(i));
+        photoGrid.appendChild(thumb);
+      });
+
+      runFeaturedLayout();
+      window.addEventListener('resize', runFeaturedLayout, { passive: true });
+
+    } else {
+      // Fallback: show recent album cards
+      document.getElementById('work-heading').textContent = 'Recent Albums';
+      document.getElementById('featured-albums-wrap').style.display = '';
+
+      const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId && isCompleteAlbum(a)).slice(0, 3);
+      const grid = document.getElementById('featured-grid');
+      if (publicAlbums.length > 0 && publicAlbums.length < 3) {
+        grid.classList.add(`editorial-grid--count-${publicAlbums.length}`);
+      }
+      publicAlbums.forEach((album, i) => {
+        const isGroup = album.type === 'group';
+        const card = document.createElement('a');
+        card.href = albumPageUrl(album);
+        card.className = 'album-card block';
+        card.style.animationDelay = `${i * 0.1}s`;
+        const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
+        const dateline = albumDateline(album, { withDesc: !isGroup });
+        const desc = albumCardDesc(album);
+        card.innerHTML = `
+          <img class="album-card-img" src="${albumCoverUrl(album)}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
+          <div class="album-card-overlay">
+            ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
+            <h3 class="album-card-title">${album.title}</h3>
+            ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    publicAlbums.forEach((album, i) => {
-      const isGroup = album.type === 'group';
-      const card = document.createElement('a');
-      card.href = albumPageUrl(album);
-      card.className = 'album-card block';
-      card.style.animationDelay = `${i * 0.1}s`;
-      const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
-      const dateline = albumDateline(album, { withDesc: !isGroup });
-      const desc = albumCardDesc(album);
-      card.innerHTML = `
-        <img class="album-card-img" src="${albumCoverUrl(album)}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
-        <div class="album-card-overlay">
-          ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
-          <h3 class="album-card-title">${album.title}</h3>
-          ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
-        </div>
-      `;
-      grid.appendChild(card);
+    // ── Featured lightbox ─────────────────────────────────────────────────────
+    let featIndex = 0;
+    const featLb  = document.getElementById('feat-lightbox');
+    const featImg = document.getElementById('feat-img');
+
+    function featLightboxOpen(i) {
+      featIndex = i;
+      featLb.style.opacity = '1';
+      featLb.style.pointerEvents = 'all';
+      document.body.style.overflow = 'hidden';
+      featLbShow();
+    }
+
+    function featLbClose() {
+      featLb.style.opacity = '0';
+      featLb.style.pointerEvents = 'none';
+      document.body.style.overflow = '';
+      featImg.style.opacity = '0';
+      featImg.src = '';
+    }
+
+    function featLbShow() {
+      const url = featuredPhotos[featIndex];
+      featImg.style.opacity = '0';
+      featImg.onload = () => { featImg.style.opacity = '1'; };
+      featImg.src = url;
+      if (featImg.complete && featImg.naturalWidth) featImg.style.opacity = '1';
+      document.getElementById('feat-counter').textContent =
+        featuredPhotos.length > 1 ? `${featIndex + 1} / ${featuredPhotos.length}` : '';
+      document.getElementById('feat-prev').style.visibility = featIndex === 0 ? 'hidden' : 'visible';
+      document.getElementById('feat-next').style.visibility = featIndex === featuredPhotos.length - 1 ? 'hidden' : 'visible';
+    }
+
+    function featLbNav(dir) {
+      const next = featIndex + dir;
+      if (next >= 0 && next < featuredPhotos.length) { featIndex = next; featLbShow(); }
+    }
+
+    document.getElementById('feat-close').addEventListener('click', featLbClose);
+    document.getElementById('feat-prev').addEventListener('click', () => featLbNav(-1));
+    document.getElementById('feat-next').addEventListener('click', () => featLbNav(1));
+    featLb.addEventListener('click', e => { if (e.target === featLb) featLbClose(); });
+    document.addEventListener('keydown', e => {
+      if (featLb.style.pointerEvents !== 'all') return;
+      if (e.key === 'Escape')      featLbClose();
+      if (e.key === 'ArrowLeft')   featLbNav(-1);
+      if (e.key === 'ArrowRight')  featLbNav(1);
     });
   </script>
 </body>

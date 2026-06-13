@@ -208,6 +208,7 @@
       display: flex; align-items: center; justify-content: space-between;
       gap: 1rem; padding: 1.25rem 1.5rem;
       background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+      flex-wrap: wrap;
     }
     #alb-counter {
       font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
@@ -221,6 +222,14 @@
     }
     #alb-mark:hover { border-color: #ef4444; color: #f87171; }
     #alb-mark.marked { background: rgba(220,38,38,0.2); border-color: #ef4444; color: #f87171; }
+    #alb-copy-url {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.22); background: transparent;
+      color: rgba(255,255,255,0.65); padding: 0.4rem 1rem; border-radius: 2px;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    #alb-copy-url:hover { border-color: rgba(255,255,255,0.5); color: white; }
+    #alb-copy-url.copied { border-color: #22c55e; color: #4ade80; }
     #alb-hint {
       font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
       color: rgba(255,255,255,0.22); text-align: right;
@@ -371,6 +380,7 @@
     <div id="alb-footer">
       <span id="alb-counter"></span>
       <button id="alb-mark" onclick="lbToggleMark()">Mark for deletion</button>
+      <button id="alb-copy-url" onclick="lbCopyUrl()">Copy URL</button>
       <span id="alb-hint">← → navigate &nbsp;·&nbsp; D mark &nbsp;·&nbsp; Esc close</span>
     </div>
   </div>
@@ -753,6 +763,19 @@
         updateToolbar();
       }
       lbSyncMark();
+    }
+
+    function lbCopyUrl() {
+      const url = lbPhotos[lbIndex];
+      if (!url) return;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('alb-copy-url');
+        btn.textContent = '✓ Copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy URL'; btn.classList.remove('copied'); }, 2000);
+      }).catch(() => {
+        showToast('Copy failed — check browser permissions.');
+      });
     }
 
     function lbClose() {
