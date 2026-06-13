@@ -23,6 +23,7 @@ const SITE_CONFIG = {
     // California
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-106.jpg`,
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-188.jpg`,
+    `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-346.jpg`,
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-404.jpg`,
     // Red Rock Canyon
     `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Red-Rock-Canyon-2026/20260123-_DSF0630.jpg`,
@@ -57,6 +58,7 @@ SITE_CONFIG.featuredPhotos = [
   `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
   `${R2_BASE_URL}/Italy/Rome/Digital/rome_495.jpg`,
   `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
+  `${R2_BASE_URL}/California/Yosemite/California-346.jpg`,
   `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
   `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
   `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
