@@ -456,7 +456,10 @@
       return thumb;
     }
 
+    let _lastLayoutMs = 0;
+
     function runJustifiedLayout(grid) {
+      _lastLayoutMs = Date.now();
       const items = Array.from(grid.querySelectorAll('.photo-thumb'));
       if (!items.length) {
         grid.style.height = '0px';
@@ -596,27 +599,37 @@
       const sectionId = index >= 0 ? getSectionIdForPhotoIndex(index) : 'digital-section';
       const thumb     = index >= 0 ? document.querySelector(`.photo-thumb[data-photo-index="${index}"]`) : null;
 
-      // Step 1: scroll to section immediately so user lands in the right area
+      // Step 1: scroll to the right section immediately
       requestAnimationFrame(() => scrollToAlbumSection(sectionId));
 
       if (!thumb) return;
 
-      // Step 2: once the target image loads (layout will have rerun with real dimensions),
-      // refine the scroll to center that exact photo
-      const img = thumb.querySelector('img');
+      // Step 2: poll until the justified layout hasn't changed for 400ms,
+      // meaning all images before the target have loaded and settled.
+      // Then center the thumb and pulse it.
+      const STABLE_MS = 400;
+      const TIMEOUT_MS = 6000;
+      const startedAt = Date.now();
 
-      const centerOnThumb = () => {
-        const rect   = thumb.getBoundingClientRect();
-        const center = rect.top + window.scrollY + rect.height / 2;
-        window.scrollTo({ top: Math.max(0, center - window.innerHeight / 2), behavior: 'smooth' });
+      const waitForStable = () => {
+        if (Date.now() - startedAt > TIMEOUT_MS) {
+          // Give up waiting — just highlight so the photo is findable
+          thumb.classList.add('linked-highlight');
+          return;
+        }
+        const msSinceLayout = Date.now() - _lastLayoutMs;
+        if (msSinceLayout >= STABLE_MS) {
+          // Layout hasn't changed for STABLE_MS — position is trustworthy
+          const rect   = thumb.getBoundingClientRect();
+          const center = rect.top + window.scrollY + rect.height / 2;
+          window.scrollTo({ top: Math.max(0, center - window.innerHeight / 2), behavior: 'smooth' });
+          setTimeout(() => thumb.classList.add('linked-highlight'), 350);
+        } else {
+          setTimeout(waitForStable, 80);
+        }
       };
 
-      if (img && img.complete && img.naturalWidth) {
-        // Already loaded — give layout one frame to settle first
-        setTimeout(centerOnThumb, 120);
-      } else if (img) {
-        img.addEventListener('load', () => setTimeout(centerOnThumb, 120), { once: true });
-      }
+      setTimeout(waitForStable, 200);
     }
 
     function measureStuckToolbarHeight(toolbar) {
@@ -1163,6 +1176,17 @@
 
     /* Add padding to grid when selection bar is visible */
     .select-mode ~ * { padding-bottom: 80px; }
+
+    /* ── Deep-link highlight pulse ── */
+    @keyframes linked-pulse {
+      0%   { box-shadow: 0 0 0 0px rgba(201,169,110,0.0); }
+      30%  { box-shadow: 0 0 0 4px rgba(201,169,110,0.7); }
+      100% { box-shadow: 0 0 0 4px rgba(201,169,110,0.0); }
+    }
+    .photo-thumb.linked-highlight {
+      animation: linked-pulse 1.8s ease forwards;
+      z-index: 2;
+    }
   </style>
 </body>
 </html>
