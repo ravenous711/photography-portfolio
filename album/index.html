@@ -889,25 +889,24 @@
       const nextLayer = 1 - activeLayer;
       const nextImg = lightboxLayers[nextLayer];
       const currentImg = lightboxLayers[activeLayer];
-      let isFull = false;
+      const isCurrent = () => lightbox.classList.contains('open') && currentIndex === index;
+      const thumbImg = document.querySelector(`.photo-thumb[data-photo-index="${index}"] img`);
 
-      try {
-        await ImagePreload.load(fullResUrl);
+      if (ImagePreload.isLoaded(fullResUrl)) {
         await ImagePreload.apply(nextImg, fullResUrl);
-        isFull = true;
-      } catch {
-        await ImagePreload.apply(nextImg, grid);
+      } else {
+        await ImagePreload.applyFromThumb(nextImg, thumbImg, grid);
       }
 
-      if (!lightbox.classList.contains('open') || currentIndex !== index) return;
+      if (!isCurrent()) return;
 
       nextImg.classList.add('active');
       currentImg.classList.remove('active');
       activeLayer = nextLayer;
 
-      if (!isFull) {
+      if (!ImagePreload.isLoaded(fullResUrl)) {
         ImagePreload.load(fullResUrl).then(async () => {
-          if (!lightbox.classList.contains('open') || currentIndex !== index) return;
+          if (!isCurrent()) return;
           await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
         }).catch(() => {});
       }

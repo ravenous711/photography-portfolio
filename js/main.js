@@ -246,16 +246,32 @@ function getNextAlbum(album) {
   return sequence[index + 1];
 }
 
-// Preload full-res images for instant lightbox navigation
+// Preload images for lightbox — grid first on slow links, full-res upgrades in background
 const ImagePreload = {
   _cache: new Map(),
+  _loaded: new Set(),
+
+  isLoaded(url) {
+    return !!url && this._loaded.has(url);
+  },
+
+  isSlowConnection() {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (!conn) return false;
+    if (conn.saveData) return true;
+    const type = conn.effectiveType;
+    return type === 'slow-2g' || type === '2g' || type === '3g';
+  },
 
   load(url) {
     if (!url || this._cache.has(url)) return this._cache.get(url);
     const p = new Promise((resolve, reject) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        this._loaded.add(url);
+        resolve(img);
+      };
       img.onerror = reject;
       img.src = url;
     });
@@ -264,19 +280,21 @@ const ImagePreload = {
   },
 
   preloadAdjacent(urls, index, radius = 3) {
-    for (let o = -radius; o <= radius; o++) {
+    const slow = this.isSlowConnection();
+    const r = slow ? 1 : radius;
+    for (let o = -r; o <= r; o++) {
       const i = index + o;
       if (i >= 0 && i < urls.length) {
         const u = urls[i];
-        this.load(u).catch(() => {});
         this.load(gridUrl(u)).catch(() => {});
+        if (!slow) this.load(u).catch(() => {});
       }
     }
   },
 
   async apply(imgEl, src) {
     await this.load(src);
-    imgEl.src = src;
+    if (imgEl.src !== src) imgEl.src = src;
     if (!imgEl.complete) {
       await new Promise((resolve, reject) => {
         imgEl.onload = () => resolve();
@@ -284,6 +302,47 @@ const ImagePreload = {
       });
     }
     try { await imgEl.decode(); } catch (_) {}
+  },
+
+  // Reuse an already-rendered grid thumb when opening the lightbox (instant on tap).
+  async applyFromThumb(imgEl, thumbImg, fallbackSrc) {
+    if (thumbImg?.complete && thumbImg.naturalWidth) {
+      if (imgEl.src !== thumbImg.src) imgEl.src = thumbImg.src;
+      this._loaded.add(thumbImg.src);
+      try { await imgEl.decode(); } catch (_) {}
+      return;
+    }
+    await this.apply(imgEl, fallbackSrc);
+  },
+
+  // Show grid immediately, then swap to full-res once it finishes downloading.
+  async showProgressive(imgEl, fullResUrl, gridSrc, { isCurrent } = {}) {
+    const stillCurrent = () => !isCurrent || isCurrent();
+
+    if (this.isLoaded(fullResUrl)) {
+      await this.apply(imgEl, fullResUrl);
+      return 'full';
+    }
+
+    try {
+      await this.apply(imgEl, gridSrc);
+    } catch {
+      try {
+        await this.apply(imgEl, fullResUrl);
+        return 'full';
+      } catch {
+        return 'error';
+      }
+    }
+
+    if (!stillCurrent()) return 'grid';
+
+    this.load(fullResUrl).then(async () => {
+      if (!stillCurrent()) return;
+      await this.apply(imgEl, fullResUrl);
+    }).catch(() => {});
+
+    return 'grid';
   },
 };
 
