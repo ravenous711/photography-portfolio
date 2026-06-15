@@ -75,6 +75,7 @@
     </div>
     <section class="group-film-rolls fade-in fade-in-delay-2" id="film-roll-section" hidden>
       <h2 class="group-film-rolls-title">Film sub albums</h2>
+      <p class="group-film-rolls-desc" id="film-roll-desc" hidden></p>
       <nav class="group-film-rolls-list" id="film-roll-links" aria-label="Film sub albums"></nav>
     </section>
   </main>
@@ -215,26 +216,7 @@
         grid.appendChild(card);
       });
 
-      renderFilmRollLinks();
-    }
-
-    function renderFilmRollLinks() {
-      const rolls = getGroupFilmRollAlbums(group.id);
-      const section = document.getElementById('film-roll-section');
-      const list = document.getElementById('film-roll-links');
-      if (!rolls.length || !section || !list) return;
-
-      list.innerHTML = '';
-      rolls.forEach(roll => {
-        const link = document.createElement('a');
-        link.href = albumPageUrl(roll);
-        link.className = 'group-film-roll-link';
-        link.textContent = filmRollLinkLabel(roll);
-        list.appendChild(link);
-      });
-
-      section.hidden = false;
-      section.classList.add('visible');
+      renderFilmRollLinks(group);
     }
     })();
   </script>

@@ -145,6 +145,11 @@
       <div id="film-section" class="album-film-section" hidden>
         <!-- Film subsections populated by JS -->
       </div>
+      <section class="group-film-rolls" id="film-roll-section" hidden>
+        <h2 class="group-film-rolls-title">Film sub albums</h2>
+        <p class="group-film-rolls-desc" id="film-roll-desc" hidden></p>
+        <nav class="group-film-rolls-list" id="film-roll-links" aria-label="Film sub albums"></nav>
+      </section>
       <nav id="album-next-nav" class="album-next-nav" aria-label="Next album" hidden></nav>
     </main>
 
@@ -570,6 +575,7 @@
 
       setupStickyAlbumHeader();
       renderNextAlbumNav();
+      renderFilmRollLinks(album);
       scrollToLinkedPhoto();
     }
 

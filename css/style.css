@@ -556,7 +556,15 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-muted);
-  margin: 0 0 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.group-film-rolls-desc {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--color-muted);
+  margin: 0 0 1.5rem;
+  max-width: 34rem;
 }
 
 .group-film-rolls-list {
@@ -591,6 +599,11 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   .group-film-roll-link {
     font-size: 0.98rem;
   }
+}
+
+.album-content-section + .group-film-rolls,
+.album-film-section + .group-film-rolls {
+  margin-top: 2.5rem;
 }
 
 .album-card-meta {

@@ -247,9 +247,13 @@ function getNextAlbum(album) {
 }
 
 function getGroupFilmRollAlbums(groupId) {
+  return getFilmRollAlbums(groupId);
+}
+
+function getFilmRollAlbums(parentId) {
   const cameraOrder = ['Minolta X-700', "Athena's Pentax 17"];
   return ALBUMS
-    .filter(a => a.parentId === groupId && a.albumKind === 'film-roll')
+    .filter(a => a.parentId === parentId && a.albumKind === 'film-roll')
     .sort((a, b) => {
       const cameraDiff = cameraOrder.indexOf(a.camera) - cameraOrder.indexOf(b.camera);
       if (cameraDiff !== 0) return cameraDiff;
@@ -267,6 +271,31 @@ function filmRollLinkLabel(roll) {
     return `${roll.camera} — Roll ${roll.rollNumber} — ${roll.filmStock}`;
   }
   return roll.shortTitle || roll.title || '';
+}
+
+function renderFilmRollLinks(parentAlbum) {
+  const rolls = getFilmRollAlbums(parentAlbum?.id);
+  const section = document.getElementById('film-roll-section');
+  const list = document.getElementById('film-roll-links');
+  const desc = document.getElementById('film-roll-desc');
+  if (!rolls.length || !section || !list) return;
+
+  if (desc) {
+    desc.textContent = parentAlbum?.filmRollsDesc || '';
+    desc.hidden = !parentAlbum?.filmRollsDesc;
+  }
+
+  list.innerHTML = '';
+  rolls.forEach(roll => {
+    const link = document.createElement('a');
+    link.href = albumPageUrl(roll);
+    link.className = 'group-film-roll-link';
+    link.textContent = filmRollLinkLabel(roll);
+    list.appendChild(link);
+  });
+
+  section.hidden = false;
+  section.classList.add('visible');
 }
 
 // Preload images for lightbox — grid first on slow links, full-res upgrades in background
