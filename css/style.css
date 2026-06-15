@@ -601,11 +601,6 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   }
 }
 
-.album-content-section + .group-film-rolls,
-.album-film-section + .group-film-rolls {
-  margin-top: 2.5rem;
-}
-
 .album-card-meta {
   font-size: 0.72rem;
   letter-spacing: 0.15em;
