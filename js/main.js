@@ -246,6 +246,29 @@ function getNextAlbum(album) {
   return sequence[index + 1];
 }
 
+function getGroupFilmRollAlbums(groupId) {
+  const cameraOrder = ['Minolta X-700', "Athena's Pentax 17"];
+  return ALBUMS
+    .filter(a => a.parentId === groupId && a.albumKind === 'film-roll')
+    .sort((a, b) => {
+      const cameraDiff = cameraOrder.indexOf(a.camera) - cameraOrder.indexOf(b.camera);
+      if (cameraDiff !== 0) return cameraDiff;
+      return (a.rollNumber || 0) - (b.rollNumber || 0);
+    });
+}
+
+function isFilmRollAlbum(album) {
+  return album?.albumKind === 'film-roll';
+}
+
+function filmRollLinkLabel(roll) {
+  if (!roll) return '';
+  if (roll.camera && roll.filmStock && roll.rollNumber) {
+    return `${roll.camera} — Roll ${roll.rollNumber} — ${roll.filmStock}`;
+  }
+  return roll.shortTitle || roll.title || '';
+}
+
 // Preload images for lightbox — grid first on slow links, full-res upgrades in background
 const ImagePreload = {
   _cache: new Map(),

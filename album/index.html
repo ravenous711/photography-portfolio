@@ -514,7 +514,10 @@
 
       const digitalPhotos = album.photos || [];
       const digitalLabelEl = document.getElementById('digital-section-label');
-      if (album.digitalLabel) {
+      if (isFilmRollAlbum(album)) {
+        digitalLabelEl.textContent = 'Full film roll';
+        digitalLabelEl.hidden = false;
+      } else if (album.digitalLabel) {
         digitalLabelEl.textContent = album.digitalLabel;
         digitalLabelEl.hidden = false;
       } else {

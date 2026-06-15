@@ -542,6 +542,57 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   margin: 0 0 0.75rem;
 }
 
+/* ── Film roll links (group page) ─────────────────────────── */
+.group-film-rolls {
+  margin-top: 3.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.group-film-rolls-title {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 1.25rem;
+}
+
+.group-film-rolls-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.group-film-roll-link {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--color-text);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.group-film-roll-link:hover {
+  color: var(--color-gold, #c9a96e);
+  border-bottom-color: rgba(201, 169, 110, 0.55);
+}
+
+@media (max-width: 640px) {
+  .group-film-rolls {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+  }
+
+  .group-film-roll-link {
+    font-size: 0.98rem;
+  }
+}
+
 .album-card-meta {
   font-size: 0.72rem;
   letter-spacing: 0.15em;
