@@ -268,7 +268,7 @@ function isFilmRollAlbum(album) {
 function filmRollLinkLabel(roll) {
   if (!roll) return '';
   if (roll.camera && roll.filmStock && roll.rollNumber) {
-    return `${roll.camera} — Roll ${roll.rollNumber} — ${roll.filmStock}`;
+    return `${roll.camera} - Roll ${roll.rollNumber} - ${roll.filmStock}`;
   }
   return roll.shortTitle || roll.title || '';
 }
