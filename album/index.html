@@ -92,8 +92,11 @@
           </svg>
           <span id="back-label">All Albums</span>
         </a>
-        <div class="album-header-title-row">
-          <h1 class="font-serif text-4xl md:text-5xl font-light" id="album-title" style="letter-spacing:0.04em"></h1>
+        <div class="album-header-title-row" id="album-header-title-row">
+          <div class="album-header-title-block">
+            <h1 class="font-serif text-4xl md:text-5xl font-light" id="album-title" style="letter-spacing:0.04em"></h1>
+            <p class="album-page-subtitle" id="album-subtitle" hidden></p>
+          </div>
           <p class="album-page-dateline" id="album-dateline"></p>
         </div>
       </div>
@@ -237,7 +240,7 @@
         allPhotos = getAlbumAllPhotos(album);
 
         // Update page title
-        document.title = `${album.title} — ${SITE_CONFIG.photographerName}`;
+        document.title = `${albumDisplayTitle(album)} — ${SITE_CONFIG.photographerName}`;
         document.getElementById('footer-copyright').textContent =
           `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
@@ -503,9 +506,21 @@
 
     function showAlbum() {
       document.getElementById('album-content').style.display = 'block';
-      document.getElementById('album-title').textContent        = album.title;
+      document.getElementById('album-title').textContent        = albumDisplayTitle(album);
       document.getElementById('album-dateline').textContent     = albumDateline(album);
-      document.getElementById('album-toolbar-title').textContent = album.title;
+      document.getElementById('album-toolbar-title').textContent = albumDisplayTitle(album);
+
+      const subtitleEl = document.getElementById('album-subtitle');
+      const titleRow = document.getElementById('album-header-title-row');
+      if (isFilmRollAlbum(album)) {
+        subtitleEl.textContent = album.camera || '';
+        subtitleEl.hidden = !album.camera;
+        titleRow.classList.add('album-header-title-row--film-roll');
+      } else {
+        subtitleEl.textContent = '';
+        subtitleEl.hidden = true;
+        titleRow.classList.remove('album-header-title-row--film-roll');
+      }
 
       const digitalGrid = document.getElementById('photo-grid');
       const filmSection = document.getElementById('film-section');
@@ -515,8 +530,8 @@
       const digitalPhotos = album.photos || [];
       const digitalLabelEl = document.getElementById('digital-section-label');
       if (isFilmRollAlbum(album)) {
-        digitalLabelEl.textContent = 'Full film roll';
-        digitalLabelEl.hidden = false;
+        digitalLabelEl.textContent = '';
+        digitalLabelEl.hidden = true;
       } else if (album.digitalLabel) {
         digitalLabelEl.textContent = album.digitalLabel;
         digitalLabelEl.hidden = false;

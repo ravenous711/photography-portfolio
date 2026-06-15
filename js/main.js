@@ -273,6 +273,19 @@ function filmRollLinkLabel(roll) {
   return roll.shortTitle || roll.title || '';
 }
 
+function filmRollPageTitle(roll) {
+  if (!roll) return '';
+  if (roll.filmStock && roll.rollNumber) {
+    return `Roll ${roll.rollNumber} - ${roll.filmStock}`;
+  }
+  return roll.title || '';
+}
+
+function albumDisplayTitle(album) {
+  if (isFilmRollAlbum(album)) return filmRollPageTitle(album);
+  return album?.title || '';
+}
+
 function renderFilmRollLinks(parentAlbum) {
   const rolls = getFilmRollAlbums(parentAlbum?.id);
   const section = document.getElementById('film-roll-section');
