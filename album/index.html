@@ -1224,6 +1224,7 @@
       lightbox.classList.add('open');
       document.body.style.overflow = 'hidden';
       loadLightboxImage(index);
+      prefetchDownloadBlob(allPhotos[index]);
     }
 
     function closeLightbox() {
@@ -1238,6 +1239,18 @@
       lightboxMetaBottom.style.width = '';
     }
 
+    // Prefetch blob for the current lightbox photo so share can fire fast.
+    const downloadBlobCache = new Map(); // url → Promise<{blob, filename}>
+
+    function prefetchDownloadBlob(url) {
+      if (!url || downloadBlobCache.has(url)) return;
+      const p = fetch(`/api/download?url=${encodeURIComponent(url)}`)
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+        .then(blob => ({ blob, filename: url.split('/').pop().split('?')[0] }))
+        .catch(() => null);
+      downloadBlobCache.set(url, p);
+    }
+
     async function downloadLightboxPhoto() {
       const url = allPhotos[currentIndex];
       if (!url) return;
@@ -1247,41 +1260,42 @@
       const progress = document.getElementById('download-progress');
       const bar = document.getElementById('dl-bar');
 
+      // Kick off fetch immediately (may already be in-flight from touchstart prefetch)
+      prefetchDownloadBlob(url);
+
       if (btn) btn.disabled = true;
       progress.classList.add('show');
       label.textContent = 'Downloading…';
-      bar.style.width = '40%';
+      bar.style.width = '30%';
 
       try {
-        const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const blob = await response.blob();
-        const filename = url.split('/').pop().split('?')[0];
+        const result = await downloadBlobCache.get(url);
+        if (!result) throw new Error('Fetch failed');
+        const { blob, filename } = result;
+        bar.style.width = '80%';
 
-        // On iOS, use the native share sheet so "Save Image" → Photos app is available.
-        // Falls back to FileSaver on desktop / browsers without file sharing support.
+        // On iOS use the native share sheet → "Save Image" → Photos app.
         const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           progress.classList.remove('show');
           bar.style.width = '0%';
           if (btn) btn.disabled = false;
-          await navigator.share({ files: [file] });
+          try {
+            await navigator.share({ files: [file] });
+          } catch (shareErr) {
+            if (shareErr.name !== 'AbortError') {
+              // share failed — fall back to FileSaver
+              saveAs(blob, filename);
+            }
+          }
           return;
         }
 
+        // Desktop fallback
         saveAs(blob, filename);
         label.textContent = 'Download started!';
         bar.style.width = '100%';
       } catch (err) {
-        if (err.name === 'AbortError') {
-          // User dismissed the share sheet — not an error
-          label.textContent = '';
-          progress.classList.remove('show');
-          bar.style.width = '0%';
-          if (btn) btn.disabled = false;
-          return;
-        }
         label.textContent = 'Download failed. Try again.';
         console.warn('Lightbox download failed:', err.message);
         bar.style.width = '0%';
@@ -1368,6 +1382,7 @@
         else prefetchLightboxIndex(newIndex - 1);
         currentIndex = newIndex;
         loadLightboxImage(currentIndex);
+        prefetchDownloadBlob(allPhotos[currentIndex]);
       }
     }
 
@@ -1381,7 +1396,12 @@
 
     bindLightboxPrefetch(document.getElementById('lightbox-prev'), -1);
     bindLightboxPrefetch(document.getElementById('lightbox-next'), 1);
-    bindTapWithoutScroll(document.getElementById('lightbox-download'), () => downloadLightboxPhoto());
+
+    // Prefetch blob as soon as user touches the download button — gives the
+    // fetch a head start so navigator.share() fires within iOS gesture window.
+    const dlBtn = document.getElementById('lightbox-download');
+    dlBtn?.addEventListener('touchstart', () => prefetchDownloadBlob(allPhotos[currentIndex]), { passive: true });
+    bindTapWithoutScroll(dlBtn, () => downloadLightboxPhoto());
 
     // Mobile tap zones
     document.getElementById('lightbox-tap-prev')?.addEventListener('click', () => lightboxNav(-1));
