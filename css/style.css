@@ -1413,6 +1413,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   width: 40%;
   z-index: 5;
   cursor: pointer;
+  pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
 }
 .lightbox-tap-prev { left: 0; }
