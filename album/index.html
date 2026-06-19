@@ -174,11 +174,20 @@
 
   <!-- ── Lightbox ── -->
   <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
-    <button id="lightbox-close" aria-label="Close lightbox" onclick="closeLightbox()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+    <div class="lightbox-actions">
+      <button type="button" id="lightbox-download" class="lightbox-action-btn" aria-label="Download photo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+      <button type="button" id="lightbox-close" class="lightbox-action-btn" aria-label="Close lightbox" onclick="closeLightbox()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
 
     <div class="lightbox-shell">
       <button class="lightbox-nav" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
@@ -1225,6 +1234,42 @@
       lightboxMetaBottom.style.width = '';
     }
 
+    async function downloadLightboxPhoto() {
+      const url = allPhotos[currentIndex];
+      if (!url) return;
+
+      const btn = document.getElementById('lightbox-download');
+      const label = document.getElementById('dl-label');
+      const progress = document.getElementById('download-progress');
+      const bar = document.getElementById('dl-bar');
+
+      if (btn) btn.disabled = true;
+      progress.classList.add('show');
+      label.textContent = 'Downloading…';
+      bar.style.width = '40%';
+
+      try {
+        const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const filename = url.split('/').pop().split('?')[0];
+        saveAs(blob, filename);
+        label.textContent = 'Download started!';
+        bar.style.width = '100%';
+      } catch (err) {
+        label.textContent = 'Download failed. Try again.';
+        console.warn('Lightbox download failed:', err.message);
+        bar.style.width = '0%';
+      }
+
+      setTimeout(() => {
+        progress.classList.remove('show');
+        bar.style.width = '0%';
+        if (btn) btn.disabled = false;
+      }, 1500);
+    }
+
     function updateLightboxMeta(index) {
       const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
       const parts = hasMultipleSections ? getLightboxCaptionParts(index) : null;
@@ -1312,6 +1357,7 @@
 
     bindLightboxPrefetch(document.getElementById('lightbox-prev'), -1);
     bindLightboxPrefetch(document.getElementById('lightbox-next'), 1);
+    bindTapWithoutScroll(document.getElementById('lightbox-download'), () => downloadLightboxPhoto());
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
