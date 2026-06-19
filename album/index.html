@@ -184,9 +184,16 @@
       </svg>
     </button>
 
-    <div id="lightbox-stage">
-      <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
-      <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
+    <div id="lightbox-content">
+      <div id="lightbox-stage">
+        <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
+        <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
+      </div>
+
+      <div id="lightbox-meta">
+        <p id="lightbox-section-primary"></p>
+        <p id="lightbox-section-overall"></p>
+      </div>
     </div>
 
     <button class="lightbox-nav" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
@@ -194,11 +201,6 @@
         <path d="M9 18l6-6-6-6"/>
       </svg>
     </button>
-
-    <div id="lightbox-meta">
-      <p id="lightbox-section-primary"></p>
-      <p id="lightbox-section-overall"></p>
-    </div>
   </div>
 
   <!-- ── Download Progress Toast ── -->

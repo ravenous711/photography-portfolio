@@ -1207,21 +1207,31 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 
 #lightbox-img.loaded { opacity: 1; }
 
+#lightbox-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90vw;
+  max-height: 94vh;
+  z-index: 1;
+}
+
 #lightbox-stage {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 90vw;
-  height: 90vh;
-  z-index: 1;
+  height: calc(94vh - 3.5rem);
+  max-height: calc(94vh - 3.5rem);
+  flex-shrink: 0;
   pointer-events: none;
 }
 
 #lightbox-stage .lightbox-layer {
   position: absolute;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: calc(94vh - 3.5rem);
   object-fit: contain;
   display: block;
   border: 1px solid rgba(255,255,255,0.05);
@@ -1284,11 +1294,8 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 #lightbox-next { right: 1.5rem; }
 
 #lightbox-meta {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  flex-shrink: 0;
+  padding-top: 0.85rem;
   text-align: center;
   pointer-events: none;
 }
