@@ -875,6 +875,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
    ============================================================ */
 .photo-grid {
   position: relative;
+  touch-action: pan-y;
 }
 
 .album-page-header {
@@ -1203,6 +1204,9 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   overflow: hidden;
   cursor: pointer;
   background: var(--color-surface);
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .photo-thumb img {
