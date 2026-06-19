@@ -347,17 +347,19 @@ const ImagePreload = {
   preloadAdjacent(urls, index, radius = 3) {
     const slow = this.isSlowConnection();
     const r = slow ? 1 : radius;
-    for (let o = -r; o <= r; o++) {
-      const i = index + o;
-      if (i >= 0 && i < urls.length) {
-        const u = urls[i];
-        this.load(gridUrl(u)).catch(() => {});
-        if (!slow) this.load(u).catch(() => {});
-      }
+    const order = [];
+    for (let o = 1; o <= r; o++) {
+      if (index + o < urls.length) order.push(index + o);
+      if (index - o >= 0) order.push(index - o);
+    }
+    for (const i of order) {
+      const u = urls[i];
+      this.load(gridUrl(u)).catch(() => {});
+      if (!slow) this.load(u).catch(() => {});
     }
   },
 
-  async apply(imgEl, src) {
+  async apply(imgEl, src, { awaitDecode = true } = {}) {
     await this.load(src);
     if (imgEl.src !== src) imgEl.src = src;
     if (!imgEl.complete) {
@@ -366,7 +368,16 @@ const ImagePreload = {
         imgEl.onerror = reject;
       });
     }
-    try { await imgEl.decode(); } catch (_) {}
+    if (awaitDecode) {
+      try { await imgEl.decode(); } catch (_) {}
+    }
+  },
+
+  // Set src immediately for instant layer swap; load/decode continues in background.
+  applyInstant(imgEl, src) {
+    if (!src) return;
+    if (imgEl.src !== src) imgEl.src = src;
+    this.load(src).catch(() => {});
   },
 
   // Reuse an already-rendered grid thumb when opening the lightbox (instant on tap).

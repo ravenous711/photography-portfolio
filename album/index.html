@@ -1158,6 +1158,17 @@
       lightboxMetaBottom.style.width = `${w}px`;
     }
 
+    function preloadLightboxNeighbors(index) {
+      ImagePreload.preloadAdjacent(allPhotos, index, 4);
+    }
+
+    function prefetchLightboxIndex(index) {
+      if (index < 0 || index >= allPhotos.length) return;
+      const url = allPhotos[index];
+      ImagePreload.load(gridUrl(url)).catch(() => {});
+      if (!ImagePreload.isSlowConnection()) ImagePreload.load(url).catch(() => {});
+    }
+
     async function showLightboxPhoto(fullResUrl, index) {
       const grid = gridUrl(fullResUrl);
       const nextLayer = 1 - activeLayer;
@@ -1166,26 +1177,31 @@
       const isCurrent = () => lightbox.classList.contains('open') && currentIndex === index;
       const thumbImg = document.querySelector(`.photo-thumb[data-photo-index="${index}"] img`);
 
+      // Swap layers immediately — never block navigation on network/decode.
       if (ImagePreload.isLoaded(fullResUrl)) {
-        await ImagePreload.apply(nextImg, fullResUrl);
+        ImagePreload.applyInstant(nextImg, fullResUrl);
+      } else if (thumbImg?.complete && thumbImg.naturalWidth) {
+        ImagePreload.applyInstant(nextImg, thumbImg.src);
+      } else if (ImagePreload.isLoaded(grid)) {
+        ImagePreload.applyInstant(nextImg, grid);
       } else {
-        await ImagePreload.applyFromThumb(nextImg, thumbImg, grid);
+        ImagePreload.applyInstant(nextImg, grid);
       }
-
-      if (!isCurrent()) return;
 
       nextImg.classList.add('active');
       currentImg.classList.remove('active');
       activeLayer = nextLayer;
       requestAnimationFrame(syncLightboxCaptionWidth);
 
-      if (!ImagePreload.isLoaded(fullResUrl)) {
-        ImagePreload.load(fullResUrl).then(async () => {
-          if (!isCurrent()) return;
-          await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
-          requestAnimationFrame(syncLightboxCaptionWidth);
-        }).catch(() => {});
-      }
+      // Upgrade quality in background (grid → full-res).
+      ImagePreload.showProgressive(lightboxLayers[activeLayer], fullResUrl, grid, { isCurrent })
+        .then(() => {
+          if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
+        })
+        .catch(() => {});
+
+      prefetchLightboxIndex(index + 1);
+      prefetchLightboxIndex(index + 2);
     }
 
     function openLightbox(index) {
@@ -1269,17 +1285,31 @@
       document.getElementById('lightbox-next').style.visibility = index === allPhotos.length - 1 ? 'hidden' : 'visible';
 
       showLightboxPhoto(url, index);
-      ImagePreload.preloadAdjacent(allPhotos, index);
+      preloadLightboxNeighbors(index);
       requestAnimationFrame(syncLightboxCaptionWidth);
     }
 
     function lightboxNav(dir) {
       const newIndex = currentIndex + dir;
       if (newIndex >= 0 && newIndex < allPhotos.length) {
+        prefetchLightboxIndex(newIndex);
+        if (dir > 0) prefetchLightboxIndex(newIndex + 1);
+        else prefetchLightboxIndex(newIndex - 1);
         currentIndex = newIndex;
         loadLightboxImage(currentIndex);
       }
     }
+
+    function bindLightboxPrefetch(btn, offset) {
+      if (!btn) return;
+      btn.addEventListener('touchstart', () => {
+        prefetchLightboxIndex(currentIndex + offset);
+        prefetchLightboxIndex(currentIndex + offset + (offset > 0 ? 1 : -1));
+      }, { passive: true });
+    }
+
+    bindLightboxPrefetch(document.getElementById('lightbox-prev'), -1);
+    bindLightboxPrefetch(document.getElementById('lightbox-next'), 1);
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
