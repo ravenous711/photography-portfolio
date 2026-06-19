@@ -195,7 +195,10 @@
       </svg>
     </button>
 
-    <p id="lightbox-counter"></p>
+    <div id="lightbox-meta">
+      <p id="lightbox-section-primary"></p>
+      <p id="lightbox-section-overall"></p>
+    </div>
   </div>
 
   <!-- ── Download Progress Toast ── -->
@@ -602,6 +605,35 @@
       return 'digital-section';
     }
 
+    function getPhotoSectionMeta(index) {
+      const digitalCount = (album.photos || []).length;
+      const filmSections = getAlbumFilmSections(album);
+
+      if (index < digitalCount) {
+        return {
+          label: album.digitalNavLabel || 'Digital',
+          indexInSection: index,
+          sectionCount: digitalCount,
+        };
+      }
+
+      let offset = digitalCount;
+      for (let i = 0; i < filmSections.length; i++) {
+        const count = (filmSections[i].photos || []).length;
+        if (index < offset + count) {
+          const label = filmSections[i].navLabel
+            || (filmSections.length > 1 ? `Film Roll ${i + 1}` : (filmSections[i].label || 'Film'));
+          return {
+            label,
+            indexInSection: index - offset,
+            sectionCount: count,
+          };
+        }
+        offset += count;
+      }
+      return null;
+    }
+
     function scrollToLinkedPhoto() {
       const name = new URLSearchParams(window.location.search).get('photo');
       if (!name) return;
@@ -900,7 +932,8 @@
       document.getElementById('lightbox-img-b'),
     ];
     let activeLayer = 0;
-    const counter     = document.getElementById('lightbox-counter');
+    const lightboxPrimary = document.getElementById('lightbox-section-primary');
+    const lightboxOverall = document.getElementById('lightbox-section-overall');
 
     async function showLightboxPhoto(fullResUrl, index) {
       const grid = gridUrl(fullResUrl);
@@ -947,10 +980,25 @@
       activeLayer = 0;
     }
 
+    function updateLightboxMeta(index) {
+      const meta = getPhotoSectionMeta(index);
+      const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
+
+      if (hasMultipleSections && meta) {
+        lightboxPrimary.textContent =
+          `${meta.label} · ${meta.indexInSection + 1} / ${meta.sectionCount}`;
+        lightboxOverall.textContent = `${index + 1} / ${allPhotos.length} overall`;
+        lightboxOverall.hidden = false;
+      } else {
+        lightboxPrimary.textContent = `${index + 1} / ${allPhotos.length}`;
+        lightboxOverall.hidden = true;
+      }
+    }
+
     function loadLightboxImage(index) {
       const url = allPhotos[index];
 
-      counter.textContent = `${index + 1} / ${allPhotos.length}`;
+      updateLightboxMeta(index);
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
       document.getElementById('lightbox-next').style.visibility = index === allPhotos.length - 1 ? 'hidden' : 'visible';
 
