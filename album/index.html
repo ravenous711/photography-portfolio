@@ -191,10 +191,13 @@
       </div>
 
       <div id="lightbox-meta">
-        <p id="lightbox-caption">
-          <span id="lightbox-section-part"></span>
-          <span id="lightbox-overall-part"></span>
-        </p>
+        <div id="lightbox-caption">
+          <div id="lightbox-caption-row">
+            <span id="lightbox-position-part"></span>
+            <span id="lightbox-overall-part"></span>
+          </div>
+          <p id="lightbox-detail-part"></p>
+        </div>
       </div>
     </div>
 
@@ -636,15 +639,18 @@
       return { filmStock: section.label };
     }
 
-    function buildLightboxSectionCaption(index) {
+    function getLightboxCaptionParts(index) {
       const digitalCount = (album.photos || []).length;
       const filmSections = getAlbumFilmSections(album);
+      const overall = `${index + 1}/${allPhotos.length}`;
 
       if (index < digitalCount) {
         const nav = album.digitalNavLabel || 'Digital';
-        const count = `${index + 1}/${digitalCount}`;
-        if (album.digitalLabel) return `${nav} - ${album.digitalLabel} · ${count}`;
-        return `${nav} · ${count}`;
+        return {
+          position: `${nav} · ${index + 1}/${digitalCount}`,
+          detail: album.digitalLabel || '',
+          overall,
+        };
       }
 
       let offset = digitalCount;
@@ -655,16 +661,19 @@
           const navLabel = section.navLabel
             || (filmSections.length > 1 ? `Film Roll ${i + 1}` : (section.label || 'Film'));
           const rollMeta = getFilmSectionRollMeta(section);
-          const parts = [navLabel];
-          if (rollMeta.camera) parts.push(rollMeta.camera);
-          if (rollMeta.filmStock) parts.push(rollMeta.filmStock);
-          parts.push(`${index - offset + 1}/${count}`);
-          return parts.join(' · ');
+          const detailParts = [];
+          if (rollMeta.camera) detailParts.push(rollMeta.camera);
+          if (rollMeta.filmStock) detailParts.push(rollMeta.filmStock);
+          return {
+            position: `${navLabel} · ${index - offset + 1}/${count}`,
+            detail: detailParts.join(' · '),
+            overall,
+          };
         }
         offset += count;
       }
 
-      return `${index + 1}/${allPhotos.length}`;
+      return { position: overall, detail: '', overall: '' };
     }
 
     function scrollToLinkedPhoto() {
@@ -965,7 +974,8 @@
       document.getElementById('lightbox-img-b'),
     ];
     let activeLayer = 0;
-    const lightboxSectionPart = document.getElementById('lightbox-section-part');
+    const lightboxPositionPart = document.getElementById('lightbox-position-part');
+    const lightboxDetailPart = document.getElementById('lightbox-detail-part');
     const lightboxOverallPart = document.getElementById('lightbox-overall-part');
 
     async function showLightboxPhoto(fullResUrl, index) {
@@ -1017,11 +1027,15 @@
       const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
 
       if (hasMultipleSections) {
-        lightboxSectionPart.textContent = buildLightboxSectionCaption(index);
-        lightboxOverallPart.textContent = `${index + 1}/${allPhotos.length}`;
+        const parts = getLightboxCaptionParts(index);
+        lightboxPositionPart.textContent = parts.position;
+        lightboxDetailPart.textContent = parts.detail;
+        lightboxDetailPart.hidden = !parts.detail;
+        lightboxOverallPart.textContent = parts.overall;
         lightboxOverallPart.hidden = false;
       } else {
-        lightboxSectionPart.textContent = `${index + 1}/${allPhotos.length}`;
+        lightboxPositionPart.textContent = `${index + 1}/${allPhotos.length}`;
+        lightboxDetailPart.hidden = true;
         lightboxOverallPart.hidden = true;
       }
     }
