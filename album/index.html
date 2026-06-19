@@ -180,38 +180,40 @@
       </svg>
     </button>
 
-    <button class="lightbox-nav" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M15 18l-6-6 6-6"/>
-      </svg>
-    </button>
+    <div class="lightbox-shell">
+      <button class="lightbox-nav" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
 
-    <div id="lightbox-content">
-      <div id="lightbox-meta-top">
-        <div id="lightbox-caption-row">
-          <span id="lightbox-position-part"></span>
-          <span id="lightbox-overall-part"></span>
+      <div id="lightbox-content">
+        <div id="lightbox-meta-top">
+          <div id="lightbox-caption-row">
+            <span id="lightbox-position-part"></span>
+            <span id="lightbox-overall-part"></span>
+          </div>
+        </div>
+
+        <div id="lightbox-stage">
+          <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
+          <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
+        </div>
+
+        <div id="lightbox-meta-bottom">
+          <p id="lightbox-detail-part">
+            <span id="lightbox-camera-part"></span>
+            <span id="lightbox-settings-part"></span>
+          </p>
         </div>
       </div>
 
-      <div id="lightbox-stage">
-        <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
-        <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
-      </div>
-
-      <div id="lightbox-meta-bottom">
-        <p id="lightbox-detail-part">
-          <span id="lightbox-camera-part"></span>
-          <span id="lightbox-settings-part"></span>
-        </p>
-      </div>
+      <button class="lightbox-nav" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
     </div>
-
-    <button class="lightbox-nav" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 18l6-6-6-6"/>
-      </svg>
-    </button>
   </div>
 
   <!-- ── Download Progress Toast ── -->

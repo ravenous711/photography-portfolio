@@ -1258,6 +1258,20 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   pointer-events: all;
 }
 
+.lightbox-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 0.75rem;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
 #lightbox-img {
   max-width: 90vw;
   max-height: 90vh;
@@ -1275,7 +1289,9 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 90vw;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
   max-height: calc(100vh - 5.25rem);
   z-index: 1;
 }
@@ -1285,7 +1301,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 90vw;
+  width: 100%;
   flex: 0 1 auto;
   min-height: 0;
   max-height: calc(100vh - 5.25rem - 2.25rem);
@@ -1297,7 +1313,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  max-width: 90vw;
+  max-width: 100%;
   max-height: calc(100vh - 5.25rem - 2.25rem);
   object-fit: contain;
   display: block;
@@ -1345,10 +1361,8 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 #lightbox-close:hover { background: rgba(255,255,255,0.18); }
 
 .lightbox-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
+  position: relative;
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
   background: rgba(255,255,255,0.08);
@@ -1361,16 +1375,32 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   color: #fff;
   font-size: 1rem;
   transition: background var(--transition);
+  z-index: 10;
 }
 
 .lightbox-nav:hover { background: rgba(255,255,255,0.18); }
-#lightbox-prev { left: 1.5rem; }
-#lightbox-next { right: 1.5rem; }
+
+@media (max-width: 640px) {
+  .lightbox-shell {
+    gap: 0.35rem;
+    padding: 0 0.35rem;
+  }
+
+  .lightbox-nav {
+    width: 36px;
+    height: 36px;
+  }
+
+  .lightbox-nav svg {
+    width: 14px;
+    height: 14px;
+  }
+}
 
 #lightbox-meta-top {
   flex-shrink: 0;
   width: auto;
-  max-width: 90vw;
+  max-width: 100%;
   margin: 0 auto;
   padding-bottom: 0.35rem;
   pointer-events: none;
@@ -1403,7 +1433,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 #lightbox-meta-bottom {
   flex-shrink: 0;
   width: auto;
-  max-width: 90vw;
+  max-width: 100%;
   margin: 0 auto;
   padding-top: 0.35rem;
   pointer-events: none;
