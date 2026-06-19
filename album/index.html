@@ -15,6 +15,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <!-- Flickr justified-layout: all images scaled to equal row height -->
   <script src="/js/justified-layout.js"></script>
+  <!-- exifr: reads EXIF from JPEG via range request for digital photo metadata -->
+  <script src="https://unpkg.com/exifr/dist/lite.umd.cjs"></script>
 </head>
 <body class="overflow-x-hidden">
 
@@ -197,6 +199,7 @@
             <span id="lightbox-overall-part"></span>
           </div>
           <p id="lightbox-detail-part"></p>
+          <p id="lightbox-exif-part"></p>
         </div>
       </div>
     </div>
@@ -975,8 +978,45 @@
     ];
     let activeLayer = 0;
     const lightboxPositionPart = document.getElementById('lightbox-position-part');
-    const lightboxDetailPart = document.getElementById('lightbox-detail-part');
-    const lightboxOverallPart = document.getElementById('lightbox-overall-part');
+    const lightboxDetailPart   = document.getElementById('lightbox-detail-part');
+    const lightboxOverallPart  = document.getElementById('lightbox-overall-part');
+    const lightboxExifPart     = document.getElementById('lightbox-exif-part');
+
+    // ── EXIF cache: url → formatted string (or null if unavailable) ──
+    const exifCache = new Map();
+
+    async function fetchExifString(url) {
+      if (exifCache.has(url)) return exifCache.get(url);
+
+      try {
+        const exifr = window.exifr;
+        if (!exifr) { exifCache.set(url, null); return null; }
+
+        const data = await exifr.parse(url, {
+          pick: ['Make', 'Model', 'LensModel', 'FNumber', 'ExposureTime', 'ISO', 'FocalLength'],
+        });
+
+        if (!data) { exifCache.set(url, null); return null; }
+
+        const parts = [];
+
+        // Shutter speed — format as fraction when < 1s
+        if (data.ExposureTime != null) {
+          const t = data.ExposureTime;
+          parts.push(t < 1 ? `1/${Math.round(1 / t)}s` : `${t}s`);
+        }
+        if (data.FNumber     != null) parts.push(`f/${data.FNumber}`);
+        if (data.ISO         != null) parts.push(`ISO ${data.ISO}`);
+        if (data.FocalLength != null) parts.push(`${Math.round(data.FocalLength)}mm`);
+
+        const str = parts.length ? parts.join(' · ') : null;
+        exifCache.set(url, str);
+        return str;
+      } catch {
+        exifCache.set(url, null);
+        return null;
+      }
+    }
 
     async function showLightboxPhoto(fullResUrl, index) {
       const grid = gridUrl(fullResUrl);
@@ -1026,6 +1066,10 @@
     function updateLightboxMeta(index) {
       const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
 
+      // Clear EXIF line immediately so it doesn't bleed from prior photo
+      lightboxExifPart.textContent = '';
+      lightboxExifPart.hidden = true;
+
       if (hasMultipleSections) {
         const parts = getLightboxCaptionParts(index);
         lightboxPositionPart.textContent = parts.position;
@@ -1037,6 +1081,20 @@
         lightboxPositionPart.textContent = `${index + 1}/${allPhotos.length}`;
         lightboxDetailPart.hidden = true;
         lightboxOverallPart.hidden = true;
+      }
+
+      // Fetch EXIF for digital photos only
+      const digitalCount = (album.photos || []).length;
+      if (index < digitalCount) {
+        const url = allPhotos[index];
+        fetchExifString(url).then(str => {
+          // Only apply if the user hasn't navigated away
+          if (currentIndex !== index) return;
+          if (str) {
+            lightboxExifPart.textContent = str;
+            lightboxExifPart.hidden = false;
+          }
+        });
       }
     }
 

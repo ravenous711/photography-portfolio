@@ -1331,6 +1331,14 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   color: rgba(255, 255, 255, 0.45);
 }
 
+#lightbox-exif-part {
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.35);
+}
+
 @media (max-width: 640px) {
   #lightbox-caption-row {
     gap: 1rem;

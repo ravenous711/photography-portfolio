@@ -8,8 +8,13 @@
 /curate.html?album=:id    /curate/:id/                301
 /curate-group.html?group=:id  /curate/group/:id/      301
 
+/curate/group/:id/        /curate/group/index.html    200
 /curate/group/:id         /curate/group/index.html    200
+/gallery/:groupId/:slug/  /album/index.html           200
 /gallery/:groupId/:slug   /album/index.html           200
+/gallery/:id/             /group/index.html           200
 /gallery/:id              /group/index.html           200
+/album/:id/               /album/index.html           200
 /album/:id                /album/index.html           200
+/curate/:id/              /curate/index.html          200
 /curate/:id               /curate/index.html          200
