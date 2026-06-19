@@ -1403,10 +1403,41 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 
 .lightbox-nav:hover { background: rgba(255,255,255,0.18); }
 
+/* Invisible tap zones — overlay left/right halves of the stage on mobile */
+.lightbox-tap-prev,
+.lightbox-tap-next {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  z-index: 5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lightbox-tap-prev { left: 0; }
+.lightbox-tap-next { right: 0; }
+
+@media (max-width: 768px) {
+  .lightbox-nav--desktop {
+    display: none;
+  }
+
+  .lightbox-tap-prev,
+  .lightbox-tap-next {
+    display: block;
+  }
+
+  .lightbox-shell {
+    gap: 0;
+    padding: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .lightbox-shell {
-    gap: 0.35rem;
-    padding: 0 0.35rem;
+    gap: 0;
+    padding: 0;
   }
 
   .lightbox-nav {

@@ -190,7 +190,8 @@
     </div>
 
     <div class="lightbox-shell">
-      <button class="lightbox-nav" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
+      <!-- Desktop-only arrow buttons — hidden on mobile, replaced by tap zones -->
+      <button class="lightbox-nav lightbox-nav--desktop" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
@@ -207,6 +208,9 @@
         <div id="lightbox-stage">
           <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
           <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
+          <!-- Mobile tap zones -->
+          <div class="lightbox-tap-prev" id="lightbox-tap-prev" aria-hidden="true"></div>
+          <div class="lightbox-tap-next" id="lightbox-tap-next" aria-hidden="true"></div>
         </div>
 
         <div id="lightbox-meta-bottom">
@@ -217,7 +221,7 @@
         </div>
       </div>
 
-      <button class="lightbox-nav" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
+      <button class="lightbox-nav lightbox-nav--desktop" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M9 18l6-6-6-6"/>
         </svg>
@@ -1358,6 +1362,10 @@
     bindLightboxPrefetch(document.getElementById('lightbox-prev'), -1);
     bindLightboxPrefetch(document.getElementById('lightbox-next'), 1);
     bindTapWithoutScroll(document.getElementById('lightbox-download'), () => downloadLightboxPhoto());
+
+    // Mobile tap zones
+    document.getElementById('lightbox-tap-prev')?.addEventListener('click', () => lightboxNav(-1));
+    document.getElementById('lightbox-tap-next')?.addEventListener('click', () => lightboxNav(1));
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
