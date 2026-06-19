@@ -16,7 +16,7 @@
   <!-- Flickr justified-layout: all images scaled to equal row height -->
   <script src="/js/justified-layout.js"></script>
   <!-- exifr: reads EXIF from JPEG via range request for digital photo metadata -->
-  <script src="https://unpkg.com/exifr/dist/lite.umd.cjs"></script>
+  <script src="https://unpkg.com/exifr@7/dist/full.umd.js"></script>
 </head>
 <body class="overflow-x-hidden">
 
@@ -120,14 +120,14 @@
           <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
         </div>
         <div class="album-header-actions">
-          <button id="select-btn" class="btn-ghost" onclick="toggleSelectMode()">
+          <button id="select-btn" class="btn-ghost" onclick="toggleSelectMode()" aria-label="Select photos">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
               <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
             </svg>
             Select
           </button>
-          <button id="download-btn" class="btn-primary" onclick="downloadPhotos(allPhotos)">
+          <button id="download-btn" class="btn-primary" onclick="downloadPhotos(allPhotos)" aria-label="Download all photos">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -187,20 +187,23 @@
     </button>
 
     <div id="lightbox-content">
+      <div id="lightbox-meta-top">
+        <div id="lightbox-caption-row">
+          <span id="lightbox-position-part"></span>
+          <span id="lightbox-overall-part"></span>
+        </div>
+      </div>
+
       <div id="lightbox-stage">
         <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
         <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
       </div>
 
-      <div id="lightbox-meta">
-        <div id="lightbox-caption">
-          <div id="lightbox-caption-row">
-            <span id="lightbox-position-part"></span>
-            <span id="lightbox-overall-part"></span>
-          </div>
-          <p id="lightbox-detail-part"></p>
-          <p id="lightbox-exif-part"></p>
-        </div>
+      <div id="lightbox-meta-bottom">
+        <p id="lightbox-detail-part">
+          <span id="lightbox-camera-part"></span>
+          <span id="lightbox-settings-part"></span>
+        </p>
       </div>
     </div>
 
@@ -469,6 +472,12 @@
       thumb.addEventListener('click', handleClick);
       thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleClick(); });
 
+      // Prefetch EXIF on hover for digital photos so it's cached before lightbox opens
+      const digitalCount = (album.photos || []).length;
+      if (index < digitalCount) {
+        thumb.addEventListener('mouseenter', () => fetchExifString(allPhotos[index]), { once: true });
+      }
+
       return thumb;
     }
 
@@ -723,19 +732,29 @@
       return height;
     }
 
+    function syncNavCompactHeight(isCompact) {
+      document.documentElement.style.setProperty(
+        '--nav-height',
+        isCompact ? '52px' : '72px',
+      );
+    }
+
     function getStickyStackHeight() {
       const nav = document.getElementById('main-nav');
       const toolbar = document.getElementById('album-header-toolbar');
       if (!nav || !toolbar) return 112;
 
       const wasStuck = toolbar.classList.contains('is-stuck');
+      const wasCompact = toolbar.classList.contains('is-compact');
       // Suppress CSS transition so getBoundingClientRect returns the final stuck
       // height immediately, not an in-progress intermediate value.
       toolbar.style.transition = 'none';
       toolbar.classList.add('is-stuck');
+      if (!wasStuck) toolbar.classList.remove('is-compact');
       void toolbar.offsetHeight; // force reflow to settled state
       const height = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
-      if (!wasStuck) toolbar.classList.remove('is-stuck');
+      toolbar.classList.toggle('is-stuck', wasStuck);
+      toolbar.classList.toggle('is-compact', wasCompact);
       toolbar.style.transition = '';
 
       document.documentElement.style.setProperty('--album-sticky-offset', `${height}px`);
@@ -772,11 +791,14 @@
       if (!nav || !toolbar) return 112;
 
       const wasStuck = toolbar.classList.contains('is-stuck');
+      const wasCompact = toolbar.classList.contains('is-compact');
       toolbar.style.transition = 'none';
       toolbar.classList.add('is-stuck');
+      if (!wasStuck) toolbar.classList.remove('is-compact');
       void toolbar.offsetHeight;
       const offset = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
       toolbar.classList.toggle('is-stuck', wasStuck);
+      toolbar.classList.toggle('is-compact', wasCompact);
       toolbar.style.transition = '';
 
       document.documentElement.style.setProperty('--album-sticky-offset', `${offset}px`);
@@ -895,6 +917,70 @@
       setupSectionNavScrollSpy(items, nav);
 
       updateAlbumStickyOffset();
+      setupAlbumHeaderScrollCompact(toolbar);
+    }
+
+    function setupAlbumHeaderScrollCompact(toolbar) {
+      const nav = document.getElementById('main-nav');
+      const COMPACT_MAX_WIDTH = 768;
+      const SCROLL_THRESHOLD = 56;
+      let lastScrollY = window.scrollY;
+      let compact = false;
+      let compactRaf = 0;
+
+      const applyCompact = (nextCompact) => {
+        const changed = compact !== nextCompact;
+        compact = nextCompact;
+        toolbar.classList.toggle('is-compact', compact);
+        nav?.classList.toggle('nav-compact', compact);
+        syncNavCompactHeight(compact);
+        if (changed) getStickyStackHeight();
+      };
+
+      const updateCompact = () => {
+        compactRaf = 0;
+        if (window.innerWidth > COMPACT_MAX_WIDTH) {
+          applyCompact(false);
+          lastScrollY = window.scrollY;
+          return;
+        }
+
+        if (!toolbar.classList.contains('is-stuck')) {
+          applyCompact(false);
+          lastScrollY = window.scrollY;
+          return;
+        }
+
+        const delta = window.scrollY - lastScrollY;
+        const minScroll = getMinScrollForStuckToolbar();
+        let nextCompact = compact;
+
+        if (window.scrollY < minScroll + SCROLL_THRESHOLD) {
+          nextCompact = false;
+        } else if (delta > 2) {
+          nextCompact = true;
+        } else if (delta < -2) {
+          nextCompact = false;
+        }
+
+        applyCompact(nextCompact);
+        lastScrollY = window.scrollY;
+      };
+
+      const scheduleCompact = () => {
+        if (compactRaf) return;
+        compactRaf = requestAnimationFrame(updateCompact);
+      };
+
+      window.addEventListener('scroll', scheduleCompact, { passive: true });
+      window.addEventListener('resize', scheduleCompact, { passive: true });
+
+      toolbar.addEventListener('click', (e) => {
+        if (!toolbar.classList.contains('is-compact')) return;
+        if (e.target.closest('a, button')) return;
+        applyCompact(false);
+        lastScrollY = window.scrollY;
+      });
     }
 
     function setActiveSectionNav(sectionId) {
@@ -979,8 +1065,11 @@
     let activeLayer = 0;
     const lightboxPositionPart = document.getElementById('lightbox-position-part');
     const lightboxDetailPart   = document.getElementById('lightbox-detail-part');
+    const lightboxCameraPart   = document.getElementById('lightbox-camera-part');
+    const lightboxSettingsPart = document.getElementById('lightbox-settings-part');
     const lightboxOverallPart  = document.getElementById('lightbox-overall-part');
-    const lightboxExifPart     = document.getElementById('lightbox-exif-part');
+    const lightboxMetaTop      = document.getElementById('lightbox-meta-top');
+    const lightboxMetaBottom   = document.getElementById('lightbox-meta-bottom');
 
     // ── EXIF cache: url → formatted string (or null if unavailable) ──
     const exifCache = new Map();
@@ -989,18 +1078,14 @@
       if (exifCache.has(url)) return exifCache.get(url);
 
       try {
-        const exifr = window.exifr;
-        if (!exifr) { exifCache.set(url, null); return null; }
+        const res = await fetch(`/api/exif/?url=${encodeURIComponent(url)}`);
+        if (res.status === 204) { exifCache.set(url, null); return null; }
+        if (!res.ok) { exifCache.set(url, null); return null; }
 
-        const data = await exifr.parse(url, {
-          pick: ['Make', 'Model', 'LensModel', 'FNumber', 'ExposureTime', 'ISO', 'FocalLength'],
-        });
-
+        const data = await res.json();
         if (!data) { exifCache.set(url, null); return null; }
 
         const parts = [];
-
-        // Shutter speed — format as fraction when < 1s
         if (data.ExposureTime != null) {
           const t = data.ExposureTime;
           parts.push(t < 1 ? `1/${Math.round(1 / t)}s` : `${t}s`);
@@ -1016,6 +1101,14 @@
         exifCache.set(url, null);
         return null;
       }
+    }
+
+    function syncLightboxCaptionWidth() {
+      const activeImg = lightboxLayers[activeLayer];
+      const w = activeImg?.offsetWidth;
+      if (!w) return;
+      lightboxMetaTop.style.width = `${w}px`;
+      lightboxMetaBottom.style.width = `${w}px`;
     }
 
     async function showLightboxPhoto(fullResUrl, index) {
@@ -1037,11 +1130,13 @@
       nextImg.classList.add('active');
       currentImg.classList.remove('active');
       activeLayer = nextLayer;
+      requestAnimationFrame(syncLightboxCaptionWidth);
 
       if (!ImagePreload.isLoaded(fullResUrl)) {
         ImagePreload.load(fullResUrl).then(async () => {
           if (!isCurrent()) return;
           await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
+          requestAnimationFrame(syncLightboxCaptionWidth);
         }).catch(() => {});
       }
     }
@@ -1061,40 +1156,61 @@
         layer.src = '';
       });
       activeLayer = 0;
+      lightboxMetaTop.style.width = '';
+      lightboxMetaBottom.style.width = '';
     }
 
     function updateLightboxMeta(index) {
       const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
+      const parts = hasMultipleSections ? getLightboxCaptionParts(index) : null;
+      const digitalCount = (album.photos || []).length;
+      const isDigital = index < digitalCount;
 
-      // Clear EXIF line immediately so it doesn't bleed from prior photo
-      lightboxExifPart.textContent = '';
-      lightboxExifPart.hidden = true;
-
-      if (hasMultipleSections) {
-        const parts = getLightboxCaptionParts(index);
+      if (hasMultipleSections && parts) {
         lightboxPositionPart.textContent = parts.position;
-        lightboxDetailPart.textContent = parts.detail;
-        lightboxDetailPart.hidden = !parts.detail;
         lightboxOverallPart.textContent = parts.overall;
         lightboxOverallPart.hidden = false;
       } else {
         lightboxPositionPart.textContent = `${index + 1}/${allPhotos.length}`;
-        lightboxDetailPart.hidden = true;
+        lightboxOverallPart.textContent = '';
         lightboxOverallPart.hidden = true;
       }
 
-      // Fetch EXIF for digital photos only
-      const digitalCount = (album.photos || []).length;
-      if (index < digitalCount) {
+      if (isDigital) {
         const url = allPhotos[index];
-        fetchExifString(url).then(str => {
-          // Only apply if the user hasn't navigated away
+        const cameraLabel = parts?.detail || album.digitalLabel || '';
+        lightboxCameraPart.textContent = cameraLabel;
+        lightboxSettingsPart.textContent = exifCache.has(url) ? (exifCache.get(url) || '') : '';
+        lightboxDetailPart.hidden = !cameraLabel && !lightboxSettingsPart.textContent;
+        lightboxMetaBottom.hidden = lightboxDetailPart.hidden;
+
+        const applySettings = (str) => {
           if (currentIndex !== index) return;
-          if (str) {
-            lightboxExifPart.textContent = str;
-            lightboxExifPart.hidden = false;
-          }
+          lightboxSettingsPart.textContent = str || '';
+          lightboxDetailPart.hidden = !lightboxCameraPart.textContent && !str;
+          lightboxMetaBottom.hidden = lightboxDetailPart.hidden;
+        };
+
+        if (exifCache.has(url)) {
+          applySettings(exifCache.get(url));
+        } else {
+          fetchExifString(url).then(applySettings);
+        }
+
+        [-1, 1].forEach(d => {
+          const adj = index + d;
+          if (adj >= 0 && adj < digitalCount) fetchExifString(allPhotos[adj]);
         });
+      } else if (parts?.detail) {
+        lightboxCameraPart.textContent = parts.detail;
+        lightboxSettingsPart.textContent = '';
+        lightboxDetailPart.hidden = false;
+        lightboxMetaBottom.hidden = false;
+      } else {
+        lightboxCameraPart.textContent = '';
+        lightboxSettingsPart.textContent = '';
+        lightboxDetailPart.hidden = true;
+        lightboxMetaBottom.hidden = true;
       }
     }
 
@@ -1107,6 +1223,7 @@
 
       showLightboxPhoto(url, index);
       ImagePreload.preloadAdjacent(allPhotos, index);
+      requestAnimationFrame(syncLightboxCaptionWidth);
     }
 
     function lightboxNav(dir) {

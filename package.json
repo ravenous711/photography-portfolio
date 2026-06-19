@@ -1,0 +1,24 @@
+{
+  "name": "photography-portfolio",
+  "version": "1.0.0",
+  "description": "A minimalist static photography portfolio site built with HTML, Tailwind CSS, and vanilla JS. Images are served from Cloudflare R2.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravenous711/photography-portfolio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ravenous711/photography-portfolio/issues"
+  },
+  "homepage": "https://github.com/ravenous711/photography-portfolio#readme",
+  "dependencies": {
+    "exifr": "^7.1.3"
+  }
+}
