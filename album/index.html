@@ -1251,6 +1251,9 @@
       downloadBlobCache.set(url, p);
     }
 
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
     async function downloadLightboxPhoto() {
       const url = allPhotos[currentIndex];
       if (!url) return;
@@ -1260,42 +1263,55 @@
       const progress = document.getElementById('download-progress');
       const bar = document.getElementById('dl-bar');
 
-      // Kick off fetch immediately (may already be in-flight from touchstart prefetch)
+      // Kick off fetch immediately (may already be cached from lightbox open)
       prefetchDownloadBlob(url);
 
       if (btn) btn.disabled = true;
-      progress.classList.add('show');
-      label.textContent = 'Downloading…';
-      bar.style.width = '30%';
 
       try {
         const result = await downloadBlobCache.get(url);
         if (!result) throw new Error('Fetch failed');
         const { blob, filename } = result;
-        bar.style.width = '80%';
 
-        // On iOS use the native share sheet → "Save Image" → Photos app.
+        // 1. Try Web Share API — opens iOS share sheet → Save Image → Photos
         const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          progress.classList.remove('show');
-          bar.style.width = '0%';
-          if (btn) btn.disabled = false;
           try {
             await navigator.share({ files: [file] });
+            if (btn) btn.disabled = false;
+            return;
           } catch (shareErr) {
-            if (shareErr.name !== 'AbortError') {
-              // share failed — fall back to FileSaver
-              saveAs(blob, filename);
+            if (shareErr.name === 'AbortError') {
+              if (btn) btn.disabled = false;
+              return; // user cancelled share sheet — fine
             }
+            // share failed, fall through to next method
           }
+        }
+
+        // 2. iOS fallback — open blob URL in new tab; user can long-press → Save to Photos
+        if (isIOS) {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          progress.classList.add('show');
+          label.textContent = 'Long press → Save to Photos';
+          bar.style.width = '100%';
+          setTimeout(() => {
+            progress.classList.remove('show');
+            bar.style.width = '0%';
+            if (btn) btn.disabled = false;
+          }, 3000);
           return;
         }
 
-        // Desktop fallback
+        // 3. Desktop — standard FileSaver download
         saveAs(blob, filename);
+        progress.classList.add('show');
         label.textContent = 'Download started!';
         bar.style.width = '100%';
       } catch (err) {
+        progress.classList.add('show');
         label.textContent = 'Download failed. Try again.';
         console.warn('Lightbox download failed:', err.message);
         bar.style.width = '0%';
@@ -1305,7 +1321,7 @@
         progress.classList.remove('show');
         bar.style.width = '0%';
         if (btn) btn.disabled = false;
-      }, 1500);
+      }, 2000);
     }
 
     function updateLightboxMeta(index) {
