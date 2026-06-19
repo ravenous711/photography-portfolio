@@ -1238,34 +1238,26 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 /* ============================================================
    LIGHTBOX
    ============================================================ */
+/* --lb-top / --lb-bot: padding consumed above and below the image area.
+   Used to derive the max-height for the image itself.
+   svh = small viewport height (excludes iOS Safari address bar). */
 #lightbox {
+  --lb-top: 4.5rem;
+  --lb-bot: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  --lb-meta: 2.5rem; /* top caption row + bottom EXIF row combined */
+  --lb-avail: calc(100svh - var(--lb-top) - var(--lb-bot) - var(--lb-meta));
   position: fixed;
   inset: 0;
   z-index: 200;
   background: rgba(0,0,0,0.96);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  /* 4.5rem top clears the action buttons; 0.75rem bottom buffer */
-  padding: 4.5rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  /* svh = visible area only — avoids iOS Safari browser-chrome overflow */
-  height: 100svh;
-  height: 100vh; /* fallback for browsers without svh */
-  max-height: 100svh;
-  overflow: hidden;
+  padding: var(--lb-top) 0 var(--lb-bot);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-}
-
-/* Modern browsers that support svh override the vh fallback */
-@supports (height: 100svh) {
-  #lightbox {
-    height: 100svh;
-    max-height: 100svh;
-  }
 }
 
 #lightbox.open {
@@ -1287,29 +1279,14 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   min-width: 0;
 }
 
-#lightbox-img {
-  max-width: 90vw;
-  max-height: 90vh;
-  object-fit: contain;
-  display: block;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  border: 1px solid rgba(255,255,255,0.05);
-}
-
-#lightbox-img.loaded { opacity: 1; }
-
 #lightbox-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex: 1;
-  min-height: 0;
   min-width: 0;
   max-width: 100%;
-  width: 100%;
-  overflow: hidden;
   z-index: 1;
 }
 
@@ -1319,9 +1296,9 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   align-items: center;
   justify-content: center;
   width: 100%;
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-height: 0;
-  overflow: hidden;
+  max-height: var(--lb-avail);
   pointer-events: none;
 }
 
@@ -1331,7 +1308,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   left: 50%;
   transform: translateX(-50%);
   max-width: 100%;
-  max-height: 100%;
+  max-height: var(--lb-avail);
   width: auto;
   height: auto;
   object-fit: contain;
@@ -1391,7 +1368,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 
 @media (max-width: 768px) {
   #lightbox {
-    padding-top: 3.25rem;
+    --lb-top: 3.25rem;
   }
 
   .lightbox-actions {
