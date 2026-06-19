@@ -87,7 +87,7 @@ SITE_CONFIG.featuredPhotos = [
 //   filmSections[].navLabel – optional short jump-nav label (default: "Film Roll N")
 //   filmPhotos  – optional film frames appended after photos (separate grid section)
 //   filmLabel   – optional heading for the film section (default: "On film")
-//   filmSections– optional array of { label, photos } for multiple film blocks
+//   filmSections– optional array of { label, photos, navLabel, camera, filmStock } for multiple film blocks
 //   albumKind   – optional 'film-roll' for hidden full-roll albums (linked from group page)
 //   camera      – camera used for the roll (film-roll link label)
 //   filmStock   – film stock name (film-roll link label)

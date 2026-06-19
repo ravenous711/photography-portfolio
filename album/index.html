@@ -191,8 +191,10 @@
       </div>
 
       <div id="lightbox-meta">
-        <p id="lightbox-section-primary"></p>
-        <p id="lightbox-section-overall"></p>
+        <p id="lightbox-caption">
+          <span id="lightbox-section-part"></span>
+          <span id="lightbox-overall-part"></span>
+        </p>
       </div>
     </div>
 
@@ -607,33 +609,62 @@
       return 'digital-section';
     }
 
-    function getPhotoSectionMeta(index) {
+    function getFilmSectionRollMeta(section) {
+      if (!section) return {};
+      if (section.camera || section.filmStock) {
+        return {
+          camera: section.camera,
+          filmStock: section.filmStock || section.label,
+        };
+      }
+
+      const photos = section.photos || [];
+      if (!photos.length) return { filmStock: section.label };
+
+      const roll = ALBUMS.find(a =>
+        a.albumKind === 'film-roll' &&
+        Array.isArray(a.photos) &&
+        photos.some(url => a.photos.includes(url))
+      );
+      if (roll) {
+        return {
+          camera: roll.camera,
+          filmStock: roll.filmStock,
+        };
+      }
+
+      return { filmStock: section.label };
+    }
+
+    function buildLightboxSectionCaption(index) {
       const digitalCount = (album.photos || []).length;
       const filmSections = getAlbumFilmSections(album);
 
       if (index < digitalCount) {
-        return {
-          label: album.digitalNavLabel || 'Digital',
-          indexInSection: index,
-          sectionCount: digitalCount,
-        };
+        const nav = album.digitalNavLabel || 'Digital';
+        const count = `${index + 1}/${digitalCount}`;
+        if (album.digitalLabel) return `${nav} - ${album.digitalLabel} · ${count}`;
+        return `${nav} · ${count}`;
       }
 
       let offset = digitalCount;
       for (let i = 0; i < filmSections.length; i++) {
-        const count = (filmSections[i].photos || []).length;
+        const section = filmSections[i];
+        const count = (section.photos || []).length;
         if (index < offset + count) {
-          const label = filmSections[i].navLabel
-            || (filmSections.length > 1 ? `Film Roll ${i + 1}` : (filmSections[i].label || 'Film'));
-          return {
-            label,
-            indexInSection: index - offset,
-            sectionCount: count,
-          };
+          const navLabel = section.navLabel
+            || (filmSections.length > 1 ? `Film Roll ${i + 1}` : (section.label || 'Film'));
+          const rollMeta = getFilmSectionRollMeta(section);
+          const parts = [navLabel];
+          if (rollMeta.camera) parts.push(rollMeta.camera);
+          if (rollMeta.filmStock) parts.push(rollMeta.filmStock);
+          parts.push(`${index - offset + 1}/${count}`);
+          return parts.join(' · ');
         }
         offset += count;
       }
-      return null;
+
+      return `${index + 1}/${allPhotos.length}`;
     }
 
     function scrollToLinkedPhoto() {
@@ -934,8 +965,8 @@
       document.getElementById('lightbox-img-b'),
     ];
     let activeLayer = 0;
-    const lightboxPrimary = document.getElementById('lightbox-section-primary');
-    const lightboxOverall = document.getElementById('lightbox-section-overall');
+    const lightboxSectionPart = document.getElementById('lightbox-section-part');
+    const lightboxOverallPart = document.getElementById('lightbox-overall-part');
 
     async function showLightboxPhoto(fullResUrl, index) {
       const grid = gridUrl(fullResUrl);
@@ -983,17 +1014,15 @@
     }
 
     function updateLightboxMeta(index) {
-      const meta = getPhotoSectionMeta(index);
       const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
 
-      if (hasMultipleSections && meta) {
-        lightboxPrimary.textContent =
-          `${meta.label} · ${meta.indexInSection + 1} / ${meta.sectionCount}`;
-        lightboxOverall.textContent = `${index + 1} / ${allPhotos.length} overall`;
-        lightboxOverall.hidden = false;
+      if (hasMultipleSections) {
+        lightboxSectionPart.textContent = buildLightboxSectionCaption(index);
+        lightboxOverallPart.textContent = `${index + 1}/${allPhotos.length}`;
+        lightboxOverallPart.hidden = false;
       } else {
-        lightboxPrimary.textContent = `${index + 1} / ${allPhotos.length}`;
-        lightboxOverall.hidden = true;
+        lightboxSectionPart.textContent = `${index + 1}/${allPhotos.length}`;
+        lightboxOverallPart.hidden = true;
       }
     }
 
