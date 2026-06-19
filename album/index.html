@@ -1258,10 +1258,30 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const blob = await response.blob();
         const filename = url.split('/').pop().split('?')[0];
+
+        // On iOS, use the native share sheet so "Save Image" → Photos app is available.
+        // Falls back to FileSaver on desktop / browsers without file sharing support.
+        const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          progress.classList.remove('show');
+          bar.style.width = '0%';
+          if (btn) btn.disabled = false;
+          await navigator.share({ files: [file] });
+          return;
+        }
+
         saveAs(blob, filename);
         label.textContent = 'Download started!';
         bar.style.width = '100%';
       } catch (err) {
+        if (err.name === 'AbortError') {
+          // User dismissed the share sheet — not an error
+          label.textContent = '';
+          progress.classList.remove('show');
+          bar.style.width = '0%';
+          if (btn) btn.disabled = false;
+          return;
+        }
         label.textContent = 'Download failed. Try again.';
         console.warn('Lightbox download failed:', err.message);
         bar.style.width = '0%';
