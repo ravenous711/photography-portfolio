@@ -151,7 +151,6 @@
         </button>
         <div id="album-nav-menu" class="album-nav-menu" hidden>
           <div id="album-nav-menu-sections" class="album-nav-menu-group" hidden></div>
-          <div id="album-nav-menu-albums" class="album-nav-menu-group" hidden></div>
           <div class="album-nav-menu-actions">
             <button type="button" id="album-nav-select-btn" class="album-nav-menu-action">Select photos</button>
             <button type="button" id="album-nav-liked-btn" class="album-nav-menu-action" hidden>Download selected</button>
@@ -1135,28 +1134,16 @@
       setupAlbumNavMenu(toolbar, items);
     }
 
-    function getSiblingAlbums(current) {
-      if (!current?.parentId) return [];
-      const parent = ALBUMS.find(a => a.id === current.parentId);
-      if (!parent?.subAlbums?.length) return [];
-      return parent.subAlbums
-        .map(id => ALBUMS.find(a => a.id === id))
-        .filter(a => a && a.id !== current.id && isCompleteAlbum(a));
-    }
-
     function setupAlbumNavMenu(toolbar, sectionItems) {
       const MOBILE_MAX = 640;
       const menuBtn = document.getElementById('album-nav-menu-btn');
       const menu = document.getElementById('album-nav-menu');
       const sectionsEl = document.getElementById('album-nav-menu-sections');
-      const albumsEl = document.getElementById('album-nav-menu-albums');
       const selectBtn = document.getElementById('album-nav-select-btn');
       const likedBtn = document.getElementById('album-nav-liked-btn');
       const downloadBtn = document.getElementById('album-nav-download-btn');
 
       if (!menuBtn || !menu) return;
-
-      const siblings = getSiblingAlbums(album);
 
       if (sectionItems.length) {
         sectionsEl.hidden = false;
@@ -1168,18 +1155,6 @@
       } else {
         sectionsEl.hidden = true;
         sectionsEl.innerHTML = '';
-      }
-
-      if (siblings.length) {
-        albumsEl.hidden = false;
-        albumsEl.innerHTML = `
-          <p class="album-nav-menu-label">Albums</p>
-          ${siblings.map(sib => `
-            <a class="album-nav-menu-link" href="${Routes.albumPageUrl(sib)}">${albumDisplayTitle(sib)}</a>
-          `).join('')}`;
-      } else {
-        albumsEl.hidden = true;
-        albumsEl.innerHTML = '';
       }
 
       const syncMenuVisibility = () => {
