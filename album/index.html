@@ -275,6 +275,9 @@
     // ── Get album from URL ──
     let album;
     let allPhotos = [];
+    let currentIndex = 0;
+    let selectMode   = false;
+    const selected   = new Set();
 
     if (Routes.redirectLegacyFlatAlbum()) {
       // redirecting to nested /gallery/:group/:slug/
@@ -362,10 +365,6 @@
     }
 
     // ── Render album grid ──
-    let currentIndex = 0;
-    let selectMode   = false;
-    const selected   = new Set();
-
     function getSelectionStorageKey() {
       return `selected_${album.id}`;
     }
@@ -513,7 +512,8 @@
 
     function updateLightboxLikeButton() {
       const btn = document.getElementById('lightbox-like');
-      if (!btn || !lightbox.classList.contains('open')) return;
+      const lb = document.getElementById('lightbox');
+      if (!btn || !lb?.classList.contains('open')) return;
       const isSelected = selected.has(currentIndex);
       btn.classList.toggle('is-liked', isSelected);
       btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
@@ -689,12 +689,22 @@
         new ResizeObserver(() => runJustifiedLayout(grid)).observe(grid);
       }
 
-      runJustifiedLayout(grid);
+      let attempts = 0;
+      const tryLayout = () => {
+        runJustifiedLayout(grid);
+        const hasThumbs = grid.querySelectorAll('.photo-thumb').length > 0;
+        if (hasThumbs && !grid.offsetWidth && attempts++ < 12) {
+          requestAnimationFrame(tryLayout);
+          return;
+        }
 
-      grid.querySelectorAll('img').forEach(img => {
-        if (img.complete && img.naturalWidth) { runJustifiedLayout(grid); }
-        else { img.addEventListener('load', () => runJustifiedLayout(grid)); }
-      });
+        grid.querySelectorAll('img').forEach(img => {
+          if (img.complete && img.naturalWidth) { runJustifiedLayout(grid); }
+          else { img.addEventListener('load', () => runJustifiedLayout(grid)); }
+        });
+      };
+
+      tryLayout();
     }
 
     function showAlbum() {
