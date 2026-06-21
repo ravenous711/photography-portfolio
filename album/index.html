@@ -270,7 +270,7 @@
 
   <!-- ── Download Progress Toast ── -->
   <div id="download-progress">
-    <p id="dl-label" class="font-sans text-sm" style="color:var(--color-text)">Preparing download…</p>
+    <p id="dl-label" class="font-sans text-sm" style="color:var(--color-text)">Preparing…</p>
     <div class="progress-bar-wrap">
       <div class="progress-bar" id="dl-bar"></div>
     </div>
@@ -1766,7 +1766,7 @@
       if (dlBtn)    { dlBtn.disabled = true; }
       if (selDlBtn) { selDlBtn.disabled = true; }
       progress.classList.add('show');
-      label.textContent = `Downloading ${photos.length} photo${photos.length !== 1 ? 's' : ''}…`;
+      label.textContent = `Prepping ZIP — 0 of ${photos.length} photos…`;
 
       const zip       = new JSZip();
       const folder    = zip.folder(album.title);
@@ -1807,7 +1807,7 @@
         }
         completed++;
         bar.style.width   = Math.round((completed / total) * 100) + '%';
-        label.textContent = `${completed} of ${total} photos…`;
+        label.textContent = `Prepping ZIP — ${completed} of ${total} photos…`;
       };
 
       const BATCH = 2;
@@ -1817,9 +1817,9 @@
       }
 
       if (successCount === 0) {
-        label.textContent = 'Could not download any photos. Try again.';
+        label.textContent = 'Could not prep ZIP — no photos loaded. Try again.';
       } else {
-        label.textContent = 'Creating ZIP file…';
+        label.textContent = 'Building ZIP file…';
         try {
           const blob     = await zip.generateAsync({ type: 'blob' });
           const suffix   = isAll ? 'photos' : 'selection';
@@ -1827,7 +1827,7 @@
           saveAs(blob, filename);
           label.textContent = failedCount
             ? `ZIP ready — ${successCount} of ${total} photos (${failedCount} failed)`
-            : 'Download started!';
+            : 'ZIP download started!';
         } catch (err) {
           label.textContent = 'Error creating ZIP. Try again.';
           console.error(err);
