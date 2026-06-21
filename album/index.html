@@ -909,11 +909,11 @@
       return height;
     }
 
-    function syncNavCompactHeight(isCompact) {
-      document.documentElement.style.setProperty(
-        '--nav-height',
-        isCompact ? '52px' : '72px',
-      );
+    function measureLiveStickyStackHeight() {
+      const nav = document.getElementById('main-nav');
+      const toolbar = document.getElementById('album-header-toolbar');
+      if (!nav || !toolbar) return 112;
+      return nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height;
     }
 
     function getStickyStackHeight() {
@@ -1106,12 +1106,23 @@
       let compactRaf = 0;
 
       const applyCompact = (nextCompact) => {
-        const changed = compact !== nextCompact;
+        if (compact === nextCompact) return;
+
+        const stackBefore = measureLiveStickyStackHeight();
         compact = nextCompact;
         toolbar.classList.toggle('is-compact', compact);
         nav?.classList.toggle('nav-compact', compact);
-        syncNavCompactHeight(compact);
-        if (changed) getStickyStackHeight();
+
+        requestAnimationFrame(() => {
+          void toolbar.offsetHeight;
+          const stackAfter = measureLiveStickyStackHeight();
+          const delta = stackBefore - stackAfter;
+          if (Math.abs(delta) > 0.5) {
+            window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+          }
+          lastScrollY = window.scrollY;
+          getStickyStackHeight();
+        });
       };
 
       const updateCompact = () => {
@@ -1156,7 +1167,6 @@
         if (!toolbar.classList.contains('is-compact')) return;
         if (e.target.closest('a, button')) return;
         applyCompact(false);
-        lastScrollY = window.scrollY;
       });
     }
 

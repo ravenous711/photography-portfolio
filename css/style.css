@@ -911,14 +911,6 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
               padding 0.2s ease, top 0.2s ease;
 }
 
-.album-header-toolbar .album-section-nav,
-.album-header-toolbar .album-header-actions {
-  max-height: 200px;
-  opacity: 1;
-  overflow: hidden;
-  transition: max-height 0.2s ease, opacity 0.2s ease;
-}
-
 .album-header-toolbar.is-stuck {
   background: var(--nav-scrolled-bg);
   backdrop-filter: blur(16px);
@@ -1126,20 +1118,30 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 
   /* Scroll compaction: slim bar with back + title only */
   .album-header-toolbar.is-stuck.is-compact {
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
     cursor: pointer;
-  }
-
-  .album-header-toolbar.is-stuck.is-compact .album-section-nav,
-  .album-header-toolbar.is-stuck.is-compact .album-header-actions {
-    max-height: 0;
-    opacity: 0;
-    pointer-events: none;
   }
 
   .album-header-toolbar.is-stuck.is-compact .album-toolbar-main {
     flex: 1;
+    position: relative;
+  }
+
+  .album-header-toolbar.is-stuck .album-section-nav,
+  .album-header-toolbar.is-stuck .album-header-actions {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  .album-header-toolbar.is-stuck.is-compact .album-section-nav,
+  .album-header-toolbar.is-stuck.is-compact .album-header-actions {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .album-header-toolbar.is-stuck.is-compact .album-toolbar-title {
@@ -1149,13 +1151,42 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 }
 
 @media (max-width: 768px) {
+  html:has(#main-nav.nav-compact) {
+    --nav-height: 52px;
+  }
+
   #main-nav.nav-compact {
-    height: 52px;
     padding: 0 1.25rem;
   }
 
   #main-nav.nav-compact .nav-logo {
     font-size: 1.15rem;
+  }
+
+  .nav-logo {
+    transition: font-size 0.2s ease;
+  }
+
+  .album-header-toolbar.is-stuck.is-compact .album-toolbar-main {
+    position: relative;
+  }
+
+  .album-header-toolbar.is-stuck .album-section-nav,
+  .album-header-toolbar.is-stuck .album-header-actions {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  .album-header-toolbar.is-stuck.is-compact .album-section-nav,
+  .album-header-toolbar.is-stuck.is-compact .album-header-actions {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 
