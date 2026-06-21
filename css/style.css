@@ -905,8 +905,18 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   padding-top: 0.75rem;
   padding-bottom: 1.25rem;
   background: transparent;
+  border-bottom: 1px solid transparent;
   transition: background var(--transition), backdrop-filter var(--transition),
-              border-color var(--transition), padding 0.2s ease;
+              border-color var(--transition), border-bottom-color 0.2s ease,
+              padding 0.2s ease, top 0.2s ease;
+}
+
+.album-header-toolbar .album-section-nav,
+.album-header-toolbar .album-header-actions {
+  max-height: 200px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.2s ease, opacity 0.2s ease;
 }
 
 .album-header-toolbar.is-stuck {
@@ -1123,7 +1133,9 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 
   .album-header-toolbar.is-stuck.is-compact .album-section-nav,
   .album-header-toolbar.is-stuck.is-compact .album-header-actions {
-    display: none;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
   }
 
   .album-header-toolbar.is-stuck.is-compact .album-toolbar-main {
@@ -1361,6 +1373,15 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 }
 
 .lightbox-action-btn:hover { background: rgba(255,255,255,0.18); }
+.lightbox-action-btn.is-liked {
+  background: rgba(201, 169, 110, 0.25);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+.lightbox-action-btn.is-liked svg {
+  fill: var(--color-gold);
+  stroke: var(--color-gold);
+}
 .lightbox-action-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;

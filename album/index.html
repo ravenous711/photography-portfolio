@@ -127,6 +127,12 @@
             </svg>
             Select
           </button>
+          <button type="button" id="liked-count-btn" class="btn-ghost liked-count-btn" hidden aria-label="Download selected photos">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <span id="liked-count-label">0</span>
+          </button>
           <button type="button" id="download-btn" class="btn-primary" aria-label="Download all photos">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -172,9 +178,25 @@
     </div>
   </div>
 
+  <!-- ── Liked download confirm ── -->
+  <div id="liked-download-confirm" class="liked-download-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="liked-confirm-message">
+    <div class="liked-download-confirm-inner">
+      <p id="liked-confirm-message" class="font-serif text-xl font-light"></p>
+      <div class="liked-download-confirm-actions">
+        <button type="button" id="liked-confirm-cancel" class="btn-ghost">Cancel</button>
+        <button type="button" id="liked-confirm-download" class="btn-primary">Download</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Lightbox ── -->
   <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
     <div class="lightbox-actions">
+      <button type="button" id="lightbox-like" class="lightbox-action-btn" aria-label="Select photo" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </button>
       <button type="button" id="lightbox-download" class="lightbox-action-btn" aria-label="Download photo">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -344,6 +366,47 @@
     let selectMode   = false;
     const selected   = new Set();
 
+    function getSelectionStorageKey() {
+      return `selected_${album.id}`;
+    }
+
+    function loadSelectedFromStorage() {
+      selected.clear();
+      try {
+        const raw = localStorage.getItem(getSelectionStorageKey());
+        if (!raw) return;
+        JSON.parse(raw).forEach(i => {
+          if (Number.isInteger(i) && i >= 0 && i < allPhotos.length) selected.add(i);
+        });
+      } catch {}
+    }
+
+    function saveSelectedToStorage() {
+      try {
+        localStorage.setItem(
+          getSelectionStorageKey(),
+          JSON.stringify([...selected].sort((a, b) => a - b)),
+        );
+      } catch {}
+    }
+
+    function syncThumbSelectedState(index, isSelected) {
+      const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
+      if (thumb) thumb.classList.toggle('selected', isSelected);
+    }
+
+    function setPhotoSelected(index, isSelected) {
+      if (isSelected) selected.add(index);
+      else selected.delete(index);
+      syncThumbSelectedState(index, isSelected);
+      saveSelectedToStorage();
+      updateSelectionUI();
+    }
+
+    function togglePhotoSelected(index) {
+      setPhotoSelected(index, !selected.has(index));
+    }
+
     function bindTapWithoutScroll(el, handler) {
       if (!el) return;
       let touchStartY = 0;
@@ -372,9 +435,6 @@
     function setSelectMode(enabled) {
       if (selectMode === enabled) return;
       selectMode = enabled;
-      if (!enabled) {
-        selected.clear();
-      }
 
       document.body.classList.toggle('album-select-mode', selectMode);
       document.getElementById('selection-bar').classList.toggle('show', selectMode);
@@ -388,10 +448,7 @@
         document.getElementById('select-btn').blur();
       }
 
-      if (!enabled) {
-        document.querySelectorAll('.photo-thumb').forEach(t => t.classList.remove('selected'));
-      }
-      updateSelectionBar();
+      updateSelectionUI();
     }
 
     function toggleSelectMode() {
@@ -402,36 +459,37 @@
       bindTapWithoutScroll(document.getElementById('select-btn'), () => toggleSelectMode());
       bindTapWithoutScroll(document.getElementById('cancel-select-btn'), () => toggleSelectMode());
       bindTapWithoutScroll(document.getElementById('download-btn'), () => downloadPhotos(allPhotos));
+      bindTapWithoutScroll(document.getElementById('liked-count-btn'), () => showLikedDownloadConfirm());
       document.getElementById('select-all-btn').addEventListener('click', () => toggleSelectAll());
       document.getElementById('download-selected-btn').addEventListener('click', () => downloadSelected());
+      document.getElementById('liked-confirm-cancel').addEventListener('click', hideLikedDownloadConfirm);
+      document.getElementById('liked-confirm-download').addEventListener('click', () => {
+        hideLikedDownloadConfirm();
+        downloadSelected();
+      });
+      document.getElementById('liked-download-confirm').addEventListener('click', (e) => {
+        if (e.target.id === 'liked-download-confirm') hideLikedDownloadConfirm();
+      });
     }
 
     function toggleThumb(index, thumb) {
-      if (selected.has(index)) {
-        selected.delete(index);
-        thumb.classList.remove('selected');
-      } else {
-        selected.add(index);
-        thumb.classList.add('selected');
-      }
-      updateSelectionBar();
+      togglePhotoSelected(index);
     }
 
     function toggleSelectAll() {
       const thumbs = Array.from(document.querySelectorAll('.photo-thumb'));
       if (selected.size === allPhotos.length) {
-        // Deselect all
         selected.clear();
         thumbs.forEach(t => t.classList.remove('selected'));
       } else {
-        // Select all
         allPhotos.forEach((_, i) => selected.add(i));
         thumbs.forEach(t => t.classList.add('selected'));
       }
-      updateSelectionBar();
+      saveSelectedToStorage();
+      updateSelectionUI();
     }
 
-    function updateSelectionBar() {
+    function updateSelectionUI() {
       const count = selected.size;
       const total = allPhotos.length;
       let countText = count === 0 ? 'No photos selected' : `${count} of ${total} selected`;
@@ -441,6 +499,40 @@
       document.getElementById('download-selected-btn').disabled = count === 0;
       document.getElementById('select-all-btn').textContent =
         count === total ? 'Deselect all' : 'Select all';
+
+      const likedBtn = document.getElementById('liked-count-btn');
+      const likedLabel = document.getElementById('liked-count-label');
+      if (likedBtn && likedLabel) {
+        likedBtn.hidden = count === 0;
+        likedLabel.textContent = String(count);
+        likedBtn.setAttribute('aria-label', count === 1 ? 'Download 1 selected photo' : `Download ${count} selected photos`);
+      }
+
+      updateLightboxLikeButton();
+    }
+
+    function updateLightboxLikeButton() {
+      const btn = document.getElementById('lightbox-like');
+      if (!btn || !lightbox.classList.contains('open')) return;
+      const isSelected = selected.has(currentIndex);
+      btn.classList.toggle('is-liked', isSelected);
+      btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+      btn.setAttribute('aria-label', isSelected ? 'Deselect photo' : 'Select photo');
+    }
+
+    function showLikedDownloadConfirm() {
+      const count = selected.size;
+      if (!count) return;
+      const modal = document.getElementById('liked-download-confirm');
+      const message = document.getElementById('liked-confirm-message');
+      message.textContent = count === 1
+        ? 'Download 1 selected photo?'
+        : `Download ${count} selected photos?`;
+      modal.hidden = false;
+    }
+
+    function hideLikedDownloadConfirm() {
+      document.getElementById('liked-download-confirm').hidden = true;
     }
 
     const INDIVIDUAL_THRESHOLD = 5;
@@ -519,9 +611,22 @@
           <polyline points="20 6 9 17 4 12"/>
         </svg>`;
 
+      const likeBadge = document.createElement('div');
+      likeBadge.className = 'photo-thumb-like';
+      likeBadge.setAttribute('aria-hidden', 'true');
+      likeBadge.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>`;
+
       thumb.appendChild(img);
       thumb.appendChild(expandOverlay);
       thumb.appendChild(checkOverlay);
+      thumb.appendChild(likeBadge);
+
+      if (selected.has(index)) {
+        thumb.classList.add('selected');
+      }
 
       const handleActivate = () => {
         if (selectMode) {
@@ -579,6 +684,11 @@
     }
 
     function bindGridLayout(grid) {
+      if (!grid._layoutBound) {
+        grid._layoutBound = true;
+        new ResizeObserver(() => runJustifiedLayout(grid)).observe(grid);
+      }
+
       runJustifiedLayout(grid);
 
       grid.querySelectorAll('img').forEach(img => {
@@ -588,6 +698,8 @@
     }
 
     function showAlbum() {
+      loadSelectedFromStorage();
+
       document.getElementById('album-content').style.display = 'block';
       document.getElementById('album-title').textContent        = albumDisplayTitle(album);
       document.getElementById('album-dateline').textContent     = albumDateline(album);
@@ -652,14 +764,17 @@
           block.appendChild(grid);
           filmSection.appendChild(block);
 
-          bindGridLayout(grid);
           photoOffset += (section.photos || []).length;
         });
       } else {
         filmSection.hidden = true;
       }
 
-      bindGridLayout(digitalGrid);
+      requestAnimationFrame(() => {
+        bindGridLayout(digitalGrid);
+        filmSection.querySelectorAll('.photo-grid').forEach(bindGridLayout);
+        updateSelectionUI();
+      });
 
       window.addEventListener('resize', () => {
         runJustifiedLayout(digitalGrid);
@@ -1388,6 +1503,7 @@
       showLightboxPhoto(url, index);
       preloadLightboxNeighbors(index);
       requestAnimationFrame(syncLightboxCaptionWidth);
+      updateLightboxLikeButton();
     }
 
     function lightboxNav(dir) {
@@ -1419,12 +1535,19 @@
     dlBtn?.addEventListener('touchstart', () => prefetchDownloadBlob(allPhotos[currentIndex]), { passive: true });
     bindTapWithoutScroll(dlBtn, () => downloadLightboxPhoto());
 
+    const likeBtn = document.getElementById('lightbox-like');
+    bindTapWithoutScroll(likeBtn, () => togglePhotoSelected(currentIndex));
+
     // Mobile tap zones
     document.getElementById('lightbox-tap-prev')?.addEventListener('click', () => lightboxNav(-1));
     document.getElementById('lightbox-tap-next')?.addEventListener('click', () => lightboxNav(1));
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('liked-download-confirm').hidden) {
+        hideLikedDownloadConfirm();
+        return;
+      }
       if (!lightbox.classList.contains('open')) return;
       if (e.key === 'Escape')     closeLightbox();
       if (e.key === 'ArrowLeft')  lightboxNav(-1);
@@ -1635,6 +1758,67 @@
       inset: 0;
       background: rgba(201,169,110,0.15);
       pointer-events: none;
+    }
+
+    .photo-thumb-like {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-gold);
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+    }
+
+    .photo-thumb.selected .photo-thumb-like { opacity: 1; }
+    .select-mode .photo-thumb-like { opacity: 0; }
+
+    .liked-count-btn {
+      border-color: rgba(201, 169, 110, 0.45);
+      color: var(--color-gold);
+    }
+
+    .liked-count-btn svg {
+      fill: var(--color-gold);
+      stroke: var(--color-gold);
+    }
+
+    .liked-download-confirm {
+      position: fixed;
+      inset: 0;
+      z-index: 250;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .liked-download-confirm[hidden] {
+      display: none;
+    }
+
+    .liked-download-confirm-inner {
+      width: min(100%, 22rem);
+      padding: 1.75rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      text-align: center;
+    }
+
+    .liked-download-confirm-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
     }
 
     /* ── Select button active state ── */
