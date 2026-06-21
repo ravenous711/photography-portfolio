@@ -883,6 +883,20 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   padding-bottom: 0;
 }
 
+@media (max-width: 768px) {
+  body.album-page {
+    --nav-height: 52px;
+  }
+
+  body.album-page #main-nav {
+    padding: 0 1.25rem;
+  }
+
+  body.album-page .nav-logo {
+    font-size: 1.15rem;
+  }
+}
+
 .album-page-header .album-header-rule {
   margin-left: 0;
   margin-top: 1.25rem;
