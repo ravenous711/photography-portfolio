@@ -919,6 +919,13 @@
       return height;
     }
 
+    function measureLiveStickyStackHeight() {
+      const nav = document.getElementById('main-nav');
+      const toolbar = document.getElementById('album-header-toolbar');
+      if (!nav || !toolbar) return 112;
+      return nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height;
+    }
+
     function getStickyStackHeight() {
       const nav = document.getElementById('main-nav');
       const toolbar = document.getElementById('album-header-toolbar');
@@ -1054,16 +1061,28 @@
         updateAlbumStickyOffset();
 
         let isStuck = toolbar.classList.contains('is-stuck');
+        let stickLockUntil = 0;
         const navHeight = () => document.getElementById('main-nav')?.offsetHeight || 72;
         const observer = new IntersectionObserver(([entry]) => {
+          if (Date.now() < stickLockUntil) return;
           const nextStuck = !entry.isIntersecting;
           if (nextStuck === isStuck) return;
 
+          const stackBefore = measureLiveStickyStackHeight();
           isStuck = nextStuck;
           toolbar.classList.toggle('is-stuck', nextStuck);
-          document.body.classList.toggle('album-toolbar-stuck', nextStuck);
-          getStickyStackHeight();
-          window.dispatchEvent(new Event('scroll'));
+
+          requestAnimationFrame(() => {
+            void toolbar.offsetHeight;
+            const stackAfter = measureLiveStickyStackHeight();
+            const delta = stackBefore - stackAfter;
+            if (Math.abs(delta) > 0.5) {
+              window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+            }
+            stickLockUntil = Date.now() + 200;
+            getStickyStackHeight();
+            window.dispatchEvent(new Event('scroll'));
+          });
         }, {
           rootMargin: `-${navHeight()}px 0px 0px 0px`,
           threshold: 0,

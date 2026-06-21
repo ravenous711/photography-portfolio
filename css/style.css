@@ -1034,32 +1034,40 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 }
 
 @media (max-width: 640px) {
-  body.album-page .album-toolbar-back {
-    display: inline-flex;
-    visibility: hidden;
-  }
-
-  body.album-page .album-toolbar-title {
-    display: block;
-    visibility: hidden;
-  }
-
-  body.album-page.album-toolbar-stuck .album-toolbar-back,
-  body.album-page.album-toolbar-stuck .album-toolbar-title {
-    visibility: visible;
-  }
-
-  /* Album mobile: compact horizontal toolbar from the start (no column→row jump on stick) */
+  /* Big header (unstuck): stacked layout with full labels */
   .album-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .album-toolbar-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .album-header-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  body.album-page .album-section-nav {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  /* Mini header (stuck): single-row compact bar */
+  .album-header-toolbar.is-stuck {
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+    min-height: 2.8125rem;
   }
 
-  .album-toolbar-main {
+  .album-header-toolbar.is-stuck .album-toolbar-main {
     flex: 1;
     min-width: 0;
     flex-direction: row;
@@ -1067,7 +1075,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     gap: 0.5rem;
   }
 
-  .album-toolbar-title-group {
+  .album-header-toolbar.is-stuck .album-toolbar-title-group {
     flex: 1;
     min-width: 0;
     flex-direction: row;
@@ -1075,7 +1083,8 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     gap: 0.5rem;
   }
 
-  .album-toolbar-title {
+  .album-header-toolbar.is-stuck .album-toolbar-title {
+    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1084,14 +1093,14 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     max-width: 7.5rem;
   }
 
-  .album-toolbar-title + .album-section-nav:not([hidden]) {
+  .album-header-toolbar.is-stuck .album-toolbar-title + .album-section-nav:not([hidden]) {
     padding-left: 0.5rem;
     border-left: 1px solid var(--color-border);
     flex: 1;
     min-width: 0;
   }
 
-  .album-section-nav {
+  .album-header-toolbar.is-stuck .album-section-nav {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -1100,25 +1109,25 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     padding-bottom: 1px;
   }
 
-  .album-section-nav::-webkit-scrollbar {
+  .album-header-toolbar.is-stuck .album-section-nav::-webkit-scrollbar {
     display: none;
   }
 
-  .album-section-nav-btn {
+  .album-header-toolbar.is-stuck .album-section-nav-btn {
     flex-shrink: 0;
     padding: 0.35rem 0.5rem;
     font-size: 0.5625rem;
     letter-spacing: 0.1em;
   }
 
-  .album-header-actions {
+  .album-header-toolbar.is-stuck .album-header-actions {
     flex-shrink: 0;
-    justify-content: flex-end;
+    flex-wrap: nowrap;
     gap: 0.35rem;
   }
 
-  .album-header-actions .btn-ghost,
-  .album-header-actions .btn-primary {
+  .album-header-toolbar.is-stuck .album-header-actions .btn-ghost,
+  .album-header-toolbar.is-stuck .album-header-actions .btn-primary {
     padding: 0.35rem;
     min-width: 2rem;
     justify-content: center;
@@ -1127,15 +1136,15 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     gap: 0;
   }
 
-  .album-header-actions .btn-ghost svg,
-  .album-header-actions .btn-primary svg {
+  .album-header-toolbar.is-stuck .album-header-actions .btn-ghost svg,
+  .album-header-toolbar.is-stuck .album-header-actions .btn-primary svg {
     width: 14px;
     height: 14px;
   }
 
-  /* Scroll compaction: slim bar with back + title only */
   .album-header-toolbar.is-stuck.is-compact {
     cursor: pointer;
+    min-height: 2.8125rem;
   }
 
   .album-header-toolbar.is-stuck.is-compact .album-toolbar-main {
@@ -1219,27 +1228,6 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   background: rgba(201, 169, 110, 0.08);
 }
 
-@media (max-width: 640px) {
-  body.album-page .album-section-nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    align-items: center;
-  }
-
-  body.album-page .album-section-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  body.album-page .album-header-toolbar.is-stuck {
-    min-height: 2.8125rem;
-  }
-
-  body.album-page .album-header-toolbar.is-stuck.is-compact {
-    min-height: 2.8125rem;
-  }
-}
 
 .album-section-label {
   scroll-margin-top: var(--album-sticky-offset, 7rem);
