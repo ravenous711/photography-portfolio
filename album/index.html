@@ -424,26 +424,54 @@
     function bindTapWithoutScroll(el, handler) {
       if (!el) return;
       let touchStartY = 0;
+      let touchStartX = 0;
       let touchMoved = false;
+      let lastTouchTap = 0;
 
       el.addEventListener('touchstart', (e) => {
         touchMoved = false;
         touchStartY = e.touches[0]?.clientY ?? 0;
+        touchStartX = e.touches[0]?.clientX ?? 0;
       }, { passive: true });
 
       el.addEventListener('touchmove', (e) => {
         const y = e.touches[0]?.clientY ?? touchStartY;
-        if (Math.abs(y - touchStartY) > 10) touchMoved = true;
+        const x = e.touches[0]?.clientX ?? touchStartX;
+        if (Math.abs(y - touchStartY) > 10 || Math.abs(x - touchStartX) > 10) touchMoved = true;
       }, { passive: true });
 
-      el.addEventListener('click', (e) => {
-        if (touchMoved) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
+      el.addEventListener('touchend', (e) => {
+        if (touchMoved) return;
+        lastTouchTap = Date.now();
         handler(e);
       });
+
+      el.addEventListener('click', (e) => {
+        if (Date.now() - lastTouchTap < 500) return;
+        handler(e);
+      });
+    }
+
+    let scrollLockY = 0;
+
+    function lockPageScroll() {
+      scrollLockY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollLockY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+    }
+
+    function unlockPageScroll() {
+      const y = scrollLockY;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      window.scrollTo(0, y);
+      scrollLockY = 0;
     }
 
     function setSelectMode(enabled) {
@@ -516,8 +544,9 @@
 
       const likedBtn = document.getElementById('liked-count-btn');
       const likedLabel = document.getElementById('liked-count-label');
+      const lightboxOpen = document.getElementById('lightbox')?.classList.contains('open');
       if (likedBtn && likedLabel) {
-        likedBtn.hidden = count === 0;
+        likedBtn.hidden = count === 0 || lightboxOpen;
         likedLabel.textContent = String(count);
         likedBtn.setAttribute('aria-label', count === 1 ? 'Download 1 selected photo' : `Download ${count} selected photos`);
       }
@@ -1084,18 +1113,19 @@
           const nextStuck = !entry.isIntersecting;
           if (nextStuck === isStuck) return;
 
+          const lightboxOpen = document.getElementById('lightbox')?.classList.contains('open');
           const stackBefore = measureLiveStickyStackHeight();
           isStuck = nextStuck;
           toolbar.classList.toggle('is-stuck', nextStuck);
           void toolbar.offsetHeight;
           const stackAfter = measureLiveStickyStackHeight();
           const delta = stackBefore - stackAfter;
-          if (Math.abs(delta) > 0.5) {
+          if (!lightboxOpen && Math.abs(delta) > 0.5) {
             window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
           }
           stickLockUntil = Date.now() + 200;
           getStickyStackHeight();
-          window.dispatchEvent(new Event('scroll'));
+          if (!lightboxOpen) window.dispatchEvent(new Event('scroll'));
         }, {
           rootMargin: `-${navHeight()}px 0px 0px 0px`,
           threshold: 0,
@@ -1411,14 +1441,14 @@
     function openLightbox(index) {
       currentIndex = index;
       lightbox.classList.add('open');
-      document.body.style.overflow = 'hidden';
+      lockPageScroll();
       loadLightboxImage(index);
       prefetchDownloadBlob(allPhotos[index]);
     }
 
     function closeLightbox() {
       lightbox.classList.remove('open');
-      document.body.style.overflow = '';
+      unlockPageScroll();
       lightboxLayers.forEach(layer => {
         layer.classList.remove('active');
         layer.src = '';
@@ -1426,6 +1456,7 @@
       activeLayer = 0;
       lightboxMetaTop.style.width = '';
       lightboxMetaBottom.style.width = '';
+      updateSelectionUI();
     }
 
     // Prefetch blob for the current lightbox photo so share can fire fast.

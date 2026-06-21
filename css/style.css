@@ -1329,13 +1329,16 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   box-sizing: border-box;
   padding: var(--lb-top) 0 var(--lb-bot);
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 #lightbox.open {
   opacity: 1;
+  visibility: visible;
   pointer-events: all;
+  transition: opacity 0.3s ease, visibility 0s;
 }
 
 .lightbox-shell {
