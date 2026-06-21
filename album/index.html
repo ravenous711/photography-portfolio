@@ -1108,7 +1108,6 @@
     }
 
     function setupAlbumHeaderScrollCompact(toolbar) {
-      const nav = document.getElementById('main-nav');
       const COMPACT_MAX_WIDTH = 768;
       const SCROLL_THRESHOLD = 56;
       let lastScrollY = window.scrollY;
@@ -1121,7 +1120,6 @@
         const stackBefore = measureLiveStickyStackHeight();
         compact = nextCompact;
         toolbar.classList.toggle('is-compact', compact);
-        nav?.classList.toggle('nav-compact', compact);
 
         requestAnimationFrame(() => {
           void toolbar.offsetHeight;
