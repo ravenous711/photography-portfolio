@@ -1056,7 +1056,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     overflow: visible;
   }
 
-  /* Mini header (stuck): single-row compact bar */
+  /* Mini header (stuck): breadcrumb + Navigate menu */
   .album-header-toolbar.is-stuck {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -1090,113 +1090,132 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     text-overflow: ellipsis;
     flex-shrink: 1;
     min-width: 0;
-    max-width: 7.5rem;
+    max-width: none;
   }
 
-  .album-header-toolbar.is-stuck .album-toolbar-title + .album-section-nav:not([hidden]) {
-    padding-left: 0.5rem;
-    border-left: 1px solid var(--color-border);
-    flex: 1;
-    min-width: 0;
-  }
-
-  .album-header-toolbar.is-stuck .album-section-nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 0.35rem;
-    padding-bottom: 1px;
-  }
-
-  .album-header-toolbar.is-stuck .album-section-nav::-webkit-scrollbar {
+  .album-header-toolbar.is-stuck .album-section-nav,
+  .album-header-toolbar.is-stuck .album-header-actions {
     display: none;
   }
 
-  .album-header-toolbar.is-stuck .album-section-nav-btn {
+  .album-nav-menu-btn {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
     flex-shrink: 0;
-    padding: 0.35rem 0.5rem;
-    font-size: 0.5625rem;
-    letter-spacing: 0.1em;
+    font-family: var(--font-sans);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    padding: 0.45rem 0.65rem;
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition), background var(--transition);
   }
 
-  .album-header-toolbar.is-stuck .album-header-actions {
-    flex-shrink: 0;
-    flex-wrap: nowrap;
+  .album-nav-menu-btn svg {
+    transition: transform 0.2s ease;
+  }
+
+  .album-nav-menu-btn[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  .album-header-toolbar.is-stuck .album-nav-menu-btn {
+    display: inline-flex;
+  }
+
+  .album-nav-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: calc(var(--nav-height) + 2.8125rem);
+    z-index: 95;
+    background: var(--nav-scrolled-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.75rem 1.25rem 1rem;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .album-nav-menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .album-nav-menu-group + .album-nav-menu-group {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .album-nav-menu-label {
+    font-family: var(--font-sans);
+    font-size: 0.5625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin: 0 0 0.5rem;
+  }
+
+  .album-nav-menu-link {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
+    color: var(--color-text);
+    background: transparent;
+    border: none;
+    padding: 0.55rem 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .album-nav-menu-link:hover {
+    color: var(--color-gold);
+  }
+
+  .album-nav-menu-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
     gap: 0.35rem;
   }
 
-  .album-header-toolbar.is-stuck .album-header-actions .btn-ghost,
-  .album-header-toolbar.is-stuck .album-header-actions .btn-primary {
-    padding: 0.35rem;
-    min-width: 2rem;
-    justify-content: center;
-    font-size: 0;
-    letter-spacing: 0;
-    gap: 0;
-  }
-
-  .album-header-toolbar.is-stuck .album-header-actions .btn-ghost svg,
-  .album-header-toolbar.is-stuck .album-header-actions .btn-primary svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .album-header-toolbar.is-stuck.is-compact {
+  .album-nav-menu-action {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    padding: 0.65rem 0.85rem;
     cursor: pointer;
-    min-height: 2.8125rem;
+    text-align: left;
+    transition: border-color var(--transition), color var(--transition);
   }
 
-  .album-header-toolbar.is-stuck.is-compact .album-toolbar-main {
-    flex: 1;
-    position: relative;
+  .album-nav-menu-action:hover {
+    border-color: var(--color-gold);
+    color: var(--color-gold);
   }
 
-  .album-header-toolbar.is-stuck .album-section-nav,
-  .album-header-toolbar.is-stuck .album-header-actions {
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-  }
-
-  .album-header-toolbar.is-stuck.is-compact .album-section-nav,
-  .album-header-toolbar.is-stuck.is-compact .album-header-actions {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  .album-header-toolbar.is-stuck.is-compact .album-toolbar-title {
-    max-width: none;
-    flex: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .album-header-toolbar.is-stuck.is-compact .album-toolbar-main {
-    position: relative;
-  }
-
-  .album-header-toolbar.is-stuck .album-section-nav,
-  .album-header-toolbar.is-stuck .album-header-actions {
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-  }
-
-  .album-header-toolbar.is-stuck.is-compact .album-section-nav,
-  .album-header-toolbar.is-stuck.is-compact .album-header-actions {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+  .album-nav-menu-action--primary {
+    border-color: rgba(201, 169, 110, 0.45);
+    color: var(--color-gold);
   }
 }
 
