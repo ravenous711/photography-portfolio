@@ -600,8 +600,43 @@
 
     const INDIVIDUAL_THRESHOLD = 5;
 
+    function photoFilename(url, fallbackIndex = 0) {
+      const name = decodeURIComponent((url || '').split('/').pop().split('?')[0] || '');
+      return name || `photo-${fallbackIndex + 1}.jpg`;
+    }
+
+    async function fetchPhotoBlob(url, attempts = 3) {
+      let lastErr = new Error('Fetch failed');
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+          const direct = await fetch(url, { mode: 'cors', cache: 'no-store' });
+          if (direct.ok) return await direct.blob();
+          lastErr = new Error(`HTTP ${direct.status}`);
+        } catch (err) {
+          lastErr = err;
+        }
+
+        try {
+          const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
+          const proxied = await fetch(proxyUrl, { cache: 'no-store' });
+          if (proxied.ok) return await proxied.blob();
+          lastErr = new Error(`HTTP ${proxied.status}`);
+        } catch (err) {
+          lastErr = err;
+        }
+
+        if (attempt < attempts) {
+          await new Promise(r => setTimeout(r, attempt * 1000));
+        }
+      }
+      throw lastErr;
+    }
+
     function downloadSelected() {
-      const urls = Array.from(selected).sort((a, b) => a - b).map(i => allPhotos[i]);
+      const urls = Array.from(selected)
+        .sort((a, b) => a - b)
+        .map(i => allPhotos[i])
+        .filter(Boolean);
       if (urls.length <= INDIVIDUAL_THRESHOLD) {
         downloadIndividually(urls);
       } else {
@@ -619,16 +654,13 @@
       progress.classList.add('show');
       label.textContent = `Downloading ${photos.length} photo${photos.length !== 1 ? 's' : ''}…`;
 
+      let failed = 0;
       for (let i = 0; i < photos.length; i++) {
         try {
-          // Route through /api/download so no CORS required
-          const proxyUrl = `/api/download?url=${encodeURIComponent(photos[i])}`;
-          const response = await fetch(proxyUrl);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const blob = await response.blob();
-          const filename = photos[i].split('/').pop().split('?')[0];
-          saveAs(blob, filename);
+          const blob = await fetchPhotoBlob(photos[i]);
+          saveAs(blob, photoFilename(photos[i], i));
         } catch (err) {
+          failed++;
           console.warn(`Could not download photo ${i + 1}:`, err.message);
         }
         bar.style.width = Math.round(((i + 1) / photos.length) * 100) + '%';
@@ -636,7 +668,9 @@
         if (i < photos.length - 1) await new Promise(r => setTimeout(r, 400));
       }
 
-      label.textContent = 'Done!';
+      label.textContent = failed
+        ? `Downloaded ${photos.length - failed} of ${photos.length} (${failed} failed)`
+        : 'Done!';
       setTimeout(() => {
         progress.classList.remove('show');
         bar.style.width = '0%';
@@ -1719,12 +1753,7 @@
     // ════════════════════════════════════════════════════════
     // ALBUM DOWNLOAD (ZIP)
     // ════════════════════════════════════════════════════════
-    // ⚠️  R2 CORS: Your R2 bucket must allow cross-origin GET
-    //     requests from this domain. Add a CORS rule in the
-    //     Cloudflare R2 dashboard under Settings → CORS.
-    //     Example rule:
-    //       AllowedOrigins: ["https://yourdomain.com"]
-    //       AllowedMethods: ["GET"]
+    // ZIP downloads try R2 directly first (full-res), then /api/download as fallback.
 
     async function downloadPhotos(photos) {
       const dlBtn    = document.getElementById('download-btn');
@@ -1739,41 +1768,70 @@
       progress.classList.add('show');
       label.textContent = `Downloading ${photos.length} photo${photos.length !== 1 ? 's' : ''}…`;
 
-      const zip    = new JSZip();
-      const folder = zip.folder(album.title);
-      const total  = photos.length;
-      let completed = 0;
+      const zip       = new JSZip();
+      const folder    = zip.folder(album.title);
+      const total     = photos.length;
+      let completed   = 0;
+      let successCount = 0;
+      let failedCount  = 0;
+      const usedNames  = new Set();
+
+      const uniqueZipName = (name) => {
+        if (!usedNames.has(name)) {
+          usedNames.add(name);
+          return name;
+        }
+        const dot = name.lastIndexOf('.');
+        const base = dot >= 0 ? name.slice(0, dot) : name;
+        const ext = dot >= 0 ? name.slice(dot) : '';
+        let n = 2;
+        while (usedNames.has(`${base}-${n}${ext}`)) n++;
+        const unique = `${base}-${n}${ext}`;
+        usedNames.add(unique);
+        return unique;
+      };
 
       const fetchPhoto = async (url, index) => {
-        try {
-          const response = await fetch(url, { mode: 'cors' });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const blob = await response.blob();
-          const ext = url.split('.').pop().split('?')[0] || 'jpg';
-          folder.file(String(index + 1).padStart(3, '0') + '.' + ext, blob);
-        } catch (err) {
-          console.warn(`Could not fetch photo ${index + 1}:`, err.message);
+        if (!url) {
+          failedCount++;
+        } else {
+          try {
+            const blob = await fetchPhotoBlob(url);
+            const name = uniqueZipName(photoFilename(url, index));
+            folder.file(name, blob);
+            successCount++;
+          } catch (err) {
+            failedCount++;
+            console.warn(`Could not fetch ${photoFilename(url, index)}:`, err.message);
+          }
         }
         completed++;
         bar.style.width   = Math.round((completed / total) * 100) + '%';
         label.textContent = `${completed} of ${total} photos…`;
       };
 
-      const BATCH = 4;
+      const BATCH = 2;
       for (let i = 0; i < total; i += BATCH) {
         await Promise.all(photos.slice(i, i + BATCH).map((url, j) => fetchPhoto(url, i + j)));
+        if (i + BATCH < total) await new Promise(r => setTimeout(r, 400));
       }
 
-      label.textContent = 'Creating ZIP file…';
-      try {
-        const blob     = await zip.generateAsync({ type: 'blob' });
-        const suffix   = isAll ? 'photos' : 'selection';
-        const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${suffix}.zip`;
-        saveAs(blob, filename);
-        label.textContent = 'Download started!';
-      } catch (err) {
-        label.textContent = 'Error creating ZIP. Try again.';
-        console.error(err);
+      if (successCount === 0) {
+        label.textContent = 'Could not download any photos. Try again.';
+      } else {
+        label.textContent = 'Creating ZIP file…';
+        try {
+          const blob     = await zip.generateAsync({ type: 'blob' });
+          const suffix   = isAll ? 'photos' : 'selection';
+          const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${suffix}.zip`;
+          saveAs(blob, filename);
+          label.textContent = failedCount
+            ? `ZIP ready — ${successCount} of ${total} photos (${failedCount} failed)`
+            : 'Download started!';
+        } catch (err) {
+          label.textContent = 'Error creating ZIP. Try again.';
+          console.error(err);
+        }
       }
 
       setTimeout(() => {
