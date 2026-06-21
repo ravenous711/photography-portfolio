@@ -133,6 +133,7 @@
             </svg>
             <span id="liked-count-label">0</span>
           </button>
+          <button type="button" id="clear-selection-btn" class="btn-ghost clear-selection-btn" hidden aria-label="Clear selected photos">Clear</button>
           <button type="button" id="download-btn" class="btn-primary" aria-label="Download all photos">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -153,6 +154,7 @@
           <div id="album-nav-menu-sections" class="album-nav-menu-group" hidden></div>
           <div class="album-nav-menu-actions">
             <button type="button" id="album-nav-select-btn" class="album-nav-menu-action">Select photos</button>
+            <button type="button" id="album-nav-clear-btn" class="album-nav-menu-action" hidden>Clear selection</button>
             <button type="button" id="album-nav-liked-btn" class="album-nav-menu-action" hidden>Download selected</button>
             <button type="button" id="album-nav-download-btn" class="album-nav-menu-action album-nav-menu-action--primary">Download all</button>
           </div>
@@ -180,6 +182,7 @@
     <span id="selection-count">0 selected</span>
     <div class="flex items-center gap-3">
       <button type="button" id="select-all-btn">Select all</button>
+      <button type="button" id="clear-selected-btn" hidden>Clear all</button>
       <button type="button" id="download-selected-btn" class="btn-primary" disabled>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -502,7 +505,9 @@
       bindTapWithoutScroll(document.getElementById('cancel-select-btn'), () => toggleSelectMode());
       bindTapWithoutScroll(document.getElementById('download-btn'), () => downloadPhotos(allPhotos));
       bindTapWithoutScroll(document.getElementById('liked-count-btn'), () => showLikedDownloadConfirm());
+      bindTapWithoutScroll(document.getElementById('clear-selection-btn'), () => clearSelection());
       document.getElementById('select-all-btn').addEventListener('click', () => toggleSelectAll());
+      document.getElementById('clear-selected-btn').addEventListener('click', () => clearSelection());
       document.getElementById('download-selected-btn').addEventListener('click', () => downloadSelected());
       document.getElementById('liked-confirm-cancel').addEventListener('click', hideLikedDownloadConfirm);
       document.getElementById('liked-confirm-download').addEventListener('click', () => {
@@ -521,12 +526,19 @@
     function toggleSelectAll() {
       const thumbs = Array.from(document.querySelectorAll('.photo-thumb'));
       if (selected.size === allPhotos.length) {
-        selected.clear();
-        thumbs.forEach(t => t.classList.remove('selected'));
+        clearSelection();
       } else {
         allPhotos.forEach((_, i) => selected.add(i));
         thumbs.forEach(t => t.classList.add('selected'));
+        saveSelectedToStorage();
+        updateSelectionUI();
       }
+    }
+
+    function clearSelection() {
+      if (selected.size === 0) return;
+      selected.clear();
+      document.querySelectorAll('.photo-thumb.selected').forEach(t => t.classList.remove('selected'));
       saveSelectedToStorage();
       updateSelectionUI();
     }
@@ -542,9 +554,15 @@
       document.getElementById('select-all-btn').textContent =
         count === total ? 'Deselect all' : 'Select all';
 
+      const lightboxOpen = document.getElementById('lightbox')?.classList.contains('open');
+      const clearToolbarBtn = document.getElementById('clear-selection-btn');
+      const clearBarBtn = document.getElementById('clear-selected-btn');
+      const showClear = count > 0 && !lightboxOpen;
+      if (clearToolbarBtn) clearToolbarBtn.hidden = !showClear;
+      if (clearBarBtn) clearBarBtn.hidden = count === 0;
+
       const likedBtn = document.getElementById('liked-count-btn');
       const likedLabel = document.getElementById('liked-count-label');
-      const lightboxOpen = document.getElementById('lightbox')?.classList.contains('open');
       if (likedBtn && likedLabel) {
         likedBtn.hidden = count === 0 || lightboxOpen;
         likedLabel.textContent = String(count);
@@ -1162,6 +1180,7 @@
       const menu = document.getElementById('album-nav-menu');
       const sectionsEl = document.getElementById('album-nav-menu-sections');
       const selectBtn = document.getElementById('album-nav-select-btn');
+      const clearBtn = document.getElementById('album-nav-clear-btn');
       const likedBtn = document.getElementById('album-nav-liked-btn');
       const downloadBtn = document.getElementById('album-nav-download-btn');
 
@@ -1190,6 +1209,7 @@
         const count = selected.size;
         likedBtn.hidden = count === 0;
         likedBtn.textContent = count === 1 ? 'Download 1 selected' : `Download ${count} selected`;
+        if (clearBtn) clearBtn.hidden = count === 0;
       };
 
       function openAlbumNavMenu() {
@@ -1228,6 +1248,11 @@
       likedBtn?.addEventListener('click', () => {
         closeAlbumNavMenu();
         showLikedDownloadConfirm();
+      });
+
+      clearBtn?.addEventListener('click', () => {
+        closeAlbumNavMenu();
+        clearSelection();
       });
 
       downloadBtn?.addEventListener('click', () => {
@@ -1807,7 +1832,7 @@
       letter-spacing: 0.08em;
       color: var(--color-muted);
     }
-    #select-all-btn, #cancel-select-btn {
+    #select-all-btn, #cancel-select-btn, #clear-selected-btn {
       font-size: 0.72rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -1818,11 +1843,19 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    #select-all-btn:hover, #cancel-select-btn:hover {
+    #select-all-btn:hover, #cancel-select-btn:hover, #clear-selected-btn:hover {
       color: var(--color-text);
       border-color: rgba(255,255,255,0.2);
     }
     #cancel-select-btn { border-color: transparent; }
+
+    .clear-selection-btn {
+      color: var(--color-muted);
+    }
+
+    .clear-selection-btn:hover {
+      color: var(--color-text);
+    }
 
     /* ── Selection heart on thumbnails ── */
     .select-mode .photo-thumb { cursor: pointer; }
