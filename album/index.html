@@ -966,6 +966,21 @@
       return { position: overall, detail: '', overall: '' };
     }
 
+    function scrollToPhotoInGrid(index, { behavior = 'auto' } = {}) {
+      if (index < 0 || index >= allPhotos.length) return false;
+
+      const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
+      if (!thumb) return false;
+
+      const rect = thumb.getBoundingClientRect();
+      const center = rect.top + window.scrollY + rect.height / 2;
+      window.scrollTo({
+        top: Math.max(0, center - window.innerHeight / 2),
+        behavior,
+      });
+      return true;
+    }
+
     function getLinkedPhotoIndex() {
       const name = new URLSearchParams(window.location.search).get('photo');
       if (!name) return -1;
@@ -1494,6 +1509,7 @@
     }
 
     function closeLightbox() {
+      const index = currentIndex;
       lightbox.classList.remove('open');
       unlockPageScroll();
       syncLightboxPhotoUrl(-1);
@@ -1506,6 +1522,7 @@
       lightboxMetaTop.style.width = '';
       lightboxMetaBottom.style.width = '';
       updateSelectionUI();
+      requestAnimationFrame(() => scrollToPhotoInGrid(index));
     }
 
     // Prefetch blob for the current lightbox photo so share can fire fast.
