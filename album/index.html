@@ -966,39 +966,22 @@
       return { position: overall, detail: '', overall: '' };
     }
 
-    function scrollToLinkedPhoto() {
+    function getLinkedPhotoIndex() {
       const name = new URLSearchParams(window.location.search).get('photo');
-      if (!name) return;
+      if (!name) return -1;
 
-      const index = allPhotos.findIndex(url => {
-        const filename = url.split('/').pop().split('?')[0];
-        return filename === name;
+      const target = decodeURIComponent(name).toLowerCase();
+      return allPhotos.findIndex(url => {
+        const filename = decodeURIComponent(url.split('/').pop().split('?')[0]).toLowerCase();
+        return filename === target;
       });
+    }
 
-      const sectionId = index >= 0 ? getSectionIdForPhotoIndex(index) : 'digital-section';
-      const thumb     = index >= 0 ? document.querySelector(`.photo-thumb[data-photo-index="${index}"]`) : null;
+    function scrollToLinkedPhoto() {
+      const index = getLinkedPhotoIndex();
+      if (index < 0) return;
 
-      // Step 1: scroll to section immediately so user lands in the right area
-      requestAnimationFrame(() => scrollToAlbumSection(sectionId));
-
-      if (!thumb) return;
-
-      // Step 2: once the target image loads (layout will have rerun with real dimensions),
-      // refine the scroll to center that exact photo
-      const img = thumb.querySelector('img');
-
-      const centerOnThumb = () => {
-        const rect   = thumb.getBoundingClientRect();
-        const center = rect.top + window.scrollY + rect.height / 2;
-        window.scrollTo({ top: Math.max(0, center - window.innerHeight / 2), behavior: 'smooth' });
-      };
-
-      if (img && img.complete && img.naturalWidth) {
-        // Already loaded — give layout one frame to settle first
-        setTimeout(centerOnThumb, 120);
-      } else if (img) {
-        img.addEventListener('load', () => setTimeout(centerOnThumb, 120), { once: true });
-      }
+      openLightbox(index);
     }
 
     function measureStuckToolbarHeight(toolbar) {
