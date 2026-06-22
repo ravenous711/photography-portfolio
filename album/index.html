@@ -981,7 +981,8 @@
       const index = getLinkedPhotoIndex();
       if (index < 0) return;
 
-      openLightbox(index);
+      // showAlbum() runs before lightbox DOM refs exist — defer until init finishes
+      setTimeout(() => openLightbox(index), 0);
     }
 
     function measureStuckToolbarHeight(toolbar) {
