@@ -1426,8 +1426,7 @@
         }
         if (data.FNumber     != null) parts.push(`f/${data.FNumber}`);
         if (data.ISO         != null) parts.push(`ISO ${data.ISO}`);
-        if (data.LensModel   != null) parts.push(String(data.LensModel).trim());
-        else if (data.FocalLength != null) parts.push(`${Math.round(data.FocalLength)}mm`);
+        if (data.FocalLength != null) parts.push(`${Math.round(data.FocalLength)}mm`);
 
         const str = parts.length ? parts.join(' · ') : null;
         exifCache.set(url, str);
