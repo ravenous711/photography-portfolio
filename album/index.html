@@ -1539,7 +1539,7 @@
 
     function prefetchDownloadBlob(url) {
       if (!url || downloadBlobCache.has(url)) return;
-      const p = fetch(`/api/download?url=${encodeURIComponent(url)}`)
+      const p = fetch(url, { mode: 'cors', cache: 'no-store' })
         .then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
         .then(blob => ({ blob, filename: url.split('/').pop().split('?')[0] }))
         .catch(() => null);
