@@ -293,6 +293,7 @@
     let album;
     let allPhotos = [];
     let currentIndex = 0;
+    let albumPageTitle = '';
     let selectMode   = false;
     const selected   = new Set();
     let refreshAlbumNavMenu = null;
@@ -313,8 +314,9 @@
       } else {
         allPhotos = getAlbumAllPhotos(album);
 
-        // Update page title
-        document.title = `${albumDisplayTitle(album)} — ${SITE_CONFIG.photographerName}`;
+        // Update page title (restored when lightbox closes)
+        albumPageTitle = `${albumDisplayTitle(album)} — ${SITE_CONFIG.photographerName}`;
+        document.title = albumPageTitle;
         document.getElementById('footer-copyright').textContent =
           `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
 
@@ -1424,7 +1426,8 @@
         }
         if (data.FNumber     != null) parts.push(`f/${data.FNumber}`);
         if (data.ISO         != null) parts.push(`ISO ${data.ISO}`);
-        if (data.FocalLength != null) parts.push(`${Math.round(data.FocalLength)}mm`);
+        if (data.LensModel   != null) parts.push(String(data.LensModel).trim());
+        else if (data.FocalLength != null) parts.push(`${Math.round(data.FocalLength)}mm`);
 
         const str = parts.length ? parts.join(' · ') : null;
         exifCache.set(url, str);
@@ -1489,6 +1492,16 @@
       prefetchLightboxIndex(index + 2);
     }
 
+    function syncLightboxPhotoUrl(index) {
+      const url = new URL(window.location.href);
+      if (index >= 0 && index < allPhotos.length) {
+        url.searchParams.set('photo', photoFilename(allPhotos[index], index));
+      } else {
+        url.searchParams.delete('photo');
+      }
+      history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+
     function openLightbox(index) {
       currentIndex = index;
       lightbox.classList.add('open');
@@ -1500,6 +1513,8 @@
     function closeLightbox() {
       lightbox.classList.remove('open');
       unlockPageScroll();
+      syncLightboxPhotoUrl(-1);
+      if (albumPageTitle) document.title = albumPageTitle;
       lightboxLayers.forEach(layer => {
         layer.classList.remove('active');
         layer.src = '';
@@ -1653,6 +1668,7 @@
       const url = allPhotos[index];
 
       updateLightboxMeta(index);
+      syncLightboxPhotoUrl(index);
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
       document.getElementById('lightbox-next').style.visibility = index === allPhotos.length - 1 ? 'hidden' : 'visible';
 

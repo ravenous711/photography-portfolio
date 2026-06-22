@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
 
     const buffer = Buffer.from(await response.arrayBuffer());
     const data = await exifr.parse(buffer, {
-      pick: ['FNumber', 'ExposureTime', 'ISO', 'FocalLength'],
+      pick: ['FNumber', 'ExposureTime', 'ISO', 'FocalLength', 'LensModel'],
     });
 
     if (!data) return res.status(204).end();
