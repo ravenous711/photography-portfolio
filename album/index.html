@@ -458,6 +458,7 @@
     }
 
     let scrollLockY = 0;
+    let restoringFromLightbox = false;
 
     function lockPageScroll() {
       scrollLockY = window.scrollY;
@@ -468,15 +469,15 @@
       document.body.style.width = '100%';
     }
 
-    function unlockPageScroll() {
-      const y = scrollLockY;
+    function unlockPageScroll(scrollTop) {
+      const y = scrollTop != null ? scrollTop : scrollLockY;
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
       document.body.style.width = '';
-      window.scrollTo(0, y);
       scrollLockY = 0;
+      window.scrollTo({ top: y, behavior: 'instant' });
     }
 
     function setSelectMode(enabled) {
@@ -966,18 +967,23 @@
       return { position: overall, detail: '', overall: '' };
     }
 
-    function scrollToPhotoInGrid(index, { behavior = 'auto' } = {}) {
-      if (index < 0 || index >= allPhotos.length) return false;
+    function getPhotoScrollTarget(index) {
+      if (index < 0 || index >= allPhotos.length) return null;
 
       const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
-      if (!thumb) return false;
+      if (!thumb) return null;
 
       const rect = thumb.getBoundingClientRect();
-      const center = rect.top + window.scrollY + rect.height / 2;
-      window.scrollTo({
-        top: Math.max(0, center - window.innerHeight / 2),
-        behavior,
-      });
+      const scrollBase = document.body.style.position === 'fixed' ? scrollLockY : window.scrollY;
+      const center = rect.top + scrollBase + rect.height / 2;
+      return Math.max(0, center - window.innerHeight / 2);
+    }
+
+    function scrollToPhotoInGrid(index, { behavior = 'auto' } = {}) {
+      const targetY = getPhotoScrollTarget(index);
+      if (targetY == null) return false;
+
+      window.scrollTo({ top: targetY, behavior });
       return true;
     }
 
@@ -1165,7 +1171,7 @@
           void toolbar.offsetHeight;
           const stackAfter = measureLiveStickyStackHeight();
           const delta = stackBefore - stackAfter;
-          if (!lightboxOpen && Math.abs(delta) > 0.5) {
+          if (!lightboxOpen && !restoringFromLightbox && Math.abs(delta) > 0.5) {
             window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
           }
           stickLockUntil = Date.now() + 200;
@@ -1510,8 +1516,11 @@
 
     function closeLightbox() {
       const index = currentIndex;
+      const targetY = getPhotoScrollTarget(index);
+
       lightbox.classList.remove('open');
-      unlockPageScroll();
+      restoringFromLightbox = true;
+      unlockPageScroll(targetY != null ? targetY : scrollLockY);
       syncLightboxPhotoUrl(-1);
       if (albumPageTitle) document.title = albumPageTitle;
       lightboxLayers.forEach(layer => {
@@ -1522,7 +1531,7 @@
       lightboxMetaTop.style.width = '';
       lightboxMetaBottom.style.width = '';
       updateSelectionUI();
-      requestAnimationFrame(() => scrollToPhotoInGrid(index));
+      window.setTimeout(() => { restoringFromLightbox = false; }, 300);
     }
 
     // Prefetch blob for the current lightbox photo so share can fire fast.
