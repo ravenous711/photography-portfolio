@@ -250,6 +250,22 @@ function getNextAlbum(album) {
   return sequence[index + 1];
 }
 
+// Sibling photo albums within the same parent group, in the group's subAlbums
+// order. Generic (driven by parentId/subAlbums), so any trip gets it for free.
+// Excludes hidden albums, nested groups, film-roll sub-albums, and empties.
+// The current album is included so callers can mark it active. Siblings share
+// the parent group, so its password gate (already enforced on this page) covers
+// them too — no locked-group exposure.
+function getSiblingAlbums(album) {
+  if (!album?.parentId) return [];
+  const parent = ALBUMS.find(a => a.id === album.parentId);
+  if (!parent?.subAlbums?.length) return [];
+  return parent.subAlbums
+    .map(id => ALBUMS.find(a => a.id === id))
+    .filter(a => a && !a.hidden && a.type !== 'group'
+      && a.albumKind !== 'film-roll' && getAlbumPhotoCount(a) > 0);
+}
+
 function getGroupFilmRollAlbums(groupId) {
   return getFilmRollAlbums(groupId);
 }

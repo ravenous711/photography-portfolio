@@ -97,6 +97,7 @@
           </div>
           <p class="album-page-dateline" id="album-dateline"></p>
         </div>
+        <nav id="album-sibling-nav" class="album-sibling-nav" aria-label="Other albums in this trip" hidden></nav>
       </div>
 
       <div class="gold-rule album-header-rule"></div>
@@ -148,6 +149,7 @@
         </button>
         <div id="album-nav-menu" class="album-nav-menu" hidden>
           <div id="album-nav-menu-sections" class="album-nav-menu-group" hidden></div>
+          <div id="album-nav-menu-siblings" class="album-nav-menu-group" hidden></div>
           <div class="album-nav-menu-actions">
             <button type="button" id="album-nav-select-btn" class="album-nav-menu-action">Select photos</button>
             <button type="button" id="album-nav-clear-btn" class="album-nav-menu-action" hidden>Clear selection</button>
@@ -955,8 +957,32 @@
 
       setupStickyAlbumHeader();
       setupSelectModeControls();
+      renderSiblingNav();
       renderNextAlbumNav();
       scrollToLinkedPhoto();
+    }
+
+    // Visible "More in <trip>" switcher in the page header so a visitor can hop
+    // straight to a sibling city without backing out to the group page (UX-8).
+    function renderSiblingNav() {
+      const nav = document.getElementById('album-sibling-nav');
+      if (!nav) return;
+      const siblings = getSiblingAlbums(album);
+      const parent = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
+      if (siblings.length < 2 || !parent) {
+        nav.hidden = true;
+        nav.innerHTML = '';
+        return;
+      }
+      nav.hidden = false;
+      nav.innerHTML = `
+        <span class="album-sibling-nav-label">More in ${parent.title}</span>
+        <span class="album-sibling-nav-links">
+          ${siblings.map(s => s.id === album.id
+            ? `<span class="album-sibling-link is-active" aria-current="page">${s.title}</span>`
+            : `<a class="album-sibling-link" href="${albumPageUrl(s)}">${s.title}</a>`
+          ).join('')}
+        </span>`;
     }
 
     function getSectionIdForPhotoIndex(index) {
@@ -1305,6 +1331,24 @@
       } else {
         sectionsEl.hidden = true;
         sectionsEl.innerHTML = '';
+      }
+
+      // Sibling-city switcher inside the menu so it's reachable when the header
+      // is stuck on mobile (the visible header row scrolls away) — UX-8.
+      const siblingsEl = document.getElementById('album-nav-menu-siblings');
+      const siblings = getSiblingAlbums(album);
+      const parentGroup = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
+      if (siblingsEl && siblings.length > 1 && parentGroup) {
+        siblingsEl.hidden = false;
+        siblingsEl.innerHTML = `
+          <p class="album-nav-menu-label">More in ${parentGroup.title}</p>
+          ${siblings.map(s => s.id === album.id
+            ? `<span class="album-nav-menu-link is-active" aria-current="page">${s.title}</span>`
+            : `<a class="album-nav-menu-link" href="${albumPageUrl(s)}">${s.title}</a>`
+          ).join('')}`;
+      } else if (siblingsEl) {
+        siblingsEl.hidden = true;
+        siblingsEl.innerHTML = '';
       }
 
       const syncMenuVisibility = () => {
