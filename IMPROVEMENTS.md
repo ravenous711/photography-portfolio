@@ -154,7 +154,7 @@ A pick-a-ticket list from the June 2026 site audit. Each ticket is self-containe
 ## Tier 6 — Album & Group Header UX
 
 ### UX-8 — Sibling city-album switcher in the album header
-- **Effort:** M · **Risk:** Med · **Status:** TODO
+- **Effort:** M · **Risk:** Med · **Status:** DONE (June 2026)
 - **Why:** From a city album (e.g. Rome) the only way to reach a sibling city (Venice, Florence, Assisi, Pisa) is the breadcrumb back-link to the parent Italy group, then a second click into the next album. There's a bottom-of-page "Next" nav (`getNextAlbum`), but it's one-directional and below the fold. A visitor browsing the trip can't hop laterally between cities from the top of the page.
 - **Fix:** Surface the parent group's sibling albums in the album header so a user can jump straight to another city without backing out. Likely approaches (pick during implementation):
   - A "cities" dropdown next to the breadcrumb (parent title) that lists sibling sub-albums, current one marked active — mirrors the existing `Navigate` menu pattern and stays compact on mobile.
