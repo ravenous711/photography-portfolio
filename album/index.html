@@ -1299,9 +1299,10 @@
 
       const syncMenuVisibility = () => {
         const mobile = window.innerWidth <= MOBILE_MAX;
-        const stuck = toolbar.classList.contains('is-stuck');
-        menuBtn.hidden = !(mobile && stuck);
-        if (!mobile || !stuck) closeAlbumNavMenu();
+        // On mobile the Navigate menu replaces the inline pills/actions in
+        // both states (top + stuck), so the header stays one compact row.
+        menuBtn.hidden = !mobile;
+        if (!mobile) closeAlbumNavMenu();
       };
 
       const updateLikedMenuLabel = () => {

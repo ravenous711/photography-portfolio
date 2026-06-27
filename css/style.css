@@ -1034,30 +1034,11 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 }
 
 @media (max-width: 640px) {
-  /* Big header (unstuck): stacked layout with full labels */
+  /* Mobile: one compact row in BOTH states (top + stuck). The inline section
+     pills and action buttons are replaced by the Navigate menu, so the header
+     height doesn't change when it sticks — which keeps the sticky transition
+     free of the scroll jump that a tall→short collapse used to cause. */
   .album-header-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .album-toolbar-main {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .album-header-actions {
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  body.album-page .album-section-nav {
-    flex-wrap: wrap;
-    overflow: visible;
-  }
-
-  /* Mini header (stuck): breadcrumb + Navigate menu */
-  .album-header-toolbar.is-stuck {
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
@@ -1067,7 +1048,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     min-height: 2.8125rem;
   }
 
-  .album-header-toolbar.is-stuck .album-toolbar-main {
+  .album-toolbar-main {
     flex: 1;
     min-width: 0;
     flex-direction: row;
@@ -1075,12 +1056,24 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     gap: 0.5rem;
   }
 
-  .album-header-toolbar.is-stuck .album-toolbar-title-group {
+  .album-toolbar-title-group {
     flex: 1;
     min-width: 0;
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  /* Inline pills + action buttons live in the Navigate menu on mobile.
+     Scoped to the toolbar so it beats the later base `.album-section-nav`. */
+  .album-header-toolbar .album-section-nav,
+  .album-header-toolbar .album-header-actions {
+    display: none;
+  }
+
+  /* Title shows only when stuck — the big page header carries identity at top */
+  .album-toolbar-title {
+    display: none;
   }
 
   .album-header-toolbar.is-stuck .album-toolbar-title {
@@ -1093,13 +1086,8 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     max-width: none;
   }
 
-  .album-header-toolbar.is-stuck .album-section-nav,
-  .album-header-toolbar.is-stuck .album-header-actions {
-    display: none;
-  }
-
   .album-nav-menu-btn {
-    display: none;
+    display: inline-flex;
     align-items: center;
     gap: 0.35rem;
     flex-shrink: 0;
@@ -1123,15 +1111,14 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
     transform: rotate(180deg);
   }
 
-  .album-header-toolbar.is-stuck .album-nav-menu-btn {
-    display: inline-flex;
-  }
-
+  /* Dropdown anchored under the toolbar so it lines up whether the toolbar is
+     stuck at the top or sitting below the page header (position: sticky on the
+     toolbar is the containing block for this absolute element). */
   .album-nav-menu {
-    position: fixed;
+    position: absolute;
     left: 0;
     right: 0;
-    top: calc(var(--nav-height) + 2.8125rem);
+    top: 100%;
     z-index: 95;
     background: var(--nav-scrolled-bg);
     backdrop-filter: blur(16px);
@@ -1227,24 +1214,27 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   margin-top: 0;
 }
 
+/* Section nav reads as lightweight text tabs (navigation), visually distinct
+   from the bordered action buttons (Select / Download all) on the right. */
 .album-section-nav-btn {
   font-family: var(--font-sans);
   font-size: 0.6875rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-muted);
   background: transparent;
-  border: 1px solid var(--color-border);
-  padding: 0.55rem 0.9rem;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 0.4rem 0.25rem;
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition), background var(--transition);
+  transition: color var(--transition), border-color var(--transition);
 }
 
 .album-section-nav-btn:hover,
 .album-section-nav-btn.is-active {
   color: var(--color-text);
-  border-color: var(--color-gold);
-  background: rgba(201, 169, 110, 0.08);
+  border-bottom-color: var(--color-gold);
+  background: transparent;
 }
 
 
