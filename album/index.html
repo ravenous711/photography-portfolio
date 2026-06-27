@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Album — Raveen Fernando</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/style.css" />
-  <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
 
   <!-- FileSaver for single-photo / desktop saves (multi-photo ZIPs stream from the Worker) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <!-- Flickr justified-layout: all images scaled to equal row height -->
   <script src="/js/justified-layout.js"></script>
-  <!-- exifr: reads EXIF from JPEG via range request for digital photo metadata -->
-  <script src="https://unpkg.com/exifr@7/dist/full.umd.js"></script>
 </head>
 <body class="overflow-x-hidden album-page">
 
@@ -621,25 +619,37 @@
       return url.startsWith(`${R2_BASE_URL}/`) ? url.slice(R2_BASE_URL.length + 1) : url;
     }
 
-    // Submit keys to the ZIP Worker via a hidden form so the browser performs a
-    // native streaming download (no JS memory, works on iOS Safari/Chrome).
-    let zipDownloadFrame = null;
+    // Trigger a native streaming download from the ZIP Worker.
+    // We use a plain anchor (GET) so the browser downloads via the
+    // Content-Disposition header and never renders the payload in-page.
+    // (A hidden iframe makes iOS Chrome try to *render* the ZIP, which OOMs
+    //  and crashes the tab — the exact bug we are fixing.)
     function submitWorkerZip(keys, filename) {
-      if (!zipDownloadFrame) {
-        zipDownloadFrame = document.createElement('iframe');
-        zipDownloadFrame.name = 'zip-download-frame';
-        zipDownloadFrame.style.display = 'none';
-        zipDownloadFrame.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(zipDownloadFrame);
+      const params = new URLSearchParams();
+      params.set('filename', filename);
+      params.set('keys', keys.join(','));
+      const getUrl = `${ZIP_WORKER_URL}/?${params.toString()}`;
+
+      // Browser URL caps are generous, but for very large albums fall back to
+      // a top-level form POST (still a native download, just no length limit).
+      if (getUrl.length <= 12000) {
+        const a = document.createElement('a');
+        a.href = getUrl;
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 1000);
+        return;
       }
 
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = ZIP_WORKER_URL;
-      form.target = 'zip-download-frame';
+      form.target = '_blank';
+      form.rel = 'noopener';
       form.acceptCharset = 'utf-8';
       form.style.display = 'none';
-
       const addField = (name, value) => {
         const input = document.createElement('input');
         input.type = 'hidden';
@@ -649,7 +659,6 @@
       };
       addField('keys', keys.join('\n'));
       addField('filename', filename);
-
       document.body.appendChild(form);
       form.submit();
       setTimeout(() => form.remove(), 1000);
