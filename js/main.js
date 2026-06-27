@@ -306,8 +306,24 @@ function renderFilmRollLinks(parentAlbum) {
   rolls.forEach(roll => {
     const link = document.createElement('a');
     link.href = albumPageUrl(roll);
-    link.className = 'group-film-roll-link';
-    link.textContent = filmRollLinkLabel(roll);
+    link.className = 'group-film-roll-card';
+
+    // Split the long "Camera - Roll N - Stock" label into a two-line card:
+    // camera as a small muted eyebrow, roll + stock as the title.
+    const name = (roll.filmStock && roll.rollNumber)
+      ? `Roll ${roll.rollNumber} · ${roll.filmStock}`
+      : (roll.shortTitle || roll.title || '');
+    if (roll.camera) {
+      const camera = document.createElement('span');
+      camera.className = 'group-film-roll-camera';
+      camera.textContent = roll.camera;
+      link.appendChild(camera);
+    }
+    const title = document.createElement('span');
+    title.className = 'group-film-roll-name';
+    title.textContent = name || filmRollLinkLabel(roll);
+    link.appendChild(title);
+
     list.appendChild(link);
   });
 
