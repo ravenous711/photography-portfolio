@@ -34,6 +34,9 @@ A pick-a-ticket list from the June 2026 site audit. Each ticket is self-containe
 - [OPS-2 — Parameterize hardcoded Italy path](#ops-2--parameterize-hardcoded-italy-path)
 - [OPS-3 — Commit-ignore Python caches](#ops-3--commit-ignore-python-caches)
 
+**Tier 6 — Album & Group Header UX**
+- [UX-8 — Sibling city-album switcher in the album header](#ux-8--sibling-city-album-switcher-in-the-album-header)
+
 **Other**
 - [NOTE-1 — Album passwords are client-side only](#note-1--album-passwords-are-client-side-only)
 - [Suggested order](#suggested-order)
@@ -148,6 +151,24 @@ A pick-a-ticket list from the June 2026 site audit. Each ticket is self-containe
 
 ---
 
+## Tier 6 — Album & Group Header UX
+
+### UX-8 — Sibling city-album switcher in the album header
+- **Effort:** M · **Risk:** Med · **Status:** TODO
+- **Why:** From a city album (e.g. Rome) the only way to reach a sibling city (Venice, Florence, Assisi, Pisa) is the breadcrumb back-link to the parent Italy group, then a second click into the next album. There's a bottom-of-page "Next" nav (`getNextAlbum`), but it's one-directional and below the fold. A visitor browsing the trip can't hop laterally between cities from the top of the page.
+- **Fix:** Surface the parent group's sibling albums in the album header so a user can jump straight to another city without backing out. Likely approaches (pick during implementation):
+  - A "cities" dropdown next to the breadcrumb (parent title) that lists sibling sub-albums, current one marked active — mirrors the existing `Navigate` menu pattern and stays compact on mobile.
+  - Or prev/next city chevrons flanking the title in the toolbar.
+- **Scope notes:**
+  - Siblings = `ALBUMS.filter(a => a.parentId === album.parentId && a.type !== 'group' && !a.hidden)` in the group's `subAlbums` order; exclude film-roll sub-albums (`albumKind === 'film-roll'`) or list them separately, TBD.
+  - Reuse `getItalyNavSequence()` / `getNextAlbum()` ordering and `albumPageUrl()` for hrefs; respect parent-group password gating (don't expose locked groups' albums).
+  - Keep it generic (driven by `parentId`/`subAlbums`), not Italy-specific, so future trips get it for free.
+  - Must stay within the one-row compact mobile header (UX-2) — fold into the `Navigate` menu on mobile rather than adding a second row.
+- **Files:** `album/index.html` (header toolbar markup + a new sibling-switcher render + wire into `Navigate` menu), `js/main.js` (a `getSiblingAlbums(album)` helper), `css/style.css`
+- **Done when:** From a city album, a user can navigate directly to any sibling city from the header (active city indicated); works on desktop + mobile; locked groups aren't exposed; no console errors.
+
+---
+
 ## Won't-fix-now / Known limitations
 
 ### NOTE-1 — Album passwords are client-side only
@@ -161,5 +182,6 @@ A pick-a-ticket list from the June 2026 site audit. Each ticket is self-containe
 2. Tier 3 extraction (MNT-1 → MNT-2 → MNT-3 → MNT-4) when next touching album code.
 3. Tier 5 housekeeping anytime.
 4. Remaining styling: STY-2 → STY-3.
+5. Tier 6 header UX: UX-8 (sibling city switcher) when next touching the album header.
 
-_(Tier 6 — Album & Group Header UX (UX-1…UX-7) — done June 2026, removed.)_
+_(Tier 6 — earlier header-UX tickets UX-1…UX-7 — done June 2026, removed.)_

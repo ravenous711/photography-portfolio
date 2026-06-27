@@ -111,6 +111,12 @@ function getAlbumFilmSections(album) {
   return [];
 }
 
+// Drop the trailing film speed/ISO for compact nav chips:
+// "Kodak Ultramax 400" -> "Kodak Ultramax", "Ilford FP4 Plus 125" -> "Ilford FP4 Plus".
+function condenseFilmStock(label) {
+  return (label || '').replace(/\s+\d+\s*$/, '').trim() || label;
+}
+
 function getAlbumSectionNavItems(album) {
   if (!album || album.type === 'group') return [];
 
@@ -127,12 +133,15 @@ function getAlbumSectionNavItems(album) {
 
   filmSections.forEach((section, index) => {
     // Inside a city album, label film sections by their film stock (section.label,
-    // e.g. "Kodak Portra 160") so the jump-nav is self-explanatory and matches the
-    // section heading. Trip-wide roll numbers (navLabel, "Film Roll 3") only make
-    // sense on the group film index, not within a single city.
+    // e.g. "Kodak Portra 160") so the jump-nav is self-explanatory. Trip-wide roll
+    // numbers (navLabel, "Film Roll 3") only make sense on the group film index,
+    // not within a single city. The trailing ISO is dropped to keep the chips
+    // compact ("Kodak Ultramax 400" -> "Kodak Ultramax").
     items.push({
       id: `album-section-film-${index}`,
-      label: section.label || section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film'),
+      label: section.label
+        ? condenseFilmStock(section.label)
+        : (section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film')),
     });
   });
 
@@ -248,6 +257,22 @@ function getNextAlbum(album) {
   const index = sequence.findIndex(a => a.id === album.id);
   if (index === -1 || index >= sequence.length - 1) return null;
   return sequence[index + 1];
+}
+
+// Sibling photo albums within the same parent group, in the group's subAlbums
+// order. Generic (driven by parentId/subAlbums), so any trip gets it for free.
+// Excludes hidden albums, nested groups, film-roll sub-albums, and empties.
+// The current album is included so callers can mark it active. Siblings share
+// the parent group, so its password gate (already enforced on this page) covers
+// them too — no locked-group exposure.
+function getSiblingAlbums(album) {
+  if (!album?.parentId) return [];
+  const parent = ALBUMS.find(a => a.id === album.parentId);
+  if (!parent?.subAlbums?.length) return [];
+  return parent.subAlbums
+    .map(id => ALBUMS.find(a => a.id === id))
+    .filter(a => a && !a.hidden && a.type !== 'group'
+      && a.albumKind !== 'film-roll' && getAlbumPhotoCount(a) > 0);
 }
 
 function getGroupFilmRollAlbums(groupId) {
