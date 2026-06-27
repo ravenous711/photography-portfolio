@@ -1,4 +1,4 @@
-import { makeZip } from 'client-zip';
+import { makeZip, predictLength } from 'client-zip';
 
 const R2_PUBLIC_BASE = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/';
 const MAX_FILES = 1000;
@@ -121,23 +121,60 @@ export default {
       return unique;
     };
 
+    // Pre-pass: resolve each object's size (via cheap HEAD) so we can send an
+    // exact Content-Length. Without it the response is chunked/unknown-length,
+    // and iOS Safari's download manager stalls at "0 KB". Run in bounded
+    // batches to stay polite with concurrent R2 ops.
+    const CONCURRENCY = 50;
+    const metas = [];
+    for (let i = 0; i < keys.length; i += CONCURRENCY) {
+      const batch = keys.slice(i, i + CONCURRENCY);
+      const heads = await Promise.all(
+        batch.map(async (key) => {
+          const head = await env.BUCKET.head(key);
+          return head ? { key, size: head.size, lastModified: head.uploaded } : null;
+        })
+      );
+      for (const m of heads) if (m) metas.push(m);
+    }
+
+    if (!metas.length) {
+      return new Response('No matching photos found', { status: 404, headers: cors });
+    }
+
+    // Final entry list with deduped names; used for both length prediction and streaming.
+    const files = metas.map((m) => ({
+      key: m.key,
+      name: uniqueName(m.key),
+      size: m.size,
+      lastModified: m.lastModified,
+    }));
+
+    // Exact byte length of the archive client-zip will emit for this metadata.
+    const totalLength = predictLength(files.map((f) => ({ name: f.name, size: f.size })));
+
     // Lazily pull each object from R2 so memory stays flat while the ZIP streams.
     async function* entries() {
-      for (const key of keys) {
-        const object = await env.BUCKET.get(key);
+      for (const f of files) {
+        const object = await env.BUCKET.get(f.key);
         if (!object || !object.body) continue;
         yield {
-          name: uniqueName(key),
+          name: f.name,
           input: object.body,
-          size: object.size,
-          lastModified: object.uploaded,
+          size: f.size,
+          lastModified: f.lastModified,
         };
       }
     }
 
-    const zipStream = makeZip(entries());
+    // Pipe the ZIP through a FixedLengthStream so the runtime emits a real
+    // Content-Length instead of chunked encoding. iOS Safari needs a known
+    // size or its download manager stalls at "0 KB". predictLength is verified
+    // to match makeZip's output exactly, so the byte count is safe to enforce.
+    const { readable, writable } = new FixedLengthStream(Number(totalLength));
+    makeZip(entries()).pipeTo(writable).catch(() => {});
 
-    return new Response(zipStream, {
+    return new Response(readable, {
       headers: {
         ...cors,
         'Content-Type': 'application/zip',
