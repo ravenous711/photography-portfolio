@@ -619,22 +619,34 @@
       return url.startsWith(`${R2_BASE_URL}/`) ? url.slice(R2_BASE_URL.length + 1) : url;
     }
 
-    // Submit keys to the ZIP Worker via a hidden form so the browser performs a
-    // native streaming download (no JS memory, works on iOS Safari/Chrome).
-    let zipDownloadFrame = null;
+    // Trigger a native streaming download from the ZIP Worker. A plain anchor
+    // (GET) lets the browser download via the Content-Disposition header and
+    // never renders the payload in-page — the reliable path on iOS Safari/Chrome.
+    // (A hidden iframe makes iOS try to *render* the ZIP, which fails.)
+    // For very large key lists that would blow the URL cap, fall back to a
+    // top-level form POST into a new tab (still a native download).
     function submitWorkerZip(keys, filename) {
-      if (!zipDownloadFrame) {
-        zipDownloadFrame = document.createElement('iframe');
-        zipDownloadFrame.name = 'zip-download-frame';
-        zipDownloadFrame.style.display = 'none';
-        zipDownloadFrame.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(zipDownloadFrame);
+      const params = new URLSearchParams();
+      params.set('filename', filename);
+      params.set('keys', keys.join(','));
+      const getUrl = `${ZIP_WORKER_URL}/?${params.toString()}`;
+
+      if (getUrl.length <= 12000) {
+        const a = document.createElement('a');
+        a.href = getUrl;
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 1000);
+        return;
       }
 
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = ZIP_WORKER_URL;
-      form.target = 'zip-download-frame';
+      form.target = '_blank';
+      form.rel = 'noopener';
       form.acceptCharset = 'utf-8';
       form.style.display = 'none';
 
