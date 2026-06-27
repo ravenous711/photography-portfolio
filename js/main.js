@@ -111,6 +111,12 @@ function getAlbumFilmSections(album) {
   return [];
 }
 
+// Drop the trailing film speed/ISO for compact nav chips:
+// "Kodak Ultramax 400" -> "Kodak Ultramax", "Ilford FP4 Plus 125" -> "Ilford FP4 Plus".
+function condenseFilmStock(label) {
+  return (label || '').replace(/\s+\d+\s*$/, '').trim() || label;
+}
+
 function getAlbumSectionNavItems(album) {
   if (!album || album.type === 'group') return [];
 
@@ -127,12 +133,15 @@ function getAlbumSectionNavItems(album) {
 
   filmSections.forEach((section, index) => {
     // Inside a city album, label film sections by their film stock (section.label,
-    // e.g. "Kodak Portra 160") so the jump-nav is self-explanatory and matches the
-    // section heading. Trip-wide roll numbers (navLabel, "Film Roll 3") only make
-    // sense on the group film index, not within a single city.
+    // e.g. "Kodak Portra 160") so the jump-nav is self-explanatory. Trip-wide roll
+    // numbers (navLabel, "Film Roll 3") only make sense on the group film index,
+    // not within a single city. The trailing ISO is dropped to keep the chips
+    // compact ("Kodak Ultramax 400" -> "Kodak Ultramax").
     items.push({
       id: `album-section-film-${index}`,
-      label: section.label || section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film'),
+      label: section.label
+        ? condenseFilmStock(section.label)
+        : (section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film')),
     });
   });
 

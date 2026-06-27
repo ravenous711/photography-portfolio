@@ -958,14 +958,14 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 .album-sibling-link {
   font-family: var(--font-sans);
   font-size: 0.66rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-text);
   text-decoration: none;
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.3rem 0.7rem;
+  border-radius: 0;
+  padding: 0.34rem 0.8rem;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
@@ -1017,16 +1017,16 @@ a.album-sibling-link:hover {
    small stuck header, so the non-stuck toolbar matches it. This also makes the
    sticky transition a near-zero height change (no scroll jump). */
 .album-header-toolbar .album-section-nav-btn {
-  padding: 0.32rem 0.7rem;
+  padding: 0.34rem 0.8rem;
   font-size: 0.625rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
 }
 
 .album-header-toolbar .album-header-actions .btn-ghost,
 .album-header-toolbar .album-header-actions .btn-primary {
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.8rem;
   font-size: 0.625rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   gap: 0.35rem;
 }
 
@@ -1296,19 +1296,20 @@ a.album-sibling-link:hover {
   margin-top: 0;
 }
 
-/* Section nav = outlined chips (navigation), the active section filled gold so
-   you can see where you are. Rounded corners keep them distinct from the square
-   Select / Download all action buttons on the right. */
+/* Section nav = squared outlined chips (navigation), the active section filled
+   gold so you can see where you are; wide letter-spacing gives them an editorial
+   gallery-label feel. They sit on the left, distinct from the Select / Download
+   all action buttons grouped on the right. */
 .album-section-nav-btn {
   font-family: var(--font-sans);
   font-size: 0.625rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-text);
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.32rem 0.7rem;
+  border-radius: 0;
+  padding: 0.34rem 0.8rem;
   cursor: pointer;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
