@@ -902,7 +902,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 }
 
 .album-page-header {
-  padding-top: calc(var(--nav-height) + 1rem);
+  padding-top: calc(var(--nav-height) + 0.5rem);
   padding-bottom: 0;
 }
 
@@ -922,7 +922,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
 
 .album-page-header .album-header-rule {
   margin-left: 0;
-  margin-top: 1.25rem;
+  margin-top: 0.85rem;
 }
 
 .album-page-header #back-link {
@@ -935,7 +935,7 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.45rem 1rem;
-  margin-top: 1.4rem;
+  margin-top: 0.75rem;
 }
 
 .album-sibling-nav-label {
@@ -992,8 +992,8 @@ a.album-sibling-link:hover {
   top: var(--nav-height);
   z-index: 90;
   margin-top: 0;
-  padding-top: 0.75rem;
-  padding-bottom: 1.25rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.85rem;
   background: transparent;
   border-bottom: 1px solid transparent;
   transition: background var(--transition), backdrop-filter var(--transition),
