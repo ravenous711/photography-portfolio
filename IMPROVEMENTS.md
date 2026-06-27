@@ -9,62 +9,38 @@ A pick-a-ticket list from the June 2026 site audit. Each ticket is self-containe
 
 ---
 
-## Tier 1 — Quick Wins (safe deletions & fixes)
+## Contents
 
-### QW-1 — Delete dead `_redirects` file
-- **Effort:** S · **Risk:** Low · **Status:** DONE
-- **Why:** Vercel only reads `vercel.json`. `_redirects` is Cloudflare Pages/Netlify format and is fully ignored in production. It duplicates every rule in `vercel.json` → two sources of truth that will silently drift.
-- **Files:** `_redirects` (delete)
-- **Done when:** File removed; confirm `vercel.json` still covers all redirects/rewrites.
+**Tier 2 — Styling**
+- [STY-2 — Purge dead CSS in `style.css`](#sty-2--purge-dead-css-in-stylecss)
+- [STY-3 — Consolidate inline CSS into stylesheets](#sty-3--consolidate-inline-css-into-stylesheets)
 
-### QW-2 — Delete orphaned image-proxy worker
-- **Effort:** S · **Risk:** Low · **Status:** DONE (kept the active `zip-download` worker — it's the live ZIP backend)
-- **Why:** Nothing references it (`workers.dev`, `/cdn-cgi/image`, `?key=&w=` → zero hits). Replaced by R2 `grid/` previews via `gridUrl()`.
-- **Files:** `workers/image-proxy/` (delete whole dir)
-- **Done when:** Directory removed; site still loads grid thumbnails.
+**Tier 3 — Maintainability**
+- [MNT-1 — Extract shared password gate](#mnt-1--extract-shared-password-gate)
+- [MNT-2 — Drop curate's re-implemented utilities](#mnt-2--drop-curates-re-implemented-utilities)
+- [MNT-3 — Extract shared lightbox core](#mnt-3--extract-shared-lightbox-core)
+- [MNT-4 — Split the 2,192-line `album/index.html`](#mnt-4--split-the-2192-line-albumindexhtml)
+- [MNT-5 — Tame the 1,447-line hand-edited `config.js`](#mnt-5--tame-the-1447-line-hand-edited-configjs)
 
-### QW-3 — Delete vestigial login page
-- **Effort:** S · **Risk:** Low · **Status:** DONE
-- **Why:** `login/index.html` immediately runs `window.location.replace(Routes.home)`. The "Preview Access" form is unreachable dead markup.
-- **Files:** `login/index.html` (delete), `js/main.js` (remove `SiteAuth` no-op), `js/routes.js` (remove unused `login()` helper), `vercel.json` (remove `/login.html` redirect)
-- **Done when:** Page + helpers gone; no references to `/login` or `Routes.login` remain.
+**Tier 4 — Correctness / Robustness**
+- [BUG-1 — Curate "album not found" doesn't stop execution](#bug-1--curate-album-not-found-doesnt-stop-execution)
+- [BUG-2 — Group page unguarded `subAlbums` access](#bug-2--group-page-unguarded-subalbums-access)
+- [BUG-3 — `athena-manifest.py --upload-lists` only writes last batch](#bug-3--athena-manifestpy---upload-lists-only-writes-last-batch)
+- [A11Y-1 — Lightbox focus management & ARIA](#a11y-1--lightbox-focus-management--aria)
+- [A11Y-2 — Improve image alt text in lightboxes/curate grid](#a11y-2--improve-image-alt-text-in-lightboxescurate-grid)
 
-### QW-4 — Fix duplicated `featuredPhotos` in config
-- **Effort:** S · **Risk:** Low · **Status:** DONE
-- **Why:** `featuredPhotos` is defined inside `SITE_CONFIG` (~lines 22–40) then **overwritten** at ~lines 55–66. The first list is dead and misleading.
-- **Files:** `js/config.js`
-- **Done when:** Only the live (second) list remains; homepage "some favorites" unchanged.
+**Tier 5 — Scripts & Docs Housekeeping**
+- [OPS-1 — Label or archive stale scripts](#ops-1--label-or-archive-stale-scripts)
+- [OPS-2 — Parameterize hardcoded Italy path](#ops-2--parameterize-hardcoded-italy-path)
+- [OPS-3 — Commit-ignore Python caches](#ops-3--commit-ignore-python-caches)
 
-### QW-5 — Add `<meta charset="UTF-8">` to main pages
-- **Effort:** S · **Risk:** Low · **Status:** DONE
-- **Why:** `index.html`, `gallery/`, `album/`, `group/` lack it. Without it browsers guess encoding — risky with `·`, `—`, `©` used in datelines.
-- **Files:** `index.html`, `gallery/index.html`, `album/index.html`, `group/index.html` (add as first `<head>` line)
-- **Done when:** All four have `<meta charset="UTF-8" />` before viewport.
-
-### QW-6 — Remove unused exifr CDN script on album page
-- **Effort:** S · **Risk:** Low · **Status:** DONE
-- **Why:** `album/index.html` loads exifr (~lines 18–19) but never calls it — EXIF comes from `/api/exif/`. It's a render-blocking download for nothing.
-- **Files:** `album/index.html`
-- **Done when:** Script tag removed; lightbox EXIF still displays (via API).
-
-### QW-7 — Remove unused Tailwind `gold` color config
-- **Effort:** S · **Risk:** Low · **Status:** DONE
-- **Why:** The `extend.colors.gold` Tailwind config is repeated on 6 pages but `text-gold`/`bg-gold` are never used.
-- **Files:** `index.html`, `gallery/index.html`, `album/index.html`, `group/index.html`, `about/index.html`, `admin/index.html`
-- **Done when:** Config blocks removed (or whole Tailwind config removed if it ends up empty). Skip if doing STY-1.
+**Other**
+- [NOTE-1 — Album passwords are client-side only](#note-1--album-passwords-are-client-side-only)
+- [Suggested order](#suggested-order)
 
 ---
 
 ## Tier 2 — Styling (biggest performance lever)
-
-### STY-1 — Stop shipping Tailwind via dev CDN
-- **Effort:** M–L · **Risk:** Med · **Status:** DONE (precompiled `css/base.css` = Preflight + used utilities, linked after `style.css`; CDN removed from all 6 pages; curate untouched. Verified pixel-identical via before/after headless-Chrome computed-style + screenshot diff — 0 pixel differences.)
-- **Why:** `cdn.tailwindcss.com` loads on 7 pages. It's a runtime JIT compiler Tailwind explicitly says is **not for production** (large JS + flash-of-unstyled-content every visit). The real design system is `css/style.css` + inline styles; `curate/` pages already render fine without Tailwind.
-- **Pick an approach:**
-  - **A (recommended): Drop Tailwind entirely.** Replace the handful of utility classes (spacing/typography/flex) with equivalents in `style.css`. No build step.
-  - **B: Add a real build step.** Install Tailwind, emit one minified static CSS at build, drop the CDN `<script>`.
-- **Files:** all 7 HTML pages, `css/style.css`, maybe `package.json`
-- **Done when:** No `cdn.tailwindcss.com` script in production; pages look identical; no FOUC.
 
 ### STY-2 — Purge dead CSS in `style.css`
 - **Effort:** S–M · **Risk:** Low · **Status:** TODO
@@ -181,8 +157,9 @@ A pick-a-ticket list from the June 2026 site audit. Each ticket is self-containe
 ---
 
 ## Suggested order
-1. Tier 1 (QW-1…QW-7) — one safe pass.
-2. Decide STY-1 (biggest perf win).
-3. Tier 4 bugs (BUG-1…BUG-3, A11Y-*).
-4. Tier 3 extraction (MNT-1 → MNT-2 → MNT-3 → MNT-4) when next touching album code.
-5. Tier 5 housekeeping anytime.
+1. Tier 4 bugs (BUG-1…BUG-3, A11Y-*).
+2. Tier 3 extraction (MNT-1 → MNT-2 → MNT-3 → MNT-4) when next touching album code.
+3. Tier 5 housekeeping anytime.
+4. Remaining styling: STY-2 → STY-3.
+
+_(Tier 6 — Album & Group Header UX (UX-1…UX-7) — done June 2026, removed.)_
