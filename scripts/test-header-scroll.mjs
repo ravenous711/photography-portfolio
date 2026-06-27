@@ -14,7 +14,6 @@ function sample(page) {
       thumbTop: firstThumb ? firstThumb.getBoundingClientRect().top : null,
       toolbarHeight: toolbar?.getBoundingClientRect().height ?? null,
       toolbarStuck: toolbar?.classList.contains('is-stuck') ?? false,
-      toolbarCompact: toolbar?.classList.contains('is-compact') ?? false,
       sentinelTop: sentinel?.getBoundingClientRect().top ?? null,
     };
   });

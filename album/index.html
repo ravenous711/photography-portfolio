@@ -1092,16 +1092,13 @@
       if (!nav || !toolbar) return 112;
 
       const wasStuck = toolbar.classList.contains('is-stuck');
-      const wasCompact = toolbar.classList.contains('is-compact');
       // Suppress CSS transition so getBoundingClientRect returns the final stuck
       // height immediately, not an in-progress intermediate value.
       toolbar.style.transition = 'none';
       toolbar.classList.add('is-stuck');
-      if (!wasStuck) toolbar.classList.remove('is-compact');
       void toolbar.offsetHeight; // force reflow to settled state
       const height = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
       toolbar.classList.toggle('is-stuck', wasStuck);
-      toolbar.classList.toggle('is-compact', wasCompact);
       toolbar.style.transition = '';
 
       document.documentElement.style.setProperty('--album-sticky-offset', `${height}px`);
@@ -1138,14 +1135,11 @@
       if (!nav || !toolbar) return 112;
 
       const wasStuck = toolbar.classList.contains('is-stuck');
-      const wasCompact = toolbar.classList.contains('is-compact');
       toolbar.style.transition = 'none';
       toolbar.classList.add('is-stuck');
-      if (!wasStuck) toolbar.classList.remove('is-compact');
       void toolbar.offsetHeight;
       const offset = nav.getBoundingClientRect().height + toolbar.getBoundingClientRect().height + 16;
       toolbar.classList.toggle('is-stuck', wasStuck);
-      toolbar.classList.toggle('is-compact', wasCompact);
       toolbar.style.transition = '';
 
       document.documentElement.style.setProperty('--album-sticky-offset', `${offset}px`);
