@@ -126,9 +126,13 @@ function getAlbumSectionNavItems(album) {
   }
 
   filmSections.forEach((section, index) => {
+    // Inside a city album, label film sections by their film stock (section.label,
+    // e.g. "Kodak Portra 160") so the jump-nav is self-explanatory and matches the
+    // section heading. Trip-wide roll numbers (navLabel, "Film Roll 3") only make
+    // sense on the group film index, not within a single city.
     items.push({
       id: `album-section-film-${index}`,
-      label: section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : (section.label || 'Film')),
+      label: section.label || section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film'),
     });
   });
 

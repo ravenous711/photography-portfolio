@@ -894,7 +894,13 @@
         digitalLabelEl.textContent = '';
         digitalLabelEl.hidden = true;
       } else if (album.digitalLabel) {
-        digitalLabelEl.textContent = album.digitalLabel;
+        // When the "Digital" jump-nav tab exists (digital + film both present),
+        // prefix the heading with "Digital" so the clicked tab and the section
+        // it lands on use the same word (otherwise "Digital" -> "Fujifilm X-T5").
+        const hasSectionNav = getAlbumSectionNavItems(album).length >= 2;
+        digitalLabelEl.textContent = hasSectionNav
+          ? `Digital · ${album.digitalLabel}`
+          : album.digitalLabel;
         digitalLabelEl.hidden = false;
       } else {
         digitalLabelEl.textContent = '';
@@ -1013,15 +1019,19 @@
         const section = filmSections[i];
         const count = (section.photos || []).length;
         if (index < offset + count) {
-          const navLabel = section.navLabel
-            || (filmSections.length > 1 ? `Film Roll ${i + 1}` : (section.label || 'Film'));
+          // Position chip mirrors the section nav tab (film stock). The detail
+          // line carries the camera; the stock already shows in the position so
+          // we don't repeat it here.
+          const stockLabel = section.label
+            || section.navLabel
+            || (filmSections.length > 1 ? `Film Roll ${i + 1}` : 'Film');
           const rollMeta = getFilmSectionRollMeta(section);
-          const detailParts = [];
-          if (rollMeta.camera) detailParts.push(rollMeta.camera);
-          if (rollMeta.filmStock) detailParts.push(rollMeta.filmStock);
+          const detail = (rollMeta.filmStock && rollMeta.filmStock !== stockLabel)
+            ? [rollMeta.camera, rollMeta.filmStock].filter(Boolean).join(' · ')
+            : (rollMeta.camera || '');
           return {
-            position: `${navLabel} · ${index - offset + 1}/${count}`,
-            detail: detailParts.join(' · '),
+            position: `${stockLabel} · ${index - offset + 1}/${count}`,
+            detail,
             overall,
           };
         }
