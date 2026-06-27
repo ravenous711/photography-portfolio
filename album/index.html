@@ -1402,6 +1402,7 @@
       document.getElementById('lightbox-img-b'),
     ];
     let activeLayer = 0;
+    let lightboxNavGeneration = 0;
     const lightboxPositionPart = document.getElementById('lightbox-position-part');
     const lightboxDetailPart   = document.getElementById('lightbox-detail-part');
     const lightboxCameraPart   = document.getElementById('lightbox-camera-part');
@@ -1461,27 +1462,32 @@
       if (!ImagePreload.isSlowConnection()) ImagePreload.load(url).catch(() => {});
     }
 
-    async function showLightboxPhoto(fullResUrl, index) {
+    async function showLightboxPhoto(fullResUrl, index, generation) {
       const grid = gridUrl(fullResUrl);
       const nextLayer = 1 - activeLayer;
       const nextImg = lightboxLayers[nextLayer];
       const currentImg = lightboxLayers[activeLayer];
-      const isCurrent = () => lightbox.classList.contains('open') && currentIndex === index;
+      const isCurrent = () =>
+        lightbox.classList.contains('open') &&
+        currentIndex === index &&
+        generation === lightboxNavGeneration;
       const thumbImg = document.querySelector(`.photo-thumb[data-photo-index="${index}"] img`);
 
-      // Swap layers immediately — never block navigation on network/decode.
+      let instantSrc = grid;
       if (ImagePreload.isLoaded(fullResUrl)) {
-        ImagePreload.applyInstant(nextImg, fullResUrl);
+        instantSrc = fullResUrl;
       } else if (thumbImg?.complete && thumbImg.naturalWidth) {
-        ImagePreload.applyInstant(nextImg, thumbImg.src);
-      } else if (ImagePreload.isLoaded(grid)) {
-        ImagePreload.applyInstant(nextImg, grid);
-      } else {
-        ImagePreload.applyInstant(nextImg, grid);
+        instantSrc = thumbImg.src;
       }
+
+      // Keep the current frame visible until the incoming layer is ready to paint.
+      // Without this, the hidden layer briefly shows its previous photo (N-1) when advancing.
+      await ImagePreload.prepareLayer(nextImg, instantSrc);
+      if (!isCurrent()) return;
 
       nextImg.classList.add('active');
       currentImg.classList.remove('active');
+      currentImg.src = '';
       activeLayer = nextLayer;
       requestAnimationFrame(syncLightboxCaptionWidth);
 
@@ -1508,13 +1514,16 @@
 
     function openLightbox(index) {
       currentIndex = index;
+      document.activeElement?.blur();
+      lightboxNavGeneration += 1;
       lightbox.classList.add('open');
       lockPageScroll();
-      loadLightboxImage(index);
+      loadLightboxImage(index, lightboxNavGeneration);
       prefetchDownloadBlob(allPhotos[index]);
     }
 
     function closeLightbox() {
+      lightboxNavGeneration += 1;
       const index = currentIndex;
       const targetY = getPhotoScrollTarget(index);
 
@@ -1673,7 +1682,7 @@
       }
     }
 
-    function loadLightboxImage(index) {
+    function loadLightboxImage(index, generation = lightboxNavGeneration) {
       const url = allPhotos[index];
 
       updateLightboxMeta(index);
@@ -1681,7 +1690,7 @@
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
       document.getElementById('lightbox-next').style.visibility = index === allPhotos.length - 1 ? 'hidden' : 'visible';
 
-      showLightboxPhoto(url, index);
+      showLightboxPhoto(url, index, generation);
       preloadLightboxNeighbors(index);
       requestAnimationFrame(syncLightboxCaptionWidth);
       updateLightboxLikeButton();
@@ -1694,7 +1703,8 @@
         if (dir > 0) prefetchLightboxIndex(newIndex + 1);
         else prefetchLightboxIndex(newIndex - 1);
         currentIndex = newIndex;
-        loadLightboxImage(currentIndex);
+        lightboxNavGeneration += 1;
+        loadLightboxImage(currentIndex, lightboxNavGeneration);
         prefetchDownloadBlob(allPhotos[currentIndex]);
       }
     }
@@ -1723,17 +1733,24 @@
     document.getElementById('lightbox-tap-prev')?.addEventListener('click', () => lightboxNav(-1));
     document.getElementById('lightbox-tap-next')?.addEventListener('click', () => lightboxNav(1));
 
-    // Keyboard navigation
+    // Keyboard navigation — capture phase + preventDefault so focused thumbs/buttons
+    // behind the overlay can't scroll the page or steal the arrow key.
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !document.getElementById('liked-download-confirm').hidden) {
         hideLikedDownloadConfirm();
         return;
       }
       if (!lightbox.classList.contains('open')) return;
-      if (e.key === 'Escape')     closeLightbox();
-      if (e.key === 'ArrowLeft')  lightboxNav(-1);
-      if (e.key === 'ArrowRight') lightboxNav(1);
-    });
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeLightbox();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        lightboxNav(e.key === 'ArrowRight' ? 1 : -1);
+      }
+    }, true);
 
     // Click backdrop to close
     lightbox.addEventListener('click', (e) => {

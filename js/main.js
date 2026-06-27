@@ -380,6 +380,20 @@ const ImagePreload = {
     this.load(src).catch(() => {});
   },
 
+  // Load into imgEl and wait until it can paint — avoids flashing stale double-buffer frames.
+  async prepareLayer(imgEl, src) {
+    if (!src) return;
+    await this.load(src);
+    if (imgEl.src !== src) imgEl.src = src;
+    if (!imgEl.complete || !imgEl.naturalWidth) {
+      await new Promise((resolve) => {
+        imgEl.onload = () => resolve();
+        imgEl.onerror = () => resolve();
+      });
+    }
+    try { await imgEl.decode(); } catch (_) {}
+  },
+
   // Reuse an already-rendered grid thumb when opening the lightbox (instant on tap).
   async applyFromThumb(imgEl, thumbImg, fallbackSrc) {
     if (thumbImg?.complete && thumbImg.naturalWidth) {
