@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio-zip-download",
+  "main": "src/index.js",
+  "compatibility_date": "2026-06-01",
+  "workers_dev": true,
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "portfolio-images" }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

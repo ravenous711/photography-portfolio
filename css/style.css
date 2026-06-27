@@ -1758,16 +1758,6 @@ textarea.form-field {
 
 #download-progress.show { display: block; }
 
-#download-progress #dl-save-btn {
-  display: block;
-  width: 100%;
-  margin-top: 0.75rem;
-}
-
-#download-progress #dl-save-btn[hidden] {
-  display: none;
-}
-
 .progress-bar-wrap {
   width: 100%;
   height: 2px;

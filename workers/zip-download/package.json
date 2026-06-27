@@ -1,0 +1,16 @@
+{
+  "name": "portfolio-zip-download",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "client-zip": "^2.5.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.105.0"
+  }
+}

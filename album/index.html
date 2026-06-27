@@ -9,9 +9,7 @@
   <link rel="stylesheet" href="/css/style.css" />
   <script>tailwind.config = { theme: { extend: { colors: { gold: '#c9a96e' } } } }</script>
 
-  <!-- JSZip for album download -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- FileSaver for triggering the download -->
+  <!-- FileSaver for single-photo / desktop saves (multi-photo ZIPs stream from the Worker) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <!-- Flickr justified-layout: all images scaled to equal row height -->
   <script src="/js/justified-layout.js"></script>
@@ -274,7 +272,6 @@
     <div class="progress-bar-wrap">
       <div class="progress-bar" id="dl-bar"></div>
     </div>
-    <button type="button" id="dl-save-btn" class="btn-primary" hidden>Save ZIP</button>
   </div>
 
   <!-- ── Footer ── -->
@@ -509,7 +506,6 @@
       bindTapWithoutScroll(document.getElementById('cancel-select-btn'), () => toggleSelectMode());
       bindTapWithoutScroll(document.getElementById('download-btn'), () => downloadPhotos(allPhotos));
       bindTapWithoutScroll(document.getElementById('liked-count-btn'), () => showLikedDownloadConfirm());
-      bindTapWithoutScroll(document.getElementById('dl-save-btn'), () => savePendingZipDownload());
       bindTapWithoutScroll(document.getElementById('clear-selection-btn'), () => clearSelection());
       document.getElementById('select-all-btn').addEventListener('click', () => toggleSelectAll());
       document.getElementById('clear-selected-btn').addEventListener('click', () => clearSelection());
@@ -609,61 +605,54 @@
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isMobileDownload = isIOS || /Android/i.test(navigator.userAgent);
 
-    let pendingZipDownload = null;
+    // Server-side streaming ZIP — builds + streams from R2 so phones never hold
+    // the whole archive in memory (which crashes iOS on large, full-res albums).
+    const ZIP_WORKER_URL = 'https://portfolio-zip-download.raveenfernando.workers.dev';
 
     function resetDownloadProgressUI() {
       const progress = document.getElementById('download-progress');
       const bar = document.getElementById('dl-bar');
-      const saveBtn = document.getElementById('dl-save-btn');
       progress.classList.remove('show');
       bar.style.width = '0%';
-      if (saveBtn) saveBtn.hidden = true;
-      if (pendingZipDownload?.blobUrl) {
-        URL.revokeObjectURL(pendingZipDownload.blobUrl);
-      }
-      pendingZipDownload = null;
     }
 
-    async function savePendingZipDownload() {
-      if (!pendingZipDownload) return;
-      const { blob, filename } = pendingZipDownload;
-      const label = document.getElementById('dl-label');
-      const file = new File([blob], filename, { type: blob.type || 'application/zip' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file] });
-          label.textContent = 'Use the share sheet to save to Files or Photos.';
-          setTimeout(resetDownloadProgressUI, 4000);
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-        }
-      }
-
-      const blobUrl = URL.createObjectURL(blob);
-      pendingZipDownload.blobUrl = blobUrl;
-      window.open(blobUrl, '_blank');
-      label.textContent = isIOS
-        ? 'In the new tab: tap ··· → Save to Files.'
-        : 'Save the ZIP from the new tab.';
-      document.getElementById('dl-save-btn').hidden = true;
+    function photoUrlToKey(url) {
+      if (!url) return '';
+      return url.startsWith(`${R2_BASE_URL}/`) ? url.slice(R2_BASE_URL.length + 1) : url;
     }
 
-    function offerZipDownload(blob, filename, successMessage) {
-      const label = document.getElementById('dl-label');
-      const saveBtn = document.getElementById('dl-save-btn');
-
-      if (isMobileDownload) {
-        pendingZipDownload = { blob, filename };
-        label.textContent = `${successMessage} Tap Save ZIP below.`;
-        if (saveBtn) saveBtn.hidden = false;
-        return true;
+    // Submit keys to the ZIP Worker via a hidden form so the browser performs a
+    // native streaming download (no JS memory, works on iOS Safari/Chrome).
+    let zipDownloadFrame = null;
+    function submitWorkerZip(keys, filename) {
+      if (!zipDownloadFrame) {
+        zipDownloadFrame = document.createElement('iframe');
+        zipDownloadFrame.name = 'zip-download-frame';
+        zipDownloadFrame.style.display = 'none';
+        zipDownloadFrame.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(zipDownloadFrame);
       }
 
-      saveAs(blob, filename);
-      label.textContent = successMessage;
-      return false;
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = ZIP_WORKER_URL;
+      form.target = 'zip-download-frame';
+      form.acceptCharset = 'utf-8';
+      form.style.display = 'none';
+
+      const addField = (name, value) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      };
+      addField('keys', keys.join('\n'));
+      addField('filename', filename);
+
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(() => form.remove(), 1000);
     }
 
     function photoFilename(url, fallbackIndex = 0) {
@@ -703,7 +692,9 @@
         .sort((a, b) => a - b)
         .map(i => allPhotos[i])
         .filter(Boolean);
-      if (urls.length <= INDIVIDUAL_THRESHOLD) {
+      // Mobile saveAs() is unreliable, so always ZIP via the Worker there.
+      // Desktop keeps the convenience of separate files for small selections.
+      if (!isMobileDownload && urls.length <= INDIVIDUAL_THRESHOLD) {
         downloadIndividually(urls);
       } else {
         downloadPhotos(urls);
@@ -1859,93 +1850,33 @@
     // ════════════════════════════════════════════════════════
     // ZIP downloads try R2 directly first (full-res), then /api/download as fallback.
 
-    async function downloadPhotos(photos) {
+    function downloadPhotos(photos) {
       const dlBtn    = document.getElementById('download-btn');
       const selDlBtn = document.getElementById('download-selected-btn');
       const progress = document.getElementById('download-progress');
       const label    = document.getElementById('dl-label');
       const bar      = document.getElementById('dl-bar');
 
+      const list = (photos || []).filter(Boolean);
+      if (!list.length) return;
+
       const isAll = photos === allPhotos;
+      const keys = list.map(photoUrlToKey);
+      const suffix = isAll ? 'photos' : 'selection';
+      const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${suffix}.zip`;
+
       if (dlBtn)    { dlBtn.disabled = true; }
       if (selDlBtn) { selDlBtn.disabled = true; }
       progress.classList.add('show');
-      label.textContent = `Prepping ZIP — 0 of ${photos.length} photos…`;
+      bar.style.width = '100%';
+      label.textContent = `Zipping ${list.length} photo${list.length !== 1 ? 's' : ''}… your device will save it shortly.`;
 
-      const zip       = new JSZip();
-      const folder    = zip.folder(album.title);
-      const total     = photos.length;
-      let completed   = 0;
-      let successCount = 0;
-      let failedCount  = 0;
-      const usedNames  = new Set();
+      // The Worker builds and streams the ZIP; the browser handles the actual
+      // download + progress, so memory stays flat even for full-res albums.
+      submitWorkerZip(keys, filename);
 
-      const uniqueZipName = (name) => {
-        if (!usedNames.has(name)) {
-          usedNames.add(name);
-          return name;
-        }
-        const dot = name.lastIndexOf('.');
-        const base = dot >= 0 ? name.slice(0, dot) : name;
-        const ext = dot >= 0 ? name.slice(dot) : '';
-        let n = 2;
-        while (usedNames.has(`${base}-${n}${ext}`)) n++;
-        const unique = `${base}-${n}${ext}`;
-        usedNames.add(unique);
-        return unique;
-      };
-
-      const fetchPhoto = async (url, index) => {
-        if (!url) {
-          failedCount++;
-        } else {
-          try {
-            const blob = await fetchPhotoBlob(url);
-            const name = uniqueZipName(photoFilename(url, index));
-            folder.file(name, blob);
-            successCount++;
-          } catch (err) {
-            failedCount++;
-            console.warn(`Could not fetch ${photoFilename(url, index)}:`, err.message);
-          }
-        }
-        completed++;
-        bar.style.width   = Math.round((completed / total) * 100) + '%';
-        label.textContent = `Prepping ZIP — ${completed} of ${total} photos…`;
-      };
-
-      const BATCH = 2;
-      for (let i = 0; i < total; i += BATCH) {
-        await Promise.all(photos.slice(i, i + BATCH).map((url, j) => fetchPhoto(url, i + j)));
-        if (i + BATCH < total) await new Promise(r => setTimeout(r, 400));
-      }
-
-      if (successCount === 0) {
-        label.textContent = 'Could not prep ZIP — no photos loaded. Try again.';
-        setTimeout(finishDownloadPhotosUI, 2500);
-      } else {
-        label.textContent = 'Building ZIP file…';
-        try {
-          const blob     = await zip.generateAsync({ type: 'blob' });
-          const suffix   = isAll ? 'photos' : 'selection';
-          const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${suffix}.zip`;
-          const successMessage = failedCount
-            ? `ZIP ready — ${successCount} of ${total} photos (${failedCount} failed).`
-            : 'ZIP ready.';
-          const waitingForTap = offerZipDownload(blob, filename, successMessage);
-          if (!waitingForTap) {
-            setTimeout(finishDownloadPhotosUI, 2500);
-          } else {
-            finishDownloadPhotosUI();
-          }
-        } catch (err) {
-          label.textContent = 'Error creating ZIP. Try again.';
-          console.error(err);
-          setTimeout(finishDownloadPhotosUI, 2500);
-        }
-      }
-
-      function finishDownloadPhotosUI() {
+      setTimeout(() => {
+        resetDownloadProgressUI();
         if (dlBtn) {
           dlBtn.disabled = false;
           dlBtn.innerHTML = `
@@ -1957,10 +1888,7 @@
             Download All`;
         }
         if (selDlBtn) { selDlBtn.disabled = selected.size === 0; }
-        if (!pendingZipDownload) {
-          resetDownloadProgressUI();
-        }
-      }
+      }, 6000);
     }
   </script>
 
