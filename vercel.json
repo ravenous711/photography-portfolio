@@ -3,7 +3,6 @@
   "redirects": [
     { "source": "/index.html", "destination": "/", "permanent": true },
     { "source": "/gallery.html", "destination": "/gallery/", "permanent": true },
-    { "source": "/login.html", "destination": "/login/", "permanent": true },
     { "source": "/admin.html", "destination": "/admin/", "permanent": true },
     { "source": "/group/:id/", "destination": "/gallery/:id/", "permanent": true },
     { "source": "/group/:id", "destination": "/gallery/:id/", "permanent": true },

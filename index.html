@@ -1,26 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" as="image" href="/images/hero.jpg" />
   <title>Raveen Fernando — Photography</title>
   <meta name="description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
   <!-- Custom styles -->
   <link rel="stylesheet" href="/css/style.css" />
+  <!-- Tailwind preflight + used utilities, precompiled (replaces the dev CDN) -->
+  <link rel="stylesheet" href="/css/base.css" />
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: { gold: '#c9a96e' }
-        }
-      }
-    }
-  </script>
   <style>
     #selected-work {
       padding-bottom: 2rem;

@@ -436,22 +436,6 @@ const ImagePreload = {
   },
 };
 
-// ── Site-wide password gate ──
-const SiteAuth = {
-  key: 'site_unlocked',
-
-  isUnlocked() {
-    return sessionStorage.getItem(this.key) === 'true';
-  },
-
-  unlock() {
-    sessionStorage.setItem(this.key, 'true');
-  },
-
-  // No-op — site preview gate removed; album passwords still use AlbumAuth
-  guard() {},
-};
-
 // ── Session-based album unlock store ──
 const AlbumAuth = {
   key: 'unlocked_albums',

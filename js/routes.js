@@ -3,10 +3,6 @@ const Routes = {
   home: '/',
   gallery: '/gallery/',
 
-  login(returnTo) {
-    return `/login/?return=${encodeURIComponent(returnTo || this.home)}`;
-  },
-
   /** Flat album URL — used when no parent slug (legacy / standalone albums) */
   album(id) {
     return `/album/${encodeURIComponent(id)}/`;
