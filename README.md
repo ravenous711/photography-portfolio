@@ -276,6 +276,5 @@ Do one at a time when the external drive is connected.
 
 ### 🟢 Nice to have
 
-- [ ] **Admin photo reorder** — drag-and-drop in `/admin` to change gallery order without editing `config.js` by hand
-  - **Phase 1:** Venice digital only — reorder mode on the admin grid, **Save order** button, new `/api/admin-reorder` endpoint (mirror `admin-delete.js`: GitHub API updates `config.js`, Vercel redeploys)
-  - **Phase 2:** Other albums + separate reorder controls per section (`photos` vs each `filmSections` roll — Venice has digital + multiple film rolls)
+> **Engineering / code tasks live in the runbook, not here** — see `IMPROVEMENTS.md`.
+> (The admin drag-and-drop photo reorder idea moved there as **ADMIN-1**.)
