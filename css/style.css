@@ -1366,12 +1366,11 @@ a.album-sibling-link:hover {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.5s ease, opacity 0.3s;
+  transition: opacity 0.3s;
   opacity: 0;
 }
 
 .photo-thumb img.loaded { opacity: 1; }
-.photo-thumb:hover img  { transform: scale(1.03); }
 
 .photo-thumb-overlay {
   position: absolute;
