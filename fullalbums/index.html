@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>Full Albums — Raveen Fernando</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+</head>
+<body class="overflow-x-hidden full-album-mode">
+
+  <!-- ── Navigation ── -->
+  <nav id="main-nav" class="nav-scrolled">
+    <a href="/" class="nav-logo">RF<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
+      <li><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">All albums</a></li>
+    </ul>
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <a href="/">Home</a>
+    <a href="/gallery/">Gallery</a>
+    <a href="/about/">About</a>
+    <a href="/fullalbums/">All albums</a>
+  </div>
+
+  <!-- ── Page Header ── -->
+  <header class="page-header page-header--compact fade-in">
+    <p class="page-subtitle" style="color:var(--color-gold)">Friends view</p>
+    <div class="gold-rule" style="background:var(--color-gold);opacity:0.7"></div>
+    <h1 class="page-title">Full Albums</h1>
+    <p style="margin-top:0.5rem;font-size:0.8rem;letter-spacing:0.06em;color:var(--color-muted)">
+      Heart your favourites to help Raveen choose the best shots.
+    </p>
+  </header>
+
+  <!-- ── Album Grid ── -->
+  <main class="gallery-main px-6 md:px-12 pb-24 max-w-7xl mx-auto" id="gallery-main">
+    <!-- Populated by JS -->
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p id="footer-copyright"></p>
+    <p class="mt-1">
+      <a href="/gallery/">Public gallery</a>
+    </p>
+  </footer>
+
+  <style>
+    .album-card { display: block; text-decoration: none; }
+    body.full-album-mode #main-nav {
+      border-bottom: 1px solid rgba(201, 169, 110, 0.35);
+    }
+  </style>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('footer-copyright').textContent =
+      `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+    // ── Gate: require friends tier, or a valid ?k= share key ──
+    const shareKey = Routes.getShareKey();
+
+    async function init() {
+      // Try to grant from ?k= if not already granted
+      if (shareKey && !TierAuth.canAccess('friends')) {
+        const granted = await TierAuth.tryUnlock(shareKey);
+        if (granted) TierAuth.grant(granted, true);
+      }
+
+      if (!TierAuth.canAccess('friends')) {
+        // No valid key, no persisted grant → send to public gallery
+        window.location.replace('/gallery/');
+        return;
+      }
+
+      // Update "All albums" nav href to keep the key
+      const hubUrl = Routes.fullAlbumUrl(null, shareKey);
+      const allAlbumsLink = document.getElementById('nav-all-albums-link');
+      if (allAlbumsLink) allAlbumsLink.href = hubUrl;
+
+      renderHub();
+    }
+
+    function renderHub() {
+      const main = document.getElementById('gallery-main');
+
+      // All non-private, non-hidden top-level albums (public + friends)
+      // Plus nested city albums that belong to group albums
+      const isPrivate = a => a.audience === 'family' || (typeof a.audience === 'string' && a.audience.startsWith('client:'));
+
+      // Top-level albums that are not private and not hidden
+      const topLevel = ALBUMS.filter(a => !a.parentId && !a.hidden && !isPrivate(a));
+
+      function renderAlbumCard(album) {
+        const card = document.createElement('a');
+        // Link to the full album, carrying the share key
+        card.href = Routes.fullAlbumUrl(album, shareKey);
+        card.className = 'album-card fade-in';
+        const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
+        const dateline = albumDateline(album, { withDesc: album.type !== 'group' });
+        const desc = albumCardDesc(album);
+        card.innerHTML = `
+          <img class="album-card-img"
+               src="${albumCoverUrl(album)}"
+               alt="${album.title}"
+               loading="lazy"${posStyle} />
+          <div class="album-card-overlay">
+            ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
+            <h2 class="album-card-title">${album.title}</h2>
+            ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
+          </div>
+        `;
+        return card;
+      }
+
+      // Group albums: also list their child city sub-albums inline as cards
+      // so friends can jump into a specific city (e.g. Venice) directly.
+      function renderGroupWithChildren(groupAlbum) {
+        const children = ALBUMS.filter(a => a.parentId === groupAlbum.id && !a.hidden && !a.albumKind);
+        if (!children.length) return;
+
+        const heading = document.createElement('h2');
+        heading.className = 'gallery-year-heading';
+        heading.textContent = groupAlbum.title;
+        main.appendChild(heading);
+
+        const grid = document.createElement('div');
+        const count = children.length;
+        grid.className = 'album-grid gallery-album-grid fade-in';
+        if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
+        children.forEach(child => grid.appendChild(renderAlbumCard(child)));
+        main.appendChild(grid);
+      }
+
+      // Separate top-level into group albums and standalone albums
+      const standaloneAlbums = topLevel.filter(a => a.type !== 'group');
+      const groupAlbums      = topLevel.filter(a => a.type === 'group');
+
+      // Render standalone albums grouped by year
+      if (standaloneAlbums.length) {
+        const byYear = new Map();
+        standaloneAlbums.forEach(a => {
+          const year = albumYear(a) || 'Other';
+          if (!byYear.has(year)) byYear.set(year, []);
+          byYear.get(year).push(a);
+        });
+        [...byYear.keys()].sort().reverse().forEach((year, idx) => {
+          const heading = document.createElement('h2');
+          heading.className = idx === 0 ? 'gallery-year-heading gallery-year-heading--first' : 'gallery-year-heading';
+          heading.textContent = year;
+          main.appendChild(heading);
+
+          const grid = document.createElement('div');
+          const count = byYear.get(year).length;
+          grid.className = 'album-grid gallery-album-grid fade-in';
+          if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
+          byYear.get(year).forEach(a => grid.appendChild(renderAlbumCard(a)));
+          main.appendChild(grid);
+        });
+      }
+
+      // Render group albums with their child city albums
+      groupAlbums.forEach(renderGroupWithChildren);
+
+      if (!standaloneAlbums.length && !groupAlbums.length) {
+        main.innerHTML = '<p style="color:var(--color-muted);padding:2rem 0">No albums yet.</p>';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

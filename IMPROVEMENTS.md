@@ -61,6 +61,7 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 | AUTH-1 | Idea (big) | XL | High | ✅ DONE |
 | FEAT-1 | Idea | M–L | Med | ✅ DONE |
 | UX-8 | Header UX | M | Med | ✅ DONE |
+| FEAT-2 | Friends curation flow | L | Med | ✅ DONE |
 
 ### Where to start next
 1. **Quick wins:** Tier bugs BUG-1…BUG-3 + A11Y-1/A11Y-2 (small, isolated, low risk).
@@ -297,6 +298,11 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **FEAT-2 — Full-album friends curation flow** — Jul 2026.
+  New `/fullalbums/` URL namespace for the uncut album (distinct gold-accent theme, "FULL ALBUM" badge). Shareable capability link `?k=KEY` grants the `friends` tier — key stays in the URL, is bookmarkable, no typed password. Randos on `/gallery/` only see the curated highlights; `/fullalbums/` without a valid key redirects to `/gallery/`. Cross-links: full-album page → "View public gallery"; curated page → "Open full album" (visible only to granted friends). "All albums" nav hub at `/fullalbums/` lists every non-private album for friends. Favorites hearts now enabled on ALL grids (digital + film) in full mode via a document-level delegated handler, fixing the missing-hearts-on-film bug. Old typed friends password removed; key-only access. Branch: `feat/curated-gallery-friends-links`.
+  **Store in 1Password:** plaintext share key `4289e2622ffb284c65c101210c81a389d8bdbfc053e3b822` under "photography portfolio share key".
+  **Links to send friends:** hub `raveenfernando.com/fullalbums/?k=4289e2622ffb284c65c101210c81a389d8bdbfc053e3b822` · specific album e.g. `raveenfernando.com/fullalbums/italy-2026/venice/?k=4289e2622ffb284c65c101210c81a389d8bdbfc053e3b822`.
 
 - **AUTH-1 + FEAT-1 Phases 3 + 3b — Private R2 + access codes** — Jul 2026.
   Private R2 bucket; Worker signed HMAC token system (`/unlock`, `/image`); Joel Birthday photos migrated; D1 `access_codes` table; admin "Access codes" tab (create/show-once/revoke); no wrangler or config edit per new client. Branch: `feat/phase3-private-r2`.

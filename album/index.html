@@ -23,7 +23,8 @@
       <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
       <li><a href="/about/" data-nav-link data-nav="about">About</a></li>
-      <li><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
+      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">All albums</a></li>
+      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -36,6 +37,7 @@
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
     <a href="/about/">About</a>
+    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">All albums</a>
     <a href="/unlock/">Unlock</a>
   </div>
 
@@ -105,15 +107,26 @@
       <div class="gold-rule album-header-rule"></div>
     </header>
 
-    <!-- ── "See all" button (shown only to unlocked visitors when curated view is active) ── -->
-    <div id="see-all-bar" hidden style="padding:1rem 1.5rem 0;text-align:center">
-      <button id="see-all-btn"
-        style="background:transparent;border:1px solid var(--color-border);color:var(--color-muted);
-               padding:0.5rem 1.25rem;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;
+    <!-- ── Cross-link bar ────────────────────────────────────────────────────── -->
+    <!-- full mode: "View public gallery" link; curated mode: "Open full album" (friends only) -->
+    <div id="album-crosslink-bar" hidden style="padding:1rem 1.5rem 0;text-align:center">
+      <a id="album-crosslink-btn"
+        href="#"
+        style="display:inline-block;background:transparent;border:1px solid var(--color-border);
+               color:var(--color-muted);padding:0.5rem 1.25rem;font-size:0.72rem;
+               letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;
                cursor:pointer;transition:border-color 0.2s,color 0.2s"
         onmouseover="this.style.borderColor='var(--color-text)';this.style.color='var(--color-text)'"
         onmouseout="this.style.borderColor='var(--color-border)';this.style.color='var(--color-muted)'">
-      </button>
+      </a>
+    </div>
+
+    <!-- ── Full-album mode label (shown only in /fullalbums/ mode) ── -->
+    <div id="full-album-badge" hidden
+      style="padding:0.6rem 1.5rem 0;text-align:center">
+      <span style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;
+                   color:var(--color-gold);border:1px solid var(--color-gold);
+                   padding:0.25rem 0.75rem;border-radius:2px">Full album</span>
     </div>
 
     <div id="album-toolbar-sentinel" aria-hidden="true"></div>
@@ -374,6 +387,10 @@
     // Active token for the current album (null for public albums)
     let _privateToken = null;
 
+    // ── Determine page mode ──
+    // isFullMode = true when served under /fullalbums/...
+    const isFullMode = Routes.isFullAlbumPath();
+
     if (Routes.redirectLegacyFlatAlbum()) {
       // redirecting to nested /gallery/:group/:slug/
     } else if (Routes.canonicalizeAlbumQuery()) {
@@ -400,14 +417,16 @@
         if (album.parentId) {
           const parent = ALBUMS.find(a => a.id === album.parentId);
           if (parent) {
-            const backHref = Routes.group(album.parentId);
-            document.getElementById('back-link').href = backHref;
-            document.getElementById('back-label').textContent = parent.title;
-            document.getElementById('back-link-sticky').href = backHref;
-            document.getElementById('back-label-sticky').textContent = parent.title;
+            const backHref = isFullMode
+              ? Routes.fullAlbumUrl(parent.type === 'group' ? parent : null, Routes.getShareKey()) || Routes.group(album.parentId)
+              : Routes.group(album.parentId);
+            document.getElementById('back-link').href = isFullMode ? Routes.fullAlbumUrl(null, Routes.getShareKey()) : Routes.group(album.parentId);
+            document.getElementById('back-label').textContent = isFullMode ? 'All albums' : parent.title;
+            document.getElementById('back-link-sticky').href = isFullMode ? Routes.fullAlbumUrl(null, Routes.getShareKey()) : Routes.group(album.parentId);
+            document.getElementById('back-label-sticky').textContent = isFullMode ? 'All albums' : parent.title;
 
-            // If the parent group is password-protected and not yet unlocked, gate here
-            if (parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
+            // If the parent group is password-protected and not yet unlocked, gate here (non-full mode only)
+            if (!isFullMode && parent.protected && !AlbumAuth.isUnlocked(parent.id)) {
               window.location.replace(Routes.group(album.parentId));
             }
           }
@@ -415,19 +434,33 @@
 
         // ── Auth check ──
         const albumAudience = album.audience || 'public';
-        const tierGranted   = TierAuth.canAccess(albumAudience);
         const isStrictTier  = albumAudience === 'family' || albumAudience.startsWith('client:');
 
-        if (!tierGranted && isStrictTier) {
-          // Family/client album: redirect non-unlocked visitors to /unlock/
-          // (takes precedence over legacy protected gate so tier-gated albums don't
-          //  show the old per-album password modal)
+        if (!TierAuth.canAccess(albumAudience) && isStrictTier) {
+          // Family/client album: redirect to /unlock/
           window.location.replace(`/unlock/?next=${encodeURIComponent(window.location.pathname)}`);
-        } else if (album.protected && !AlbumAuth.isUnlocked(album.id) && !isStrictTier) {
-          // Legacy per-album password gate (only for albums not using the tier system)
+        } else if (album.protected && !AlbumAuth.isUnlocked(album.id) && !isStrictTier && !isFullMode) {
+          // Legacy per-album password gate (non-full mode only)
           showPasswordModal();
+        } else if (isFullMode) {
+          // ── Full-album mode: gate on friends tier ──
+          // Check if a ?k= share key in the URL grants the friends tier.
+          const shareKey = Routes.getShareKey();
+          (async () => {
+            if (shareKey && !TierAuth.canAccess('friends')) {
+              const granted = await TierAuth.tryUnlock(shareKey);
+              if (granted) TierAuth.grant(granted, true);
+            }
+            if (TierAuth.canAccess('friends')) {
+              applyFullAlbumMode();
+              showAlbum();
+            } else {
+              // No valid key and no persisted grant → redirect to the curated page
+              window.location.replace(Routes.curatedUrl(album));
+            }
+          })();
         } else {
-          // Public/friends: show album (curated or full based on curated[] presence)
+          // Public/curated mode: show the curated view (always, for all visitors on /gallery/)
           showAlbum();
         }
       }
@@ -469,6 +502,60 @@
           input.addEventListener('animationend', () => { input.style.animation = ''; }, { once: true });
         }
       });
+    }
+
+    // ── Full-album mode setup ──
+    function applyFullAlbumMode() {
+      // Visual treatment
+      document.body.classList.add('full-album-mode');
+      document.getElementById('full-album-badge').hidden = false;
+
+      // Nav: show "All albums" hub link with key, hide plain "Unlock"
+      const shareKey = Routes.getShareKey();
+      const hubUrl = Routes.fullAlbumUrl(null, shareKey);
+      const allAlbumsItem = document.getElementById('nav-all-albums-item');
+      const allAlbumsLink = document.getElementById('nav-all-albums-link');
+      const unlockItem    = document.getElementById('nav-unlock-item');
+      const mobileAllLink = document.getElementById('mobile-all-albums-link');
+      if (allAlbumsItem) allAlbumsItem.style.display = '';
+      if (allAlbumsLink) allAlbumsLink.href = hubUrl;
+      if (unlockItem)    unlockItem.style.display = 'none';
+      if (mobileAllLink) { mobileAllLink.style.display = ''; mobileAllLink.href = hubUrl; }
+
+      // Cross-link bar: "View public gallery →"
+      const bar = document.getElementById('album-crosslink-bar');
+      const btn = document.getElementById('album-crosslink-btn');
+      if (bar && btn && album) {
+        btn.textContent = 'View public gallery →';
+        btn.href = Routes.curatedUrl(album);
+        bar.hidden = false;
+      }
+    }
+
+    // ── Curated-mode cross-link (for already-granted friends on /gallery/ pages) ──
+    function applyCuratedModeForGrantedFriend() {
+      const shareKey = Routes.getShareKey() ||
+        (() => { try { return localStorage.getItem('friends_share_key'); } catch { return null; } })();
+      if (!TierAuth.canAccess('friends') || !album) return;
+
+      // Nav: show "All albums" hub link
+      const hubUrl = Routes.fullAlbumUrl(null, shareKey);
+      const allAlbumsItem = document.getElementById('nav-all-albums-item');
+      const allAlbumsLink = document.getElementById('nav-all-albums-link');
+      const mobileAllLink = document.getElementById('mobile-all-albums-link');
+      if (allAlbumsItem) allAlbumsItem.style.display = '';
+      if (allAlbumsLink) allAlbumsLink.href = hubUrl;
+      if (mobileAllLink) { mobileAllLink.style.display = ''; mobileAllLink.href = hubUrl; }
+
+      // Cross-link bar: "Open full album →"
+      const bar = document.getElementById('album-crosslink-bar');
+      const btn = document.getElementById('album-crosslink-btn');
+      if (bar && btn) {
+        const fullUrl = Routes.fullAlbumUrl(album, shareKey);
+        btn.textContent = 'Open full album →';
+        btn.href = fullUrl;
+        bar.hidden = false;
+      }
     }
 
     // ── Render album grid ──
@@ -979,14 +1066,13 @@
       }
 
       // ── Curated-vs-full decision ─────────────────────────────────────────
-      const albumAudience = album.audience || 'public';
-      const tierGranted   = TierAuth.canAccess(albumAudience);
-      const hasCurated    = Array.isArray(album.curated) && album.curated.length > 0;
-      const fullPhotos    = getAlbumAllPhotos(album);
+      const hasCurated = Array.isArray(album.curated) && album.curated.length > 0;
+      const fullPhotos = getAlbumAllPhotos(album);
 
-      // Always show curated if available (for everyone — it's the editorial landing).
-      // Fall back to full album if no curated list exists yet.
-      const showCurated = hasCurated;
+      // Full mode (/fullalbums/): always show the complete set.
+      // Curated mode (/gallery/ etc.): always show the curated subset if available;
+      // fall back to full photos only when no curated set exists yet.
+      const showCurated = !isFullMode && hasCurated;
       isCuratedView = showCurated;
 
       // Scope allPhotos to curated or full
@@ -998,91 +1084,11 @@
         allPhotos = allPhotos.map(url => toImageUrl(url, _privateToken));
       }
 
-      // ── "See all" button — only shown to unlocked viewers ────────────────
-      const seeAllBar = document.getElementById('see-all-bar');
-      const seeAllBtn = document.getElementById('see-all-btn');
-      if (showCurated && tierGranted && fullPhotos.length > album.curated.length) {
-        const remaining = fullPhotos.length - album.curated.length;
-        seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
-        seeAllBar.hidden = false;
-        function renderFullAlbum() {
-          allPhotos = _privateToken
-            ? fullPhotos.map(url => toImageUrl(url, _privateToken))
-            : fullPhotos;
-          // Restore section nav and digital label
-          const sectionNav = document.getElementById('album-section-nav');
-          if (sectionNav) sectionNav.hidden = false;
-          const digitalLabel = document.getElementById('digital-section-label');
-          if (digitalLabel) digitalLabel.hidden = false;
-          // Re-render grid with full album
-          const digitalGrid = document.getElementById('photo-grid');
-          const filmSection  = document.getElementById('film-section');
-          digitalGrid.innerHTML = '';
-          filmSection.innerHTML = '';
-          (album.photos || []).forEach((url, i) => digitalGrid.appendChild(createPhotoThumb(url, i, album.title)));
-          const filmSections = getAlbumFilmSections(album);
-          let offset = (album.photos || []).length;
-          if (filmSections.length) {
-            filmSection.hidden = false;
-            filmSections.forEach((section, si) => {
-              const block = document.createElement('div');
-              block.id = `album-section-film-${si}`;
-              block.className = si > 0 ? 'album-film-block album-film-block--continued' : 'album-film-block';
-              const lbl = document.createElement('p');
-              lbl.className = 'album-section-label';
-              lbl.textContent = section.label || 'On film';
-              block.appendChild(lbl);
-              const grid = document.createElement('div');
-              grid.className = 'photo-grid';
-              (section.photos || []).forEach((url, i) => grid.appendChild(createPhotoThumb(url, offset + i, album.title)));
-              block.appendChild(grid);
-              filmSection.appendChild(block);
-              offset += (section.photos || []).length;
-            });
-          } else {
-            filmSection.hidden = true;
-          }
-          requestAnimationFrame(() => {
-            bindGridLayout(digitalGrid);
-            filmSection.querySelectorAll('.photo-grid').forEach(bindGridLayout);
-            updateSelectionUI();
-          });
-        }
-
-        function renderCuratedAlbum() {
-          allPhotos = [...album.curated];
-          const sectionNav = document.getElementById('album-section-nav');
-          if (sectionNav) sectionNav.hidden = true;
-          const digitalLabel = document.getElementById('digital-section-label');
-          if (digitalLabel) digitalLabel.hidden = true;
-          const digitalGrid = document.getElementById('photo-grid');
-          const filmSection  = document.getElementById('film-section');
-          digitalGrid.innerHTML = '';
-          filmSection.innerHTML = '';
-          filmSection.hidden = true;
-          album.curated.forEach((url, i) => digitalGrid.appendChild(createPhotoThumb(url, i, album.title)));
-          requestAnimationFrame(() => {
-            bindGridLayout(digitalGrid);
-            updateSelectionUI();
-          });
-        }
-
-        let showingFull = false;
-        seeAllBtn.addEventListener('click', () => {
-          showingFull = !showingFull;
-          if (showingFull) {
-            isCuratedView = false;
-            renderFullAlbum();
-            seeAllBtn.textContent = `Back to highlights`;
-          } else {
-            isCuratedView = true;
-            renderCuratedAlbum();
-            seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
-          }
-        });
-      } else {
-        seeAllBar.hidden = true;
+      // ── Cross-link for curated mode (for already-granted friends on /gallery/) ──
+      if (!isFullMode) {
+        applyCuratedModeForGrantedFriend();
       }
+
 
       document.getElementById('album-content').style.display = 'block';
       document.getElementById('album-title').textContent        = albumDisplayTitle(album);
@@ -1188,8 +1194,9 @@
       renderNextAlbumNav();
       scrollToLinkedPhoto();
 
-      // Initialize favorites voting — available to everyone (anonymous session-based)
-      initFavorites(album.id, true);
+      // Favorites hearts: only in full-album mode (/fullalbums/).
+      // Curated public pages show no hearts — they're the editorial gallery, not the curation tool.
+      initFavorites(album.id, isFullMode);
     }
 
     // Visible "More in <trip>" switcher in the page header so a visitor can hop
@@ -2206,8 +2213,8 @@
       } catch { return 'anon'; }
     }
 
-    async function initFavorites(albumId, tierGranted) {
-      favEnabled = tierGranted;
+    async function initFavorites(albumId, enabled) {
+      favEnabled = enabled;
       if (!favEnabled) return;
 
       const sessionId = getFavSessionId();
@@ -2225,14 +2232,13 @@
         }
       } catch { /* Worker not deployed yet — fail silently */ }
 
-      // Mark already-hearted thumbs and enable the fav UI on the grid
-      const digitalGrid = document.getElementById('photo-grid');
-      if (digitalGrid) {
-        digitalGrid.classList.add('favorites-enabled');
-        digitalGrid.querySelectorAll('.fav-badge').forEach(badge => {
+      // Enable hearts on ALL photo grids (digital + every film-roll section)
+      document.querySelectorAll('.photo-grid').forEach(grid => {
+        grid.classList.add('favorites-enabled');
+        grid.querySelectorAll('.fav-badge').forEach(badge => {
           if (heartedUrls.has(badge.dataset.favUrl)) badge.classList.add('hearted');
         });
-      }
+      });
 
       // Show lightbox fav button
       const favBtn = document.getElementById('lightbox-fav');
@@ -2294,8 +2300,9 @@
       favBtn.setAttribute('aria-label', hearted ? 'Remove from favorites' : 'Add to favorites');
     }
 
-    // Wire fav badge clicks (delegated from grids)
-    document.getElementById('photo-grid')?.addEventListener('click', (e) => {
+    // Wire fav badge clicks — delegated at document level so it covers
+    // both the digital #photo-grid and all film-section .photo-grid grids.
+    document.addEventListener('click', (e) => {
       const badge = e.target.closest('.fav-badge');
       if (!badge) return;
       e.stopPropagation();
@@ -2313,6 +2320,18 @@
   </script>
 
   <style>
+    /* ── Full-album mode: gold accent treatment ── */
+    body.full-album-mode #main-nav {
+      border-bottom: 1px solid rgba(201, 169, 110, 0.35);
+    }
+    body.full-album-mode .album-page-header .gold-rule {
+      background: var(--color-gold);
+      opacity: 0.7;
+    }
+    body.full-album-mode #album-title {
+      color: var(--color-text);
+    }
+
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       20%, 60%  { transform: translateX(-8px); }
