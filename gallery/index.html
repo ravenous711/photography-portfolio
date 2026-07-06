@@ -19,6 +19,7 @@
       <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
       <li><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -31,6 +32,7 @@
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
     <a href="/about/">About</a>
+    <a href="/unlock/">Unlock</a>
   </div>
 
   <!-- ── Page Header ── -->
@@ -66,6 +68,19 @@
 
     // ── Render album grid grouped by year ──
     const main = document.getElementById('gallery-main');
+
+    // Public albums: not hidden, no parentId, audience is public/friends (or unset)
+    // Friends/family albums: hidden albums that become visible when the right tier is unlocked
+    const canSeeFamily  = TierAuth.canAccess('family');
+    const canSeeFriends = TierAuth.canAccess('friends');
+
+    // Update nav unlock link to show current state
+    const navUnlockLink = document.getElementById('nav-unlock-link');
+    if (navUnlockLink && TierAuth.grantedTiers().size > 0) {
+      navUnlockLink.textContent = 'Unlocked ✓';
+    }
+
+    // Top-level non-hidden albums (public and friends-visible)
     const topLevel = ALBUMS.filter(a => !a.parentId && !a.hidden);
 
     function renderAlbumCard(album) {
@@ -97,6 +112,7 @@
       return card;
     }
 
+    // ── Main public/friends gallery grid (grouped by year) ──
     const byYear = new Map();
     topLevel.forEach(album => {
       const year = albumYear(album) || 'Other';
@@ -124,6 +140,26 @@
       byYear.get(year).forEach(album => grid.appendChild(renderAlbumCard(album)));
       main.appendChild(grid);
     });
+
+    // ── Family section (visible only when family tier is unlocked) ──
+    if (canSeeFamily) {
+      const familyAlbums = ALBUMS.filter(a =>
+        a.audience === 'family' && !a.parentId
+      );
+      if (familyAlbums.length > 0) {
+        const heading = document.createElement('h2');
+        heading.className = 'gallery-year-heading';
+        heading.textContent = 'Family';
+        main.appendChild(heading);
+
+        const grid = document.createElement('div');
+        const count = familyAlbums.length;
+        grid.className = 'album-grid gallery-album-grid fade-in';
+        if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
+        familyAlbums.forEach(album => grid.appendChild(renderAlbumCard(album)));
+        main.appendChild(grid);
+      }
+    }
   </script>
 </body>
 </html>

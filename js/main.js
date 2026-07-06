@@ -481,7 +481,7 @@ const ImagePreload = {
   },
 };
 
-// ── Session-based album unlock store ──
+// ── Session-based album unlock store (legacy per-album gating) ──
 const AlbumAuth = {
   key: 'unlocked_albums',
 
@@ -502,6 +502,68 @@ const AlbumAuth = {
         sessionStorage.setItem(this.key, JSON.stringify(unlocked));
       }
     } catch {}
+  },
+};
+
+// ── Tier-based access store ──────────────────────────────────────────────────
+// Tracks which audience tiers (friends / family / client:x) have been unlocked
+// via the shared unlock modal. Stored in sessionStorage so it clears on tab close.
+// "Remember me" (localStorage) is opt-in, set in the unlock flow.
+const TierAuth = {
+  _sessionKey: 'unlocked_tiers',
+  _localKey:   'unlocked_tiers_persist',
+
+  // Return the set of currently granted audiences
+  grantedTiers() {
+    try {
+      const session = JSON.parse(sessionStorage.getItem(this._sessionKey) || '[]');
+      const persist = JSON.parse(localStorage.getItem(this._localKey)   || '[]');
+      return new Set([...session, ...persist]);
+    } catch {
+      return new Set();
+    }
+  },
+
+  // Does the viewer have access to this audience?
+  // Rules: 'public' is always granted; 'family' grants 'friends' too.
+  canAccess(audience) {
+    if (!audience || audience === 'public') return true;
+    const tiers = this.grantedTiers();
+    if (tiers.has(audience)) return true;
+    // family tier grants friends as well
+    if (audience === 'friends' && tiers.has('family')) return true;
+    return false;
+  },
+
+  // Grant a list of audiences (e.g. ['family', 'friends'])
+  grant(audiences, persist = false) {
+    try {
+      const session = JSON.parse(sessionStorage.getItem(this._sessionKey) || '[]');
+      const merged = [...new Set([...session, ...audiences])];
+      sessionStorage.setItem(this._sessionKey, JSON.stringify(merged));
+
+      if (persist) {
+        const local = JSON.parse(localStorage.getItem(this._localKey) || '[]');
+        const mergedLocal = [...new Set([...local, ...audiences])];
+        localStorage.setItem(this._localKey, JSON.stringify(mergedLocal));
+      }
+    } catch {}
+  },
+
+  // Clear all tiers (sign out)
+  clear() {
+    try {
+      sessionStorage.removeItem(this._sessionKey);
+      localStorage.removeItem(this._localKey);
+    } catch {}
+  },
+
+  // Try to unlock via a password. Returns the granted audiences array, or null.
+  async tryUnlock(password) {
+    if (typeof hashPassword !== 'function') return null;
+    const hash = await hashPassword(password);
+    const tiers = (typeof PASSWORD_TIERS !== 'undefined') ? PASSWORD_TIERS : {};
+    return tiers[hash] || null;
   },
 };
 

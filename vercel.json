@@ -32,6 +32,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/unlock/", "destination": "/unlock/index.html" },
     { "source": "/curate/group/:id/", "destination": "/curate/group/index.html" },
     { "source": "/curate/group/:id", "destination": "/curate/group/index.html" },
     { "source": "/gallery/:groupId/:slug/", "destination": "/album/index.html" },
