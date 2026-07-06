@@ -316,6 +316,64 @@
     const selected   = new Set();
     let refreshAlbumNavMenu = null;
 
+    // ── Private image token (Phase 3) ────────────────────────────────────────
+    // For family/client albums, images are served from a private R2 bucket via
+    // the Worker. We exchange the stored password hash for a short-lived HMAC
+    // token, then proxy every <img> through GET /image?key=...&token=...
+
+    /** Returns true if this audience requires private R2 serving. */
+    function isPrivateAudience(audience) {
+      return audience === 'family' || (typeof audience === 'string' && audience.startsWith('client:'));
+    }
+
+    /**
+     * Fetch (or return cached) a Worker image token for the given audience.
+     * The token is valid for 4 hours; we refresh if < 5 min remain.
+     */
+    async function getPrivateToken(audience) {
+      const cacheKey = `worker_token_${audience}`;
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+        if (cached && cached.expiresAt > Date.now() + 5 * 60 * 1000) return cached.token;
+      } catch {}
+
+      const hash = TierAuth.getHash(audience);
+      if (!hash) return null;
+
+      const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+      if (!workerBase) return null;
+
+      try {
+        const resp = await fetch(`${workerBase}/unlock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash }),
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        sessionStorage.setItem(cacheKey, JSON.stringify({ token: data.token, expiresAt: data.expiresAt }));
+        return data.token;
+      } catch {
+        return null;
+      }
+    }
+
+    /**
+     * Convert a photo URL to a Worker-proxied URL for private albums.
+     * For public albums returns the URL unchanged.
+     */
+    function toImageUrl(url, privateToken) {
+      if (!privateToken || !url) return url;
+      const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+      if (!workerBase) return url;
+      // Extract the R2 key by stripping any https://host/ prefix
+      const key = url.replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+/, '');
+      return `${workerBase}/image?key=${encodeURIComponent(key)}&token=${encodeURIComponent(privateToken)}`;
+    }
+
+    // Active token for the current album (null for public albums)
+    let _privateToken = null;
+
     if (Routes.redirectLegacyFlatAlbum()) {
       // redirecting to nested /gallery/:group/:slug/
     } else if (Routes.canonicalizeAlbumQuery()) {
@@ -783,6 +841,7 @@
       const thumb = document.createElement('div');
       thumb.className = 'photo-thumb';
       thumb.dataset.photoIndex = String(index);
+      // url is already proxied for private albums (allPhotos is rewritten in showAlbum)
       thumb.dataset.photoUrl = url;
       thumb.setAttribute('tabindex', '0');
       thumb.setAttribute('role', 'button');
@@ -793,7 +852,8 @@
       img.loading = index < 6 ? 'eager' : 'lazy';
       img.addEventListener('load', () => img.classList.add('loaded'));
       img.addEventListener('error', () => { img.src = url; }, { once: true });
-      img.src = gridUrl(url);
+      // For private (Worker-proxied) URLs skip the grid transform; for public use gridUrl.
+      img.src = _privateToken ? url : gridUrl(url);
 
       const expandOverlay = document.createElement('div');
       expandOverlay.className = 'photo-thumb-overlay';
@@ -907,8 +967,16 @@
       tryLayout();
     }
 
-    function showAlbum() {
+    async function showAlbum() {
       loadSelectedFromStorage();
+
+      // ── Private token (family / client albums) ───────────────────────────
+      const albumAudienceForToken = album.audience || 'public';
+      if (isPrivateAudience(albumAudienceForToken)) {
+        _privateToken = await getPrivateToken(albumAudienceForToken);
+      } else {
+        _privateToken = null;
+      }
 
       // ── Curated-vs-full decision ─────────────────────────────────────────
       const albumAudience = album.audience || 'public';
@@ -924,6 +992,12 @@
       // Scope allPhotos to curated or full
       allPhotos = showCurated ? [...album.curated] : fullPhotos;
 
+      // For private albums, rewrite all photo URLs to Worker-proxied endpoints now,
+      // so the lightbox, prefetch, download, and favorites all use the correct URL.
+      if (_privateToken) {
+        allPhotos = allPhotos.map(url => toImageUrl(url, _privateToken));
+      }
+
       // ── "See all" button — only shown to unlocked viewers ────────────────
       const seeAllBar = document.getElementById('see-all-bar');
       const seeAllBtn = document.getElementById('see-all-btn');
@@ -932,7 +1006,9 @@
         seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
         seeAllBar.hidden = false;
         function renderFullAlbum() {
-          allPhotos = fullPhotos;
+          allPhotos = _privateToken
+            ? fullPhotos.map(url => toImageUrl(url, _privateToken))
+            : fullPhotos;
           // Restore section nav and digital label
           const sectionNav = document.getElementById('album-section-nav');
           if (sectionNav) sectionNav.hidden = false;

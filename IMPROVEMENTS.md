@@ -219,7 +219,7 @@ These are bigger than a single ticket — capture the intent now, scope into tic
   - Removed keep/cut Supabase voting flow (curate/ pages, Supabase client, Routes.curate)
 - **Pending (Phase 2b):** D1 favorites table + inline heart toggle + admin tally (replaces Supabase)
 - **Pending (Phase 2b):** D1 favorites — deploy wrangler migration + Worker to production (`wrangler d1 execute` + `wrangler deploy`).
-- **Pending (Phase 3):** Private R2 bucket; **signed-URL token** image/ZIP serving (no DNS move — keep Porkbun nameservers; Worker on `*.workers.dev` issues short-lived HMAC tokens after password validation); /unlock Worker endpoint; access-codes D1 table + admin CRUD
+- **Pending (Phase 3):** Infrastructure shipped — private R2 bucket (`portfolio-images-private`), Worker `/unlock` + `/image` endpoints, `TierAuth.getHash()`, album page token fetching. Remaining: upload family photos to private bucket, verify end-to-end.
 - **Env var to add to Vercel + `.env.local`:** `SESSION_SECRET` — run `openssl rand -hex 32`
 - **Status before these phases:** IDEA (needs a decision + scoping)
 - **Goal:** Two-tier viewing:

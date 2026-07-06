@@ -5,7 +5,8 @@
   "compatibility_date": "2026-06-01",
   "workers_dev": true,
   "r2_buckets": [
-    { "binding": "BUCKET", "bucket_name": "portfolio-images" }
+    { "binding": "BUCKET",         "bucket_name": "portfolio-images" },
+    { "binding": "PRIVATE_BUCKET", "bucket_name": "portfolio-images-private" }
   ],
   // D1 binding for the favorites/voting table
   // Secrets (set via wrangler secret put):

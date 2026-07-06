@@ -565,7 +565,25 @@ const TierAuth = {
     if (typeof hashPassword !== 'function') return null;
     const hash = await hashPassword(password);
     const tiers = (typeof PASSWORD_TIERS !== 'undefined') ? PASSWORD_TIERS : {};
-    return tiers[hash] || null;
+    const audiences = tiers[hash] || null;
+    if (audiences) {
+      // Persist hash keyed by audience so album pages can exchange it for a Worker token
+      try {
+        const stored = JSON.parse(sessionStorage.getItem('tier_hashes') || '{}');
+        for (const a of audiences) stored[a] = hash;
+        sessionStorage.setItem('tier_hashes', JSON.stringify(stored));
+      } catch {}
+    }
+    return audiences;
+  },
+
+  // Retrieve the stored password hash for a given audience (for Worker token exchange).
+  // 'family' hash also grants 'friends' — fall back to family hash if friends hash absent.
+  getHash(audience) {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('tier_hashes') || '{}');
+      return stored[audience] || stored['family'] || null;
+    } catch { return null; }
   },
 };
 

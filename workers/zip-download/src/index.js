@@ -3,6 +3,162 @@ import { makeZip, predictLength } from 'client-zip';
 const R2_PUBLIC_BASE = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/';
 const MAX_FILES = 1000;
 
+// Token lifetime: 4 hours
+const TOKEN_TTL_SECONDS = 4 * 60 * 60;
+
+// ── HMAC token helpers (Web Crypto) ──────────────────────────────────────────
+
+async function importHmacKey(secret) {
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify'],
+  );
+}
+
+function b64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function b64urlDecode(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(b64);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+
+/** Create a signed token: base64url(payload).base64url(hmac) */
+async function createToken(payload, secret) {
+  const key = await importHmacKey(secret);
+  const data = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+  return `${data}.${b64url(sig)}`;
+}
+
+/** Verify token; returns parsed payload or null if invalid/expired. */
+async function verifyToken(token, secret) {
+  const dot = token.lastIndexOf('.');
+  if (dot < 1) return null;
+  const data = token.slice(0, dot);
+  const sigB64 = token.slice(dot + 1);
+  try {
+    const key = await importHmacKey(secret);
+    const sigBytes = b64urlDecode(sigB64);
+    const valid = await crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(data));
+    if (!valid) return null;
+    const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(data)));
+    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// ── /unlock — exchange password hash for a signed token ──────────────────────
+
+/**
+ * POST /unlock
+ * Body: { hash: "<sha256-of-password>" }
+ * Env secrets: UNLOCK_SECRET, FRIENDS_HASH, FAMILY_HASH
+ * Returns: { token, tier, expiresAt } or 401
+ */
+async function handleUnlock(request, env, cors) {
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
+  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (!env.UNLOCK_SECRET) return json({ error: 'Unlock not configured' }, 503);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const { hash } = body || {};
+  if (!hash || typeof hash !== 'string' || !/^[0-9a-f]{64}$/i.test(hash)) {
+    return json({ error: 'Invalid hash' }, 400);
+  }
+
+  // Match hash against known tier hashes (constant-time comparison via subtle)
+  let grantedTier = null;
+  const check = async (envHash, tierName) => {
+    if (!envHash || grantedTier) return;
+    // Use HMAC of '1' as a dummy constant-time compare proxy
+    const a = new TextEncoder().encode(hash);
+    const b = new TextEncoder().encode(envHash);
+    if (a.length !== b.length) return;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+    if (diff === 0) grantedTier = tierName;
+  };
+
+  await check(env.FAMILY_HASH, 'family');
+  await check(env.FRIENDS_HASH, 'friends');
+
+  if (!grantedTier) return json({ error: 'Invalid access code' }, 401);
+
+  const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
+  const token = await createToken({ tier: grantedTier, exp }, env.UNLOCK_SECRET);
+
+  return json({ token, tier: grantedTier, expiresAt: exp * 1000 });
+}
+
+// ── /image — serve private R2 objects behind token gate ───────────────────────
+
+/**
+ * GET /image?key=<r2-key>&token=<hmac-token>
+ * Serves from PRIVATE_BUCKET if token is valid and tier has access to this key.
+ */
+async function handleImage(request, url, env, cors) {
+  const err = (msg, status) =>
+    new Response(msg, { status, headers: { ...cors, 'Cache-Control': 'no-store' } });
+
+  if (request.method !== 'GET') return err('Method not allowed', 405);
+  if (!env.UNLOCK_SECRET || !env.PRIVATE_BUCKET) return err('Not configured', 503);
+
+  const token = url.searchParams.get('token');
+  const rawKey = url.searchParams.get('key');
+  if (!token || !rawKey) return err('Missing token or key', 400);
+
+  // Sanitise key: no traversal, no leading slash
+  const key = decodeURIComponent(rawKey).replace(/^\/+/, '').replace(/\.\./g, '');
+  if (!key) return err('Invalid key', 400);
+
+  const payload = await verifyToken(token, env.UNLOCK_SECRET);
+  if (!payload) return err('Forbidden', 403);
+
+  // Tier access rules:
+  // - 'family' → any key in the private bucket
+  // - 'client:<name>' → keys under '<name>/' prefix only
+  // - 'friends' → no private bucket access (friends albums use public R2)
+  const { tier } = payload;
+  if (tier === 'friends') return err('Forbidden', 403);
+  if (tier.startsWith('client:')) {
+    const clientName = tier.slice(7);
+    if (!key.startsWith(`${clientName}/`)) return err('Forbidden', 403);
+  }
+  // 'family' → allow all
+
+  const object = await env.PRIVATE_BUCKET.get(key);
+  if (!object) return err('Not found', 404);
+
+  const ext = key.split('.').pop().toLowerCase();
+  const contentType = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+    gif: 'image/gif', webp: 'image/webp', avif: 'image/avif' }[ext] || 'application/octet-stream';
+
+  return new Response(object.body, {
+    headers: {
+      ...cors,
+      'Content-Type': contentType,
+      'Cache-Control': 'private, max-age=3600',
+      'Content-Length': String(object.size),
+    },
+  });
+}
+
 const ALLOWED_ORIGINS = new Set([
   'https://raveenfernando.com',
   'https://www.raveenfernando.com',
@@ -209,6 +365,16 @@ export default {
     // Route favorites requests
     if (url.pathname.startsWith('/favorites')) {
       return handleFavorites(request, url, env, cors);
+    }
+
+    // Private image unlock
+    if (url.pathname === '/unlock') {
+      return handleUnlock(request, env, cors);
+    }
+
+    // Private image serving
+    if (url.pathname === '/image') {
+      return handleImage(request, url, env, cors);
     }
 
     // ZIP download (existing)
