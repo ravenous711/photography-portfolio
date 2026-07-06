@@ -3,11 +3,10 @@ export const config = { matcher: ['/(.*)'] };
 const COOKIE_NAME = 'site_preview';
 const COOKIE_VAL  = 'granted';
 
-// Vercel internals should always pass through
-const BYPASS = /^\/_vercel\//;
-
-// API routes other than /api/gate pass through too (health, etc.)
-const PASS_API = /^\/api\/(?!gate)/;
+// Vercel internals and all API routes always pass through the gate.
+// API endpoints carry their own auth (admin session, etc.) and the gate
+// handler itself lives at /api/gate — gating these would deadlock login.
+const BYPASS = /^\/(_vercel|api)(\/|$)/;
 
 function hasCookie(request) {
   const raw = request.headers.get('cookie') || '';
@@ -94,7 +93,7 @@ function gateResponse(redirectTo = '/', wrongPassword = false) {
   <div class="card">
     <h1>Under construction</h1>
     <p>Making some selections — check back soon.</p>
-    <form method="POST" action="/api/gate">
+    <form method="POST" action="/api/gate/">
       <input type="hidden" name="redirect" value="${safeRedirect}" />
       <input type="password" name="password" placeholder="Preview password" autofocus />
       ${wrongPassword ? '<span class="error">Incorrect password — try again</span>' : ''}
@@ -113,8 +112,8 @@ function gateResponse(redirectTo = '/', wrongPassword = false) {
 export default function middleware(request) {
   const { pathname, searchParams } = new URL(request.url);
 
-  // Always let Vercel internals and the gate API through
-  if (BYPASS.test(pathname) || PASS_API.test(pathname) || pathname === '/api/gate') return;
+  // Always let Vercel internals and all API routes through
+  if (BYPASS.test(pathname)) return;
 
   // Authenticated — pass through
   if (hasCookie(request)) return;
