@@ -18,30 +18,16 @@
       "destination": "/gallery/:id/",
       "permanent": true
     },
-    {
-      "source": "/curate.html",
-      "has": [{ "type": "query", "key": "album", "value": "(?<id>.*)" }],
-      "destination": "/curate/:id/",
-      "permanent": true
-    },
-    {
-      "source": "/curate-group.html",
-      "has": [{ "type": "query", "key": "group", "value": "(?<id>.*)" }],
-      "destination": "/curate/group/:id/",
-      "permanent": true
-    }
+    { "source": "/curate.html", "destination": "/gallery/", "permanent": true },
+    { "source": "/curate-group.html", "destination": "/gallery/", "permanent": true }
   ],
   "rewrites": [
     { "source": "/unlock/", "destination": "/unlock/index.html" },
-    { "source": "/curate/group/:id/", "destination": "/curate/group/index.html" },
-    { "source": "/curate/group/:id", "destination": "/curate/group/index.html" },
     { "source": "/gallery/:groupId/:slug/", "destination": "/album/index.html" },
     { "source": "/gallery/:groupId/:slug", "destination": "/album/index.html" },
     { "source": "/gallery/:id/", "destination": "/group/index.html" },
     { "source": "/gallery/:id", "destination": "/group/index.html" },
     { "source": "/album/:id/", "destination": "/album/index.html" },
-    { "source": "/album/:id", "destination": "/album/index.html" },
-    { "source": "/curate/:id/", "destination": "/curate/index.html" },
-    { "source": "/curate/:id", "destination": "/curate/index.html" }
+    { "source": "/album/:id", "destination": "/album/index.html" }
   ]
 }

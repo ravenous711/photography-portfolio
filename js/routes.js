@@ -18,16 +18,6 @@ const Routes = {
     return `/gallery/${encodeURIComponent(id)}/`;
   },
 
-  curate(albumId) {
-    return `/curate/${encodeURIComponent(albumId)}/`;
-  },
-
-  curateGroup(groupId, pw) {
-    let url = `/curate/group/${encodeURIComponent(groupId)}/`;
-    if (pw) url += `?pw=${encodeURIComponent(pw)}`;
-    return url;
-  },
-
   albumPageUrl(album) {
     if (!album) return this.gallery;
     if (album.type === 'group') return this.group(album.id);

@@ -260,56 +260,6 @@
       border-color: var(--color-text);
     }
 
-    /* ── Curation results ── */
-    .curation-album { margin-bottom: 2.5rem; }
-    .curation-album h2 {
-      font-family: var(--font-serif);
-      font-size: 1.25rem; font-weight: 300;
-      letter-spacing: 0.04em;
-      margin: 0 0 0.15rem;
-      color: var(--color-text);
-    }
-    .curation-album .curate-link {
-      font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--color-gold); text-decoration: none;
-    }
-    .curation-album .curate-link:hover { text-decoration: underline; }
-    .curation-photo-row {
-      display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--color-border);
-      cursor: pointer;
-    }
-    .curation-photo-row:hover { background: var(--color-surface); margin: 0 -0.5rem; padding: 0.5rem 0.5rem; }
-    .curation-photo-row img {
-      width: 52px; height: 52px;
-      object-fit: cover; border-radius: 2px; flex-shrink: 0;
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .curation-photo-row img.loaded { opacity: 1; }
-    .curation-photo-row .vote-bars { flex: 1; }
-    .vote-bar-label {
-      display: flex; justify-content: space-between;
-      font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--color-muted); margin-bottom: 4px;
-    }
-    .vote-bar-track {
-      height: 4px; background: var(--color-border);
-      border-radius: 2px; overflow: hidden; margin-bottom: 3px;
-    }
-    .vote-bar-keep { height: 100%; background: #22c55e; border-radius: 2px; }
-    .vote-bar-cut  { height: 100%; background: #ef4444; border-radius: 2px; }
-    .curation-select-check {
-      width: 18px; height: 18px; flex-shrink: 0;
-      accent-color: #ef4444; cursor: pointer;
-    }
-    .select-all-row {
-      display: flex; align-items: center; gap: 0.5rem;
-      margin-bottom: 0.75rem;
-      font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--color-muted);
-    }
-    .no-votes { font-size: 0.82rem; color: var(--color-muted); padding: 0.5rem 0; }
   </style>
 </head>
 <body class="overflow-x-hidden">
@@ -340,7 +290,6 @@
       <span style="font-family:var(--font-serif);font-size:1.1rem;letter-spacing:0.06em;color:var(--color-text);flex:1">Admin</span>
       <!-- Tab switcher -->
       <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
-      <button class="btn-ghost tab-btn" id="tab-curation" onclick="switchTab('curation')">Curation</button>
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
       <button class="btn-ghost" id="curate-btn" disabled onclick="saveCuratedSet()" style="border-color:var(--color-gold);color:var(--color-gold)">Save as curated set</button>
@@ -353,16 +302,6 @@
       <div id="album-list"></div>
     </main>
 
-    <!-- ── Curation tab ── -->
-    <main id="pane-curation" style="display:none; padding: 2rem 1.5rem 4rem">
-      <div id="curate-share-links" style="margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--color-border)">
-        <p style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-muted);margin:0 0 0.75rem">Share curate links</p>
-        <div id="curate-share-list"></div>
-      </div>
-      <div id="curation-list">
-        <p style="color:var(--color-muted);font-size:0.85rem">Loading vote data…</p>
-      </div>
-    </main>
 
   </div>
 
@@ -872,184 +811,6 @@
       else if (e.key === 'd' || e.key === 'D') { lbToggleMark(); }
     });
 
-    // ── Tab switching ─────────────────────────────────────────────────────────
-    let curationLoaded = false;
-    function switchTab(tab) {
-      document.getElementById('pane-albums').style.display   = tab === 'albums'   ? '' : 'none';
-      document.getElementById('pane-curation').style.display = tab === 'curation' ? '' : 'none';
-      document.getElementById('tab-albums').classList.toggle('active',   tab === 'albums');
-      document.getElementById('tab-curation').classList.toggle('active', tab === 'curation');
-      // Hide the deletion toolbar items on curation tab
-      document.getElementById('selection-count').style.display = tab === 'albums' ? '' : 'none';
-      document.querySelector('.btn-ghost[onclick="clearSelection()"]').style.display = tab === 'albums' ? '' : 'none';
-      document.getElementById('commit-btn').style.display = tab === 'albums' ? '' : 'none';
-      if (tab === 'curation' && !curationLoaded) {
-        curationLoaded = true;
-        loadCurationResults();
-      }
-    }
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://dgajyvjxvobmnqxticvh.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_pwy5JTpQQG9VjrSmbBG4_Q_WWY8_NFa';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function renderCurateShareLinks() {
-      const list = document.getElementById('curate-share-list');
-      const groups = (ALBUMS || []).filter(a => a.type === 'group' && a.curatePasswordHash);
-      if (!groups.length) {
-        list.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No group curate links configured.</p>';
-        return;
-      }
-      list.innerHTML = groups.map(g => {
-        const url = `${location.origin}${Routes.curateGroup(g.id)}`;
-        return `
-          <div style="margin-bottom:0.75rem">
-            <strong style="font-size:0.85rem">${g.title}</strong>
-            <a class="curate-link" href="${url}" target="_blank" style="display:block;margin-top:0.25rem">↗ ${url}</a>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function loadCurationResults() {
-      renderCurateShareLinks();
-
-      const container = document.getElementById('curation-list');
-      container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">Loading…</p>';
-
-      const { data, error } = await sb
-        .from('votes')
-        .select('album_id, photo_url, vote');
-
-      if (error) {
-        container.innerHTML = `<p style="color:#f87171;font-size:0.85rem">Failed to load votes: ${error.message}</p>`;
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No votes yet. Share a curate link with friends.</p>';
-        return;
-      }
-
-      // Aggregate: { albumId: { photoUrl: { keep: N, cut: N } } }
-      const agg = {};
-      data.forEach(({ album_id, photo_url, vote }) => {
-        if (!agg[album_id]) agg[album_id] = {};
-        if (!agg[album_id][photo_url]) agg[album_id][photo_url] = { keep: 0, cut: 0 };
-        agg[album_id][photo_url][vote]++;
-      });
-
-      container.innerHTML = '';
-
-      Object.entries(agg).forEach(([albumId, photoVotes]) => {
-        const albumConfig = (ALBUMS || []).find(a => a.id === albumId);
-        const albumTitle  = albumConfig ? albumConfig.title : albumId;
-
-        // Sort photos by cut votes descending
-        const sorted = Object.entries(photoVotes)
-          .sort(([, a], [, b]) => b.cut - a.cut);
-
-        const section = document.createElement('div');
-        section.className = 'curation-album';
-
-        const curateUrl = `${location.origin}${Routes.curate(albumId)}`;
-        section.innerHTML = `
-          <h2>${albumTitle}</h2>
-          <a class="curate-link" href="${curateUrl}" target="_blank">↗ Share curate link</a>
-          <div class="select-all-row" style="margin-top:0.75rem">
-            <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer">
-              <input type="checkbox" onchange="toggleSelectCutAbove(this, '${albumId}', 1)"
-                style="accent-color:#ef4444;cursor:pointer" />
-              Select all with ≥1 Cut vote
-            </label>
-          </div>
-          <div class="curation-photo-list" id="curation-${albumId}"></div>
-        `;
-        container.appendChild(section);
-
-        const list = section.querySelector(`#curation-${albumId}`);
-
-        sorted.forEach(([photoUrl, v]) => {
-          const total = v.keep + v.cut;
-          const keepPct = total > 0 ? (v.keep / total) * 100 : 0;
-          const cutPct  = total > 0 ? (v.cut  / total) * 100 : 0;
-
-          const row = document.createElement('div');
-          row.className = 'curation-photo-row';
-          row.dataset.url = photoUrl;
-          row.dataset.albumId = albumId;
-
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.className = 'curation-select-check';
-          cb.onchange = () => {
-            if (cb.checked) selected.add(photoUrl); else selected.delete(photoUrl);
-            updateToolbar();
-          };
-
-          const img = document.createElement('img');
-          img.alt = '';
-          img.decoding = 'async';
-          img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-          img.addEventListener('error', () => { img.src = photoUrl; }, { once: true });
-          img.src = thumbUrl(photoUrl);
-
-          const bars = document.createElement('div');
-          bars.className = 'vote-bars';
-          bars.innerHTML = `
-            <div class="vote-bar-label">
-              <span>✓ Keep &nbsp;${v.keep}</span>
-              <span>${v.cut}&nbsp; Cut ✕</span>
-            </div>
-            <div class="vote-bar-track"><div class="vote-bar-keep" style="width:${keepPct}%"></div></div>
-            <div class="vote-bar-track"><div class="vote-bar-cut"  style="width:${cutPct}%"></div></div>
-          `;
-
-          const cutBadge = document.createElement('span');
-          cutBadge.style.cssText = 'font-size:0.7rem;letter-spacing:0.06em;color:var(--color-muted);flex-shrink:0';
-          cutBadge.textContent = `${total} vote${total !== 1 ? 's' : ''}`;
-
-          row.appendChild(cb);
-          row.appendChild(img);
-          row.appendChild(bars);
-          row.appendChild(cutBadge);
-          list.appendChild(row);
-
-          // Click image → lightbox (no album nav list for curation); click row → toggle checkbox
-          img.style.cursor = 'zoom-in';
-          row.addEventListener('click', (e) => {
-            if (e.target === cb) return;
-            if (e.target === img) { openLightbox(photoUrl, [photoUrl]); return; }
-            cb.checked = !cb.checked;
-            cb.onchange();
-          });
-        });
-      });
-    }
-
-    function toggleSelectCutAbove(masterCb, albumId, threshold) {
-      const list = document.getElementById(`curation-${albumId}`);
-      list.querySelectorAll('.curation-photo-row').forEach(row => {
-        const cb = row.querySelector('.curation-select-check');
-        const url = row.dataset.url;
-        // Count cut votes from agg — re-read from DOM bars label
-        const label = row.querySelector('.vote-bar-label');
-        if (!label) return;
-        const cutMatch = label.textContent.match(/(\d+)\s*Cut/);
-        const cutVotes = cutMatch ? parseInt(cutMatch[1]) : 0;
-        if (cutVotes >= threshold) {
-          cb.checked = masterCb.checked;
-          if (masterCb.checked) selected.add(url); else selected.delete(url);
-        }
-      });
-      updateToolbar();
-      // Show albums tab commit button when items are selected from curation tab
-      document.getElementById('commit-btn').style.display = '';
-      document.getElementById('selection-count').style.display = '';
-    }
   </script>
 </body>
 </html>
