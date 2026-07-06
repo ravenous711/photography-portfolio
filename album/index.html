@@ -2542,7 +2542,9 @@
     .fav-badge.hearted { color: #e85d6e; background: rgba(0,0,0,0.55); }
     .fav-badge.hearted svg { fill: #e85d6e; stroke: #e85d6e; }
     .fav-badge:hover { background: rgba(0,0,0,0.7); }
-    /* Show all fav badges on tiles when favorites are enabled for this album */
+    /* Show fav badges on tiles in full-album mode (body class set by applyFullAlbumMode) */
+    body.full-album-mode .photo-thumb .fav-badge { display: flex; }
+    /* Legacy class-based rule kept for safety */
     .favorites-enabled .photo-thumb .fav-badge { display: flex; }
     /* Keep fav badge hidden in select mode (ZIP selection UI takes over) */
     .select-mode .fav-badge { display: none !important; }
