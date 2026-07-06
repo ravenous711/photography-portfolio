@@ -532,10 +532,11 @@
       if (unlockItem)    unlockItem.style.display = 'none';
       if (mobileAllLink) { mobileAllLink.style.display = ''; mobileAllLink.href = hubUrl; }
 
-      // Cross-link bar: "View public gallery →"
+      // Cross-link bar: "View public gallery →" — skip for family albums (no curation)
+      const albumAudienceFull = album?.audience || 'public';
       const bar = document.getElementById('album-crosslink-bar');
       const btn = document.getElementById('album-crosslink-btn');
-      if (bar && btn && album) {
+      if (bar && btn && album && albumAudienceFull !== 'family' && !albumAudienceFull.startsWith('family:')) {
         btn.textContent = 'View public gallery →';
         btn.href = Routes.curatedUrl(album);
         bar.hidden = false;
@@ -557,10 +558,11 @@
       if (allAlbumsLink) allAlbumsLink.href = hubUrl;
       if (mobileAllLink) { mobileAllLink.style.display = ''; mobileAllLink.href = hubUrl; }
 
-      // Cross-link bar: "Open full album →"
+      // Cross-link bar: "Open full album →" — skip for family albums (no curation)
+      const albumAudienceCurated = album?.audience || 'public';
       const bar = document.getElementById('album-crosslink-bar');
       const btn = document.getElementById('album-crosslink-btn');
-      if (bar && btn) {
+      if (bar && btn && albumAudienceCurated !== 'family' && !albumAudienceCurated.startsWith('family:')) {
         const fullUrl = Routes.fullAlbumUrl(album, shareKey);
         btn.textContent = 'Open full album →';
         btn.href = fullUrl;
