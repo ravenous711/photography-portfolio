@@ -298,11 +298,14 @@
 
         const granted = await TierAuth.tryUnlock(input.value.trim());
 
-        if (granted) {
+          if (granted) {
           TierAuth.grant(granted, remember.checked);
           updateNavLink();
 
-          // If it's a single client album, redirect straight there
+          // Check for a ?next= redirect (from album page or banner link)
+          const nextParam = new URLSearchParams(window.location.search).get('next');
+
+          // If it's a single client album, redirect straight to their album
           const clientTier = granted.find(t => t.startsWith('client:'));
           if (clientTier) {
             const clientId = clientTier.slice(7);
@@ -314,6 +317,13 @@
               setTimeout(() => window.location.href = Routes.albumPageUrl(album), 800);
               return;
             }
+          }
+
+          // If there's a ?next= param, redirect there after unlock
+          if (nextParam && nextParam.startsWith('/')) {
+            showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')} — redirecting…`);
+            setTimeout(() => window.location.href = nextParam, 800);
+            return;
           }
 
           showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')}`);
