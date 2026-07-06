@@ -62,6 +62,8 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 | FEAT-1 | Idea | M–L | Med | ✅ DONE |
 | UX-8 | Header UX | M | Med | ✅ DONE |
 | FEAT-2 | Friends curation flow | L | Med | ✅ DONE |
+| FEAT-3 | Select & download workflow | L | Med | TODO |
+| UX-HEARTS | Differentiate hearts vs selection visually | S | Low | TODO |
 
 ### Where to start next
 1. **Quick wins:** Tier bugs BUG-1…BUG-3 + A11Y-1/A11Y-2 (small, isolated, low risk).
@@ -273,6 +275,29 @@ These are bigger than a single ticket — capture the intent now, scope into tic
   - Confirm the public "best of" split (see FEAT-1) as the companion public tier.
 - **Related:** NOTE-1 (the limitation this fixes), MNT-1 (password-gate module becomes the
   client UX layer), MNT-5 (manifest-based config makes authenticated album manifests easier).
+
+### FEAT-3 — Robust select & download workflow
+- **Effort:** L · **Risk:** Med · **Status:** TODO
+- **Why:** The original select-to-download feature (select individual photos → download as ZIP) was
+  temporarily removed because the selection heart badge was visually identical to the favorites
+  heart badge, causing confusion for friends trying to vote on photos.
+- **Fix:** Design distinct, clearly separated affordances for (a) hearting/voting and (b) selecting
+  for download. Consider: different icons (heart for vote, checkbox or plus for download), different
+  positions on the thumbnail, or a dedicated download mode that's visually distinct from the
+  curation mode. The JS logic is preserved in `album/index.html` behind a CSS `display:none` block
+  — search for "FEAT-3" to find it. Re-enable and restyle once the design is settled.
+- **Files:** `album/index.html` (select-mode CSS block, `setupSelectModeControls`, `toggleThumb`,
+  `downloadPhotos`, `downloadSelected`, `photo-thumb-like`)
+- **Done when:** Friends can clearly tell "heart this photo" from "add to my download list" at a
+  glance; both flows work on mobile and desktop without ambiguity.
+
+### UX-HEARTS — Differentiate favorites heart from selection indicator
+- **Effort:** S · **Risk:** Low · **Status:** TODO (blocked on FEAT-3 design)
+- **Why:** `.fav-badge` and `.photo-thumb-like` are both heart-shaped icons at the bottom-right of
+  a thumbnail. When both are visible (full album + select mode) friends can't tell them apart.
+- **Fix:** Part of FEAT-3 — agree on distinct icons/positions before re-enabling selection.
+
+---
 
 ### FEAT-1 — Public "best of" curated albums
 - **Effort:** M–L · **Risk:** Med · **Status:** ✅ DONE (Jul 2026, curated picker shipped, placeholder sets on all albums)

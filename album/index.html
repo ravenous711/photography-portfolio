@@ -2602,6 +2602,23 @@
     body.album-select-mode main {
       padding-bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px));
     }
+
+    /* ── Selection/download feature temporarily disabled (see FEAT-3 in IMPROVEMENTS.md) ──
+       Hearts for favorites and select-to-download were visually identical, causing confusion.
+       The selection UI is hidden but the JS logic is preserved for the future rebuild. */
+    #select-btn,
+    #liked-count-btn,
+    #clear-selection-btn,
+    #album-nav-select-btn,
+    #album-nav-clear-btn,
+    #album-nav-liked-btn,
+    #selection-bar,
+    #selection-bar.show,
+    #liked-download-confirm,
+    #lightbox-like,
+    .photo-thumb-like {
+      display: none !important;
+    }
   </style>
 </body>
 </html>
