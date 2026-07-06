@@ -343,6 +343,7 @@
       <button class="btn-ghost tab-btn" id="tab-curation" onclick="switchTab('curation')">Curation</button>
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
+      <button class="btn-ghost" id="curate-btn" disabled onclick="saveCuratedSet()" style="border-color:var(--color-gold);color:var(--color-gold)">Save as curated set</button>
       <button class="btn-danger" id="commit-btn" disabled onclick="commitDeletions()">Commit Deletions</button>
       <button class="btn-ghost" onclick="signOut()" style="color:var(--color-muted);margin-left:0.5rem">Sign out</button>
     </div>
@@ -461,6 +462,24 @@
       document.getElementById('selection-count').textContent =
         count === 0 ? '0 selected' : `${count} photo${count !== 1 ? 's' : ''} selected`;
       document.getElementById('commit-btn').disabled = count === 0;
+      // Curate button: enabled when 1+ photos selected from a single album
+      const albumId = selectedAlbumId();
+      const curateBtn = document.getElementById('curate-btn');
+      curateBtn.disabled = count === 0 || !albumId;
+      curateBtn.title = albumId ? `Save ${count} photo${count !== 1 ? 's' : ''} as curated set for "${albumId}"` : 'Select photos from one album to curate';
+    }
+
+    // Return the album id shared by all selected photos, or null if mixed/none
+    function selectedAlbumId() {
+      if (selected.size === 0) return null;
+      const ids = new Set();
+      selected.forEach(url => {
+        const thumb = document.querySelector(`.photo-thumb[data-url="${CSS.escape(url)}"]`) ||
+                      document.querySelector(`.photo-thumb[data-url="${url}"]`);
+        if (thumb) ids.add(thumb.closest('[data-album-id]')?.dataset.albumId || null);
+      });
+      ids.delete(null);
+      return ids.size === 1 ? [...ids][0] : null;
     }
 
     function clearSelection() {
@@ -526,6 +545,7 @@
 
         const section = document.createElement('div');
         section.className = 'album-section';
+        section.dataset.albumId = album.id;
 
         // Header (clickable)
         const header = document.createElement('div');
@@ -671,6 +691,59 @@
 
       btn.textContent = 'Commit Deletions';
       btn.disabled = selected.size === 0;
+    }
+
+    // ── Save as curated set ───────────────────────────────────────────────────
+    async function saveCuratedSet() {
+      const albumId = selectedAlbumId();
+      if (!albumId || selected.size === 0) return;
+
+      const album = ALBUMS.find(a => a.id === albumId);
+      const albumTitle = album ? album.title : albumId;
+      const count = selected.size;
+
+      const ok = confirm(
+        `Save ${count} selected photo${count !== 1 ? 's' : ''} as the curated set for "${albumTitle}"?\n\n` +
+        `This will be the public view of this album. The full album stays accessible to unlocked viewers.\n\n` +
+        `Tip: select photos in the order you want them to appear.`
+      );
+      if (!ok) return;
+
+      const btn = document.getElementById('curate-btn');
+      btn.textContent = 'Saving…'; btn.disabled = true;
+
+      // Preserve selection order by reading URLs in DOM order
+      const allThumbs = document.querySelectorAll(`.album-section[data-album-id="${CSS.escape(albumId)}"] .photo-thumb`);
+      const orderedPhotos = [];
+      allThumbs.forEach(thumb => {
+        const url = thumb.dataset.url;
+        if (url && selected.has(url)) orderedPhotos.push(url);
+      });
+
+      try {
+        const res = await fetch('/api/admin-curate', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId, photos: orderedPhotos }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(`Error: ${data.error || res.statusText}`, 6000);
+        } else if (!data.changed) {
+          showToast('Curated set unchanged (same photos already saved).');
+        } else {
+          showToast(`Saved curated[${orderedPhotos.length}] for "${albumTitle}" — Vercel redeploying.`, 6000);
+          clearSelection();
+        }
+      } catch (err) {
+        showToast(`Request failed: ${err.message}`);
+      }
+
+      btn.textContent = 'Save as curated set';
+      updateToolbar();
     }
 
     // ── Toast ────────────────────────────────────────────────────────────────
