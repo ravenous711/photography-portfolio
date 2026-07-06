@@ -8,30 +8,38 @@ description: Guides the user through adding a new photo album to the photography
 Workflow for adding a new album to Raveen's photography portfolio. Always follow all steps in order.
 
 ## Key facts
-- R2 bucket: `portfolio-images`
+- Public R2 bucket: `portfolio-images` — public albums + grid thumbnails for ALL albums
+- Private R2 bucket: `portfolio-images-private` — family and client album originals
 - Cloudflare account ID: `723c27febd4a099c7884fdf00de2329f`
-- Wrangler OAuth token location: `~/Library/Preferences/.wrangler/config/default.toml`
-- Albums config: `js/config.js` (repo root)
 - R2 base URL: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev`
 - Live site: `https://photography-portfolio-pi-blush.vercel.app`
 - Wrangler path: `/opt/homebrew/bin/wrangler` — always `export PATH="/opt/homebrew/bin:$PATH"` first
-- Upload helper template: `scripts/upload-album.sh` (retry + two-phase pattern)
-- Grid: every upload must generate + upload a 1200px-wide JPEG to `grid/<R2-folder-name>/` for album/admin/curate display (lightbox uses full-res)
-- External drive: `/Volumes/PhotosSSD/Photos/` (Italy exports, California starred, etc.)
+- Albums config: `js/config.js` (repo root)
+- External drive: `/Volumes/PhotosSSD/Photos/`
 
-## Cloudflare rate limit behaviour (learned from experience)
-- R2 API rate-limits sequential uploads — rapid back-to-back calls fail with `fetch failed`
-- Transient 503 / auth errors also happen mid-batch — **always auto-retry** (see helper below)
-- After a cooldown of a few minutes, you can upload with **no sleep** and it works fine
+## Audience tiers
+
+| Audience | Who sees it | Bucket | Shows on |
+|---|---|---|---|
+| `public` | Everyone | public | `/gallery/` |
+| `friends` | Friends password | public | `/gallery/` + `/fullalbums/` |
+| `family` | Raveen master password | private | `/family/` (both groups) |
+| `family:anger-ali` | Anger-Ali family password | private | `/family/` (Anger-Ali section) |
+| `family:fernando` | Fernando family password | private | `/family/` (Fernando section) |
+| `client:<name>` | Client access code | private | admin only |
+
+**Always set `hidden: true` for family and client albums.**
+No `PASSWORD_TIERS` edit needed for family sub-tiers — they are already configured.
+
+## Cloudflare rate limit behaviour
+- R2 API rate-limits sequential uploads — always auto-retry (see helper below)
 - During an active session, use `sleep 15` between originals, `sleep 10` between grids
-- If failures persist, double to 30s then 60s
 - **Never use `sleep 5`** — too fast, causes consistent failures
-- **Never interleave orig/grid per file** — generate all grids locally, upload all originals, then all grids
+- **Never interleave orig/grid per file** — upload all originals first, then all grids
 
-## Path gotcha (macOS)
-Photo folders often contain spaces (e.g. `06 June`). **Never** build file lists with `ls | xargs basename` — it splits on spaces and produces bogus filenames.
+## Path gotchas (macOS + zsh)
 
-Use a bash loop instead:
+**Spaces in paths**: Never build file lists with `ls | xargs basename`. Use a bash loop:
 ```bash
 FILES=()
 for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
@@ -42,9 +50,12 @@ IFS=$'\n' FILES=($(printf '%s\n' "${FILES[@]}" | sort))
 unset IFS
 ```
 
-## Upload helper — use in every upload loop
+**zsh nullglob**: In zsh, unmatched globs (`*.JPG` when no JPGs exist) throw errors. Add at the top of every upload script:
+```bash
+setopt nullglob
+```
 
-Always define this once at the top of upload scripts (also in `scripts/upload-album.sh`). Retries 3 times with 15s / 30s / 60s backoff before marking failed:
+## Upload helper — use in every upload loop
 
 ```bash
 upload_with_retry() {
@@ -68,12 +79,11 @@ upload_with_retry() {
 
 ## Step 1 — Gather info (ask the user)
 
-Ask these if not already provided:
 1. **Photo folder path** — where are the photos locally?
 2. **All photos or starred only?** — all JPGs, or only Lightroom star rating > 0?
-3. **Audience** — `public` (city album with curated set), `friends` (city album, full album unlocked for friends), `family` (hidden, unlocked with family password), or `client:<name>` (hidden, unique client password)?
-4. **Album name** — suggest one based on the folder name or event if not given
-5. **Password** — only if `client:<name>`; friends/family passwords are shared site-wide
+3. **Audience** — see tier table above
+4. **Album structure** — flat album (digital + optional filmSections) or multi-city group?
+5. **Album name** — suggest one from the folder name if not given
 
 ## Step 2 — Find starred photos (if filtering by rating)
 
@@ -84,15 +94,14 @@ FOLDER="<path>"
 exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null | awk -F'\t' '$1 > 0 {print $2}' | sort
 ```
 
-Show the user the count and confirm before uploading.
-
 ## Step 3 — Generate grid images locally (1200px)
 
-Use macOS `sips` to resize to **1200px** wide. Used on the album page, admin, and curate. Lightbox still uses full-res originals.
-Run in Cursor shell (`required_permissions: ["all"]`):
+Grids always go to the **public** bucket (`portfolio-images/grid/...`), even for private family albums.
+They power the album card thumbnails on `/gallery/` and `/family/`.
 
-**All photos:**
 ```bash
+export PATH="/opt/homebrew/bin:$PATH"
+setopt nullglob
 FOLDER="<local path>"
 GRID_DIR="/tmp/grid_<R2-folder-name>"
 mkdir -p "$GRID_DIR"
@@ -105,75 +114,71 @@ done
 echo "Done. $(ls "$GRID_DIR" | wc -l | tr -d ' ') grid images"
 ```
 
-**Starred photos only:** same loop but filter via exiftool first (see Step 2).
-
-Grid images are typically 150–400KB vs 5–20MB for originals.
-
 ## Step 4 — Upload originals
 
-Run yourself via Shell tool with `required_permissions: ["all", "full_network"]`, backgrounded (`block_until_ms: 0`).
+- **Public / friends albums** → `portfolio-images/<R2-folder-name>`
+- **Family / client albums** → `portfolio-images-private/<R2-folder-name>`
 
-**All photos:**
+Run backgrounded (`block_until_ms: 0`, `required_permissions: ["all", "full_network"]`):
+
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
+setopt nullglob
 FOLDER="<local path>"
-DEST="portfolio-images/<R2-folder-name>"
+DEST="portfolio-images/<R2-folder-name>"   # or portfolio-images-private/...
+fail=0
 
-for f in "$FOLDER"/*.JPG "$FOLDER"/*.jpg; do
+FILES=()
+for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
   [ -f "$f" ] || continue
+  FILES+=("$f")
+done
+IFS=$'\n' FILES=($(printf '%s\n' "${FILES[@]}" | sort)); unset IFS
+
+for f in "${FILES[@]}"; do
   upload_with_retry "$DEST/$(basename "$f")" "$f" "$(basename "$f")" || fail=$((fail+1))
   sleep 15
 done
-```
-
-**Starred photos only:**
-```bash
-export PATH="/opt/homebrew/bin:$PATH"
-FOLDER="<local path>"
-DEST="portfolio-images/<R2-folder-name>"
-
-exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null \
-  | awk -F'\t' '$1 > 0 {print $2}' | sort \
-  | while read fname; do
-      upload_with_retry "$DEST/$fname" "$FOLDER/$fname" "$fname" || fail=$((fail+1))
-      sleep 15
-    done
+echo "=== Done. Failures: $fail ==="
 ```
 
 ## Step 5 — Upload grid images
 
-Run after originals complete. Grid images go to `grid/<R2-folder-name>/`. Use `sleep 10` between files.
+Always to the **public** bucket. Run after originals complete:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
+setopt nullglob
 GRID_DIR="/tmp/grid_<R2-folder-name>"
 DEST="portfolio-images/grid/<R2-folder-name>"
+gfail=0
 
 for f in "$GRID_DIR"/*.jpg; do
   [ -f "$f" ] || continue
   upload_with_retry "$DEST/$(basename "$f")" "$f" "grid $(basename "$f")" || gfail=$((gfail+1))
   sleep 10
 done
+echo "=== Grid done. Failures: $gfail ==="
 ```
 
-## Step 6 — Verify via manifest (always do this automatically)
+## Step 6 — Verify via manifest
 
-After both upload loops finish, **run this yourself** — do not wait for the user to ask. Check both folders:
+After both upload loops finish, run automatically:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
 TOKEN=$(grep 'oauth_token' ~/Library/Preferences/.wrangler/config/default.toml | awk -F'"' '{print $2}')
 ACCOUNT_ID="723c27febd4a099c7884fdf00de2329f"
+BUCKET="portfolio-images"   # or portfolio-images-private for family/client
 FOLDER_NAME="<R2-folder-name>"
 
 echo "=== Originals ==="
-curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/portfolio-images/objects?prefix=$FOLDER_NAME/&per_page=1000" \
+curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/$BUCKET/objects?prefix=$FOLDER_NAME/&per_page=1000" \
   -H "Authorization: Bearer $TOKEN" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 uploaded = sorted(o['key'].split('/')[-1] for o in data['result'])
 print(f'Found {len(uploaded)} files')
-for f in uploaded: print(f'  {f}')
 "
 
 echo "=== Grid ==="
@@ -181,65 +186,54 @@ curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/po
   -H "Authorization: Bearer $TOKEN" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
-uploaded = sorted(o['key'].split('/')[-1] for o in data['result'])
-print(f'Found {len(uploaded)} grid images')
+print(f'Found {len(data[\"result\"])} grid images')
 "
 ```
 
-Counts should match for originals and grid. Any missing files go to Step 7.
+Retry any missing files before moving on.
 
-## Step 7 — Auto-retry missing files (always do this automatically)
+## Step 7 — Add album to config.js
 
-**Run this yourself** after Step 6 if anything is missing. Loop until manifest is complete or 3 rounds exhausted:
+Read `js/config.js` first. Use `${R2_BASE_URL}/<R2-folder-name>/` for all photo URLs regardless of bucket — the album page rewrites family/client URLs to Worker tokens at runtime via `toImageUrl()`.
 
-```bash
-export PATH="/opt/homebrew/bin:$PATH"
-FOLDER="<local path>"
-GRID_DIR="/tmp/grid_<R2-folder-name>"
-DEST="portfolio-images/<R2-folder-name>"
-GRID_DEST="portfolio-images/grid/<R2-folder-name>"
-# MISSING_ORIGINALS and MISSING_GRID = filenames from Step 6 diff
+### Flat album with digital + film sections (Maryland / Red Rock pattern)
 
-for fname in $MISSING_ORIGINALS; do
-  upload_with_retry "$DEST/$fname" "$FOLDER/$fname" "$fname"
-done
-for fname in $MISSING_GRID; do
-  upload_with_retry "$GRID_DEST/$fname" "$GRID_DIR/$fname" "grid $fname"
-done
-```
+Use this for a single event with mixed digital and film:
 
-Re-run Step 6 after each retry round. Tell the user only if files remain missing after 3 rounds.
-When a background upload task finishes, check the log for `✗ FAILED` lines and retry those immediately — do not leave single-file failures for the user.
-
-## Step 8 — Generate password hash (if protected)
-
-```bash
-python3 -c "import hashlib; print(hashlib.sha256(b'<password>').hexdigest())"
-```
-
-## Step 9 — Add album to config.js
-
-Read `js/config.js` first, then add to the `ALBUMS` array.
-
-- Use originals (`${R2_BASE_URL}/<R2-folder-name>/`) for `coverImage` and `photos` arrays (these are used for the full-res gallery and lightbox)
-- The site automatically builds grid URLs (`grid/...`) for album, admin, and curate previews
-- **Always set `audience`** — this controls who can access the album
-
-**Public city album** (`audience: 'public'` — curated set shown to all, full album is fallback):
 ```js
 {
   id: '<slug>',
   title: '<Title>',
   description: '<Short description.>',
-  audience: 'public',
+  location: '<City>',
+  date: '<Month YYYY>',
+  audience: 'family:anger-ali',   // or family:fernando / friends / public
+  hidden: true,                    // always true for family albums
   protected: false,
-  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
-  photos: [ `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.JPG>`, ... ],
-  // curated: []  ← add via admin "Save as curated set" after photos are live
+  digitalLabel: 'Fujifilm X-T5',  // optional — label above digital grid
+  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<COVER.jpg>`,
+  photos: [
+    `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.jpg>`,
+    // ...
+  ],
+  filmSections: [
+    {
+      label: '<Camera> — <Film Stock>',
+      navLabel: '<Short label>',   // shown in jump nav
+      camera: '<Camera>',
+      filmStock: '<Film Stock>',
+      photos: [
+        `${R2_BASE_URL}/<film-R2-folder>/<FRAME1.jpg>`,
+        // ...
+      ],
+    },
+    // add more sections for additional rolls
+  ],
 },
 ```
 
-**Friends city album** (`audience: 'friends'` — curated set public, full album unlocked with `rf-pix-2026`):
+### Public/friends flat album
+
 ```js
 {
   id: '<slug>',
@@ -247,64 +241,25 @@ Read `js/config.js` first, then add to the `ALBUMS` array.
   description: '<Short description.>',
   audience: 'friends',
   protected: false,
-  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
-  photos: [ ... ],
-  // curated: []  ← add via admin "Save as curated set"
+  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.jpg>`,
+  photos: [ `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.jpg>`, ... ],
+  // curated: []  ← add via admin "Save as curated set" after photos are live
 },
 ```
 
-**Family album** (hidden, unlocked with `rf-family-pw`):
-```js
-{
-  id: '<slug>',
-  title: '<Title>',
-  description: '<Short description.>',
-  audience: 'family',
-  hidden: true,
-  protected: false,
-  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
-  photos: [ ... ],
-},
-```
+### Multi-city group album (Italy pattern)
 
-**Client album** (hidden, unique client password — also add hash to `PASSWORD_TIERS`):
-```js
-{
-  id: 'client-<name>',
-  title: '<Title>',
-  description: '<Short description.>',
-  audience: 'client:<name>',
-  hidden: true,
-  protected: false,
-  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
-  photos: [ ... ],
-},
-```
-For client albums, also add to `PASSWORD_TIERS` in `js/config.js`:
-```js
-'<sha256 of client password>': ['client:<name>'],
-```
+Use for trips with multiple distinct locations. Each city is a sub-album with `parentId` + `slug`. Separate hidden film-roll albums can be linked from the group page. See existing Italy 2026 albums in config for the full pattern.
 
-## Step 10 — Commit and push
+## Step 8 — Commit
 
 ```bash
-git add js/config.js && git commit -m "Add <album name> album" && git push
+git add js/config.js && git commit -m "Add <album name> album"
 ```
 
-Vercel auto-deploys in ~30 seconds.
+Push to `main` only when explicitly asked — Vercel auto-deploys in ~30 seconds.
 
-## Step 11 — Share link (if hidden)
+## Step 9 — Share link (if hidden)
 
-```
-https://photography-portfolio-pi-blush.vercel.app/album.html?id=<slug>
-```
-
----
-
-## Grid backfill — Joel Birthday only
-
-| Album | R2 folder | Photos |
-|---|---|---|
-| **Joel Birthday 2025** | `Joel-Bday-2025/` | 74 |
-
-Run Step 3 (generate grids) and Step 5 (upload grids) only — no need to re-upload originals.
+Family albums: direct the user to `/family/` after unlocking with their password.
+Client albums: create an access code via `/admin/` → Access codes tab.
