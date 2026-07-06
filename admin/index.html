@@ -369,7 +369,7 @@
       <div id="fav-tally-grid" style="position:relative;min-height:2rem"></div>
       <div id="fav-save-bar" style="display:none;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--color-border)">
         <span id="fav-save-count" style="font-size:0.8rem;color:var(--color-muted);margin-right:1rem"></span>
-        <button class="btn-ghost" onclick="saveFavCurated()" style="border-color:var(--color-gold);color:var(--color-gold);font-size:0.75rem">Save top as curated set</button>
+        <button class="btn-ghost" onclick="saveFavCurated()" style="border-color:var(--color-gold);color:var(--color-gold);font-size:0.75rem">Save as curated set</button>
       </div>
     </main>
 
@@ -969,13 +969,12 @@
           return;
         }
         const tally = data.tally || [];
-        if (!tally.length) {
-          status.textContent = `No favorites yet for this album.`;
-          grid.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No hearts recorded yet — share the site with friends and family.</p>';
-          return;
-        }
-
-        status.textContent = `${tally.length} photo${tally.length !== 1 ? 's' : ''} with hearts`;
+        const album = ALBUMS.find(a => a.id === albumId);
+        const totalPhotos = album ? getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg')).length : 0;
+        const heartedCount = tally.length;
+        status.textContent = heartedCount
+          ? `${totalPhotos} photos · ${heartedCount} hearted`
+          : `${totalPhotos} photos · no hearts yet`;
         renderFavTally(tally, albumId);
       } catch (err) {
         status.textContent = `Request failed: ${err.message}`;
@@ -983,44 +982,106 @@
     }
 
     function renderFavTally(tally, albumId) {
-      const grid = document.getElementById('fav-tally-grid');
-      grid.innerHTML = '';
-      grid.style.display = 'grid';
-      grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(160px, 1fr))';
-      grid.style.gap = '0.75rem';
+      const container = document.getElementById('fav-tally-grid');
+      container.innerHTML = '';
+      container.style.cssText = '';
 
-      tally.forEach(({ photoUrl, count }) => {
-        const card = document.createElement('div');
-        card.style.cssText = 'position:relative;border:2px solid transparent;border-radius:2px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;background:var(--color-surface)';
-        card.dataset.url = photoUrl;
+      const album = ALBUMS.find(a => a.id === albumId);
+      if (!album) {
+        container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">Album not found in config.</p>';
+        return;
+      }
 
+      const allPhotos = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
+      if (!allPhotos.length) {
+        container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No photos in this album.</p>';
+        return;
+      }
+
+      // Heart count map  photoUrl → count
+      const heartMap = new Map();
+      tally.forEach(({ photoUrl, count }) => heartMap.set(photoUrl, count));
+
+      // Currently curated set
+      const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
+
+      // ── Legend ──
+      const legend = document.createElement('div');
+      legend.style.cssText = 'display:flex;align-items:center;gap:1.25rem;margin-bottom:1rem;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-muted);flex-wrap:wrap';
+      legend.innerHTML = `
+        <span style="display:flex;align-items:center;gap:0.45rem">
+          <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.75);color:#e85d6e;padding:2px 7px;border-radius:10px;font-size:0.65rem">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 2
+          </span>
+          Hearted by friends
+        </span>
+        <span style="display:flex;align-items:center;gap:0.45rem">
+          <span style="background:var(--color-gold);color:#1a1410;padding:2px 7px;border-radius:2px;font-size:0.62rem">★</span>
+          Already in highlights
+        </span>
+        <span style="display:flex;align-items:center;gap:0.45rem">
+          <span style="border:2px solid var(--color-gold);padding:2px 7px;border-radius:2px;font-size:0.62rem;color:var(--color-gold)">✓</span>
+          Click to select for new curated set
+        </span>
+      `;
+      container.appendChild(legend);
+
+      // ── Justified photo grid ──
+      const grid = document.createElement('div');
+      grid.className = 'photo-grid';
+      grid.style.position = 'relative';
+      container.appendChild(grid);
+
+      allPhotos.forEach(url => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb';
+        thumb.dataset.url = url;
+
+        // Image — click opens lightbox
         const img = document.createElement('img');
-        img.src = gridUrl(photoUrl);
         img.alt = '';
-        img.style.cssText = 'width:100%;aspect-ratio:3/2;object-fit:cover;display:block;transition:opacity 0.15s';
+        img.decoding = 'async';
+        img.src = gridUrl(url);
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in';
+        img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url, allPhotos); });
 
-        const badge = document.createElement('div');
-        badge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);color:white;font-size:0.65rem;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:3px';
-        badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${count}`;
+        // Heart count badge (top-right)
+        const hearts = heartMap.get(url) || 0;
+        if (hearts > 0) {
+          const hBadge = document.createElement('div');
+          hBadge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);color:#e85d6e;font-size:0.65rem;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px;pointer-events:none;z-index:3';
+          hBadge.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${hearts}`;
+          thumb.appendChild(hBadge);
+        }
 
-        card.appendChild(img);
-        card.appendChild(badge);
-        grid.appendChild(card);
+        // Curated badge (top-left, gold star)
+        if (curatedSet.has(url)) {
+          const cBadge = document.createElement('div');
+          cBadge.style.cssText = 'position:absolute;top:6px;left:6px;background:var(--color-gold);color:#1a1410;font-size:0.6rem;padding:2px 6px;border-radius:2px;pointer-events:none;z-index:3;letter-spacing:0.04em;font-weight:500';
+          cBadge.textContent = '★';
+          thumb.appendChild(cBadge);
+        }
 
-        card.addEventListener('click', () => {
-          const url = card.dataset.url;
-          if (favTallySelected.has(url)) {
-            favTallySelected.delete(url);
-            card.style.borderColor = 'transparent';
-            img.style.opacity = '1';
+        thumb.appendChild(img);
+        grid.appendChild(thumb);
+
+        // Click thumb (not image) → toggle selection for new curated set
+        thumb.addEventListener('click', () => {
+          const u = thumb.dataset.url;
+          if (favTallySelected.has(u)) {
+            favTallySelected.delete(u);
+            thumb.style.outline = '';
+            thumb.style.outlineOffset = '';
           } else {
-            favTallySelected.add(url);
-            card.style.borderColor = 'var(--color-gold)';
-            img.style.opacity = '0.75';
+            favTallySelected.add(u);
+            thumb.style.outline = '3px solid var(--color-gold)';
+            thumb.style.outlineOffset = '-3px';
           }
           updateFavSaveBar();
         });
       });
+
+      bindAdminGridLayout(grid);
     }
 
     function updateFavSaveBar() {
@@ -1053,7 +1114,7 @@
       } catch (err) {
         showToast(`Request failed: ${err.message}`);
       }
-      btn.textContent = 'Save top as curated set'; btn.disabled = false;
+      btn.textContent = 'Save as curated set'; btn.disabled = false;
     }
 
     // ── Toast ────────────────────────────────────────────────────────────────
