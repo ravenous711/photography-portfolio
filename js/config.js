@@ -58,10 +58,10 @@ const WORKER_BASE_URL = (() => {
 // Or: python3 -c "import hashlib; print(hashlib.sha256(b'your-password').hexdigest())"
 
 const PASSWORD_TIERS = {
-  // friends password — unlocks full city/public albums
-  '5d862a1a4da5e5fa93e64f68239ec8b2ddeb789616a63fe794fd61dad316f941': ['friends'],
-  // family password — unlocks family albums AND everything friends can see
-  '4aa017482b6698229824ea4cc189eeeecbc11563a1177f24602cbd22580ddc66': ['family', 'friends'],
+  // friends password: rf-pix-2026
+  'a8b3ec8e72875d9feaec7919a6164fc90bcaead8f70d0f20d6a13c83de2c6ad4': ['friends'],
+  // family password: rf-family-pw — also grants friends
+  '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'friends'],
 };
 
 // Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)
@@ -118,8 +118,7 @@ const ALBUMS = [
     date: 'October 2025',
     hidden: true,
     audience: 'family',
-    protected: true,
-    passwordHash: '2d2b01d274945379effbc06b47517c211bee6f4f57ea4be7c15e76d334386862',
+    protected: false,
     coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
     photos: [
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
