@@ -449,7 +449,11 @@
           (async () => {
             if (shareKey && !TierAuth.canAccess('friends')) {
               const granted = await TierAuth.tryUnlock(shareKey);
-              if (granted) TierAuth.grant(granted, true);
+              if (granted) {
+                TierAuth.grant(granted, true);
+                // Persist the key so cross-links work after navigating away from the ?k= URL
+                try { localStorage.setItem('friends_share_key', shareKey); } catch {}
+              }
             }
             if (TierAuth.canAccess('friends')) {
               applyFullAlbumMode();
@@ -975,7 +979,10 @@
         thumb.classList.add('selected');
       }
 
-      const handleActivate = () => {
+      const handleActivate = (e) => {
+        // Fav-badge sits inside the thumb; its own delegated handler manages it.
+        // Without this guard the lightbox also opens when tapping a heart.
+        if (e && e.target && e.target.closest('.fav-badge')) return;
         if (selectMode) {
           toggleThumb(index, thumb);
         } else {

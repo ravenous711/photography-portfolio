@@ -79,7 +79,10 @@
       // Try to grant from ?k= if not already granted
       if (shareKey && !TierAuth.canAccess('friends')) {
         const granted = await TierAuth.tryUnlock(shareKey);
-        if (granted) TierAuth.grant(granted, true);
+        if (granted) {
+          TierAuth.grant(granted, true);
+          try { localStorage.setItem('friends_share_key', shareKey); } catch {}
+        }
       }
 
       if (!TierAuth.canAccess('friends')) {
