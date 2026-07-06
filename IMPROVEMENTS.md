@@ -58,8 +58,8 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 | OPS-3 | Housekeeping | S | Low | TODO |
 | OPS-4 | Tooling | L | Med | TODO |
 | ADMIN-1 | Admin/tooling | M–L | Med | TODO |
-| AUTH-1 | Idea (big) | XL | High | IN PROGRESS |
-| FEAT-1 | Idea | M–L | Med | IN PROGRESS |
+| AUTH-1 | Idea (big) | XL | High | ✅ DONE |
+| FEAT-1 | Idea | M–L | Med | ✅ DONE |
 | UX-8 | Header UX | M | Med | ✅ DONE |
 
 ### Where to start next
@@ -67,7 +67,7 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 2. **Maintainability**, when next touching album code: MNT-1 → MNT-2 → MNT-3 → MNT-4.
 3. **Housekeeping** anytime: OPS-1 → OPS-2 → OPS-3.
 4. **Styling:** STY-2 → STY-3.
-  5. **Big bet:** AUTH-1 Phase 1–2 shipped (group password tiers, client-side gating). Phase 3 (real privacy, private R2 bucket + Worker signed-URL tokens — no DNS move) is next — see AUTH-1 ticket.
+  5. **Big bet:** AUTH-1 + FEAT-1 fully shipped (Phases 1–3b). Private R2 + signed tokens + access codes panel all live. See AUTH-1 ticket for details.
 
 ---
 
@@ -205,8 +205,8 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 These are bigger than a single ticket — capture the intent now, scope into tickets later.
 
 ### AUTH-1 — Per-user logins & truly private albums
-- **Effort:** XL · **Risk:** High · **Status:** IN PROGRESS
-- **Chosen approach:** group-password tiers. D1 (client-side) for friends/city albums; D2 (server-enforced cookie + private R2 bucket) for family/kids/clients.
+- **Effort:** XL · **Risk:** High · **Status:** ✅ DONE (Jul 2026)
+- **Chosen approach:** group-password tiers + D1-backed access codes. Signed HMAC tokens for private R2 serving (no DNS move — Porkbun nameservers kept).
 - **Shipped (Phase 1–2, Jul 2026, branch `feat/curated-tiers-phase1-2`):**
   - `audience` tags on every album (`public` / `friends` / `family` / `client:<name>`)
   - `PASSWORD_TIERS` map in `js/config.js` with SHA-256 hashes (friends: `rf-pix-2026`, family: `rf-family-pw`)
@@ -217,10 +217,17 @@ These are bigger than a single ticket — capture the intent now, scope into tic
   - Admin "Save as curated set" button + `api/admin-curate.js` writes `curated[]` to config.js via GitHub
   - Curated-vs-full rendering: public visitors see curated subset + unlock banner; unlocked viewers see full album
   - Removed keep/cut Supabase voting flow (curate/ pages, Supabase client, Routes.curate)
-- **Pending (Phase 2b):** D1 favorites table + inline heart toggle + admin tally (replaces Supabase)
-- **Pending (Phase 2b):** D1 favorites — deploy wrangler migration + Worker to production (`wrangler d1 execute` + `wrangler deploy`).
-- **Pending (Phase 3):** Infrastructure shipped — private R2 bucket (`portfolio-images-private`), Worker `/unlock` + `/image` endpoints, `TierAuth.getHash()`, album page token fetching. Remaining: upload family photos to private bucket, verify end-to-end.
-- **Env var to add to Vercel + `.env.local`:** `SESSION_SECRET` — run `openssl rand -hex 32`
+  - Phase 2b: D1 favorites table + inline heart toggle + admin tally tab; Worker deployed with D1
+- **Shipped (Phase 3 + 3b, Jul 2026, branch `feat/phase3-private-r2`):**
+  - Private R2 bucket `portfolio-images-private` — no public access
+  - Worker `POST /unlock`: validates hash (env secrets + D1 `access_codes`) → returns 4h HMAC token
+  - Worker `GET /image?key&token`: verifies token + tier → streams from private bucket
+  - `TierAuth.getHash()`: stores hash on unlock so album page can silently refresh tokens
+  - `album/index.html`: fetches token for family/client albums, rewrites photo URLs to Worker-proxied endpoints
+  - Joel Birthday 2025 (74 photos) migrated from public → private bucket
+  - D1 `access_codes` table: create/list/revoke codes without config edits or wrangler per client
+  - Admin "Access codes" tab: create code (shown once), revoke; `api/admin-access-codes.js` proxy
+- **Env vars (all set):** `SESSION_SECRET`, `ADMIN_PASSWORD_HASH`, `GITHUB_TOKEN`, `GITHUB_REPO`, `WORKER_ADMIN_SECRET` in Vercel + `.env.local`
 - **Status before these phases:** IDEA (needs a decision + scoping)
 - **Goal:** Two-tier viewing:
   - **Public, curated albums** for everyone (e.g. "10 best from each city") — no login.
@@ -267,7 +274,7 @@ These are bigger than a single ticket — capture the intent now, scope into tic
   client UX layer), MNT-5 (manifest-based config makes authenticated album manifests easier).
 
 ### FEAT-1 — Public "best of" curated albums
-- **Effort:** M–L · **Risk:** Med · **Status:** IN PROGRESS (Phase 1 shipped, curated picker shipped)
+- **Effort:** M–L · **Risk:** Med · **Status:** ✅ DONE (Jul 2026, curated picker shipped, placeholder sets on all albums)
 - **Why:** The public-facing companion to AUTH-1: a tight, curated set (e.g. top ~10 per city)
   that everyone can see, with the full-resolution / full-count albums reserved for logged-in
   viewers. Also makes the homepage/gallery more focused.
@@ -290,6 +297,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **AUTH-1 + FEAT-1 Phases 3 + 3b — Private R2 + access codes** — Jul 2026.
+  Private R2 bucket; Worker signed HMAC token system (`/unlock`, `/image`); Joel Birthday photos migrated; D1 `access_codes` table; admin "Access codes" tab (create/show-once/revoke); no wrangler or config edit per new client. Branch: `feat/phase3-private-r2`.
 
 - **AUTH-1 + FEAT-1 Phases 1–2 — Group password tiers + curated albums** — Jul 2026.
   Audience tags on all albums; `PASSWORD_TIERS` map; `TierAuth` store; `/unlock/` page + nav link;
