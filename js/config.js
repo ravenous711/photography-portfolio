@@ -367,18 +367,7 @@ const ALBUMS = [
       `${R2_BASE_URL}/California/Yosemite/California-593.jpg`,
       `${R2_BASE_URL}/California/Yosemite/California-594.jpg`,
     ],
-    curated: [
-      `${R2_BASE_URL}/California/Yosemite/California-339.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-344.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-346.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-349.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-356.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-362.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-366.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-381.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-383.jpg`,
-      `${R2_BASE_URL}/California/Yosemite/California-385.jpg`,
-    ],
+    curated: [],
   },
 
   {
