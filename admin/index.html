@@ -82,6 +82,39 @@
     .thumb-check svg { display: none; }
     .photo-thumb.marked .thumb-check svg { display: block; }
 
+    /* ── Curated badge (gold star) ── */
+    .photo-thumb.is-curated { border-color: var(--color-gold); }
+    .curated-badge {
+      position: absolute; bottom: 6px; right: 6px; z-index: 2;
+      background: var(--color-gold);
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .curated-badge svg { display: block; }
+    .photo-thumb.marked .curated-badge { opacity: 0.4; }
+
+    /* ── Album curated action row ── */
+    .album-curate-actions {
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .btn-curate-load {
+      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      border: 1px solid var(--color-gold); color: var(--color-gold);
+      background: transparent; padding: 0.25rem 0.6rem; cursor: pointer;
+      border-radius: 2px; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn-curate-load:hover { opacity: 0.7; }
+    .btn-curate-clear {
+      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      border: 1px solid var(--color-muted); color: var(--color-muted);
+      background: transparent; padding: 0.25rem 0.6rem; cursor: pointer;
+      border-radius: 2px; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn-curate-clear:hover { opacity: 0.7; }
+
     /* ── Album section ── */
     .album-section { margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
     .album-header {
@@ -487,11 +520,18 @@
         section.dataset.albumId = album.id;
 
         // Header (clickable)
+        const curatedCount = Array.isArray(album.curated) ? album.curated.length : 0;
+        const curatedLabel = curatedCount > 0 ? ` · ${curatedCount} curated` : '';
         const header = document.createElement('div');
         header.className = 'album-header';
         header.innerHTML = `
           <h2>${album.title}</h2>
-          <span class="album-meta">${count} photo${count !== 1 ? 's' : ''}${badge}</span>
+          <span class="album-meta">${count} photo${count !== 1 ? 's' : ''}${badge}${curatedLabel}</span>
+          ${curatedCount > 0 ? `
+          <div class="album-curate-actions">
+            <button class="btn-curate-load" title="Pre-select the ${curatedCount} curated photos so you can edit and re-save">Edit curated</button>
+            <button class="btn-curate-clear" title="Remove the curated set — all photos will be shown to everyone">Clear curated</button>
+          </div>` : ''}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
@@ -532,9 +572,11 @@
             });
           }, { rootMargin: '200px' }); // start loading 200px before entering view
 
+          const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
+
           photos.forEach(url => {
             const thumb = document.createElement('div');
-            thumb.className = 'photo-thumb';
+            thumb.className = 'photo-thumb' + (curatedSet.has(url) ? ' is-curated' : '');
             thumb.dataset.url = url;
 
             const img = document.createElement('img');
@@ -550,6 +592,15 @@
             const checkEl = document.createElement('div');
             checkEl.className = 'thumb-check';
             checkEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+            // Gold star badge for currently curated photos
+            if (curatedSet.has(url)) {
+              const badge = document.createElement('div');
+              badge.className = 'curated-badge';
+              badge.title = 'Currently in curated set';
+              badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+              thumb.appendChild(badge);
+            }
 
             thumb.appendChild(img);
             thumb.appendChild(overlay);
@@ -570,10 +621,70 @@
           bindAdminGridLayout(grid);
         }
 
-        header.addEventListener('click', () => {
+        header.addEventListener('click', (e) => {
+          // Don't toggle section when clicking the curate action buttons
+          if (e.target.closest('.album-curate-actions')) return;
           section.classList.toggle('open');
           if (section.classList.contains('open')) loadImages();
         });
+
+        // Wire "Edit curated" button — pre-select existing curated photos
+        const loadBtn = header.querySelector('.btn-curate-load');
+        if (loadBtn) {
+          loadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!section.classList.contains('open')) {
+              section.classList.add('open');
+              loadImages();
+            }
+            // Wait a tick for images to start rendering, then select curated set
+            setTimeout(() => {
+              clearSelection();
+              const thumbs = section.querySelectorAll('.photo-thumb.is-curated');
+              thumbs.forEach(thumb => {
+                const url = thumb.dataset.url;
+                if (url) { thumb.classList.add('marked'); selected.add(url); }
+              });
+              updateToolbar();
+              showToast(`Loaded ${thumbs.length} curated photo${thumbs.length !== 1 ? 's' : ''} — edit selection, then hit "Save as curated set".`, 6000);
+            }, 50);
+          });
+        }
+
+        // Wire "Clear curated" button — removes curated[] from the album
+        const clearBtn = header.querySelector('.btn-curate-clear');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const ok = confirm(`Remove the curated set for "${album.title}"?\n\nAll photos will be shown to everyone (no highlights). You can set a new curated set anytime from the admin panel.`);
+            if (!ok) return;
+            clearBtn.textContent = 'Clearing…'; clearBtn.disabled = true;
+            try {
+              const res = await fetch('/api/admin-curate', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ albumId: album.id, photos: [] }),
+              });
+              const data = await res.json();
+              if (!res.ok) {
+                showToast(`Error: ${data.error || res.statusText}`, 6000);
+              } else {
+                showToast(`Curated set cleared for "${album.title}" — Vercel redeploying.`, 6000);
+                header.querySelector('.album-curate-actions')?.remove();
+                header.querySelector('.album-meta').textContent =
+                  `${count} photo${count !== 1 ? 's' : ''}${badge}`;
+                section.querySelectorAll('.photo-thumb.is-curated').forEach(t => {
+                  t.classList.remove('is-curated');
+                  t.querySelector('.curated-badge')?.remove();
+                });
+              }
+            } catch (err) {
+              showToast(`Request failed: ${err.message}`);
+            }
+            clearBtn.textContent = 'Clear curated'; clearBtn.disabled = false;
+          });
+        }
       });
 
       window.addEventListener('resize', () => {
@@ -675,6 +786,29 @@
           showToast('Curated set unchanged (same photos already saved).');
         } else {
           showToast(`Saved curated[${orderedPhotos.length}] for "${albumTitle}" — Vercel redeploying.`, 6000);
+          // Update gold star badges in the DOM to reflect new curated set
+          const newCurated = new Set(orderedPhotos);
+          const section = document.querySelector(`.album-section[data-album-id="${CSS.escape(albumId)}"]`);
+          if (section) {
+            section.querySelectorAll('.photo-thumb').forEach(thumb => {
+              const url = thumb.dataset.url;
+              const shouldBeCurated = newCurated.has(url);
+              thumb.classList.toggle('is-curated', shouldBeCurated);
+              const existingBadge = thumb.querySelector('.curated-badge');
+              if (shouldBeCurated && !existingBadge) {
+                const badge = document.createElement('div');
+                badge.className = 'curated-badge';
+                badge.title = 'Currently in curated set';
+                badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+                thumb.appendChild(badge);
+              } else if (!shouldBeCurated && existingBadge) {
+                existingBadge.remove();
+              }
+            });
+            // Update header curated count
+            const meta = section.querySelector('.album-meta');
+            if (meta) meta.textContent = `${section.querySelectorAll('.photo-thumb').length} photos${orderedPhotos.length > 0 ? ` · ${orderedPhotos.length} curated` : ''}`;
+          }
           clearSelection();
         }
       } catch (err) {

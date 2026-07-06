@@ -167,7 +167,9 @@ export default async function handler(req, res) {
       method: 'PUT',
       headers: { ...ghHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: `Admin: set curated[${photos.length}] for ${albumId}`,
+        message: photos.length === 0
+          ? `Admin: clear curated set for ${albumId}`
+          : `Admin: set curated[${photos.length}] for ${albumId}`,
         content: Buffer.from(updatedContent).toString('base64'),
         sha: fileData.sha,
       }),
