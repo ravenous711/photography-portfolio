@@ -273,6 +273,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-314.jpg`,
       `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-324.jpg`,
     ],
+    curated: [
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-009.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-011.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-026.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-041.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-042.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-050.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-060.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-061.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-068.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-074.jpg`,
+    ],
   },
 
   {
@@ -343,6 +355,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/California/Yosemite/California-589.jpg`,
       `${R2_BASE_URL}/California/Yosemite/California-593.jpg`,
       `${R2_BASE_URL}/California/Yosemite/California-594.jpg`,
+    ],
+    curated: [
+      `${R2_BASE_URL}/California/Yosemite/California-339.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-344.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-346.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-349.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-356.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-362.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-366.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-381.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-383.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-385.jpg`,
     ],
   },
 
@@ -447,6 +471,18 @@ const ALBUMS = [
           `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_38.jpg`,
         ],
       },
+    ],
+    curated: [
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0215.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0223.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0233.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0362.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260122-_DSF0408.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260122-_DSF0412.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260122-_DSF0447.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260122-_DSF0461-Edit.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260122-_DSF0478.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260123-_DSF0509.jpg`,
     ],
   },
 
@@ -816,6 +852,18 @@ const ALBUMS = [
       },
 
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_006.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_016.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_017.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_022.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_047.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_060.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_081.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_085.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_106.jpg`,
+      `${R2_BASE_URL}/Italy/Florence/Digital/florence_127.jpg`,
+    ],
   },
 
   {
@@ -886,6 +934,18 @@ const ALBUMS = [
       },
 
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_005.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_007.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_016.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_024.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_035.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_042.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_044.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_045.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_055.jpg`,
+      `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_059.jpg`,
+    ],
   },
 
   {
@@ -943,6 +1003,18 @@ const ALBUMS = [
         ],
       },
 
+    ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_004.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_011.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_014.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_024.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_025.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_031.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_036.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_039.jpg`,
+      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_050.jpg`,
     ],
   },
 
@@ -1101,6 +1173,18 @@ const ALBUMS = [
       },
 
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_002.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_029.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_036.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_053.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_061.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_063.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_103.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_132.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_136.jpg`,
+      `${R2_BASE_URL}/Italy/Rome/Digital/rome_144.jpg`,
+    ],
   },
 
   // ── ITALY FILM ROLLS (hidden — linked from Italy group page) ──
@@ -1156,6 +1240,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_36.jpg`,
       `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_37.jpg`,
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_02.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_03.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_04.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_05.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_06.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_08.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_09.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_10.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_11.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_12.jpg`,
+    ],
   },
 
   {
@@ -1208,6 +1304,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E036.jpg`,
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E037.jpg`,
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E038.jpg`,
+    ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E001.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E003.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E004.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E005.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E006.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E007.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E008.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E009.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E010.jpg`,
+      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E011.jpg`,
     ],
   },
 
@@ -1276,6 +1384,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_073.jpg`,
       `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_074.jpg`,
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_005.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_007.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_008.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_009.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_010.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_013.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_015.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_016.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_017.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_019.jpg`,
+    ],
   },
 
   {
@@ -1336,6 +1456,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_075.jpg`,
       `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_078.jpg`,
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_004.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_005.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_006.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_008.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_010.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_013.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_015.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_017.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_019.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_020.jpg`,
+    ],
   },
 
   {
@@ -1388,6 +1520,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E034.jpg`,
       `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E035.jpg`,
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E002.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E003.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E004.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E005.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E006.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E007.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E008.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E009.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E010.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E012.jpg`,
+    ],
   },
 
   {
@@ -1438,6 +1582,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_35.jpg`,
       `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_38.jpg`,
     ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_01.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_02.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_03.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_04.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_05.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_06.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_08.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_09.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_10.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_12.jpg`,
+    ],
   },
 
   {
@@ -1477,6 +1633,18 @@ const ALBUMS = [
       `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_050.jpg`,
       `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_053.jpg`,
       `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_055.jpg`,
+    ],
+    curated: [
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_005.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_009.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_010.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_013.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_017.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_020.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_023.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_024.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_025.jpg`,
+      `${R2_BASE_URL}/Italy/Film/Athena-Ektar100/athena_ektar100_027.jpg`,
     ],
   },
 
