@@ -1,19 +1,22 @@
 export const config = { matcher: ['/(.*)'] };
 
-const PASSWORD   = 'preview2026';
-const COOKIE_KEY = 'site_preview';
-const COOKIE_VAL = 'granted';
-const GATE_PATH  = '/__gate';
+const COOKIE_NAME = 'site_preview';
+const COOKIE_VAL  = 'granted';
 
-// Paths that bypass the gate entirely (Vercel internals, favicons, etc.)
+// Vercel internals should always pass through
 const BYPASS = /^\/_vercel\//;
+
+// API routes other than /api/gate pass through too (health, etc.)
+const PASS_API = /^\/api\/(?!gate)/;
 
 function hasCookie(request) {
   const raw = request.headers.get('cookie') || '';
-  return raw.split(';').some(c => c.trim() === `${COOKIE_KEY}=${COOKIE_VAL}`);
+  // Use includes() — safer than exact-split matching
+  return raw.includes(`${COOKIE_NAME}=${COOKIE_VAL}`);
 }
 
 function gateResponse(redirectTo = '/', wrongPassword = false) {
+  const safeRedirect = redirectTo.startsWith('/') ? redirectTo : '/';
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,7 +57,7 @@ function gateResponse(redirectTo = '/', wrongPassword = false) {
     form { display: flex; flex-direction: column; gap: 0.9rem; }
     input[type="password"] {
       background: #1a1a1a;
-      border: 1px solid #2e2e2e;
+      border: 1px solid ${wrongPassword ? '#c0392b' : '#2e2e2e'};
       border-radius: 4px;
       color: #e0e0e0;
       font-size: 0.95rem;
@@ -91,10 +94,10 @@ function gateResponse(redirectTo = '/', wrongPassword = false) {
   <div class="card">
     <h1>Under construction</h1>
     <p>Making some selections — check back soon.</p>
-    <form method="POST" action="${GATE_PATH}">
-      <input type="hidden" name="redirect" value="${redirectTo}" />
+    <form method="POST" action="/api/gate">
+      <input type="hidden" name="redirect" value="${safeRedirect}" />
       <input type="password" name="password" placeholder="Preview password" autofocus />
-      ${wrongPassword ? '<span class="error">Incorrect password</span>' : ''}
+      ${wrongPassword ? '<span class="error">Incorrect password — try again</span>' : ''}
       <button type="submit">Enter</button>
     </form>
   </div>
@@ -107,38 +110,17 @@ function gateResponse(redirectTo = '/', wrongPassword = false) {
   });
 }
 
-export default async function middleware(request) {
-  const url = new URL(request.url);
-  const { pathname, search } = url;
+export default function middleware(request) {
+  const { pathname, searchParams } = new URL(request.url);
 
-  // Always let Vercel internals through
-  if (BYPASS.test(pathname)) return;
+  // Always let Vercel internals and the gate API through
+  if (BYPASS.test(pathname) || PASS_API.test(pathname) || pathname === '/api/gate') return;
 
-  // Handle password form submission
-  if (request.method === 'POST' && pathname === GATE_PATH) {
-    let password = '', redirectTo = '/';
-    try {
-      const body = await request.text();
-      const params = new URLSearchParams(body);
-      password   = params.get('password') || '';
-      redirectTo = params.get('redirect')  || '/';
-    } catch {}
-
-    if (password === PASSWORD) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': redirectTo,
-          'Set-Cookie': `${COOKIE_KEY}=${COOKIE_VAL}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax`,
-        },
-      });
-    }
-    return gateResponse(redirectTo, true);
-  }
-
-  // Already authenticated — pass through
+  // Authenticated — pass through
   if (hasCookie(request)) return;
 
-  // Show gate
-  return gateResponse(pathname + search);
+  // Show gate (surface wrong-password error if bounced back from /api/gate)
+  const wrongPassword = searchParams.get('gate_error') === '1';
+  const redirect = searchParams.get('redirect') || pathname;
+  return gateResponse(wrongPassword ? (redirect || '/') : pathname, wrongPassword);
 }
