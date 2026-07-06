@@ -135,6 +135,15 @@
       document.title = `${group.title} — ${SITE_CONFIG.photographerName}`;
       document.getElementById('modal-group-title').textContent = group.title;
 
+      // Tier-auth gate for family/client group albums
+      const groupAudience = group.audience || 'public';
+      if (groupAudience !== 'public' && groupAudience !== 'friends') {
+        if (!TierAuth.canAccess(groupAudience)) {
+          window.location.replace(`/unlock/?next=${encodeURIComponent(window.location.pathname)}`);
+          return;
+        }
+      }
+
       if (group.protected && !AlbumAuth.isUnlocked(group.id)) {
         showPasswordModal();
       } else {
@@ -191,6 +200,9 @@
         const parent = ALBUMS.find(a => a.id === group.parentId);
         backLink.href = Routes.group(group.parentId);
         document.getElementById('back-link-label').textContent = parent ? parent.title : 'Back';
+      } else if (groupAudience === 'family' || groupAudience.startsWith('family:')) {
+        backLink.href = '/family/';
+        document.getElementById('back-link-label').textContent = 'Family Gallery';
       }
 
       const grid = document.getElementById('sub-album-grid');
