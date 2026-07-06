@@ -2224,11 +2224,21 @@
       favEnabled = enabled;
       if (!favEnabled) return;
 
+      // Enable hearts immediately (synchronously) so they appear as soon as the grid renders.
+      // Previously this happened only after the fetch, causing visible delay or missing hearts.
+      document.querySelectorAll('.photo-grid').forEach(grid => {
+        grid.classList.add('favorites-enabled');
+      });
+
+      // Show lightbox fav button
+      const favBtn = document.getElementById('lightbox-fav');
+      if (favBtn) favBtn.style.display = '';
+
+      // Then async-load which photos this session already hearted, and backfill the state.
       const sessionId = getFavSessionId();
       const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
       if (!workerBase) return;
 
-      // Load which photos this session has already hearted
       try {
         const res = await fetch(
           `${workerBase}/favorites?albumId=${encodeURIComponent(albumId)}&sessionId=${encodeURIComponent(sessionId)}`
@@ -2236,20 +2246,13 @@
         if (res.ok) {
           const { heartedUrls: urls } = await res.json();
           heartedUrls = new Set(urls || []);
+          // Backfill hearted state on any badges already in the DOM
+          document.querySelectorAll('.fav-badge').forEach(badge => {
+            badge.classList.toggle('hearted', heartedUrls.has(badge.dataset.favUrl));
+          });
+          updateLightboxFavButton();
         }
-      } catch { /* Worker not deployed yet — fail silently */ }
-
-      // Enable hearts on ALL photo grids (digital + every film-roll section)
-      document.querySelectorAll('.photo-grid').forEach(grid => {
-        grid.classList.add('favorites-enabled');
-        grid.querySelectorAll('.fav-badge').forEach(badge => {
-          if (heartedUrls.has(badge.dataset.favUrl)) badge.classList.add('hearted');
-        });
-      });
-
-      // Show lightbox fav button
-      const favBtn = document.getElementById('lightbox-fav');
-      if (favBtn) favBtn.style.display = '';
+      } catch { /* Worker unavailable — fail silently, hearts still visible */ }
     }
 
     async function toggleFav(url) {
