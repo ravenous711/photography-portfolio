@@ -23,6 +23,11 @@
   ],
   "rewrites": [
     { "source": "/unlock/", "destination": "/unlock/index.html" },
+    { "source": "/fullalbums/", "destination": "/fullalbums/index.html" },
+    { "source": "/fullalbums/:groupId/:slug/", "destination": "/album/index.html" },
+    { "source": "/fullalbums/:groupId/:slug", "destination": "/album/index.html" },
+    { "source": "/fullalbums/:id/", "destination": "/album/index.html" },
+    { "source": "/fullalbums/:id", "destination": "/album/index.html" },
     { "source": "/gallery/:groupId/:slug/", "destination": "/album/index.html" },
     { "source": "/gallery/:groupId/:slug", "destination": "/album/index.html" },
     { "source": "/gallery/:id/", "destination": "/group/index.html" },

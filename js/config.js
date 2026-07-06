@@ -55,10 +55,14 @@ const WORKER_BASE_URL = (() => {
 // Or: python3 -c "import hashlib; print(hashlib.sha256(b'your-password').hexdigest())"
 
 const PASSWORD_TIERS = {
-  // Passwords are in 1Password — NEVER store plaintext here, hashes only.
-  // To add a new tier: sha256(password) -> ['audience', ...]
-  // Generate: python3 -c "import hashlib; print(hashlib.sha256(b'pw').hexdigest())"
-  'a8b3ec8e72875d9feaec7919a6164fc90bcaead8f70d0f20d6a13c83de2c6ad4': ['friends'],
+  // Hashes only — plaintext keys are in 1Password under "photography portfolio share key".
+  // To rotate the friends link key: generate a new hex key, update the hash below,
+  // and hand out new /fullalbums/?k=<newkey> links.
+  // Generate hash: python3 -c "import hashlib; print(hashlib.sha256(b'key'.encode()).hexdigest())"
+  //
+  // Friends capability-link key (used in /fullalbums/...?k=KEY share links):
+  '1cf3ce8ffa39c24b2ae128eefe6d292f8b18136716da8026d35baa0d67ec35a4': ['friends'],
+  // Family password (unchanged — used at /unlock/):
   '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'friends'],
 };
 

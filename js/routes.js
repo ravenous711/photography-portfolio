@@ -49,23 +49,50 @@ const Routes = {
     );
   },
 
-  /** Resolve album from /gallery/:group/:slug/ or /album/:id/ */
+  /** Resolve album from /gallery/:group/:slug/, /album/:id/, or /fullalbums/:group/:slug/, /fullalbums/:id/ */
   resolveAlbumFromPath() {
-    const nested = window.location.pathname.match(/^\/gallery\/([^/]+)\/([^/]+)\/?$/);
+    const nested = window.location.pathname.match(/^\/(gallery|fullalbums)\/([^/]+)\/([^/]+)\/?$/);
     if (nested) {
       return this.findAlbumByGroupSlug(
-        decodeURIComponent(nested[1]),
-        decodeURIComponent(nested[2])
+        decodeURIComponent(nested[2]),
+        decodeURIComponent(nested[3])
       );
     }
 
-    const flat = window.location.pathname.match(/^\/album\/([^/]+)\/?$/);
+    const flat = window.location.pathname.match(/^\/(album|fullalbums)\/([^/]+)\/?$/);
     if (flat) {
-      const id = decodeURIComponent(flat[1]);
+      const id = decodeURIComponent(flat[2]);
       return this._albums().find(a => a.id === id);
     }
 
     return null;
+  },
+
+  /** True when the current page is a /fullalbums/ full-album view */
+  isFullAlbumPath() {
+    return window.location.pathname.startsWith('/fullalbums/');
+  },
+
+  /** Returns the ?k= share key from the current URL, or null */
+  getShareKey() {
+    return new URLSearchParams(window.location.search).get('k') || null;
+  },
+
+  /** Build a /fullalbums/... URL for a given album, with the share key appended */
+  fullAlbumUrl(album, key) {
+    let base;
+    if (!album) return key ? `/fullalbums/?k=${encodeURIComponent(key)}` : '/fullalbums/';
+    if (album.parentId && album.slug) {
+      base = `/fullalbums/${encodeURIComponent(album.parentId)}/${encodeURIComponent(album.slug)}/`;
+    } else {
+      base = `/fullalbums/${encodeURIComponent(album.id)}/`;
+    }
+    return key ? `${base}?k=${encodeURIComponent(key)}` : base;
+  },
+
+  /** Build the public curated /gallery/... URL for an album */
+  curatedUrl(album) {
+    return this.albumPageUrl(album);
   },
 
   /** /album/italy-florence/ → /gallery/italy-2026/florence/ when slug exists */
