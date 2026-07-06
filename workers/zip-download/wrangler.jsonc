@@ -7,10 +7,24 @@
   "r2_buckets": [
     { "binding": "BUCKET", "bucket_name": "portfolio-images" }
   ],
+  // D1 binding for the favorites/voting table
+  // Create DB first: wrangler d1 create portfolio-favorites
+  // Then apply migration: wrangler d1 migrations apply portfolio-favorites --remote
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "portfolio-favorites",
+      "database_id": "REPLACE_WITH_DB_ID_FROM_WRANGLER_D1_CREATE"
+    }
+  ],
+  // Secrets (set via wrangler secret put):
+  //   ADMIN_SECRET — shared with Vercel WORKER_ADMIN_SECRET env var;
+  //                  gates the /favorites/tally admin endpoint
   "observability": {
     "enabled": true
   },
   "limits": {
     "cpu_ms": 300000
-  }
+  },
+  "migrations_dir": "./migrations"
 }

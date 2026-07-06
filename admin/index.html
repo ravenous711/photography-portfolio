@@ -343,6 +343,7 @@
       <span style="font-family:var(--font-serif);font-size:1.1rem;letter-spacing:0.06em;color:var(--color-text);flex:1">Admin</span>
       <!-- Tab switcher -->
       <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
+      <button class="btn-ghost tab-btn" id="tab-favorites" onclick="switchTab('favorites')">Favorites</button>
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
       <button class="btn-ghost" id="save-curated-btn" style="display:none" onclick="savePendingCurated()">Save curated changes</button>
@@ -355,6 +356,21 @@
       <div id="album-list"></div>
     </main>
 
+    <!-- ── Favorites tally tab ── -->
+    <main id="pane-favorites" style="display:none; padding: 2rem 1.5rem 4rem">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
+        <select id="fav-album-select" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px">
+          <option value="">— Select album —</option>
+        </select>
+        <button class="btn-ghost" onclick="loadFavoritesTally()" style="font-size:0.75rem">Load tally</button>
+        <span id="fav-status" style="font-size:0.75rem;color:var(--color-muted)"></span>
+      </div>
+      <div id="fav-tally-grid" style="position:relative;min-height:2rem"></div>
+      <div id="fav-save-bar" style="display:none;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--color-border)">
+        <span id="fav-save-count" style="font-size:0.8rem;color:var(--color-muted);margin-right:1rem"></span>
+        <button class="btn-ghost" onclick="saveFavCurated()" style="border-color:var(--color-gold);color:var(--color-gold);font-size:0.75rem">Save top as curated set</button>
+      </div>
+    </main>
 
   </div>
 
@@ -871,6 +887,144 @@
       btn.disabled = selected.size === 0;
     }
 
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+    function switchTab(tab) {
+      document.getElementById('pane-albums').style.display    = tab === 'albums'    ? '' : 'none';
+      document.getElementById('pane-favorites').style.display = tab === 'favorites' ? '' : 'none';
+      document.getElementById('tab-albums').classList.toggle('active', tab === 'albums');
+      document.getElementById('tab-favorites').classList.toggle('active', tab === 'favorites');
+
+      if (tab === 'favorites') {
+        // Populate album dropdown on first open
+        const sel = document.getElementById('fav-album-select');
+        if (sel.options.length <= 1) {
+          const leafAlbums = ALBUMS.filter(a =>
+            a.type !== 'group' && !a.hidden &&
+            (a.audience === 'public' || a.audience === 'friends' || a.audience === 'family')
+          );
+          leafAlbums.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.id;
+            opt.textContent = a.title;
+            sel.appendChild(opt);
+          });
+        }
+      }
+    }
+
+    // ── Favorites tally ───────────────────────────────────────────────────────
+    let favTallySelected = new Set(); // URLs selected for curated set
+    let favTallyAlbumId = null;
+
+    async function loadFavoritesTally() {
+      const albumId = document.getElementById('fav-album-select').value;
+      if (!albumId) { showToast('Select an album first'); return; }
+
+      const status = document.getElementById('fav-status');
+      const grid   = document.getElementById('fav-tally-grid');
+      status.textContent = 'Loading…';
+      grid.innerHTML = '';
+      favTallySelected.clear();
+      favTallyAlbumId = albumId;
+      document.getElementById('fav-save-bar').style.display = 'none';
+
+      try {
+        const res = await fetch(`/api/admin-favorites?albumId=${encodeURIComponent(albumId)}`, {
+          credentials: 'same-origin',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          status.textContent = `Error: ${data.error || res.statusText}`;
+          return;
+        }
+        const tally = data.tally || [];
+        if (!tally.length) {
+          status.textContent = `No favorites yet for this album.`;
+          grid.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No hearts recorded yet — share the site with friends and family.</p>';
+          return;
+        }
+
+        status.textContent = `${tally.length} photo${tally.length !== 1 ? 's' : ''} with hearts`;
+        renderFavTally(tally, albumId);
+      } catch (err) {
+        status.textContent = `Request failed: ${err.message}`;
+      }
+    }
+
+    function renderFavTally(tally, albumId) {
+      const grid = document.getElementById('fav-tally-grid');
+      grid.innerHTML = '';
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(160px, 1fr))';
+      grid.style.gap = '0.75rem';
+
+      tally.forEach(({ photoUrl, count }) => {
+        const card = document.createElement('div');
+        card.style.cssText = 'position:relative;border:2px solid transparent;border-radius:2px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;background:var(--color-surface)';
+        card.dataset.url = photoUrl;
+
+        const img = document.createElement('img');
+        img.src = gridUrl(photoUrl);
+        img.alt = '';
+        img.style.cssText = 'width:100%;aspect-ratio:3/2;object-fit:cover;display:block;transition:opacity 0.15s';
+
+        const badge = document.createElement('div');
+        badge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);color:white;font-size:0.65rem;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:3px';
+        badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${count}`;
+
+        card.appendChild(img);
+        card.appendChild(badge);
+        grid.appendChild(card);
+
+        card.addEventListener('click', () => {
+          const url = card.dataset.url;
+          if (favTallySelected.has(url)) {
+            favTallySelected.delete(url);
+            card.style.borderColor = 'transparent';
+            img.style.opacity = '1';
+          } else {
+            favTallySelected.add(url);
+            card.style.borderColor = 'var(--color-gold)';
+            img.style.opacity = '0.75';
+          }
+          updateFavSaveBar();
+        });
+      });
+    }
+
+    function updateFavSaveBar() {
+      const bar   = document.getElementById('fav-save-bar');
+      const label = document.getElementById('fav-save-count');
+      const count = favTallySelected.size;
+      bar.style.display = count > 0 ? '' : 'none';
+      label.textContent = `${count} photo${count !== 1 ? 's' : ''} selected`;
+    }
+
+    async function saveFavCurated() {
+      if (!favTallyAlbumId || !favTallySelected.size) return;
+      const photos = Array.from(favTallySelected);
+      const btn = document.querySelector('#fav-save-bar button');
+      btn.textContent = 'Saving…'; btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin-curate', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId: favTallyAlbumId, photos }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(`Error: ${data.error || res.statusText}`, 6000);
+        } else {
+          showToast(`Saved curated[${photos.length}] for "${favTallyAlbumId}" — Vercel redeploying.`, 6000);
+        }
+      } catch (err) {
+        showToast(`Request failed: ${err.message}`);
+      }
+      btn.textContent = 'Save top as curated set'; btn.disabled = false;
+    }
 
     // ── Toast ────────────────────────────────────────────────────────────────
     function showToast(msg, duration = 4000) {

@@ -220,6 +220,12 @@
   <!-- ── Lightbox ── -->
   <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
     <div class="lightbox-actions">
+      <!-- Favorites heart (shown only when tier unlocked) -->
+      <button type="button" id="lightbox-fav" class="lightbox-action-btn" aria-label="Add to favorites" aria-pressed="false" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </button>
       <button type="button" id="lightbox-like" class="lightbox-action-btn" aria-label="Select photo" aria-pressed="false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -596,6 +602,7 @@
       }
 
       updateLightboxLikeButton();
+      updateLightboxFavButton();
       refreshAlbumNavMenu?.();
     }
 
@@ -803,9 +810,19 @@
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>`;
 
+      // Favorites heart badge (visible only when .favorites-enabled is on the grid)
+      const favBadge = document.createElement('div');
+      favBadge.className = 'fav-badge';
+      favBadge.dataset.favUrl = url;
+      favBadge.setAttribute('aria-label', 'Toggle favorite');
+      favBadge.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" stroke-width="2">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>`;
+
       thumb.appendChild(img);
       thumb.appendChild(expandOverlay);
       thumb.appendChild(likeBadge);
+      thumb.appendChild(favBadge);
 
       if (selected.has(index)) {
         thumb.classList.add('selected');
@@ -1094,6 +1111,9 @@
       renderSiblingNav();
       renderNextAlbumNav();
       scrollToLinkedPhoto();
+
+      // Initialize favorites voting (only when tier is unlocked)
+      initFavorites(album.id, tierGranted);
     }
 
     // Visible "More in <trip>" switcher in the page header so a visitor can hop
@@ -2089,6 +2109,131 @@
         if (selDlBtn) { selDlBtn.disabled = selected.size === 0; }
       }, 6000);
     }
+
+    // ════════════════════════════════════════════════════════
+    // FAVORITES (D1 voting via Cloudflare Worker)
+    // Only enabled when the album's tier is unlocked.
+    // ════════════════════════════════════════════════════════
+
+    const FAV_SESSION_KEY = 'fav_session_id';
+    let heartedUrls = new Set();  // URLs the current session has hearted
+    let favEnabled = false;       // true when tier unlocked for this album
+
+    function getFavSessionId() {
+      try {
+        let id = localStorage.getItem(FAV_SESSION_KEY);
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+          localStorage.setItem(FAV_SESSION_KEY, id);
+        }
+        return id;
+      } catch { return 'anon'; }
+    }
+
+    async function initFavorites(albumId, tierGranted) {
+      favEnabled = tierGranted;
+      if (!favEnabled) return;
+
+      const sessionId = getFavSessionId();
+      const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+      if (!workerBase) return;
+
+      // Load which photos this session has already hearted
+      try {
+        const res = await fetch(
+          `${workerBase}/favorites?albumId=${encodeURIComponent(albumId)}&sessionId=${encodeURIComponent(sessionId)}`
+        );
+        if (res.ok) {
+          const { heartedUrls: urls } = await res.json();
+          heartedUrls = new Set(urls || []);
+        }
+      } catch { /* Worker not deployed yet — fail silently */ }
+
+      // Mark already-hearted thumbs and enable the fav UI on the grid
+      const digitalGrid = document.getElementById('photo-grid');
+      if (digitalGrid) {
+        digitalGrid.classList.add('favorites-enabled');
+        digitalGrid.querySelectorAll('.fav-badge').forEach(badge => {
+          if (heartedUrls.has(badge.dataset.favUrl)) badge.classList.add('hearted');
+        });
+      }
+
+      // Show lightbox fav button
+      const favBtn = document.getElementById('lightbox-fav');
+      if (favBtn) favBtn.style.display = '';
+    }
+
+    async function toggleFav(url) {
+      if (!favEnabled) return;
+      const sessionId = getFavSessionId();
+      const albumId = album?.id;
+      const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+      if (!workerBase || !albumId) return;
+
+      const wasHearted = heartedUrls.has(url);
+      // Optimistic update
+      if (wasHearted) heartedUrls.delete(url); else heartedUrls.add(url);
+      updateFavUI(url);
+
+      try {
+        const res = await fetch(`${workerBase}/favorites/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId, photoUrl: url, sessionId }),
+        });
+        if (res.ok) {
+          const { hearted } = await res.json();
+          if (hearted) heartedUrls.add(url); else heartedUrls.delete(url);
+          updateFavUI(url);
+        } else {
+          // Revert on failure
+          if (wasHearted) heartedUrls.add(url); else heartedUrls.delete(url);
+          updateFavUI(url);
+        }
+      } catch {
+        // Revert on network error
+        if (wasHearted) heartedUrls.add(url); else heartedUrls.delete(url);
+        updateFavUI(url);
+      }
+    }
+
+    function updateFavUI(url) {
+      // Update all fav badges for this URL in the grid
+      document.querySelectorAll(`.fav-badge[data-fav-url="${CSS.escape(url)}"]`).forEach(badge => {
+        badge.classList.toggle('hearted', heartedUrls.has(url));
+        badge.setAttribute('aria-label', heartedUrls.has(url) ? 'Remove from favorites' : 'Add to favorites');
+      });
+      // Update lightbox fav button if this is the current photo
+      updateLightboxFavButton();
+    }
+
+    function updateLightboxFavButton() {
+      const favBtn = document.getElementById('lightbox-fav');
+      if (!favBtn || favBtn.style.display === 'none') return;
+      const url = allPhotos[currentIndex];
+      if (!url) return;
+      const hearted = heartedUrls.has(url);
+      favBtn.classList.toggle('hearted', hearted);
+      favBtn.setAttribute('aria-pressed', hearted ? 'true' : 'false');
+      favBtn.setAttribute('aria-label', hearted ? 'Remove from favorites' : 'Add to favorites');
+    }
+
+    // Wire fav badge clicks (delegated from grids)
+    document.getElementById('photo-grid')?.addEventListener('click', (e) => {
+      const badge = e.target.closest('.fav-badge');
+      if (!badge) return;
+      e.stopPropagation();
+      toggleFav(badge.dataset.favUrl);
+    });
+
+    // Wire lightbox fav button
+    const favBtn = document.getElementById('lightbox-fav');
+    if (favBtn) {
+      favBtn.addEventListener('click', () => {
+        const url = allPhotos[currentIndex];
+        if (url) toggleFav(url);
+      });
+    }
   </script>
 
   <style>
@@ -2272,6 +2417,35 @@
       fill: var(--color-gold);
       stroke: var(--color-gold);
     }
+
+    /* ── Favorites hearts (D1 voting, shown when tier unlocked) ── */
+    .fav-badge {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.45);
+      display: none; /* shown via .favorites-enabled on parent */
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: rgba(255,255,255,0.75);
+      transition: color 0.15s, background 0.15s;
+      z-index: 4;
+    }
+    .fav-badge svg { fill: none; stroke: currentColor; transition: fill 0.15s; }
+    .fav-badge.hearted { color: #e85d6e; background: rgba(0,0,0,0.55); }
+    .fav-badge.hearted svg { fill: #e85d6e; stroke: #e85d6e; }
+    .fav-badge:hover { background: rgba(0,0,0,0.7); }
+    /* Show all fav badges on tiles when favorites are enabled for this album */
+    .favorites-enabled .photo-thumb .fav-badge { display: flex; }
+    /* Keep fav badge hidden in select mode (ZIP selection UI takes over) */
+    .select-mode .fav-badge { display: none !important; }
+
+    /* Lightbox fav button hearted state */
+    #lightbox-fav.hearted svg { fill: #e85d6e; stroke: #e85d6e; }
+    #lightbox-fav { color: rgba(255,255,255,0.6); }
+    #lightbox-fav.hearted { color: #e85d6e; }
 
     .liked-download-confirm {
       position: fixed;

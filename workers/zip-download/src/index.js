@@ -7,6 +7,9 @@ const ALLOWED_ORIGINS = new Set([
   'https://raveenfernando.com',
   'https://www.raveenfernando.com',
   'https://photography-portfolio-pi-blush.vercel.app',
+  // Local dev: add your vercel dev origin if needed
+  'http://localhost:8080',
+  'http://localhost:3000',
 ]);
 
 function corsHeaders(request) {
@@ -16,6 +19,116 @@ function corsHeaders(request) {
   }
   return {};
 }
+
+// ── Favorites / voting (D1) ───────────────────────────────────────────────────
+
+/**
+ * POST /favorites/toggle
+ * Body: { albumId, photoUrl, sessionId }
+ * Returns: { hearted: bool, count: number }
+ *
+ * GET /favorites?albumId=X&sessionId=Y
+ * Returns: { heartedUrls: string[] }
+ *
+ * GET /favorites/tally?albumId=X
+ * Requires: Authorization: Bearer <ADMIN_SECRET>
+ * Returns: { tally: [{photoUrl, count}] } sorted DESC
+ */
+async function handleFavorites(request, url, env, cors) {
+  if (!env.DB) {
+    return new Response(JSON.stringify({ error: 'Favorites not configured (no D1 binding)' }),
+      { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
+  // Admin tally — requires Bearer token matching ADMIN_SECRET wrangler secret
+  if (url.pathname === '/favorites/tally') {
+    if (request.method !== 'GET') return json({ error: 'Method not allowed' }, 405);
+
+    const authHeader = request.headers.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!env.ADMIN_SECRET || !token || token !== env.ADMIN_SECRET) {
+      return json({ error: 'Unauthorized' }, 401);
+    }
+
+    const albumId = url.searchParams.get('albumId');
+    if (!albumId) return json({ error: 'albumId required' }, 400);
+
+    const { results } = await env.DB.prepare(
+      `SELECT photo_url, COUNT(*) as count
+       FROM favorites
+       WHERE album_id = ?
+       GROUP BY photo_url
+       ORDER BY count DESC`
+    ).bind(albumId).all();
+
+    return json({ tally: results.map(r => ({ photoUrl: r.photo_url, count: r.count })) });
+  }
+
+  // Heart toggle — POST /favorites/toggle
+  if (url.pathname === '/favorites/toggle') {
+    if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+
+    let body;
+    try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+    const { albumId, photoUrl, sessionId } = body || {};
+    if (!albumId || !photoUrl || !sessionId) {
+      return json({ error: 'albumId, photoUrl, sessionId required' }, 400);
+    }
+    if (sessionId.length > 128 || albumId.length > 256 || photoUrl.length > 2048) {
+      return json({ error: 'Input too long' }, 400);
+    }
+
+    // Check if already hearted
+    const existing = await env.DB.prepare(
+      `SELECT id FROM favorites WHERE session_id = ? AND photo_url = ?`
+    ).bind(sessionId, photoUrl).first();
+
+    if (existing) {
+      // Un-heart
+      await env.DB.prepare(
+        `DELETE FROM favorites WHERE session_id = ? AND photo_url = ?`
+      ).bind(sessionId, photoUrl).run();
+    } else {
+      // Heart — INSERT OR IGNORE handles race conditions
+      await env.DB.prepare(
+        `INSERT OR IGNORE INTO favorites (album_id, photo_url, session_id) VALUES (?, ?, ?)`
+      ).bind(albumId, photoUrl, sessionId).run();
+    }
+
+    // Return updated count for this photo
+    const row = await env.DB.prepare(
+      `SELECT COUNT(*) as count FROM favorites WHERE photo_url = ?`
+    ).bind(photoUrl).first();
+
+    return json({ hearted: !existing, count: row?.count ?? 0 });
+  }
+
+  // Session hearts — GET /favorites?albumId=X&sessionId=Y
+  if (url.pathname === '/favorites') {
+    if (request.method !== 'GET') return json({ error: 'Method not allowed' }, 405);
+
+    const albumId = url.searchParams.get('albumId');
+    const sessionId = url.searchParams.get('sessionId');
+    if (!albumId || !sessionId) return json({ error: 'albumId and sessionId required' }, 400);
+
+    const { results } = await env.DB.prepare(
+      `SELECT photo_url FROM favorites WHERE album_id = ? AND session_id = ?`
+    ).bind(albumId, sessionId).all();
+
+    return json({ heartedUrls: results.map(r => r.photo_url) });
+  }
+
+  return json({ error: 'Not found' }, 404);
+}
+
+// ── Helpers (ZIP) ─────────────────────────────────────────────────────────────
 
 // Normalise a caller-supplied value into an R2 object key.
 // Accepts full public URLs or already-relative keys; strips query strings.
@@ -75,21 +188,30 @@ async function parseKeys(request) {
   return { keys, filename: sanitizeFilename(filename.endsWith('.zip') ? filename : `${filename}.zip`) };
 }
 
+// ── Main handler ──────────────────────────────────────────────────────────────
+
 export default {
   async fetch(request, env) {
     const cors = corsHeaders(request);
+    const url = new URL(request.url);
 
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
           ...cors,
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Max-Age': '86400',
         },
       });
     }
 
+    // Route favorites requests
+    if (url.pathname.startsWith('/favorites')) {
+      return handleFavorites(request, url, env, cors);
+    }
+
+    // ZIP download (existing)
     if (request.method !== 'GET' && request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405, headers: cors });
     }
