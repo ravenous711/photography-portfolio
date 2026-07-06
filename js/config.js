@@ -55,9 +55,10 @@ const WORKER_BASE_URL = (() => {
 // Or: python3 -c "import hashlib; print(hashlib.sha256(b'your-password').hexdigest())"
 
 const PASSWORD_TIERS = {
-  // friends password: rf-pix-2026
+  // Passwords are in 1Password — NEVER store plaintext here, hashes only.
+  // To add a new tier: sha256(password) -> ['audience', ...]
+  // Generate: python3 -c "import hashlib; print(hashlib.sha256(b'pw').hexdigest())"
   'a8b3ec8e72875d9feaec7919a6164fc90bcaead8f70d0f20d6a13c83de2c6ad4': ['friends'],
-  // family password: rf-family-pw — also grants friends
   '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'friends'],
 };
 

@@ -42,6 +42,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'photos must be an array' });
   }
 
+  // Allowlist: every URL must be from the known R2 public bucket.
+  // This prevents an attacker with a stolen session from injecting
+  // arbitrary JS/expressions into the backtick literals in config.js.
+  const R2_ORIGIN = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/';
+  const invalidUrls = photos.filter(u => {
+    if (typeof u !== 'string') return true;
+    if (!u.startsWith(R2_ORIGIN)) return true;
+    // Reject anything that could escape a template literal or the JS file
+    if (/[`\\${}]/.test(u)) return true;
+    // Reject path traversal
+    if (u.includes('..')) return true;
+    return false;
+  });
+  if (invalidUrls.length > 0) {
+    return res.status(400).json({
+      error: `Invalid photo URLs (must start with ${R2_ORIGIN} and contain no special characters)`,
+      examples: invalidUrls.slice(0, 3),
+    });
+  }
+
   // ── Fetch config.js from GitHub ───────────────────────────────────────────
   const [owner, repo] = GITHUB_REPO.split('/');
   const filePath = 'js/config.js';
@@ -200,16 +220,21 @@ function escapeRegex(str) {
 
 /**
  * Build a single curated: [...] line.
- * For ≤ 3 photos: inline. For > 3: multi-line array, one URL per line.
+ * URLs are written as JSON.stringify() single-quoted strings so no
+ * backtick template expression or injection is possible even if a URL
+ * somehow contained special characters (the allowlist above also blocks this).
  */
 function buildCuratedLine(photos, indent) {
   if (photos.length === 0) {
     return `${indent}curated: [],`;
   }
+  // Use JSON.stringify to get a safely escaped string, then convert outer
+  // double-quotes to single-quotes (config.js convention).
+  const safeStr = (u) => JSON.stringify(u).replace(/^"|"$/g, "'");
   if (photos.length <= 3) {
-    const inner = photos.map(u => `\`${u}\``).join(', ');
+    const inner = photos.map(safeStr).join(', ');
     return `${indent}curated: [${inner}],`;
   }
-  const inner = photos.map(u => `${indent}  \`${u}\`,`).join('\n');
+  const inner = photos.map(u => `${indent}  ${safeStr(u)},`).join('\n');
   return `${indent}curated: [\n${inner}\n${indent}],`;
 }

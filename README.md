@@ -24,11 +24,11 @@ The site has four audience tiers. Every album in `js/config.js` has an `audience
 
 | Tier | Password | Hash |
 |---|---|---|
-| Friends | `rf-pix-2026` | `a8b3ec8e...` |
-| Family | `rf-family-pw` | `29637b2d...` |
+| Friends | see 1Password | `a8b3ec8e...` |
+| Family | see 1Password | `29637b2d...` |
 | Admin panel | see 1Password | `7a65b8f6...` |
 
-Passwords are never stored in the repo — only their SHA-256 hashes in `PASSWORD_TIERS` in `js/config.js`.
+Passwords are stored in 1Password only — **never in the repo** (not even in comments). Only SHA-256 hashes live in `PASSWORD_TIERS` in `js/config.js`.
 
 ### Handing out passwords
 
@@ -176,7 +176,7 @@ Every album needs an `audience` tag. Pick the template that matches:
 {
   id: 'my-city-2026',
   title: 'My City 2026',
-  audience: 'friends',       // curated set public; full album unlocked with rf-pix-2026
+  audience: 'friends',       // curated set public; full album unlocked with friends password
   protected: false,
   coverImage: `${R2_BASE_URL}/My-City-2026/COVER.JPG`,
   photos: [ ... ],
@@ -189,7 +189,7 @@ Every album needs an `audience` tag. Pick the template that matches:
 {
   id: 'my-family-event',
   title: 'Family Event 2026',
-  audience: 'family',        // unlocked with rf-family-pw; hidden from public gallery
+  audience: 'family',        // unlocked with family password (see 1Password); hidden from public gallery
   hidden: true,
   protected: false,
   coverImage: `${R2_BASE_URL}/Family-Event-2026/COVER.JPG`,

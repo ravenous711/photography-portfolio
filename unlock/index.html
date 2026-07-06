@@ -336,10 +336,20 @@
             }
           }
 
-          // If there's a ?next= param, redirect there after unlock
-          if (nextParam && nextParam.startsWith('/')) {
+          // If there's a ?next= param, redirect there — same-origin only.
+          // Rejects //attacker.example protocol-relative URLs and any off-origin path.
+          const safeNext = (() => {
+            if (!nextParam || !nextParam.startsWith('/') || nextParam.startsWith('//')) return null;
+            try {
+              const u = new URL(nextParam, window.location.origin);
+              return u.origin === window.location.origin
+                ? u.pathname + u.search + u.hash
+                : null;
+            } catch { return null; }
+          })();
+          if (safeNext) {
             showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')} — redirecting…`);
-            setTimeout(() => window.location.href = nextParam, 800);
+            setTimeout(() => window.location.href = safeNext, 800);
             return;
           }
 
