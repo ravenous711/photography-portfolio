@@ -2240,9 +2240,11 @@
         grid.classList.add('favorites-enabled');
       });
 
-      // Show lightbox fav button
-      const favBtn = document.getElementById('lightbox-fav');
-      if (favBtn) favBtn.style.display = '';
+      // Show lightbox fav button (only on full album pages)
+      if (document.body.classList.contains('full-album-mode')) {
+        const favBtn = document.getElementById('lightbox-fav');
+        if (favBtn) favBtn.style.display = '';
+      }
 
       // Then async-load which photos this session already hearted, and backfill the state.
       const sessionId = getFavSessionId();
@@ -2266,7 +2268,8 @@
     }
 
     async function toggleFav(url) {
-      if (!favEnabled) return;
+      // Hearts are only visible on full-album pages (body.full-album-mode), so any click should work.
+      // favEnabled is still set by initFavorites but is no longer the gate here.
       const sessionId = getFavSessionId();
       const albumId = album?.id;
       const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
@@ -2300,10 +2303,12 @@
     }
 
     function updateFavUI(url) {
-      // Update all fav badges for this URL in the grid
-      document.querySelectorAll(`.fav-badge[data-fav-url="${CSS.escape(url)}"]`).forEach(badge => {
-        badge.classList.toggle('hearted', heartedUrls.has(url));
-        badge.setAttribute('aria-label', heartedUrls.has(url) ? 'Remove from favorites' : 'Add to favorites');
+      const hearted = heartedUrls.has(url);
+      // Use direct attribute comparison — CSS.escape can mangle URL characters in selectors
+      document.querySelectorAll('.fav-badge').forEach(badge => {
+        if (badge.dataset.favUrl !== url) return;
+        badge.classList.toggle('hearted', hearted);
+        badge.setAttribute('aria-label', hearted ? 'Remove from favorites' : 'Add to favorites');
       });
       // Update lightbox fav button if this is the current photo
       updateLightboxFavButton();
