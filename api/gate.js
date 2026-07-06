@@ -15,7 +15,7 @@ function readBody(req) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const isSecure = req.headers['x-forwarded-proto'] === 'https';
   const cookieStr = `${COOKIE_NAME}=${COOKIE_VAL}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax${isSecure ? '; Secure' : ''}`;
 
@@ -46,4 +46,4 @@ export default async function handler(req, res) {
 
   res.statusCode = 405;
   res.end();
-}
+};
