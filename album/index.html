@@ -1188,8 +1188,8 @@
       renderNextAlbumNav();
       scrollToLinkedPhoto();
 
-      // Initialize favorites voting (only when tier is unlocked)
-      initFavorites(album.id, tierGranted);
+      // Initialize favorites voting — available to everyone (anonymous session-based)
+      initFavorites(album.id, true);
     }
 
     // Visible "More in <trip>" switcher in the page header so a visitor can hop
