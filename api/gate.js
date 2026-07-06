@@ -1,37 +1,49 @@
 /**
  * POST /api/gate — validate preview password, set session cookie, redirect.
- * GET  /api/gate — clear cookie (logout / reset gate).
+ * GET  /api/gate — clear cookie (dev reset).
  */
 
 const COOKIE_NAME = 'site_preview';
 const COOKIE_VAL  = 'granted';
 const PASSWORD    = 'preview2026';
 
-export default function handler(req, res) {
+function readBody(req) {
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk.toString(); });
+    req.on('end', () => resolve(data));
+  });
+}
+
+export default async function handler(req, res) {
   const isSecure = req.headers['x-forwarded-proto'] === 'https';
-  const cookieBase = `${COOKIE_NAME}=${COOKIE_VAL}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+  const cookieStr = `${COOKIE_NAME}=${COOKIE_VAL}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax${isSecure ? '; Secure' : ''}`;
 
   if (req.method === 'POST') {
-    const body   = typeof req.body === 'string' ? Object.fromEntries(new URLSearchParams(req.body)) : req.body || {};
-    const { password, redirect: back = '/' } = body;
+    const raw    = await readBody(req);
+    const params = new URLSearchParams(raw);
+    const password = params.get('password') || '';
+    const back     = params.get('redirect')  || '/';
 
     if (password === PASSWORD) {
-      res.setHeader('Set-Cookie', cookieBase);
+      res.setHeader('Set-Cookie', cookieStr);
       res.writeHead(302, { Location: back });
       return res.end();
     }
 
-    // Wrong password — re-show gate with error flag
-    res.writeHead(302, { Location: `/?gate_error=1&redirect=${encodeURIComponent(back)}` });
+    // Wrong password — bounce back with error flag
+    const safeBack = back.startsWith('/') ? back : '/';
+    res.writeHead(302, { Location: `/?gate_error=1&redirect=${encodeURIComponent(safeBack)}` });
     return res.end();
   }
 
-  // GET — clear the cookie (used to reset during dev/testing)
+  // GET — clear cookie (reset for dev/testing)
   if (req.method === 'GET') {
     res.setHeader('Set-Cookie', `${COOKIE_NAME}=; Path=/; Max-Age=0`);
     res.writeHead(302, { Location: '/' });
     return res.end();
   }
 
-  res.status(405).end();
+  res.statusCode = 405;
+  res.end();
 }
