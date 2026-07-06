@@ -23,6 +23,8 @@
   ],
   "rewrites": [
     { "source": "/family/", "destination": "/family/index.html" },
+    { "source": "/familyalbums/:year/:slug/", "destination": "/album/index.html" },
+    { "source": "/familyalbums/:year/:slug", "destination": "/album/index.html" },
     { "source": "/unlock/", "destination": "/unlock/index.html" },
     { "source": "/fullalbums/", "destination": "/fullalbums/index.html" },
     { "source": "/fullalbums/:groupId/:slug/", "destination": "/album/index.html" },

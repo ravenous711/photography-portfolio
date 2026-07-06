@@ -207,10 +207,11 @@ Use this for a single event with mixed digital and film:
   description: '<Short description.>',
   location: '<City>',
   date: '<Month YYYY>',
-  audience: 'family:anger-ali',   // or family:fernando / friends / public
-  hidden: true,                    // always true for family albums
+  audience: 'family:anger-ali',        // or family:fernando / friends / public
+  hidden: true,                        // always true for family albums
   protected: false,
-  digitalLabel: 'Fujifilm X-T5',  // optional — label above digital grid
+  familySlug: 'short-descriptive-slug', // gives URL /familyalbums/YYYY/short-descriptive-slug/
+  digitalLabel: 'Fujifilm X-T5',       // optional — label above digital grid
   coverImage: `${R2_BASE_URL}/<R2-folder-name>/<COVER.jpg>`,
   photos: [
     `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.jpg>`,

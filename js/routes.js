@@ -18,9 +18,16 @@ const Routes = {
     return `/gallery/${encodeURIComponent(id)}/`;
   },
 
+  /** Family album — /familyalbums/:year/:familySlug/ */
+  familyAlbum(album) {
+    const year = (album.date || '').match(/\b(20\d\d)\b/)?.[1] || 'family';
+    return `/familyalbums/${year}/${encodeURIComponent(album.familySlug)}/`;
+  },
+
   albumPageUrl(album) {
     if (!album) return this.gallery;
     if (album.type === 'group') return this.group(album.id);
+    if (album.familySlug) return this.familyAlbum(album);
     if (album.parentId && album.slug) {
       return this.nestedAlbum(album.parentId, album.slug);
     }
@@ -49,8 +56,16 @@ const Routes = {
     );
   },
 
-  /** Resolve album from /gallery/:group/:slug/, /album/:id/, or /fullalbums/:group/:slug/, /fullalbums/:id/ */
+  /** Resolve album from current path — handles all URL patterns */
   resolveAlbumFromPath() {
+    // /familyalbums/:year/:slug/
+    const family = window.location.pathname.match(/^\/familyalbums\/([^/]+)\/([^/]+)\/?$/);
+    if (family) {
+      const slug = decodeURIComponent(family[2]);
+      return this._albums().find(a => a.familySlug === slug);
+    }
+
+    // /gallery/:group/:slug/ or /fullalbums/:group/:slug/
     const nested = window.location.pathname.match(/^\/(gallery|fullalbums)\/([^/]+)\/([^/]+)\/?$/);
     if (nested) {
       return this.findAlbumByGroupSlug(
@@ -59,6 +74,7 @@ const Routes = {
       );
     }
 
+    // /album/:id/ or /fullalbums/:id/
     const flat = window.location.pathname.match(/^\/(album|fullalbums)\/([^/]+)\/?$/);
     if (flat) {
       const id = decodeURIComponent(flat[2]);
@@ -95,16 +111,23 @@ const Routes = {
     return this.albumPageUrl(album);
   },
 
-  /** /album/italy-florence/ → /gallery/italy-2026/florence/ when slug exists */
+  /** /album/:id/ → canonical URL (family slug or nested gallery) when a better URL exists */
   redirectLegacyFlatAlbum() {
     const flat = window.location.pathname.match(/^\/album\/([^/]+)\/?$/);
     if (!flat) return false;
 
     const album = this._albums().find(a => a.id === decodeURIComponent(flat[1]));
-    if (!album?.parentId || !album?.slug) return false;
+    if (!album) return false;
 
-    window.location.replace(this.nestedAlbum(album.parentId, album.slug));
-    return true;
+    if (album.familySlug) {
+      window.location.replace(this.familyAlbum(album));
+      return true;
+    }
+    if (album.parentId && album.slug) {
+      window.location.replace(this.nestedAlbum(album.parentId, album.slug));
+      return true;
+    }
+    return false;
   },
 
   /** ?id= on album page → canonical nested or flat URL. Returns true if redirecting. */

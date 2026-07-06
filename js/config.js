@@ -128,6 +128,7 @@ const ALBUMS = [
     hidden: true,
     audience: 'family:anger-ali',
     protected: false,
+    familySlug: 'joel-birthday',
     coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6970.JPG`,
     photos: [
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
@@ -217,6 +218,7 @@ const ALBUMS = [
     audience: 'family:anger-ali',
     hidden: true,
     protected: false,
+    familySlug: 'raveen-athena-maryland',
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Maryland-2026-Digital/20260306-DSCF1772.jpg`,
     photos: [
