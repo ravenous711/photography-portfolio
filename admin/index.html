@@ -135,38 +135,49 @@
       border-color: var(--color-gold); color: var(--color-gold);
     }
 
-    /* ── Album section ── */
-    .album-section { margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
-    .album-header {
+    /* ── Album directory rows ── */
+    .album-row {
       display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.9rem 0;
+      padding: 0.85rem 0;
       cursor: pointer;
-      user-select: none;
-    }
-    .album-header:hover h2 { opacity: 0.7; }
-    .album-header h2 {
-      font-family: var(--font-serif);
-      font-size: 1.25rem;
-      font-weight: 300;
-      letter-spacing: 0.04em;
-      margin: 0;
-      color: var(--color-text);
+      border-bottom: 1px solid var(--color-border);
       transition: opacity 0.15s;
-      flex: 1;
+      text-decoration: none;
     }
-    .album-header .album-meta {
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+    .album-row:hover { opacity: 0.65; }
+    .album-row-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem; font-weight: 300; letter-spacing: 0.04em;
+      color: var(--color-text); flex: 1; margin: 0;
+    }
+    .album-row-meta {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--color-muted); white-space: nowrap;
+    }
+    .album-row-chevron { color: var(--color-muted); flex-shrink: 0; }
+
+    /* ── Detail view header ── */
+    #detail-header {
+      display: flex; align-items: baseline; gap: 1rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    #detail-header h2 {
+      font-family: var(--font-serif); font-size: 1.5rem; font-weight: 300;
+      letter-spacing: 0.04em; margin: 0; color: var(--color-text); flex: 1;
+    }
+    #detail-status {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--color-muted);
     }
-    .album-header .chevron {
-      width: 16px; height: 16px;
-      color: var(--color-muted);
-      transition: transform 0.2s;
-      flex-shrink: 0;
-    }
-    .album-section.open .chevron { transform: rotate(180deg); }
+
+    /* ── Album section (detail wrapper — kept for savePendingCurated queries) ── */
+    .album-section { margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
+
+    /* Legacy accordion styles (preserved, unused in new detail view) */
+    .album-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 0; cursor: pointer; user-select: none; }
+    .album-header h2 { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 300; letter-spacing: 0.04em; margin: 0; color: var(--color-text); flex: 1; }
+    .album-header .album-meta { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-muted); }
+    .album-header .chevron { width: 16px; height: 16px; color: var(--color-muted); flex-shrink: 0; }
     .album-body {
       overflow: hidden;
       max-height: 0;
@@ -340,11 +351,16 @@
 
     <!-- ── Toolbar ── -->
     <div id="toolbar">
-      <span style="font-family:var(--font-serif);font-size:1.1rem;letter-spacing:0.06em;color:var(--color-text);flex:1">Admin</span>
-      <!-- Tab switcher -->
-      <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
-      <button class="btn-ghost tab-btn" id="tab-favorites" onclick="switchTab('favorites')">Favorites</button>
-      <button class="btn-ghost tab-btn" id="tab-codes" onclick="switchTab('codes')">Access codes</button>
+      <!-- List mode: site name + tabs -->
+      <span id="toolbar-site-name" style="font-family:var(--font-serif);font-size:1.1rem;letter-spacing:0.06em;color:var(--color-text)">Admin</span>
+      <span id="toolbar-tabs" style="display:flex;align-items:center;gap:0.5rem;flex:1">
+        <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
+        <button class="btn-ghost tab-btn" id="tab-codes" onclick="switchTab('codes')">Access codes</button>
+      </span>
+      <!-- Detail mode: back button + album title -->
+      <button class="btn-ghost" id="back-btn" style="display:none" onclick="closeAlbumDetail()">← Albums</button>
+      <span id="detail-toolbar-title" style="display:none;font-family:var(--font-serif);font-size:1rem;letter-spacing:0.04em;color:var(--color-text);flex:1"></span>
+      <!-- Shared actions -->
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
       <button class="btn-ghost" id="save-curated-btn" style="display:none" onclick="savePendingCurated()">Save curated changes</button>
@@ -352,25 +368,18 @@
       <button class="btn-ghost" onclick="signOut()" style="color:var(--color-muted);margin-left:0.5rem">Sign out</button>
     </div>
 
-    <!-- ── Albums tab ── -->
+    <!-- ── Albums list (directory) ── -->
     <main id="pane-albums" style="padding: 2rem 1.5rem 4rem">
       <div id="album-list"></div>
     </main>
 
-    <!-- ── Favorites tally tab ── -->
-    <main id="pane-favorites" style="display:none; padding: 2rem 1.5rem 4rem">
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
-        <select id="fav-album-select" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px">
-          <option value="">— Select album —</option>
-        </select>
-        <button class="btn-ghost" onclick="loadFavoritesTally()" style="font-size:0.75rem">Load tally</button>
-        <span id="fav-status" style="font-size:0.75rem;color:var(--color-muted)"></span>
+    <!-- ── Album detail view ── -->
+    <main id="pane-album-detail" style="display:none; padding: 2rem 1.5rem 4rem">
+      <div id="detail-header">
+        <h2 id="detail-album-title"></h2>
+        <span id="detail-status"></span>
       </div>
-      <div id="fav-tally-grid" style="position:relative;min-height:2rem"></div>
-      <div id="fav-save-bar" style="display:none;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--color-border)">
-        <span id="fav-save-count" style="font-size:0.8rem;color:var(--color-muted);margin-right:1rem"></span>
-        <button class="btn-ghost" onclick="saveFavCurated()" style="border-color:var(--color-gold);color:var(--color-gold);font-size:0.75rem">Save as curated set</button>
-      </div>
+      <div id="album-detail-grid-container"></div>
     </main>
 
     <!-- ── Access codes tab ── -->
@@ -628,6 +637,17 @@
       }
       btn.textContent = 'Save curated changes'; btn.disabled = false;
       updateToolbar();
+      // Update detail status if still in the album detail view
+      if (currentDetailAlbum) {
+        const newCurated = document.querySelectorAll(`#pane-album-detail .photo-thumb.is-curated, #pane-album-detail .photo-thumb.curate-pending-add`).length;
+        const total = document.querySelectorAll('#pane-album-detail .photo-thumb').length;
+        const hEl = document.getElementById('detail-status');
+        if (hEl && total) {
+          const prev = hEl.textContent.split(' · ');
+          const heartsPart = prev.find(p => p.includes('hearted')) || '';
+          hEl.textContent = [prev[0], heartsPart].filter(Boolean).join(' · ');
+        }
+      }
     }
 
     function makeCuratedBadge() {
@@ -680,186 +700,201 @@
       });
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // ── Album detail navigation ───────────────────────────────────────────────
+    let currentDetailAlbum = null;
+
+    async function openAlbumDetail(album) {
+      currentDetailAlbum = album;
+
+      // Switch panes
+      document.getElementById('pane-albums').style.display = 'none';
+      document.getElementById('pane-codes').style.display  = 'none';
+      document.getElementById('pane-album-detail').style.display = '';
+
+      // Toolbar: show back + title, hide tabs
+      document.getElementById('toolbar-tabs').style.display   = 'none';
+      document.getElementById('toolbar-site-name').style.display = 'none';
+      document.getElementById('back-btn').style.display       = '';
+      document.getElementById('detail-toolbar-title').style.display = '';
+      document.getElementById('detail-toolbar-title').textContent = album.title;
+
+      // Set detail header
+      document.getElementById('detail-album-title').textContent = album.title;
+      document.getElementById('detail-status').textContent = 'Loading…';
+      document.getElementById('album-detail-grid-container').innerHTML = '';
+
+      // Fetch favorites tally async
+      let tally = [];
+      try {
+        const res = await fetch(`/api/admin-favorites?albumId=${encodeURIComponent(album.id)}`, {
+          credentials: 'same-origin',
+        });
+        if (res.ok) { const d = await res.json(); tally = d.tally || []; }
+      } catch {}
+
+      renderAlbumDetail(album, tally);
+    }
+
+    function closeAlbumDetail() {
+      currentDetailAlbum = null;
+
+      // Switch panes
+      document.getElementById('pane-album-detail').style.display = 'none';
+      document.getElementById('pane-albums').style.display = '';
+
+      // Toolbar: restore tabs, hide back
+      document.getElementById('toolbar-tabs').style.display   = '';
+      document.getElementById('toolbar-site-name').style.display = '';
+      document.getElementById('back-btn').style.display       = 'none';
+      document.getElementById('detail-toolbar-title').style.display = 'none';
+
+      // Re-render directory to pick up any curated-count changes
+      document.getElementById('album-list').innerHTML = '';
+      renderAlbums();
+    }
+
+    function renderAlbumDetail(album, tally) {
+      const container = document.getElementById('album-detail-grid-container');
+      container.innerHTML = '';
+
+      const allPhotos = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
+      const heartMap  = new Map(tally.map(({ photoUrl, count }) => [photoUrl, count]));
+      const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
+
+      const heartedCount = tally.length;
+      document.getElementById('detail-status').textContent = heartedCount
+        ? `${allPhotos.length} photos · ${heartedCount} hearted`
+        : `${allPhotos.length} photos`;
+
+      // Legend
+      const legend = document.createElement('div');
+      legend.style.cssText = 'display:flex;align-items:center;gap:1.25rem;margin-bottom:1rem;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-muted);flex-wrap:wrap';
+      legend.innerHTML = `
+        <span style="display:flex;align-items:center;gap:0.45rem">
+          <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.75);color:#e85d6e;padding:2px 7px;border-radius:10px;font-size:0.65rem">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 2
+          </span>
+          Hearted by friends
+        </span>
+        <span style="display:flex;align-items:center;gap:0.45rem">
+          <span style="display:inline-flex;align-items:center;justify-content:center;background:var(--color-gold);border-radius:50%;width:18px;height:18px">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </span>
+          In curated set — click ★ to toggle
+        </span>
+        <span style="display:flex;align-items:center;gap:0.45rem">
+          <span style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.9);border:1.5px solid rgba(0,0,0,0.2);border-radius:4px;width:18px;height:18px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          Hover + click checkbox to mark for deletion
+        </span>
+      `;
+      container.appendChild(legend);
+
+      // Grid wrapper — class album-section + data-album-id so existing savePendingCurated queries work
+      const wrapper = document.createElement('div');
+      wrapper.className = 'album-section';
+      wrapper.dataset.albumId = album.id;
+      wrapper.style.cssText = 'border-bottom:none;margin-bottom:0';
+
+      const grid = document.createElement('div');
+      grid.className = 'photo-grid';
+      grid.style.position = 'relative';
+      wrapper.appendChild(grid);
+      container.appendChild(wrapper);
+
+      allPhotos.forEach(url => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb' + (curatedSet.has(url) ? ' is-curated' : '');
+        thumb.dataset.url = url;
+
+        // Image — click → lightbox
+        const img = document.createElement('img');
+        img.alt = ''; img.decoding = 'async';
+        img.src = gridUrl(url);
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in';
+        img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url, allPhotos); });
+
+        // Deletion overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'mark-overlay';
+        overlay.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+        // Deletion checkbox (top-left, hover to reveal)
+        const checkEl = document.createElement('div');
+        checkEl.className = 'thumb-check';
+        checkEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
+
+        // Heart count badge (top-right)
+        const hearts = heartMap.get(url) || 0;
+        if (hearts > 0) {
+          const hBadge = document.createElement('div');
+          hBadge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);color:#e85d6e;font-size:0.65rem;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px;pointer-events:none;z-index:3';
+          hBadge.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${hearts}`;
+          thumb.appendChild(hBadge);
+        }
+
+        // Curated star badge (bottom-right — solid gold if curated, faint on hover for adding)
+        if (curatedSet.has(url)) {
+          const badge = makeCuratedBadge();
+          badge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleCurated(thumb, url, album.id, curatedSet);
+          });
+          thumb.appendChild(badge);
+        }
+        const addBadge = makeCurateAddBadge();
+        addBadge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleCurated(thumb, url, album.id, curatedSet);
+        });
+        thumb.appendChild(addBadge);
+
+        thumb.appendChild(img);
+        thumb.appendChild(overlay);
+        thumb.appendChild(checkEl);
+        grid.appendChild(thumb);
+      });
+
+      bindAdminGridLayout(grid);
+      window.addEventListener('resize', () => runJustifiedLayout(grid), { passive: true });
+    }
+
+    // ── Render (directory list) ───────────────────────────────────────────────
     function renderAlbums() {
       const container = document.getElementById('album-list');
 
-      // Flatten all albums with actual photos (digital + all film sections, skip groups/placeholders)
       const leafAlbums = ALBUMS.filter(a =>
         a.type !== 'group' &&
         getAlbumAllPhotos(a).some(p => !p.endsWith('.svg'))
       );
 
-      if (leafAlbums.length === 0) {
+      if (!leafAlbums.length) {
         container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No albums with photos found.</p>';
         return;
       }
 
       leafAlbums.forEach(album => {
-        const photos = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
-        const badge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
-        const count = photos.length;
-
-        const section = document.createElement('div');
-        section.className = 'album-section';
-        section.dataset.albumId = album.id;
-
-        // Header (clickable)
+        const photos      = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
         const curatedCount = Array.isArray(album.curated) ? album.curated.length : 0;
-        const curatedLabel = curatedCount > 0 ? ` · ${curatedCount} curated` : '';
-        const header = document.createElement('div');
-        header.className = 'album-header';
-        header.innerHTML = `
-          <h2>${album.title}</h2>
-          <span class="album-meta">${count} photo${count !== 1 ? 's' : ''}${badge}${curatedLabel}</span>
-          ${curatedCount > 0 ? `
-          <div class="album-curate-actions">
-            <button class="btn-curate-clear" title="Remove the entire curated set — all photos will be shown to everyone">Clear curated</button>
-          </div>` : ''}
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"/>
+        const count        = photos.length;
+        const audienceBadge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
+
+        const row = document.createElement('div');
+        row.className = 'album-row';
+        row.innerHTML = `
+          <span class="album-row-title">${album.title}</span>
+          <span class="album-row-meta">
+            ${count} photo${count !== 1 ? 's' : ''}${curatedCount > 0 ? ` · ${curatedCount} curated` : ''}${audienceBadge}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="album-row-chevron" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"/>
           </svg>
         `;
-
-        // Body (collapsible)
-        const body = document.createElement('div');
-        body.className = 'album-body';
-        const grid = document.createElement('div');
-        grid.className = 'photo-grid';
-        body.appendChild(grid);
-
-        section.appendChild(header);
-        section.appendChild(body);
-        container.appendChild(section);
-
-        let imagesLoaded = false;
-
-        function loadImages() {
-          if (imagesLoaded) return;
-          imagesLoaded = true;
-
-          const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (!entry.isIntersecting) return;
-              const img = entry.target.querySelector('img');
-              if (img && img.dataset.src) {
-                const original = img.dataset.src;
-                delete img.dataset.src;
-                img.addEventListener('load', () => {
-                  img.classList.add('loaded');
-                  runJustifiedLayout(grid);
-                }, { once: true });
-                img.addEventListener('error', () => { img.src = original; }, { once: true });
-                img.src = thumbUrl(original);
-              }
-              observer.unobserve(entry.target);
-            });
-          }, { rootMargin: '200px' }); // start loading 200px before entering view
-
-          const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
-
-          photos.forEach(url => {
-            const thumb = document.createElement('div');
-            thumb.className = 'photo-thumb' + (curatedSet.has(url) ? ' is-curated' : '');
-            thumb.dataset.url = url;
-
-            const img = document.createElement('img');
-            img.alt = '';
-            img.decoding = 'async';
-            img.dataset.src = url; // deferred — set by observer
-
-            const overlay = document.createElement('div');
-            overlay.className = 'mark-overlay';
-            overlay.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-
-            // Corner checkbox for deletion
-            const checkEl = document.createElement('div');
-            checkEl.className = 'thumb-check';
-            checkEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-
-            // Gold star badge for currently curated photos (click to remove from curated)
-            if (curatedSet.has(url)) {
-              const badge = makeCuratedBadge();
-              badge.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleCurated(thumb, url, album.id, curatedSet);
-              });
-              thumb.appendChild(badge);
-            }
-
-            // Faint outline star on non-curated photos (click to add to curated)
-            const addBadge = makeCurateAddBadge();
-            addBadge.addEventListener('click', (e) => {
-              e.stopPropagation();
-              toggleCurated(thumb, url, album.id, curatedSet);
-            });
-            thumb.appendChild(addBadge);
-
-            thumb.appendChild(img);
-            thumb.appendChild(overlay);
-            thumb.appendChild(checkEl);
-            grid.appendChild(thumb);
-            observer.observe(thumb);
-
-            img.style.cursor = 'zoom-in';
-
-            // Click image → lightbox (pass full album photo list for nav)
-            img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url, photos); });
-
-            // Click checkbox corner → toggle selection; click elsewhere on card → toggle selection
-            checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
-            thumb.addEventListener('click', (e) => { if (e.target !== img) toggleThumb(thumb, url); });
-          });
-
-          bindAdminGridLayout(grid);
-        }
-
-        header.addEventListener('click', (e) => {
-          // Don't toggle section when clicking the curate action buttons
-          if (e.target.closest('.album-curate-actions')) return;
-          section.classList.toggle('open');
-          if (section.classList.contains('open')) loadImages();
-        });
-
-        // Wire "Clear curated" button — removes curated[] from the album
-        const clearBtn = header.querySelector('.btn-curate-clear');
-        if (clearBtn) {
-          clearBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const ok = confirm(`Remove the curated set for "${album.title}"?\n\nAll photos will be shown to everyone (no highlights). You can set a new curated set anytime from the admin panel.`);
-            if (!ok) return;
-            clearBtn.textContent = 'Clearing…'; clearBtn.disabled = true;
-            try {
-              const res = await fetch('/api/admin-curate', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ albumId: album.id, photos: [] }),
-              });
-              const data = await res.json();
-              if (!res.ok) {
-                showToast(`Error: ${data.error || res.statusText}`, 6000);
-              } else {
-                showToast(`Curated set cleared for "${album.title}" — Vercel redeploying.`, 6000);
-                header.querySelector('.album-curate-actions')?.remove();
-                header.querySelector('.album-meta').textContent =
-                  `${count} photo${count !== 1 ? 's' : ''}${badge}`;
-                section.querySelectorAll('.photo-thumb.is-curated').forEach(t => {
-                  t.classList.remove('is-curated');
-                  t.querySelector('.curated-badge')?.remove();
-                });
-              }
-            } catch (err) {
-              showToast(`Request failed: ${err.message}`);
-            }
-            clearBtn.textContent = 'Clear curated'; clearBtn.disabled = false;
-          });
-        }
+        row.addEventListener('click', () => openAlbumDetail(album));
+        container.appendChild(row);
       });
-
-      window.addEventListener('resize', () => {
-        document.querySelectorAll('#album-list .photo-grid').forEach(runJustifiedLayout);
-      }, { passive: true });
     }
 
     // ── Commit Deletions ─────────────────────────────────────────────────────
@@ -916,205 +951,11 @@
 
     // ── Tab switching ─────────────────────────────────────────────────────────
     function switchTab(tab) {
-      document.getElementById('pane-albums').style.display    = tab === 'albums'    ? '' : 'none';
-      document.getElementById('pane-favorites').style.display = tab === 'favorites' ? '' : 'none';
-      document.getElementById('pane-codes').style.display     = tab === 'codes'     ? '' : 'none';
+      document.getElementById('pane-albums').style.display = tab === 'albums' ? '' : 'none';
+      document.getElementById('pane-codes').style.display  = tab === 'codes'  ? '' : 'none';
       document.getElementById('tab-albums').classList.toggle('active', tab === 'albums');
-      document.getElementById('tab-favorites').classList.toggle('active', tab === 'favorites');
       document.getElementById('tab-codes').classList.toggle('active', tab === 'codes');
-
       if (tab === 'codes') loadCodesList();
-
-      if (tab === 'favorites') {
-        // Populate album dropdown on first open
-        const sel = document.getElementById('fav-album-select');
-        if (sel.options.length <= 1) {
-          const leafAlbums = ALBUMS.filter(a =>
-            a.type !== 'group' && !a.hidden &&
-            (a.audience === 'public' || a.audience === 'friends' || a.audience === 'family')
-          );
-          leafAlbums.forEach(a => {
-            const opt = document.createElement('option');
-            opt.value = a.id;
-            opt.textContent = a.title;
-            sel.appendChild(opt);
-          });
-        }
-      }
-    }
-
-    // ── Favorites tally ───────────────────────────────────────────────────────
-    let favTallySelected = new Set(); // URLs selected for curated set
-    let favTallyAlbumId = null;
-
-    async function loadFavoritesTally() {
-      const albumId = document.getElementById('fav-album-select').value;
-      if (!albumId) { showToast('Select an album first'); return; }
-
-      const status = document.getElementById('fav-status');
-      const grid   = document.getElementById('fav-tally-grid');
-      status.textContent = 'Loading…';
-      grid.innerHTML = '';
-      favTallySelected.clear();
-      favTallyAlbumId = albumId;
-      document.getElementById('fav-save-bar').style.display = 'none';
-
-      try {
-        const res = await fetch(`/api/admin-favorites?albumId=${encodeURIComponent(albumId)}`, {
-          credentials: 'same-origin',
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          status.textContent = `Error: ${data.error || res.statusText}`;
-          return;
-        }
-        const tally = data.tally || [];
-        const album = ALBUMS.find(a => a.id === albumId);
-        const totalPhotos = album ? getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg')).length : 0;
-        const heartedCount = tally.length;
-        status.textContent = heartedCount
-          ? `${totalPhotos} photos · ${heartedCount} hearted`
-          : `${totalPhotos} photos · no hearts yet`;
-        renderFavTally(tally, albumId);
-      } catch (err) {
-        status.textContent = `Request failed: ${err.message}`;
-      }
-    }
-
-    function renderFavTally(tally, albumId) {
-      const container = document.getElementById('fav-tally-grid');
-      container.innerHTML = '';
-      container.style.cssText = '';
-
-      const album = ALBUMS.find(a => a.id === albumId);
-      if (!album) {
-        container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">Album not found in config.</p>';
-        return;
-      }
-
-      const allPhotos = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
-      if (!allPhotos.length) {
-        container.innerHTML = '<p style="color:var(--color-muted);font-size:0.85rem">No photos in this album.</p>';
-        return;
-      }
-
-      // Heart count map  photoUrl → count
-      const heartMap = new Map();
-      tally.forEach(({ photoUrl, count }) => heartMap.set(photoUrl, count));
-
-      // Currently curated set
-      const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
-
-      // ── Legend ──
-      const legend = document.createElement('div');
-      legend.style.cssText = 'display:flex;align-items:center;gap:1.25rem;margin-bottom:1rem;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-muted);flex-wrap:wrap';
-      legend.innerHTML = `
-        <span style="display:flex;align-items:center;gap:0.45rem">
-          <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.75);color:#e85d6e;padding:2px 7px;border-radius:10px;font-size:0.65rem">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 2
-          </span>
-          Hearted by friends
-        </span>
-        <span style="display:flex;align-items:center;gap:0.45rem">
-          <span style="background:var(--color-gold);color:#1a1410;padding:2px 7px;border-radius:2px;font-size:0.62rem">★</span>
-          Already in highlights
-        </span>
-        <span style="display:flex;align-items:center;gap:0.45rem">
-          <span style="border:2px solid var(--color-gold);padding:2px 7px;border-radius:2px;font-size:0.62rem;color:var(--color-gold)">✓</span>
-          Click to select for new curated set
-        </span>
-      `;
-      container.appendChild(legend);
-
-      // ── Justified photo grid ──
-      const grid = document.createElement('div');
-      grid.className = 'photo-grid';
-      grid.style.position = 'relative';
-      container.appendChild(grid);
-
-      allPhotos.forEach(url => {
-        const thumb = document.createElement('div');
-        thumb.className = 'photo-thumb';
-        thumb.dataset.url = url;
-
-        // Image — click opens lightbox
-        const img = document.createElement('img');
-        img.alt = '';
-        img.decoding = 'async';
-        img.src = gridUrl(url);
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in';
-        img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url, allPhotos); });
-
-        // Heart count badge (top-right)
-        const hearts = heartMap.get(url) || 0;
-        if (hearts > 0) {
-          const hBadge = document.createElement('div');
-          hBadge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);color:#e85d6e;font-size:0.65rem;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px;pointer-events:none;z-index:3';
-          hBadge.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${hearts}`;
-          thumb.appendChild(hBadge);
-        }
-
-        // Curated badge (top-left, gold star)
-        if (curatedSet.has(url)) {
-          const cBadge = document.createElement('div');
-          cBadge.style.cssText = 'position:absolute;top:6px;left:6px;background:var(--color-gold);color:#1a1410;font-size:0.6rem;padding:2px 6px;border-radius:2px;pointer-events:none;z-index:3;letter-spacing:0.04em;font-weight:500';
-          cBadge.textContent = '★';
-          thumb.appendChild(cBadge);
-        }
-
-        thumb.appendChild(img);
-        grid.appendChild(thumb);
-
-        // Click thumb (not image) → toggle selection for new curated set
-        thumb.addEventListener('click', () => {
-          const u = thumb.dataset.url;
-          if (favTallySelected.has(u)) {
-            favTallySelected.delete(u);
-            thumb.style.outline = '';
-            thumb.style.outlineOffset = '';
-          } else {
-            favTallySelected.add(u);
-            thumb.style.outline = '3px solid var(--color-gold)';
-            thumb.style.outlineOffset = '-3px';
-          }
-          updateFavSaveBar();
-        });
-      });
-
-      bindAdminGridLayout(grid);
-    }
-
-    function updateFavSaveBar() {
-      const bar   = document.getElementById('fav-save-bar');
-      const label = document.getElementById('fav-save-count');
-      const count = favTallySelected.size;
-      bar.style.display = count > 0 ? '' : 'none';
-      label.textContent = `${count} photo${count !== 1 ? 's' : ''} selected`;
-    }
-
-    async function saveFavCurated() {
-      if (!favTallyAlbumId || !favTallySelected.size) return;
-      const photos = Array.from(favTallySelected);
-      const btn = document.querySelector('#fav-save-bar button');
-      btn.textContent = 'Saving…'; btn.disabled = true;
-
-      try {
-        const res = await fetch('/api/admin-curate', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ albumId: favTallyAlbumId, photos }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          showToast(`Error: ${data.error || res.statusText}`, 6000);
-        } else {
-          showToast(`Saved curated[${photos.length}] for "${favTallyAlbumId}" — Vercel redeploying.`, 6000);
-        }
-      } catch (err) {
-        showToast(`Request failed: ${err.message}`);
-      }
-      btn.textContent = 'Save as curated set'; btn.disabled = false;
     }
 
     // ── Toast ────────────────────────────────────────────────────────────────
