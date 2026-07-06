@@ -58,8 +58,8 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 | OPS-3 | Housekeeping | S | Low | TODO |
 | OPS-4 | Tooling | L | Med | TODO |
 | ADMIN-1 | Admin/tooling | M–L | Med | TODO |
-| AUTH-1 | Idea (big) | XL | High | IDEA |
-| FEAT-1 | Idea | M–L | Med | IDEA |
+| AUTH-1 | Idea (big) | XL | High | IN PROGRESS |
+| FEAT-1 | Idea | M–L | Med | IN PROGRESS |
 | UX-8 | Header UX | M | Med | ✅ DONE |
 
 ### Where to start next
@@ -67,7 +67,7 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 2. **Maintainability**, when next touching album code: MNT-1 → MNT-2 → MNT-3 → MNT-4.
 3. **Housekeeping** anytime: OPS-1 → OPS-2 → OPS-3.
 4. **Styling:** STY-2 → STY-3.
-5. **Big bet:** AUTH-1 (logins + truly private albums) — see Ideas; needs scoping first.
+5. **Big bet:** AUTH-1 Phase 1–2 shipped (group password tiers, client-side gating). Phase 3 (real privacy, private R2 bucket + Worker cookie) is next — see AUTH-1 ticket.
 
 ---
 
@@ -205,7 +205,22 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 These are bigger than a single ticket — capture the intent now, scope into tickets later.
 
 ### AUTH-1 — Per-user logins & truly private albums
-- **Effort:** XL · **Risk:** High · **Status:** IDEA (needs a decision + scoping)
+- **Effort:** XL · **Risk:** High · **Status:** IN PROGRESS
+- **Chosen approach:** group-password tiers. D1 (client-side) for friends/city albums; D2 (server-enforced cookie + private R2 bucket) for family/kids/clients.
+- **Shipped (Phase 1–2, Jul 2026, branch `feat/curated-tiers-phase1-2`):**
+  - `audience` tags on every album (`public` / `friends` / `family` / `client:<name>`)
+  - `PASSWORD_TIERS` map in `js/config.js` with SHA-256 hashes (friends: `rf-pix-2026`, family: `rf-family-pw`)
+  - `TierAuth` in `js/main.js` — sessionStorage + optional localStorage persistence
+  - `/unlock/` page + "Unlock" nav link on all pages; `?next=` redirect for album deep-links
+  - Gallery shows Family section when family tier is unlocked (Joel Birthday 2025 test case)
+  - Admin auth hardened: removed public `adminPasswordHash` from `config.js`; `api/admin-login.js` issues signed HttpOnly 24h session cookie; admin APIs verify session cookie
+  - Admin "Save as curated set" button + `api/admin-curate.js` writes `curated[]` to config.js via GitHub
+  - Curated-vs-full rendering: public visitors see curated subset + unlock banner; unlocked viewers see full album
+  - Removed keep/cut Supabase voting flow (curate/ pages, Supabase client, Routes.curate)
+- **Pending (Phase 2b):** D1 favorites table + inline heart toggle + admin tally (replaces Supabase)
+- **Pending (Phase 3):** Private R2 bucket; Worker cookie-based image/ZIP serving; /unlock Worker endpoint; access-codes D1 table + admin CRUD
+- **Env var to add to Vercel + `.env.local`:** `SESSION_SECRET` — run `openssl rand -hex 32`
+- **Status before these phases:** IDEA (needs a decision + scoping)
 - **Goal:** Two-tier viewing:
   - **Public, curated albums** for everyone (e.g. "10 best from each city") — no login.
   - **Full / private albums** visible only to people you authorize, controlled by group
@@ -251,7 +266,7 @@ These are bigger than a single ticket — capture the intent now, scope into tic
   client UX layer), MNT-5 (manifest-based config makes authenticated album manifests easier).
 
 ### FEAT-1 — Public "best of" curated albums
-- **Effort:** M–L · **Risk:** Med · **Status:** IDEA
+- **Effort:** M–L · **Risk:** Med · **Status:** IN PROGRESS (Phase 1 shipped, curated picker shipped)
 - **Why:** The public-facing companion to AUTH-1: a tight, curated set (e.g. top ~10 per city)
   that everyone can see, with the full-resolution / full-count albums reserved for logged-in
   viewers. Also makes the homepage/gallery more focused.
@@ -274,6 +289,13 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **AUTH-1 + FEAT-1 Phases 1–2 — Group password tiers + curated albums** — Jul 2026.
+  Audience tags on all albums; `PASSWORD_TIERS` map; `TierAuth` store; `/unlock/` page + nav link;
+  gallery family section; admin session auth (HttpOnly cookie, public hash removed);
+  admin "Save as curated set" + `api/admin-curate.js`; curated-vs-full album rendering with unlock
+  banner; keep/cut Supabase flow removed. Branch: `feat/curated-tiers-phase1-2`.
+  **Next:** add `SESSION_SECRET` Vercel env var; run admin curated picker for each city album.
 
 - **UX-8 — Sibling city-album switcher in the album header** — June 2026. From a city album you
   can jump straight to any sibling city from the header (active city indicated); works desktop +
