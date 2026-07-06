@@ -23,6 +23,18 @@ Run this from the project root. It reads `vercel.json` and handles all URL rewri
 - Port 8080 is the standard choice; swap if it's taken
 - Run with `required_permissions: ["all"]` if the sandbox blocks Vercel's auth check
 
+### Admin API env vars (local dev only)
+
+`SESSION_SECRET` and `ADMIN_PASSWORD_HASH` are Sensitive vars in Vercel and cannot be added to the Development environment — so `vercel dev` won't pick them up from the linked project. Pass them inline:
+
+```bash
+SESSION_SECRET=0263cc197da6f1a9df526c07b23d9644329c31fe6fc88f98b3c0c3a557971852 \
+ADMIN_PASSWORD_HASH=7a65b8f6d861c21a7bdaad7de3c2eca1d5d540096de8a6dc98bd3cadcc97f3ea \
+vercel dev --listen 8080
+```
+
+These values are also in `.env.local` for reference (but `vercel dev` doesn't read that file when env vars already exist in the linked project for the development environment).
+
 ## Key URLs once running
 
 | Page | URL |
