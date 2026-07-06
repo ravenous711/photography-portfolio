@@ -772,7 +772,7 @@
       legend.innerHTML = `
         <span style="display:flex;align-items:center;gap:0.45rem">
           <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.75);color:#e85d6e;padding:2px 7px;border-radius:10px;font-size:0.65rem">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 2
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#e85d6e" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </span>
           Hearted by friends
         </span>
@@ -803,15 +803,31 @@
       wrapper.appendChild(grid);
       container.appendChild(wrapper);
 
+      // Lazy-load images as they scroll into view (same pattern as original accordion)
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const img = entry.target.querySelector('img');
+          if (img && img.dataset.src) {
+            const src = img.dataset.src;
+            delete img.dataset.src;
+            img.addEventListener('load',  () => { img.classList.add('loaded'); runJustifiedLayout(grid); }, { once: true });
+            img.addEventListener('error', () => { img.src = src; }, { once: true }); // fallback to full URL
+            img.src = gridUrl(src);
+          }
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '300px' });
+
       allPhotos.forEach(url => {
         const thumb = document.createElement('div');
         thumb.className = 'photo-thumb' + (curatedSet.has(url) ? ' is-curated' : '');
         thumb.dataset.url = url;
 
-        // Image — click → lightbox
+        // Image — deferred src; click → lightbox
         const img = document.createElement('img');
         img.alt = ''; img.decoding = 'async';
-        img.src = gridUrl(url);
+        img.dataset.src = url; // loaded by observer
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in';
         img.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(url, allPhotos); });
 
@@ -855,6 +871,7 @@
         thumb.appendChild(overlay);
         thumb.appendChild(checkEl);
         grid.appendChild(thumb);
+        observer.observe(thumb);
       });
 
       bindAdminGridLayout(grid);
