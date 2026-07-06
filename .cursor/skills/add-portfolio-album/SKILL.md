@@ -71,9 +71,9 @@ upload_with_retry() {
 Ask these if not already provided:
 1. **Photo folder path** — where are the photos locally?
 2. **All photos or starred only?** — all JPGs, or only Lightroom star rating > 0?
-3. **Album type** — public (visible in gallery), password-protected (visible but locked), or hidden (direct link only)?
+3. **Audience** — `public` (city album with curated set), `friends` (city album, full album unlocked for friends), `family` (hidden, unlocked with family password), or `client:<name>` (hidden, unique client password)?
 4. **Album name** — suggest one based on the folder name or event if not given
-5. **Password** — only if protected or hidden
+5. **Password** — only if `client:<name>`; friends/family passwords are shared site-wide
 
 ## Step 2 — Find starred photos (if filtering by rating)
 
@@ -223,44 +223,66 @@ Read `js/config.js` first, then add to the `ALBUMS` array.
 
 - Use originals (`${R2_BASE_URL}/<R2-folder-name>/`) for `coverImage` and `photos` arrays (these are used for the full-res gallery and lightbox)
 - The site automatically builds grid URLs (`grid/...`) for album, admin, and curate previews
+- **Always set `audience`** — this controls who can access the album
 
-**Public:**
+**Public city album** (`audience: 'public'` — curated set shown to all, full album is fallback):
 ```js
 {
   id: '<slug>',
   title: '<Title>',
   description: '<Short description.>',
+  audience: 'public',
   protected: false,
   coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
   photos: [ `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.JPG>`, ... ],
+  // curated: []  ← add via admin "Save as curated set" after photos are live
 },
 ```
 
-**Password-protected:**
+**Friends city album** (`audience: 'friends'` — curated set public, full album unlocked with `rf-pix-2026`):
 ```js
 {
   id: '<slug>',
   title: '<Title>',
   description: '<Short description.>',
-  protected: true,
-  passwordHash: '<hash>',
+  audience: 'friends',
+  protected: false,
   coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
   photos: [ ... ],
+  // curated: []  ← add via admin "Save as curated set"
 },
 ```
 
-**Hidden (direct link + password only):**
+**Family album** (hidden, unlocked with `rf-family-pw`):
 ```js
 {
   id: '<slug>',
   title: '<Title>',
   description: '<Short description.>',
+  audience: 'family',
   hidden: true,
-  protected: true,
-  passwordHash: '<hash>',
+  protected: false,
   coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
   photos: [ ... ],
 },
+```
+
+**Client album** (hidden, unique client password — also add hash to `PASSWORD_TIERS`):
+```js
+{
+  id: 'client-<name>',
+  title: '<Title>',
+  description: '<Short description.>',
+  audience: 'client:<name>',
+  hidden: true,
+  protected: false,
+  coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.JPG>`,
+  photos: [ ... ],
+},
+```
+For client albums, also add to `PASSWORD_TIERS` in `js/config.js`:
+```js
+'<sha256 of client password>': ['client:<name>'],
 ```
 
 ## Step 10 — Commit and push

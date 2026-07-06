@@ -9,16 +9,42 @@ A minimalist static photography portfolio site built with HTML, Tailwind CSS, an
 
 ---
 
-## Passwords
+## How access tiers work
 
-| Gate | Password |
-|---|---|
-| Joel Birthday 2025 (hidden album) | `joeli-oli-ravioli` |
+The site has four audience tiers. Every album in `js/config.js` has an `audience` field:
 
-To change any password, generate a new SHA-256 hash and update `js/config.js`:
-```bash
-python3 -c "import hashlib; print(hashlib.sha256(b'yourpassword').hexdigest())"
-```
+| Audience | Who sees it | How |
+|---|---|---|
+| `public` | Everyone | Always visible; shows curated subset if `curated[]` is set |
+| `friends` | Friends with password | Password unlocks full city albums; curated set is public default |
+| `family` | Family with password | Hidden albums that appear in gallery after unlock |
+| `client:<name>` | One client | Hidden album, only their password works |
+
+### Passwords (keep in 1Password)
+
+| Tier | Password | Hash |
+|---|---|---|
+| Friends | `rf-pix-2026` | `a8b3ec8e...` |
+| Family | `rf-family-pw` | `29637b2d...` |
+| Admin panel | see 1Password | `7a65b8f6...` |
+
+Passwords are never stored in the repo — only their SHA-256 hashes in `PASSWORD_TIERS` in `js/config.js`.
+
+### Handing out passwords
+
+- **Friends:** text/email them `raveenfernando.com/unlock/` + the friends password
+- **Family:** same with the family password; they'll see a Family section in the gallery
+- **Clients:** same with their client password; they'll land directly on their album
+
+### Curated sets
+
+Each public/friends album can have a `curated: [...]` array — the highlight photos shown to everyone by default. To pick curated photos:
+1. Go to `/admin/` → expand an album → select your top photos
+2. Click **Save as curated set** — writes to `config.js` via GitHub, triggers Vercel redeploy
+
+Friends/family who unlock see a **"See all N photos"** button to expand to the full album.
+
+Albums without a `curated[]` array show the full photo set to everyone (fallback).
 
 ---
 
@@ -124,59 +150,68 @@ exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null \
 
 ### Step 2 — Add the album to `js/config.js`
 
-Pick the template that matches your album type:
+Every album needs an `audience` tag. Pick the template that matches:
 
-#### Public album (visible in gallery, no password)
+#### Public city album (visible to everyone; curated set shown by default)
 ```js
 {
-  id: 'my-album',                // used in the URL: ?id=my-album
-  title: 'My Album',
+  id: 'my-city-2026',
+  title: 'My City 2026',
   description: 'A short description.',
+  location: 'City Name',
+  date: 'Month Year',
+  audience: 'public',        // visible to all
   protected: false,
-  coverImage: `${R2_BASE_URL}/Your-Album-Name/COVER.JPG`,
+  coverImage: `${R2_BASE_URL}/My-City-2026/COVER.JPG`,
   photos: [
-    `${R2_BASE_URL}/Your-Album-Name/PHOTO1.JPG`,
-    `${R2_BASE_URL}/Your-Album-Name/PHOTO2.JPG`,
+    `${R2_BASE_URL}/My-City-2026/PHOTO1.JPG`,
     // ...
   ],
+  // curated: []  ← add via admin "Save as curated set" after uploading
 },
 ```
 
-#### Password-protected album (visible in gallery, requires password to view)
+#### Friends album (full album unlocked with friends password; curated set is public)
 ```js
 {
-  id: 'my-private-album',
-  title: 'My Private Album',
-  description: 'A short description.',
-  protected: true,
-  passwordHash: 'PASTE_SHA256_HASH_HERE',   // see password section above
-  coverImage: `${R2_BASE_URL}/Your-Album-Name/COVER.JPG`,
-  photos: [
-    `${R2_BASE_URL}/Your-Album-Name/PHOTO1.JPG`,
-    // ...
-  ],
+  id: 'my-city-2026',
+  title: 'My City 2026',
+  audience: 'friends',       // curated set public; full album unlocked with rf-pix-2026
+  protected: false,
+  coverImage: `${R2_BASE_URL}/My-City-2026/COVER.JPG`,
+  photos: [ ... ],
+  // curated: []  ← add after picking highlights in admin
 },
 ```
 
-#### Hidden album (not shown in gallery, accessible only via direct link + password)
+#### Family album (hidden; appears in gallery only after family password unlock)
 ```js
 {
-  id: 'my-hidden-album',
-  title: 'My Hidden Album',
-  description: 'A short description.',
-  hidden: true,                             // removes it from the gallery grid
-  protected: true,
-  passwordHash: 'PASTE_SHA256_HASH_HERE',
-  coverImage: `${R2_BASE_URL}/Your-Album-Name/COVER.JPG`,
-  photos: [
-    `${R2_BASE_URL}/Your-Album-Name/PHOTO1.JPG`,
-    // ...
-  ],
+  id: 'my-family-event',
+  title: 'Family Event 2026',
+  audience: 'family',        // unlocked with rf-family-pw; hidden from public gallery
+  hidden: true,
+  protected: false,
+  coverImage: `${R2_BASE_URL}/Family-Event-2026/COVER.JPG`,
+  photos: [ ... ],
 },
 ```
-Share the direct link:
+
+#### Client album (hidden; only that client's password unlocks it)
+```js
+{
+  id: 'client-john-doe',
+  title: 'John Doe — Session 2026',
+  audience: 'client:john-doe',   // only client:john-doe password works
+  hidden: true,
+  protected: false,
+  coverImage: `${R2_BASE_URL}/Client-JohnDoe-2026/COVER.JPG`,
+  photos: [ ... ],
+},
 ```
-https://photography-portfolio-pi-blush.vercel.app/album.html?id=my-hidden-album
+Then add their password hash to `PASSWORD_TIERS` in `js/config.js`:
+```js
+'<sha256 of their password>': ['client:john-doe'],
 ```
 
 ---

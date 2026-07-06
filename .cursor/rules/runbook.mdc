@@ -16,7 +16,18 @@ alwaysApply: true
   albums, admin panel). Use it for anything about uploading or managing photos.
 
 ## Working conventions (from the runbook)
-- Local dev: `vercel dev --listen 8080` (or the `dev-server` skill).
+- Local dev: use the `dev-server` skill (includes required env vars for admin APIs).
 - Feature branch per ticket; **commit after each logical step** so any step is easy to revert.
 - Production auto-deploys from `main` via Vercel — **push to `main` only when explicitly asked.**
 - **Never deploy, publish, or upload files/data to an external endpoint without explicit approval.**
+
+## Access tiers (AUTH-1 — shipped Phase 1–2)
+Every album in `js/config.js` has an `audience` field:
+- `public` — visible to all; curated subset shown if `curated[]` set, full album is the fallback
+- `friends` — curated set public; full album unlocked with friends password (`rf-pix-2026`)
+- `family` — hidden album; appears in gallery after family password (`rf-family-pw`)
+- `client:<name>` — hidden album; only that client's password works
+
+When creating or editing albums, **always set `audience`**. City albums are typically `friends` (curated set public, full album for friends). Sensitive albums (family/kids/clients) use `family` or `client:<name>` + `hidden: true`.
+
+`PASSWORD_TIERS` in `js/config.js` maps SHA-256 hashes → granted audiences. To add a new client password: hash their password and add an entry. The `adminPasswordHash` field has been removed from config — admin auth is now server-side via `/api/admin-login`.
