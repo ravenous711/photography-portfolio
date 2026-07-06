@@ -30,11 +30,11 @@ The site has four audience tiers. Every album in `js/config.js` has an `audience
 
 Passwords are stored in 1Password only — **never in the repo** (not even in comments). Only SHA-256 hashes live in `PASSWORD_TIERS` in `js/config.js`.
 
-### Handing out passwords
+### Handing out access
 
-- **Friends:** text/email them `raveenfernando.com/unlock/` + the friends password
+- **Friends:** text/email them `raveenfernando.com/unlock/` + the friends password (see 1Password)
 - **Family:** same with the family password; they'll see a Family section in the gallery
-- **Clients:** same with their client password; they'll land directly on their album
+- **Clients:** create an access code in the admin panel (see "Full client gallery workflow" below) — no password hash editing needed
 
 ### Curated sets
 
@@ -185,6 +185,9 @@ Every album needs an `audience` tag. Pick the template that matches:
 ```
 
 #### Family album (hidden; appears in gallery only after family password unlock)
+
+Family photos live in the **private R2 bucket** (`portfolio-images-private`). Use `portfolio-images-private` as the upload destination. The album page routes images through the Worker automatically.
+
 ```js
 {
   id: 'my-family-event',
@@ -197,22 +200,63 @@ Every album needs an `audience` tag. Pick the template that matches:
 },
 ```
 
-#### Client album (hidden; only that client's password unlocks it)
+#### Client album (hidden; only that client's access code unlocks it)
+
+Client photos live in the **private R2 bucket** (`portfolio-images-private`) — they are never publicly accessible. Use `portfolio-images-private` as the upload destination instead of `portfolio-images`.
+
 ```js
 {
   id: 'client-john-doe',
   title: 'John Doe — Session 2026',
-  audience: 'client:john-doe',   // only client:john-doe password works
+  audience: 'client:john-doe',   // only client:john-doe access code works
   hidden: true,
   protected: false,
   coverImage: `${R2_BASE_URL}/Client-JohnDoe-2026/COVER.JPG`,
-  photos: [ ... ],
+  photos: [
+    // Use the same R2 key paths — the album page routes them through the Worker automatically
+    `${R2_BASE_URL}/Client-JohnDoe-2026/PHOTO1.JPG`,
+    // ...
+  ],
 },
 ```
-Then add their password hash to `PASSWORD_TIERS` in `js/config.js`:
-```js
-'<sha256 of their password>': ['client:john-doe'],
-```
+
+> No `PASSWORD_TIERS` edit needed. The access code is created in the admin panel (see below).
+
+---
+
+### Full client gallery workflow
+
+1. **Upload photos to the private bucket** (Terminal.app):
+   ```bash
+   export PATH="/opt/homebrew/bin:$PATH"
+   FOLDER="/path/to/exported/photos"
+   DEST="portfolio-images-private/Client-JohnDoe-2026"
+
+   for f in "$FOLDER"/*.JPG; do
+     [ -f "$f" ] || continue
+     wrangler r2 object put "$DEST/$(basename "$f")" --file "$f" \
+       --content-type image/jpeg --remote \
+       && echo "✓ $(basename "$f")" || echo "✗ FAILED: $(basename "$f")"
+   done
+   ```
+
+2. **Add the album to `js/config.js`** with `audience: 'client:john-doe'` and `hidden: true` (template above).
+
+3. **Commit and push** — Vercel deploys in ~30 seconds.
+
+4. **Create an access code** in the admin panel:
+   - Go to `/admin/` → **Access codes** tab
+   - Label: `John Doe Session 2026` (your reference only)
+   - Audience: `client:john-doe` (must match the album's `audience` field exactly)
+   - Code: a strong passphrase (min 8 chars)
+   - Click **Create** — **copy the code from the confirmation banner — it is shown once and never stored**
+
+5. **Send the client** the unlock URL + their code:
+   > "Your gallery is live! Go to `raveenfernando.com/unlock/` and enter: `<their-code>`"
+
+6. **To revoke access**: Admin panel → Access codes → Revoke. Takes effect immediately.
+
+> The client enters their code once per browser session. The album page handles silent token refresh — they are never interrupted.
 
 ---
 
