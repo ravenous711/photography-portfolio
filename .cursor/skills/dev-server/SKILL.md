@@ -30,6 +30,8 @@ Run this from the project root. It reads `vercel.json` and handles all URL rewri
 ```bash
 SESSION_SECRET=0263cc197da6f1a9df526c07b23d9644329c31fe6fc88f98b3c0c3a557971852 \
 ADMIN_PASSWORD_HASH=7a65b8f6d861c21a7bdaad7de3c2eca1d5d540096de8a6dc98bd3cadcc97f3ea \
+GITHUB_TOKEN=REDACTED_TOKEN \
+GITHUB_REPO=ravenous711/photography-portfolio \
 vercel dev --listen 8080
 ```
 
