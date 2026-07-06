@@ -910,15 +910,14 @@
         const remaining = fullPhotos.length - album.curated.length;
         seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
         seeAllBar.hidden = false;
-        seeAllBtn.addEventListener('click', () => {
+        function renderFullAlbum() {
           allPhotos = fullPhotos;
-          seeAllBar.hidden = true;
-          // Restore section nav and digital label (hidden in curated mode)
+          // Restore section nav and digital label
           const sectionNav = document.getElementById('album-section-nav');
           if (sectionNav) sectionNav.hidden = false;
           const digitalLabel = document.getElementById('digital-section-label');
           if (digitalLabel) digitalLabel.hidden = false;
-          // Re-render the grid with the full album
+          // Re-render grid with full album
           const digitalGrid = document.getElementById('photo-grid');
           const filmSection  = document.getElementById('film-section');
           digitalGrid.innerHTML = '';
@@ -951,7 +950,37 @@
             filmSection.querySelectorAll('.photo-grid').forEach(bindGridLayout);
             updateSelectionUI();
           });
-        }, { once: true });
+        }
+
+        function renderCuratedAlbum() {
+          allPhotos = [...album.curated];
+          const sectionNav = document.getElementById('album-section-nav');
+          if (sectionNav) sectionNav.hidden = true;
+          const digitalLabel = document.getElementById('digital-section-label');
+          if (digitalLabel) digitalLabel.hidden = true;
+          const digitalGrid = document.getElementById('photo-grid');
+          const filmSection  = document.getElementById('film-section');
+          digitalGrid.innerHTML = '';
+          filmSection.innerHTML = '';
+          filmSection.hidden = true;
+          album.curated.forEach((url, i) => digitalGrid.appendChild(createPhotoThumb(url, i, album.title)));
+          requestAnimationFrame(() => {
+            bindGridLayout(digitalGrid);
+            updateSelectionUI();
+          });
+        }
+
+        let showingFull = false;
+        seeAllBtn.addEventListener('click', () => {
+          showingFull = !showingFull;
+          if (showingFull) {
+            renderFullAlbum();
+            seeAllBtn.textContent = `Back to highlights`;
+          } else {
+            renderCuratedAlbum();
+            seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
+          }
+        });
       } else {
         seeAllBar.hidden = true;
       }
