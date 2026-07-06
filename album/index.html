@@ -105,16 +105,15 @@
       <div class="gold-rule album-header-rule"></div>
     </header>
 
-    <!-- ── Curated-view banner (shown when public visitor sees a friends/full album) ── -->
-    <div id="curated-banner" hidden
-         style="background:rgba(201,169,110,0.08);border-bottom:1px solid rgba(201,169,110,0.2);
-                padding:0.6rem 1.5rem;text-align:center;font-size:0.72rem;
-                letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">
-      <span id="curated-banner-text"></span>
-      &nbsp;·&nbsp;
-      <a id="curated-banner-link" href="/unlock/" style="color:var(--color-gold);text-decoration:none">
-        Unlock to see all
-      </a>
+    <!-- ── "See all" button (shown only to unlocked visitors when curated view is active) ── -->
+    <div id="see-all-bar" hidden style="padding:1rem 1.5rem 0;text-align:center">
+      <button id="see-all-btn"
+        style="background:transparent;border:1px solid var(--color-border);color:var(--color-muted);
+               padding:0.5rem 1.25rem;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;
+               cursor:pointer;transition:border-color 0.2s,color 0.2s"
+        onmouseover="this.style.borderColor='var(--color-text)';this.style.color='var(--color-text)'"
+        onmouseout="this.style.borderColor='var(--color-border)';this.style.color='var(--color-muted)'">
+      </button>
     </div>
 
     <div id="album-toolbar-sentinel" aria-hidden="true"></div>
@@ -901,27 +900,61 @@
       const albumAudience = album.audience || 'public';
       const tierGranted   = TierAuth.canAccess(albumAudience);
       const hasCurated    = Array.isArray(album.curated) && album.curated.length > 0;
-      // Show curated when: viewer hasn't unlocked the audience AND album has a curated list
-      // Fallback: if no curated list, always show full (curated-missing fallback per plan)
-      const showCurated   = !tierGranted && hasCurated;
+      const fullPhotos    = getAlbumAllPhotos(album);
 
-      // Override allPhotos for download/selection scope
-      const fullPhotos = getAlbumAllPhotos(album);
+      // Always show curated if available (for everyone — it's the editorial landing).
+      // Fall back to full album if no curated list exists yet.
+      const showCurated = hasCurated;
+
+      // Scope allPhotos to curated or full
       allPhotos = showCurated ? [...album.curated] : fullPhotos;
 
-      // ── Curated banner ───────────────────────────────────────────────────
-      const banner     = document.getElementById('curated-banner');
-      const bannerText = document.getElementById('curated-banner-text');
-      const bannerLink = document.getElementById('curated-banner-link');
-      if (showCurated) {
-        const curatedCount = album.curated.length;
-        const totalCount   = fullPhotos.length;
-        bannerText.textContent = `Showing ${curatedCount} of ${totalCount} photo${totalCount !== 1 ? 's' : ''}`;
-        // Pass current URL as ?next= so unlock page redirects back here
-        bannerLink.href = `/unlock/?next=${encodeURIComponent(window.location.pathname)}`;
-        banner.hidden = false;
+      // ── "See all" button — only shown to unlocked viewers ────────────────
+      const seeAllBar = document.getElementById('see-all-bar');
+      const seeAllBtn = document.getElementById('see-all-btn');
+      if (showCurated && tierGranted && fullPhotos.length > album.curated.length) {
+        const remaining = fullPhotos.length - album.curated.length;
+        seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
+        seeAllBar.hidden = false;
+        seeAllBtn.addEventListener('click', () => {
+          allPhotos = fullPhotos;
+          seeAllBar.hidden = true;
+          // Re-render the grid with the full album
+          const digitalGrid = document.getElementById('photo-grid');
+          const filmSection  = document.getElementById('film-section');
+          digitalGrid.innerHTML = '';
+          filmSection.innerHTML = '';
+          (album.photos || []).forEach((url, i) => digitalGrid.appendChild(createPhotoThumb(url, i, album.title)));
+          const filmSections = getAlbumFilmSections(album);
+          let offset = (album.photos || []).length;
+          if (filmSections.length) {
+            filmSection.hidden = false;
+            filmSections.forEach((section, si) => {
+              const block = document.createElement('div');
+              block.id = `album-section-film-${si}`;
+              block.className = si > 0 ? 'album-film-block album-film-block--continued' : 'album-film-block';
+              const lbl = document.createElement('p');
+              lbl.className = 'album-section-label';
+              lbl.textContent = section.label || 'On film';
+              block.appendChild(lbl);
+              const grid = document.createElement('div');
+              grid.className = 'photo-grid';
+              (section.photos || []).forEach((url, i) => grid.appendChild(createPhotoThumb(url, offset + i, album.title)));
+              block.appendChild(grid);
+              filmSection.appendChild(block);
+              offset += (section.photos || []).length;
+            });
+          } else {
+            filmSection.hidden = true;
+          }
+          requestAnimationFrame(() => {
+            bindGridLayout(digitalGrid);
+            filmSection.querySelectorAll('.photo-grid').forEach(bindGridLayout);
+            updateSelectionUI();
+          });
+        }, { once: true });
       } else {
-        banner.hidden = true;
+        seeAllBar.hidden = true;
       }
 
       document.getElementById('album-content').style.display = 'block';
@@ -971,6 +1004,7 @@
         digitalGrid.appendChild(createPhotoThumb(url, i, album.title));
       });
 
+      // In curated mode, skip film sections (curated is a flat list of highlights)
       const filmSections = showCurated ? [] : getAlbumFilmSections(album);
       let photoOffset = digitalPhotos.length;
 
