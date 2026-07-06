@@ -349,26 +349,20 @@
         }
 
         // ── Auth check ──
-        // 1. Legacy per-album password gate (takes precedence)
-        if (album.protected && !AlbumAuth.isUnlocked(album.id)) {
-          showPasswordModal();
-          return;
-        }
-
-        // 2. Tier-based audience gate
         const albumAudience = album.audience || 'public';
         const tierGranted   = TierAuth.canAccess(albumAudience);
         const isStrictTier  = albumAudience === 'family' || albumAudience.startsWith('client:');
 
-        if (!tierGranted && isStrictTier) {
-          // Family/client: redirect to unlock page with a return URL
-          const returnUrl = encodeURIComponent(window.location.pathname);
-          window.location.replace(`/unlock/?next=${returnUrl}`);
-          return;
+        if (album.protected && !AlbumAuth.isUnlocked(album.id)) {
+          // Legacy per-album password gate
+          showPasswordModal();
+        } else if (!tierGranted && isStrictTier) {
+          // Family/client album: redirect non-unlocked visitors to /unlock/
+          window.location.replace(`/unlock/?next=${encodeURIComponent(window.location.pathname)}`);
+        } else {
+          // Public/friends: show album (curated or full based on curated[] presence)
+          showAlbum();
         }
-
-        // 3. Show album (may be curated-only for friends tier if viewer hasn't unlocked)
-        showAlbum();
       }
     }
 
