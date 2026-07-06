@@ -1041,6 +1041,15 @@
         filmSection.querySelectorAll('.photo-grid').forEach(runJustifiedLayout);
       });
 
+      // Hide section nav (Digital / film roll tabs) in curated mode —
+      // they only make sense for the full sectioned album
+      if (showCurated) {
+        const sectionNav = document.getElementById('album-section-nav');
+        if (sectionNav) sectionNav.hidden = true;
+        const digitalLabel = document.getElementById('digital-section-label');
+        if (digitalLabel) digitalLabel.hidden = true;
+      }
+
       setupStickyAlbumHeader();
       setupSelectModeControls();
       renderSiblingNav();
