@@ -274,18 +274,7 @@ const ALBUMS = [
       `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-314.jpg`,
       `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-324.jpg`,
     ],
-    curated: [
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-009.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-011.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-026.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-041.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-042.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-050.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-060.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-061.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-068.jpg`,
-      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-074.jpg`,
-    ],
+    curated: [],
   },
 
   {
