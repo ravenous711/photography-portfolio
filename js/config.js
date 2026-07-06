@@ -4,9 +4,6 @@
 
 const SITE_CONFIG = {
   photographerName: 'Raveen Fernando',
-  // Admin panel password hash — protect /admin.html
-  // Password stored separately; to change: python3 -c "import hashlib; print(hashlib.sha256(b'newpassword').hexdigest())"
-  adminPasswordHash: '5be8a85ba815c0473d9a609eb5a6d7dbeaf1e32045456bda1ea209ebecd211d8',
   tagline: 'Capturing light, emotion, and the quiet beauty of the world.',
   // ── Hero background (home page) — served from /images/ for same-origin preload ──
   heroImage: '/images/hero.jpg',
@@ -27,6 +24,42 @@ const SITE_CONFIG = {
 //     requests from your domain (needed for the ZIP download).
 // ============================================================
 const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
+
+// ── Worker base URL (ZIP downloads, and future private-image serving) ──
+// Override for local dev: set window.WORKER_BASE_URL before loading this file,
+// or set localStorage.workerBaseUrl = 'http://localhost:8787' in the console.
+const WORKER_BASE_URL = (() => {
+  try {
+    return localStorage.getItem('workerBaseUrl') || 'https://portfolio-zip-download.raveenfernando.workers.dev';
+  } catch {
+    return 'https://portfolio-zip-download.raveenfernando.workers.dev';
+  }
+})();
+
+// ── Access tier system ──────────────────────────────────────────────────────
+//
+// audience — who can see an album's full content:
+//   'public'          no unlock needed; curated set shown to all, full set shown if no curated
+//   'friends'         full content after entering friends password (D1 client-side gating)
+//   'family'          full content after entering family password (D2 private, via Worker)
+//   'client:<name>'   full content after entering that client's password (D2 private)
+//
+// Tier inheritance: family password ALSO grants friends access.
+//
+// PASSWORD_TIERS maps SHA-256(password) → array of audiences granted.
+// Passwords themselves are NEVER stored here — only their hashes.
+// Change a password by replacing its hash; add new clients by adding entries.
+//
+// To generate a hash: open browser console and run:
+//   hashPassword('your-password').then(h => console.log(h))
+// Or: python3 -c "import hashlib; print(hashlib.sha256(b'your-password').hexdigest())"
+
+const PASSWORD_TIERS = {
+  // friends password: rf-pix-2026
+  'a8b3ec8e72875d9feaec7919a6164fc90bcaead8f70d0f20d6a13c83de2c6ad4': ['friends'],
+  // family password: rf-family-pw — also grants friends
+  '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'friends'],
+};
 
 // Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)
 SITE_CONFIG.featuredPhotos = [
@@ -81,8 +114,8 @@ const ALBUMS = [
     location: 'Detroit',
     date: 'October 2025',
     hidden: true,
-    protected: true,
-    passwordHash: '2d2b01d274945379effbc06b47517c211bee6f4f57ea4be7c15e76d334386862',
+    audience: 'family',
+    protected: false,
     coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
     photos: [
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
@@ -170,6 +203,7 @@ const ALBUMS = [
     location: 'California',
     date: 'July 2025',
     type: 'group',
+    audience: 'friends',
     protected: false,
     subAlbums: ['california-santa-cruz', 'california-yosemite'],
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
@@ -181,6 +215,7 @@ const ALBUMS = [
     parentId: 'california',
     location: 'Santa Cruz & Big Sur',
     date: 'July 2025',
+    audience: 'friends',
     protected: false,
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-141.jpg`,
     photos: [
@@ -246,6 +281,7 @@ const ALBUMS = [
     parentId: 'california',
     location: 'Yosemite',
     date: 'July 2025',
+    audience: 'friends',
     protected: false,
     coverImage: `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
     photos: [
@@ -317,6 +353,7 @@ const ALBUMS = [
     date: 'September 2025',
     description: 'Photos from this trip are still being edited.',
     hidden: true,
+    audience: 'public',
     protected: false,
     coverImage: '/images/placeholder-album.svg',
     photos: [],
@@ -328,6 +365,7 @@ const ALBUMS = [
     location: 'Red Rock Canyon',
     date: 'January 2026',
     description: 'Red Rock Canyon National Conservation Area, Nevada.',
+    audience: 'friends',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg`,
@@ -422,6 +460,7 @@ const ALBUMS = [
     location: 'Italy',
     date: 'May–June 2026',
     type: 'group',
+    audience: 'friends',
     protected: false,
     filmRollsDesc: 'The film shot across this trip categorized by the roll. The same frames also appear in the city albums above, placed where they were made.',
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
@@ -438,6 +477,7 @@ const ALBUMS = [
     description: 'Venice, 30–31 May 2026.',
     location: 'Venice',
     date: 'May 2026',
+    audience: 'friends',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
@@ -635,14 +675,14 @@ const ALBUMS = [
 
     ],
     curated: [
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_042.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_097.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_104.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_108.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_125.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_232.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_284.jpg`,
-      `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_381.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_042.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_097.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_104.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_108.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_125.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_232.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_381.jpg`,
     ],
   },
 
@@ -654,6 +694,7 @@ const ALBUMS = [
     description: 'Florence, 1–2 June 2026.',
     location: 'Florence',
     date: 'June 2026',
+    audience: 'friends',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
@@ -785,6 +826,7 @@ const ALBUMS = [
     description: 'Pisa, 1 June 2026.',
     location: 'Pisa',
     date: 'June 2026',
+    audience: 'friends',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
@@ -854,6 +896,7 @@ const ALBUMS = [
     description: 'Assisi, 3 June 2026.',
     location: 'Assisi',
     date: 'June 2026',
+    audience: 'friends',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
@@ -910,6 +953,7 @@ const ALBUMS = [
     parentId: 'italy-2026',
     location: 'Rome',
     date: 'June 2026',
+    audience: 'friends',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Rome/Digital/rome_495.jpg`,
@@ -1073,6 +1117,7 @@ const ALBUMS = [
     description: 'Full film roll — Italy 2026.',
     location: 'Italy',
     date: 'May 2026',
+    audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_14.jpg`,
     photos: [
@@ -1126,6 +1171,7 @@ const ALBUMS = [
     description: 'Full film roll — Italy 2026.',
     location: 'Italy',
     date: 'May–June 2026',
+    audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E017.jpg`,
     photos: [
@@ -1178,6 +1224,7 @@ const ALBUMS = [
     description: 'Full film roll — Italy 2026.',
     location: 'Italy',
     date: 'May 2026',
+    audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-1/athena_ultramax1_034.jpg`,
     photos: [
@@ -1244,6 +1291,7 @@ const ALBUMS = [
     description: 'Full film roll — Italy 2026.',
     location: 'Italy',
     date: 'June 2026',
+    audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/Italy/Film/Athena-Ultramax-2/athena_ultramax2_030.jpg`,
     photos: [

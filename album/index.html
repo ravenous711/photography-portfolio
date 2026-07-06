@@ -303,6 +303,7 @@
     // ── Get album from URL ──
     let album;
     let allPhotos = [];
+    let isCuratedView = false; // true when showing curated subset — affects lightbox captions
     let currentIndex = 0;
     let albumPageTitle = '';
     let selectMode   = false;
@@ -353,12 +354,14 @@
         const tierGranted   = TierAuth.canAccess(albumAudience);
         const isStrictTier  = albumAudience === 'family' || albumAudience.startsWith('client:');
 
-        if (album.protected && !AlbumAuth.isUnlocked(album.id)) {
-          // Legacy per-album password gate
-          showPasswordModal();
-        } else if (!tierGranted && isStrictTier) {
+        if (!tierGranted && isStrictTier) {
           // Family/client album: redirect non-unlocked visitors to /unlock/
+          // (takes precedence over legacy protected gate so tier-gated albums don't
+          //  show the old per-album password modal)
           window.location.replace(`/unlock/?next=${encodeURIComponent(window.location.pathname)}`);
+        } else if (album.protected && !AlbumAuth.isUnlocked(album.id) && !isStrictTier) {
+          // Legacy per-album password gate (only for albums not using the tier system)
+          showPasswordModal();
         } else {
           // Public/friends: show album (curated or full based on curated[] presence)
           showAlbum();
@@ -899,6 +902,7 @@
       // Always show curated if available (for everyone — it's the editorial landing).
       // Fall back to full album if no curated list exists yet.
       const showCurated = hasCurated;
+      isCuratedView = showCurated;
 
       // Scope allPhotos to curated or full
       allPhotos = showCurated ? [...album.curated] : fullPhotos;
@@ -974,9 +978,11 @@
         seeAllBtn.addEventListener('click', () => {
           showingFull = !showingFull;
           if (showingFull) {
+            isCuratedView = false;
             renderFullAlbum();
             seeAllBtn.textContent = `Back to highlights`;
           } else {
+            isCuratedView = true;
             renderCuratedAlbum();
             seeAllBtn.textContent = `See all ${fullPhotos.length} photos`;
           }
@@ -1155,9 +1161,15 @@
     }
 
     function getLightboxCaptionParts(index) {
+      const overall = `${index + 1}/${allPhotos.length}`;
+
+      // In curated mode photos may come from any section; skip per-section labels
+      if (isCuratedView) {
+        return { position: overall, detail: '', overall };
+      }
+
       const digitalCount = (album.photos || []).length;
       const filmSections = getAlbumFilmSections(album);
-      const overall = `${index + 1}/${allPhotos.length}`;
 
       if (index < digitalCount) {
         const nav = album.digitalNavLabel || 'Digital';

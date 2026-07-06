@@ -28,14 +28,16 @@ Run this from the project root. It reads `vercel.json` and handles all URL rewri
 `SESSION_SECRET` and `ADMIN_PASSWORD_HASH` are Sensitive vars in Vercel and cannot be added to the Development environment — so `vercel dev` won't pick them up from the linked project. Pass them inline:
 
 ```bash
-SESSION_SECRET=0263cc197da6f1a9df526c07b23d9644329c31fe6fc88f98b3c0c3a557971852 \
-ADMIN_PASSWORD_HASH=7a65b8f6d861c21a7bdaad7de3c2eca1d5d540096de8a6dc98bd3cadcc97f3ea \
-GITHUB_TOKEN=REDACTED_TOKEN \
+SESSION_SECRET=<from .env.local> \
+ADMIN_PASSWORD_HASH=<from .env.local> \
+GITHUB_TOKEN=<from .env.local> \
 GITHUB_REPO=ravenous711/photography-portfolio \
 vercel dev --listen 8080
 ```
 
-These values are also in `.env.local` for reference (but `vercel dev` doesn't read that file when env vars already exist in the linked project for the development environment).
+All four values live in `.env.local` at the repo root — copy them from there. Do not commit `.env.local` (it is in `.gitignore`).
+
+> **Note — admin-curate writes to GitHub:** The `/api/admin-curate` endpoint always writes to the default branch of the linked `GITHUB_REPO`. When testing locally on a feature branch, the curated changes are committed to the wrong branch. After saving a curated set locally, run `git pull` to pull any new commits in, then cherry-pick or manually re-apply the curated change to your feature branch.
 
 ## Key URLs once running
 

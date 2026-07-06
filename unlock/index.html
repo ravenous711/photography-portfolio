@@ -299,7 +299,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       updateNavLink();
-      if (renderSignedIn()) return;
+      renderSignedIn(); // renders the "already signed in" banner if applicable, but always continues
 
       const form  = document.getElementById('unlock-form');
       const input = document.getElementById('unlock-input');
