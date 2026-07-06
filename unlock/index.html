@@ -181,20 +181,28 @@
         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
       </svg>
 
-      <!-- State: already signed in -->
-      <div id="signed-in-view" class="unlock-signed-in">
+      <!-- State: already signed in (shown above the form when tiers are active) -->
+      <div id="signed-in-view" class="unlock-signed-in" style="display:none">
         <p class="unlock-title">You're in</p>
-        <div id="signed-in-tiers"></div>
+        <div id="signed-in-tiers" style="margin-bottom:0.5rem"></div>
         <a href="/gallery/" class="unlock-btn" style="display:inline-block;text-decoration:none;padding:0.75rem 2rem;width:auto">
           View gallery
         </a>
         <button class="unlock-signout-btn" onclick="signOut()">Sign out</button>
+
+        <!-- Divider before additional-code form -->
+        <div style="width:100%;border-top:1px solid var(--color-border);margin:1.5rem 0 0.25rem"></div>
+        <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">
+          Unlock another tier
+        </p>
       </div>
 
-      <!-- State: unlock form -->
+      <!-- Password form — always visible so additional tiers can be added -->
       <div id="form-view">
-        <p class="unlock-title">Unlock</p>
-        <p class="unlock-subtitle">Enter your access code</p>
+        <div id="form-title-block">
+          <p class="unlock-title">Unlock</p>
+          <p class="unlock-subtitle">Enter your access code</p>
+        </div>
 
         <form class="unlock-form" id="unlock-form" novalidate>
           <input
@@ -251,11 +259,17 @@
 
     function renderSignedIn() {
       const tiers = TierAuth.grantedTiers();
-      if (tiers.size === 0) return false;
+      if (tiers.size === 0) {
+        // No tiers active: hide signed-in view, show plain title block
+        document.getElementById('signed-in-view').style.display = 'none';
+        document.getElementById('form-title-block').style.display = '';
+        return false;
+      }
 
-      document.getElementById('form-view').style.display = 'none';
+      // Tiers active: show signed-in banner above the form; hide the plain title block
       const sv = document.getElementById('signed-in-view');
       sv.style.display = 'flex';
+      document.getElementById('form-title-block').style.display = 'none';
 
       const tiersEl = document.getElementById('signed-in-tiers');
       tiersEl.innerHTML = [...tiers]
@@ -266,8 +280,11 @@
 
     function signOut() {
       TierAuth.clear();
-      document.getElementById('signed-in-view').style.display = 'none';
-      document.getElementById('form-view').style.display = 'block';
+      renderSignedIn();
+      document.getElementById('unlock-input').value = '';
+      document.getElementById('unlock-error').textContent = '';
+      document.getElementById('unlock-btn').textContent = 'Unlock';
+      document.getElementById('unlock-btn').disabled = false;
       showToast('Signed out');
     }
 
@@ -326,8 +343,13 @@
             return;
           }
 
+          // Re-render signed-in banner (additive — shows all currently granted tiers)
           showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')}`);
           renderSignedIn();
+          // Clear the input for the next optional code
+          input.value = '';
+          btn.textContent = 'Unlock';
+          btn.disabled = false;
         } else {
           error.textContent = 'Incorrect access code. Please try again.';
           input.value = '';
