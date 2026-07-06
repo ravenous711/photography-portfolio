@@ -97,6 +97,8 @@ async function handleUnlock(request, env, cors) {
 
   await check(env.FAMILY_HASH, 'family');
   await check(env.FRIENDS_HASH, 'friends');
+  await check(env.ANGER_ALI_HASH, 'family:anger-ali');
+  await check(env.FERNANDO_FAMILY_HASH, 'family:fernando');
 
   // Fall back to D1 access_codes if env hashes didn't match
   if (!grantedTier && env.DB) {
@@ -139,7 +141,7 @@ async function handleImage(request, url, env, cors) {
   if (!payload) return err('Forbidden', 403);
 
   // Tier access rules:
-  // - 'family' → any key in the private bucket
+  // - 'family' or 'family:*' → any key in the private bucket
   // - 'client:<name>' → keys under '<name>/' prefix only
   // - 'friends' → no private bucket access (friends albums use public R2)
   const { tier } = payload;
@@ -148,7 +150,7 @@ async function handleImage(request, url, env, cors) {
     const clientName = tier.slice(7);
     if (!key.startsWith(`${clientName}/`)) return err('Forbidden', 403);
   }
-  // 'family' → allow all
+  // 'family' and 'family:*' sub-tiers → allow any private bucket key
 
   const object = await env.PRIVATE_BUCKET.get(key);
   if (!object) return err('Not found', 404);

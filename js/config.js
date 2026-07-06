@@ -39,12 +39,15 @@ const WORKER_BASE_URL = (() => {
 // ── Access tier system ──────────────────────────────────────────────────────
 //
 // audience — who can see an album's full content:
-//   'public'          no unlock needed; curated set shown to all, full set shown if no curated
-//   'friends'         full content after entering friends password (D1 client-side gating)
-//   'family'          full content after entering family password (D2 private, via Worker)
-//   'client:<name>'   full content after entering that client's password (D2 private)
+//   'public'             no unlock needed; curated set shown to all, full set shown if no curated
+//   'friends'            full content after entering friends password (D1 client-side gating)
+//   'family'             master key — grants access to all family sub-tiers (Raveen only)
+//   'family:anger-ali'   Anger-Ali family group — private R2, via Worker
+//   'family:fernando'    Fernando family group  — private R2, via Worker
+//   'client:<name>'      full content after entering that client's password (D2 private)
 //
-// Tier inheritance: family password ALSO grants friends access.
+// Tier inheritance: family (master) grants all sub-tiers + friends.
+//                   family:anger-ali / family:fernando each grant friends.
 //
 // PASSWORD_TIERS maps SHA-256(password) → array of audiences granted.
 // Passwords themselves are NEVER stored here — only their hashes.
@@ -62,8 +65,12 @@ const PASSWORD_TIERS = {
   //
   // Friends capability-link key (used in /fullalbums/...?k=KEY share links):
   '1cf3ce8ffa39c24b2ae128eefe6d292f8b18136716da8026d35baa0d67ec35a4': ['friends'],
-  // Family password (unchanged — used at /unlock/):
-  '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'friends'],
+  // Master family password — grants all sub-tiers (Raveen only; stored in 1Password):
+  '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'family:anger-ali', 'family:fernando', 'friends'],
+  // Anger-Ali family password — TODO: replace hash before deploying to main (stored in 1Password):
+  'f965656f1e3bfcbca8584fcc175ae66738218b05e1f81d5d89de8be17423b5cc': ['family:anger-ali', 'friends'],
+  // Fernando family password — TODO: replace hash before deploying to main (stored in 1Password):
+  '7985ab4784d9ac0c49b490befba89c3a29a1855355122a4a5b8b459b4f3efb1c': ['family:fernando', 'friends'],
 };
 
 // Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)
@@ -119,7 +126,7 @@ const ALBUMS = [
     location: 'Detroit',
     date: 'October 2025',
     hidden: true,
-    audience: 'family',
+    audience: 'family:anger-ali',
     protected: false,
     coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
     photos: [
