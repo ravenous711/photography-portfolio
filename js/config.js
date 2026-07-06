@@ -128,7 +128,7 @@ const ALBUMS = [
     hidden: true,
     audience: 'family:anger-ali',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
+    coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6970.JPG`,
     photos: [
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF6858.JPG`,
       `${R2_BASE_URL}/Joel-Bday-2025/DSCF6866.JPG`,

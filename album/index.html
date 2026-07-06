@@ -855,7 +855,17 @@
     }
 
     function photoFilename(url, fallbackIndex = 0) {
-      const name = decodeURIComponent((url || '').split('/').pop().split('?')[0] || '');
+      if (!url) return `photo-${fallbackIndex + 1}.jpg`;
+      // Worker private image URL ends in /image — extract filename from the `key` query param
+      try {
+        const u = new URL(url);
+        if (u.pathname.endsWith('/image')) {
+          const key = u.searchParams.get('key') || '';
+          const name = decodeURIComponent(key.split('/').pop() || '');
+          if (name) return name;
+        }
+      } catch {}
+      const name = decodeURIComponent(url.split('/').pop().split('?')[0] || '');
       return name || `photo-${fallbackIndex + 1}.jpg`;
     }
 
