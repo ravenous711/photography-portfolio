@@ -198,7 +198,9 @@ function albumDateline(album, { withDesc = false } = {}) {
 
   if (album.type === 'group' && album.subAlbums?.length) {
     parts.push(`${album.subAlbums.length} albums`);
-  } else {
+  } else if (!album.curated?.length) {
+    // Omit frame count for highlight albums — curated shows a subset, so the
+    // full-album count is misleading on the card.
     const count = getAlbumPhotoCount(album);
     if (count) parts.push(`${count} frames`);
   }
