@@ -969,16 +969,14 @@
       favBadge.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" stroke-width="2">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>`;
-      // Direct handler on the badge — avoids any bubbling / delegation complexity.
+      // Direct click handler on the badge.
+      // stopPropagation keeps the event from reaching the thumb's lightbox handler.
+      // Using only 'click' (not touchend) avoids touchcancel issues from the parent's
+      // touch-action: pan-y — the browser fires the synthetic click reliably after a tap.
       favBadge.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleFav(url);
       });
-      favBadge.addEventListener('touchend', (e) => {
-        e.stopPropagation();
-        e.preventDefault(); // prevent the synthetic click from also firing toggleFav
-        toggleFav(url);
-      }, { passive: false });
 
       thumb.appendChild(img);
       thumb.appendChild(expandOverlay);
@@ -2538,10 +2536,11 @@
       width: 28px; height: 28px;
       border-radius: 50%;
       background: rgba(0,0,0,0.45);
-      display: none; /* shown via .favorites-enabled on parent */
+      display: none; /* shown via body.full-album-mode or .favorites-enabled on parent */
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      touch-action: manipulation; /* override parent's pan-y so taps register as clicks */
       color: rgba(255,255,255,0.75);
       transition: color 0.15s, background 0.15s;
       z-index: 4;
