@@ -913,6 +913,11 @@
         seeAllBtn.addEventListener('click', () => {
           allPhotos = fullPhotos;
           seeAllBar.hidden = true;
+          // Restore section nav and digital label (hidden in curated mode)
+          const sectionNav = document.getElementById('album-section-nav');
+          if (sectionNav) sectionNav.hidden = false;
+          const digitalLabel = document.getElementById('digital-section-label');
+          if (digitalLabel) digitalLabel.hidden = false;
           // Re-render the grid with the full album
           const digitalGrid = document.getElementById('photo-grid');
           const filmSection  = document.getElementById('film-section');
