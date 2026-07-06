@@ -1,3 +1,5 @@
+import { requireSession } from './_admin-session.js';
+
 const BUCKET = 'portfolio-images';
 const R2_BASE_URL = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 
@@ -6,15 +8,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Require valid signed session cookie
+  const session = requireSession(req, res);
+  if (!session) return;
+
   const {
     CLOUDFLARE_ACCOUNT_ID,
     CLOUDFLARE_API_TOKEN,
     GITHUB_TOKEN,
     GITHUB_REPO,
-    ADMIN_PASSWORD_HASH,
   } = process.env;
 
-  if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN || !GITHUB_TOKEN || !GITHUB_REPO || !ADMIN_PASSWORD_HASH) {
+  if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN || !GITHUB_TOKEN || !GITHUB_REPO) {
     return res.status(500).json({ error: 'Server not configured — missing environment variables.' });
   }
 
@@ -25,11 +30,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
 
-  const { passwordHash, urls } = body;
-
-  if (!passwordHash || passwordHash !== ADMIN_PASSWORD_HASH) {
-    return res.status(403).json({ error: 'Incorrect admin password' });
-  }
+  const { urls } = body;
 
   if (!Array.isArray(urls) || urls.length === 0) {
     return res.status(400).json({ error: 'No URLs provided' });

@@ -344,6 +344,7 @@
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
       <button class="btn-danger" id="commit-btn" disabled onclick="commitDeletions()">Commit Deletions</button>
+      <button class="btn-ghost" onclick="signOut()" style="color:var(--color-muted);margin-left:0.5rem">Sign out</button>
     </div>
 
     <!-- ── Albums tab ── -->
@@ -399,19 +400,13 @@
     }
     function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
-    // ── Auth ────────────────────────────────────────────────────────────────
+    // ── Auth (server-side session) ───────────────────────────────────────────
     document.getElementById('auth-site-name').textContent = SITE_CONFIG.photographerName;
 
-    const SESSION_KEY = 'admin_unlocked';
-
-    async function hashPassword(pw) {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    if (sessionStorage.getItem(SESSION_KEY) === 'true') {
-      showAdminUI();
-    }
+    // On load: check if we already have a valid session cookie
+    fetch('/api/admin-verify', { credentials: 'same-origin' })
+      .then(r => { if (r.ok) showAdminUI(); })
+      .catch(() => {});
 
     document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -420,19 +415,37 @@
       const btn = e.target.querySelector('button');
       btn.textContent = 'Checking…'; btn.disabled = true;
 
-      const hash = await hashPassword(pw);
-      if (hash === SITE_CONFIG.adminPasswordHash) {
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        showAdminUI();
-      } else {
-        document.getElementById('auth-error').textContent = 'Incorrect password.';
-        const input = document.getElementById('auth-input');
-        input.value = '';
-        input.style.animation = 'shake 0.4s ease';
-        input.addEventListener('animationend', () => { input.style.animation = ''; }, { once: true });
+      try {
+        const res = await fetch('/api/admin-login', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw }),
+        });
+
+        if (res.ok) {
+          showAdminUI();
+        } else {
+          document.getElementById('auth-error').textContent = 'Incorrect password.';
+          const input = document.getElementById('auth-input');
+          input.value = '';
+          input.style.animation = 'shake 0.4s ease';
+          input.addEventListener('animationend', () => { input.style.animation = ''; }, { once: true });
+          btn.textContent = 'Enter'; btn.disabled = false;
+        }
+      } catch {
+        document.getElementById('auth-error').textContent = 'Network error — try again.';
         btn.textContent = 'Enter'; btn.disabled = false;
       }
     });
+
+    async function signOut() {
+      await fetch('/api/admin-login', { method: 'DELETE', credentials: 'same-origin' });
+      document.getElementById('admin-ui').style.display = 'none';
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('auth-input').value = '';
+      document.getElementById('auth-error').textContent = '';
+    }
 
     function showAdminUI() {
       document.getElementById('auth-screen').classList.add('hidden');
@@ -619,25 +632,12 @@
       const btn = document.getElementById('commit-btn');
       btn.textContent = 'Deleting…'; btn.disabled = true;
 
-      const pw = sessionStorage.getItem('_admin_pw_hash');
-
-      // Re-hash is stored separately below; we need the hash to send to the API.
-      // Prompt for password to re-derive hash (we don't store the plaintext).
-      const rawPw = prompt('Re-enter admin password to confirm:');
-      if (!rawPw) { btn.textContent = 'Commit Deletions'; btn.disabled = false; return; }
-
-      const passwordHash = await hashPassword(rawPw);
-      if (passwordHash !== SITE_CONFIG.adminPasswordHash) {
-        showToast('Incorrect password — deletion cancelled.');
-        btn.textContent = 'Commit Deletions'; btn.disabled = false;
-        return;
-      }
-
       try {
         const res = await fetch('/api/admin-delete', {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passwordHash, urls: Array.from(selected) }),
+          body: JSON.stringify({ urls: Array.from(selected) }),
         });
 
         const data = await res.json();
