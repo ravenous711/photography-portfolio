@@ -495,7 +495,29 @@
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('admin-ui').style.display = 'block';
       renderAlbums();
+      checkInitialRoute(); // navigate to #album-id if present on load / reload
     }
+
+    // ── Hash-based routing so reloading restores the right album ─────────────
+    function checkInitialRoute() {
+      const hash = location.hash;
+      if (hash.startsWith('#album-')) {
+        const albumId = decodeURIComponent(hash.slice(7));
+        const album = ALBUMS.find(a => a.id === albumId);
+        if (album) openAlbumDetail(album, /* pushState= */ false);
+      }
+    }
+
+    window.addEventListener('popstate', () => {
+      const hash = location.hash;
+      if (hash.startsWith('#album-')) {
+        const albumId = decodeURIComponent(hash.slice(7));
+        const album = ALBUMS.find(a => a.id === albumId);
+        if (album) openAlbumDetail(album, /* pushState= */ false);
+      } else {
+        if (currentDetailAlbum) _showListView();
+      }
+    });
 
     // ── Selection state (deletion) ───────────────────────────────────────────
     const selected = new Set();
@@ -703,8 +725,13 @@
     // ── Album detail navigation ───────────────────────────────────────────────
     let currentDetailAlbum = null;
 
-    async function openAlbumDetail(album) {
+    async function openAlbumDetail(album, pushState = true) {
       currentDetailAlbum = album;
+
+      // Update URL hash so reloading returns to this album
+      if (pushState) {
+        history.pushState({ albumId: album.id }, '', `#album-${encodeURIComponent(album.id)}`);
+      }
 
       // Switch panes
       document.getElementById('pane-albums').style.display = 'none';
@@ -712,9 +739,9 @@
       document.getElementById('pane-album-detail').style.display = '';
 
       // Toolbar: show back + title, hide tabs
-      document.getElementById('toolbar-tabs').style.display   = 'none';
-      document.getElementById('toolbar-site-name').style.display = 'none';
-      document.getElementById('back-btn').style.display       = '';
+      document.getElementById('toolbar-tabs').style.display       = 'none';
+      document.getElementById('toolbar-site-name').style.display  = 'none';
+      document.getElementById('back-btn').style.display           = '';
       document.getElementById('detail-toolbar-title').style.display = '';
       document.getElementById('detail-toolbar-title').textContent = album.title;
 
@@ -735,22 +762,21 @@
       renderAlbumDetail(album, tally);
     }
 
-    function closeAlbumDetail() {
+    function _showListView() {
       currentDetailAlbum = null;
-
-      // Switch panes
       document.getElementById('pane-album-detail').style.display = 'none';
-      document.getElementById('pane-albums').style.display = '';
-
-      // Toolbar: restore tabs, hide back
-      document.getElementById('toolbar-tabs').style.display   = '';
-      document.getElementById('toolbar-site-name').style.display = '';
-      document.getElementById('back-btn').style.display       = 'none';
+      document.getElementById('pane-albums').style.display       = '';
+      document.getElementById('toolbar-tabs').style.display       = '';
+      document.getElementById('toolbar-site-name').style.display  = '';
+      document.getElementById('back-btn').style.display           = 'none';
       document.getElementById('detail-toolbar-title').style.display = 'none';
-
-      // Re-render directory to pick up any curated-count changes
       document.getElementById('album-list').innerHTML = '';
       renderAlbums();
+    }
+
+    function closeAlbumDetail() {
+      history.pushState(null, '', location.pathname); // clear the hash
+      _showListView();
     }
 
     function renderAlbumDetail(album, tally) {
@@ -874,7 +900,11 @@
         observer.observe(thumb);
       });
 
-      bindAdminGridLayout(grid);
+      // Run layout once after first paint so grid.offsetWidth is non-zero
+      requestAnimationFrame(() => {
+        bindAdminGridLayout(grid);
+        runJustifiedLayout(grid);
+      });
       window.addEventListener('resize', () => runJustifiedLayout(grid), { passive: true });
     }
 
