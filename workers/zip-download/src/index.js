@@ -98,6 +98,14 @@ async function handleUnlock(request, env, cors) {
   await check(env.FAMILY_HASH, 'family');
   await check(env.FRIENDS_HASH, 'friends');
 
+  // Fall back to D1 access_codes if env hashes didn't match
+  if (!grantedTier && env.DB) {
+    const row = await env.DB.prepare(
+      `SELECT audience FROM access_codes WHERE code_hash = ? AND revoked = 0 LIMIT 1`
+    ).bind(hash).first();
+    if (row) grantedTier = row.audience;
+  }
+
   if (!grantedTier) return json({ error: 'Invalid access code' }, 401);
 
   const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
@@ -284,7 +292,79 @@ async function handleFavorites(request, url, env, cors) {
   return json({ error: 'Not found' }, 404);
 }
 
-// ── Helpers (ZIP) ─────────────────────────────────────────────────────────────
+// ── /access-codes — admin CRUD for D1-backed access codes ────────────────────
+
+/**
+ * Requires: Authorization: Bearer <ADMIN_SECRET>
+ *
+ * POST   /access-codes         { label, audience, code }  → { id, label, audience }
+ * GET    /access-codes                                     → { codes: [...] }
+ * DELETE /access-codes/:id                                 → { ok: true }
+ */
+async function handleAccessCodes(request, url, env, cors) {
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
+  // All access-codes endpoints require admin auth
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!env.ADMIN_SECRET || !token || token !== env.ADMIN_SECRET) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+
+  if (!env.DB) return json({ error: 'DB not configured' }, 503);
+
+  // DELETE /access-codes/:id — revoke
+  const deleteMatch = url.pathname.match(/^\/access-codes\/(\d+)$/);
+  if (deleteMatch && request.method === 'DELETE') {
+    const id = parseInt(deleteMatch[1], 10);
+    await env.DB.prepare(`UPDATE access_codes SET revoked = 1 WHERE id = ?`).bind(id).run();
+    return json({ ok: true });
+  }
+
+  // GET /access-codes — list all (active + revoked, newest first)
+  if (request.method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT id, label, audience, created_at, revoked FROM access_codes ORDER BY id DESC`
+    ).all();
+    return json({ codes: results });
+  }
+
+  // POST /access-codes — create new code
+  if (request.method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+    const { label, audience, code } = body || {};
+    if (!label || !audience || !code) {
+      return json({ error: 'label, audience, and code are required' }, 400);
+    }
+    if (typeof label !== 'string' || label.length > 128) return json({ error: 'label too long' }, 400);
+    if (typeof audience !== 'string' || audience.length > 64) return json({ error: 'audience too long' }, 400);
+    if (typeof code !== 'string' || code.length < 8 || code.length > 256) {
+      return json({ error: 'code must be 8–256 characters' }, 400);
+    }
+
+    // Hash the plaintext code before storing
+    const codeHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))
+      .then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
+
+    try {
+      const result = await env.DB.prepare(
+        `INSERT INTO access_codes (code_hash, label, audience) VALUES (?, ?, ?)`
+      ).bind(codeHash, label, audience).run();
+      return json({ id: result.meta.last_row_id, label, audience }, 201);
+    } catch (e) {
+      if (String(e).includes('UNIQUE')) return json({ error: 'Code already exists' }, 409);
+      throw e;
+    }
+  }
+
+  return json({ error: 'Method not allowed' }, 405);
+}
 
 // Normalise a caller-supplied value into an R2 object key.
 // Accepts full public URLs or already-relative keys; strips query strings.
@@ -355,7 +435,7 @@ export default {
       return new Response(null, {
         headers: {
           ...cors,
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Max-Age': '86400',
         },
@@ -375,6 +455,11 @@ export default {
     // Private image serving
     if (url.pathname === '/image') {
       return handleImage(request, url, env, cors);
+    }
+
+    // Access codes admin CRUD
+    if (url.pathname.startsWith('/access-codes')) {
+      return handleAccessCodes(request, url, env, cors);
     }
 
     // ZIP download (existing)

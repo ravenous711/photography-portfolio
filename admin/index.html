@@ -344,6 +344,7 @@
       <!-- Tab switcher -->
       <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
       <button class="btn-ghost tab-btn" id="tab-favorites" onclick="switchTab('favorites')">Favorites</button>
+      <button class="btn-ghost tab-btn" id="tab-codes" onclick="switchTab('codes')">Access codes</button>
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
       <button class="btn-ghost" id="save-curated-btn" style="display:none" onclick="savePendingCurated()">Save curated changes</button>
@@ -372,7 +373,32 @@
       </div>
     </main>
 
-  </div>
+    <!-- ── Access codes tab ── -->
+    <main id="pane-codes" style="display:none; padding: 2rem 1.5rem 4rem; max-width: 720px">
+
+      <!-- Create form -->
+      <section style="margin-bottom:2rem;padding:1.25rem 1.5rem;border:1px solid var(--color-border)">
+        <p style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-muted);margin-bottom:1rem">Create access code</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem">
+          <input id="code-label" placeholder="Label (e.g. Smith Wedding)" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px;width:100%">
+          <select id="code-audience" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px">
+            <option value="friends">friends</option>
+            <option value="family">family</option>
+            <option value="client:">client:name — edit below</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <input id="code-value" placeholder="Plaintext code (min 8 chars, shown once)" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px;flex:1">
+          <button class="btn-ghost" onclick="createCode()" style="font-size:0.75rem;white-space:nowrap">Create</button>
+        </div>
+        <p id="code-create-status" style="font-size:0.75rem;color:var(--color-muted);margin-top:0.5rem;min-height:1.2em"></p>
+      </section>
+
+      <!-- Code list -->
+      <div id="codes-list">
+        <p style="font-size:0.8rem;color:var(--color-muted)">Loading...</p>
+      </div>
+    </main>
 
   <!-- ── Admin Lightbox ── -->
   <div id="admin-lightbox" role="dialog" aria-modal="true">
@@ -892,8 +918,12 @@
     function switchTab(tab) {
       document.getElementById('pane-albums').style.display    = tab === 'albums'    ? '' : 'none';
       document.getElementById('pane-favorites').style.display = tab === 'favorites' ? '' : 'none';
+      document.getElementById('pane-codes').style.display     = tab === 'codes'     ? '' : 'none';
       document.getElementById('tab-albums').classList.toggle('active', tab === 'albums');
       document.getElementById('tab-favorites').classList.toggle('active', tab === 'favorites');
+      document.getElementById('tab-codes').classList.toggle('active', tab === 'codes');
+
+      if (tab === 'codes') loadCodesList();
 
       if (tab === 'favorites') {
         // Populate album dropdown on first open
@@ -1151,6 +1181,77 @@
       else if (e.key === 'ArrowRight') { lbNav(1); }
       else if (e.key === 'd' || e.key === 'D') { lbToggleMark(); }
     });
+
+    // ── Access codes ──────────────────────────────────────────────────────────
+
+    async function loadCodesList() {
+      const el = document.getElementById('codes-list');
+      el.innerHTML = '<p style="font-size:0.8rem;color:var(--color-muted)">Loading...</p>';
+      const resp = await fetch('/api/admin-access-codes');
+      if (!resp.ok) { el.innerHTML = '<p style="color:red;font-size:0.8rem">Failed to load codes.</p>'; return; }
+      const { codes } = await resp.json();
+      if (!codes.length) { el.innerHTML = '<p style="font-size:0.8rem;color:var(--color-muted)">No codes yet.</p>'; return; }
+      el.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:0.78rem">
+          <thead>
+            <tr style="border-bottom:1px solid var(--color-border);color:var(--color-muted)">
+              <th style="text-align:left;padding:0.5rem 0.75rem;font-weight:400;letter-spacing:0.08em;text-transform:uppercase">Label</th>
+              <th style="text-align:left;padding:0.5rem 0.75rem;font-weight:400;letter-spacing:0.08em;text-transform:uppercase">Audience</th>
+              <th style="text-align:left;padding:0.5rem 0.75rem;font-weight:400;letter-spacing:0.08em;text-transform:uppercase">Created</th>
+              <th style="text-align:left;padding:0.5rem 0.75rem;font-weight:400;letter-spacing:0.08em;text-transform:uppercase">Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${codes.map(c => `
+              <tr id="code-row-${c.id}" style="border-bottom:1px solid var(--color-border);${c.revoked ? 'opacity:0.4' : ''}">
+                <td style="padding:0.6rem 0.75rem">${escHtml(c.label)}</td>
+                <td style="padding:0.6rem 0.75rem;font-family:monospace">${escHtml(c.audience)}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--color-muted)">${c.created_at.slice(0,10)}</td>
+                <td style="padding:0.6rem 0.75rem">${c.revoked ? '<span style="color:var(--color-muted)">Revoked</span>' : '<span style="color:#4caf50">Active</span>'}</td>
+                <td style="padding:0.6rem 0.75rem;text-align:right">
+                  ${!c.revoked ? `<button class="btn-ghost" style="font-size:0.7rem;color:var(--color-muted)" onclick="revokeCode(${c.id})">Revoke</button>` : ''}
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function createCode() {
+      const label    = document.getElementById('code-label').value.trim();
+      const audience = document.getElementById('code-audience').value.trim();
+      const code     = document.getElementById('code-value').value.trim();
+      const status   = document.getElementById('code-create-status');
+
+      if (!label || !audience || !code) { status.textContent = 'Fill in all fields.'; return; }
+      if (code.length < 8) { status.textContent = 'Code must be at least 8 characters.'; return; }
+
+      status.textContent = 'Creating…';
+      const resp = await fetch('/api/admin-access-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, audience, code }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) { status.textContent = `Error: ${data.error}`; return; }
+
+      // Show the code once, then clear the field
+      status.innerHTML = `✓ Created. <strong>Send this code — it won't be shown again:</strong> <code style="user-select:all;font-size:0.9em;background:var(--color-surface);padding:0.1em 0.4em">${escHtml(code)}</code>`;
+      document.getElementById('code-label').value = '';
+      document.getElementById('code-value').value = '';
+      loadCodesList();
+    }
+
+    async function revokeCode(id) {
+      if (!confirm('Revoke this code? Anyone using it will lose access immediately.')) return;
+      const resp = await fetch(`/api/admin-access-codes?id=${id}`, { method: 'DELETE' });
+      if (resp.ok) loadCodesList();
+      else alert('Revoke failed — see console.');
+    }
 
   </script>
 </body>
