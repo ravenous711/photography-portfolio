@@ -84,29 +84,44 @@
 
     /* ── Curated badge (gold star) ── */
     .photo-thumb.is-curated { border-color: var(--color-gold); }
+    /* pending-add = will be added to curated on save */
+    .photo-thumb.curate-pending-add { border-color: var(--color-gold); }
+    /* pending-remove = currently curated but will be removed on save */
+    .photo-thumb.curate-pending-remove { border-color: #6b7280; }
+    .photo-thumb.curate-pending-remove .curated-badge { opacity: 0.25; }
+    .photo-thumb.curate-pending-remove .curate-add-badge { display: none !important; }
+
     .curated-badge {
-      position: absolute; bottom: 6px; right: 6px; z-index: 2;
+      position: absolute; bottom: 6px; right: 6px; z-index: 3;
       background: var(--color-gold);
       border-radius: 50%;
-      width: 20px; height: 20px;
+      width: 22px; height: 22px;
       display: flex; align-items: center; justify-content: center;
-      pointer-events: none;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
     }
-    .curated-badge svg { display: block; }
+    .curated-badge:hover { transform: scale(1.2); }
+    .curated-badge svg { display: block; pointer-events: none; }
     .photo-thumb.marked .curated-badge { opacity: 0.4; }
+
+    /* Faint star outline on hover for non-curated photos (click to add) */
+    .curate-add-badge {
+      position: absolute; bottom: 6px; right: 6px; z-index: 3;
+      background: rgba(0,0,0,0.45);
+      border-radius: 50%;
+      width: 22px; height: 22px;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .photo-thumb:not(.is-curated):not(.curate-pending-add):hover .curate-add-badge { display: flex; }
+    .photo-thumb.curate-pending-add .curate-add-badge { display: flex; background: var(--color-gold); }
+    .curate-add-badge svg { display: block; pointer-events: none; }
 
     /* ── Album curated action row ── */
     .album-curate-actions {
       display: flex; align-items: center; gap: 0.5rem;
       flex-shrink: 0;
     }
-    .btn-curate-load {
-      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
-      border: 1px solid var(--color-gold); color: var(--color-gold);
-      background: transparent; padding: 0.25rem 0.6rem; cursor: pointer;
-      border-radius: 2px; transition: opacity 0.15s; white-space: nowrap;
-    }
-    .btn-curate-load:hover { opacity: 0.7; }
     .btn-curate-clear {
       font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
       border: 1px solid var(--color-muted); color: var(--color-muted);
@@ -114,6 +129,11 @@
       border-radius: 2px; transition: opacity 0.15s; white-space: nowrap;
     }
     .btn-curate-clear:hover { opacity: 0.7; }
+
+    /* Curated save button in toolbar */
+    #save-curated-btn {
+      border-color: var(--color-gold); color: var(--color-gold);
+    }
 
     /* ── Album section ── */
     .album-section { margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
@@ -325,7 +345,7 @@
       <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
-      <button class="btn-ghost" id="curate-btn" disabled onclick="saveCuratedSet()" style="border-color:var(--color-gold);color:var(--color-gold)">Save as curated set</button>
+      <button class="btn-ghost" id="save-curated-btn" style="display:none" onclick="savePendingCurated()">Save curated changes</button>
       <button class="btn-danger" id="commit-btn" disabled onclick="commitDeletions()">Commit Deletions</button>
       <button class="btn-ghost" onclick="signOut()" style="color:var(--color-muted);margin-left:0.5rem">Sign out</button>
     </div>
@@ -426,19 +446,22 @@
       renderAlbums();
     }
 
-    // ── Selection state ──────────────────────────────────────────────────────
+    // ── Selection state (deletion) ───────────────────────────────────────────
     const selected = new Set();
+
+    // ── Pending curated edits: albumId → Set of URLs in the new curated set ─
+    // null means no edits pending for that album.
+    const pendingCurated = new Map(); // albumId → Set<url>
 
     function updateToolbar() {
       const count = selected.size;
       document.getElementById('selection-count').textContent =
         count === 0 ? '0 selected' : `${count} photo${count !== 1 ? 's' : ''} selected`;
       document.getElementById('commit-btn').disabled = count === 0;
-      // Curate button: enabled when 1+ photos selected from a single album
-      const albumId = selectedAlbumId();
-      const curateBtn = document.getElementById('curate-btn');
-      curateBtn.disabled = count === 0 || !albumId;
-      curateBtn.title = albumId ? `Save ${count} photo${count !== 1 ? 's' : ''} as curated set for "${albumId}"` : 'Select photos from one album to curate';
+
+      // Show "Save curated changes" if any album has pending curated edits
+      const hasPending = pendingCurated.size > 0;
+      document.getElementById('save-curated-btn').style.display = hasPending ? '' : 'none';
     }
 
     // Return the album id shared by all selected photos, or null if mixed/none
@@ -458,6 +481,126 @@
       selected.clear();
       document.querySelectorAll('.photo-thumb.marked').forEach(el => el.classList.remove('marked'));
       updateToolbar();
+    }
+
+    // ── Toggle a photo in/out of pending curated set ─────────────────────────
+    function toggleCurated(thumb, url, albumId, currentCuratedSet) {
+      if (!pendingCurated.has(albumId)) {
+        // First edit for this album — start from the current curated set
+        pendingCurated.set(albumId, new Set(currentCuratedSet));
+      }
+      const pending = pendingCurated.get(albumId);
+      const isNowPending = pending.has(url);
+
+      if (isNowPending) {
+        pending.delete(url);
+        // Revert visual: if it was originally curated, show faded; if it was a new add, remove add style
+        if (currentCuratedSet.has(url)) {
+          thumb.classList.add('curate-pending-remove');
+          thumb.classList.remove('curate-pending-add');
+        } else {
+          thumb.classList.remove('curate-pending-add');
+        }
+      } else {
+        pending.add(url);
+        if (currentCuratedSet.has(url)) {
+          // Restoring an originally-curated photo
+          thumb.classList.remove('curate-pending-remove');
+        } else {
+          // New addition
+          thumb.classList.add('curate-pending-add');
+        }
+      }
+
+      // If pending matches original, clear the pending state for this album
+      const same = pending.size === currentCuratedSet.size &&
+        [...currentCuratedSet].every(u => pending.has(u));
+      if (same) {
+        pendingCurated.delete(albumId);
+        // Revert all visual state for this album
+        document.querySelectorAll(`.album-section[data-album-id="${CSS.escape(albumId)}"] .photo-thumb`).forEach(t => {
+          t.classList.remove('curate-pending-add', 'curate-pending-remove');
+        });
+      }
+
+      updateToolbar();
+    }
+
+    // ── Save all pending curated changes ─────────────────────────────────────
+    async function savePendingCurated() {
+      if (pendingCurated.size === 0) return;
+      const btn = document.getElementById('save-curated-btn');
+      btn.textContent = 'Saving…'; btn.disabled = true;
+
+      const errors = [];
+      for (const [albumId, urlSet] of pendingCurated) {
+        const orderedPhotos = [];
+        // Preserve DOM order
+        document.querySelectorAll(`.album-section[data-album-id="${CSS.escape(albumId)}"] .photo-thumb`).forEach(t => {
+          if (urlSet.has(t.dataset.url)) orderedPhotos.push(t.dataset.url);
+        });
+        try {
+          const res = await fetch('/api/admin-curate', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ albumId, photos: orderedPhotos }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errors.push(`${albumId}: ${data.error || res.statusText}`);
+          } else {
+            // Update DOM to reflect saved state
+            const section = document.querySelector(`.album-section[data-album-id="${CSS.escape(albumId)}"]`);
+            if (section) {
+              const newCurated = new Set(orderedPhotos);
+              section.querySelectorAll('.photo-thumb').forEach(t => {
+                const u = t.dataset.url;
+                const shouldBe = newCurated.has(u);
+                t.classList.toggle('is-curated', shouldBe);
+                t.classList.remove('curate-pending-add', 'curate-pending-remove');
+                const existing = t.querySelector('.curated-badge');
+                if (shouldBe && !existing) {
+                  const badge = makeCuratedBadge(albumId, newCurated);
+                  t.appendChild(badge);
+                  badge.addEventListener('click', (e) => { e.stopPropagation(); toggleCurated(t, u, albumId, newCurated); });
+                } else if (!shouldBe && existing) {
+                  existing.remove();
+                }
+              });
+              const meta = section.querySelector('.album-meta');
+              const total = section.querySelectorAll('.photo-thumb').length;
+              if (meta) meta.textContent = `${total} photo${total !== 1 ? 's' : ''}${orderedPhotos.length > 0 ? ` · ${orderedPhotos.length} curated` : ''}`;
+            }
+          }
+        } catch (err) {
+          errors.push(`${albumId}: ${err.message}`);
+        }
+      }
+
+      pendingCurated.clear();
+      if (errors.length) {
+        showToast(`Some saves failed: ${errors.join('; ')}`, 8000);
+      } else {
+        showToast(`Curated sets saved — Vercel redeploying.`, 5000);
+      }
+      btn.textContent = 'Save curated changes'; btn.disabled = false;
+      updateToolbar();
+    }
+
+    function makeCuratedBadge() {
+      const badge = document.createElement('div');
+      badge.className = 'curated-badge';
+      badge.title = 'In curated set — click to remove';
+      badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      return badge;
+    }
+    function makeCurateAddBadge() {
+      const badge = document.createElement('div');
+      badge.className = 'curate-add-badge';
+      badge.title = 'Click to add to curated set';
+      badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      return badge;
     }
 
     // ── Justified layout (mirrors album page) ────────────────────────────────
@@ -529,8 +672,7 @@
           <span class="album-meta">${count} photo${count !== 1 ? 's' : ''}${badge}${curatedLabel}</span>
           ${curatedCount > 0 ? `
           <div class="album-curate-actions">
-            <button class="btn-curate-load" title="Pre-select the ${curatedCount} curated photos so you can edit and re-save">Edit curated</button>
-            <button class="btn-curate-clear" title="Remove the curated set — all photos will be shown to everyone">Clear curated</button>
+            <button class="btn-curate-clear" title="Remove the entire curated set — all photos will be shown to everyone">Clear curated</button>
           </div>` : ''}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
@@ -593,14 +735,23 @@
             checkEl.className = 'thumb-check';
             checkEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-            // Gold star badge for currently curated photos
+            // Gold star badge for currently curated photos (click to remove from curated)
             if (curatedSet.has(url)) {
-              const badge = document.createElement('div');
-              badge.className = 'curated-badge';
-              badge.title = 'Currently in curated set';
-              badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+              const badge = makeCuratedBadge();
+              badge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleCurated(thumb, url, album.id, curatedSet);
+              });
               thumb.appendChild(badge);
             }
+
+            // Faint outline star on non-curated photos (click to add to curated)
+            const addBadge = makeCurateAddBadge();
+            addBadge.addEventListener('click', (e) => {
+              e.stopPropagation();
+              toggleCurated(thumb, url, album.id, curatedSet);
+            });
+            thumb.appendChild(addBadge);
 
             thumb.appendChild(img);
             thumb.appendChild(overlay);
@@ -627,29 +778,6 @@
           section.classList.toggle('open');
           if (section.classList.contains('open')) loadImages();
         });
-
-        // Wire "Edit curated" button — pre-select existing curated photos
-        const loadBtn = header.querySelector('.btn-curate-load');
-        if (loadBtn) {
-          loadBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (!section.classList.contains('open')) {
-              section.classList.add('open');
-              loadImages();
-            }
-            // Wait a tick for images to start rendering, then select curated set
-            setTimeout(() => {
-              clearSelection();
-              const thumbs = section.querySelectorAll('.photo-thumb.is-curated');
-              thumbs.forEach(thumb => {
-                const url = thumb.dataset.url;
-                if (url) { thumb.classList.add('marked'); selected.add(url); }
-              });
-              updateToolbar();
-              showToast(`Loaded ${thumbs.length} curated photo${thumbs.length !== 1 ? 's' : ''} — edit selection, then hit "Save as curated set".`, 6000);
-            }, 50);
-          });
-        }
 
         // Wire "Clear curated" button — removes curated[] from the album
         const clearBtn = header.querySelector('.btn-curate-clear');
@@ -743,81 +871,6 @@
       btn.disabled = selected.size === 0;
     }
 
-    // ── Save as curated set ───────────────────────────────────────────────────
-    async function saveCuratedSet() {
-      const albumId = selectedAlbumId();
-      if (!albumId || selected.size === 0) return;
-
-      const album = ALBUMS.find(a => a.id === albumId);
-      const albumTitle = album ? album.title : albumId;
-      const count = selected.size;
-
-      const ok = confirm(
-        `Save ${count} selected photo${count !== 1 ? 's' : ''} as the curated set for "${albumTitle}"?\n\n` +
-        `This will be the public view of this album. The full album stays accessible to unlocked viewers.\n\n` +
-        `Tip: select photos in the order you want them to appear.`
-      );
-      if (!ok) return;
-
-      const btn = document.getElementById('curate-btn');
-      btn.textContent = 'Saving…'; btn.disabled = true;
-
-      // Preserve selection order by reading URLs in DOM order
-      const allThumbs = document.querySelectorAll(`.album-section[data-album-id="${CSS.escape(albumId)}"] .photo-thumb`);
-      const orderedPhotos = [];
-      allThumbs.forEach(thumb => {
-        const url = thumb.dataset.url;
-        if (url && selected.has(url)) orderedPhotos.push(url);
-      });
-
-      try {
-        const res = await fetch('/api/admin-curate', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ albumId, photos: orderedPhotos }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          showToast(`Error: ${data.error || res.statusText}`, 6000);
-        } else if (!data.changed) {
-          showToast('Curated set unchanged (same photos already saved).');
-        } else {
-          showToast(`Saved curated[${orderedPhotos.length}] for "${albumTitle}" — Vercel redeploying.`, 6000);
-          // Update gold star badges in the DOM to reflect new curated set
-          const newCurated = new Set(orderedPhotos);
-          const section = document.querySelector(`.album-section[data-album-id="${CSS.escape(albumId)}"]`);
-          if (section) {
-            section.querySelectorAll('.photo-thumb').forEach(thumb => {
-              const url = thumb.dataset.url;
-              const shouldBeCurated = newCurated.has(url);
-              thumb.classList.toggle('is-curated', shouldBeCurated);
-              const existingBadge = thumb.querySelector('.curated-badge');
-              if (shouldBeCurated && !existingBadge) {
-                const badge = document.createElement('div');
-                badge.className = 'curated-badge';
-                badge.title = 'Currently in curated set';
-                badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-                thumb.appendChild(badge);
-              } else if (!shouldBeCurated && existingBadge) {
-                existingBadge.remove();
-              }
-            });
-            // Update header curated count
-            const meta = section.querySelector('.album-meta');
-            if (meta) meta.textContent = `${section.querySelectorAll('.photo-thumb').length} photos${orderedPhotos.length > 0 ? ` · ${orderedPhotos.length} curated` : ''}`;
-          }
-          clearSelection();
-        }
-      } catch (err) {
-        showToast(`Request failed: ${err.message}`);
-      }
-
-      btn.textContent = 'Save as curated set';
-      updateToolbar();
-    }
 
     // ── Toast ────────────────────────────────────────────────────────────────
     function showToast(msg, duration = 4000) {
