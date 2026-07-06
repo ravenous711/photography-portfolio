@@ -969,6 +969,16 @@
       favBadge.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" stroke-width="2">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>`;
+      // Direct handler on the badge — avoids any bubbling / delegation complexity.
+      favBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFav(url);
+      });
+      favBadge.addEventListener('touchend', (e) => {
+        e.stopPropagation();
+        e.preventDefault(); // prevent the synthetic click from also firing toggleFav
+        toggleFav(url);
+      }, { passive: false });
 
       thumb.appendChild(img);
       thumb.appendChild(expandOverlay);
@@ -2310,14 +2320,7 @@
       favBtn.setAttribute('aria-label', hearted ? 'Remove from favorites' : 'Add to favorites');
     }
 
-    // Wire fav badge clicks — delegated at document level so it covers
-    // both the digital #photo-grid and all film-section .photo-grid grids.
-    document.addEventListener('click', (e) => {
-      const badge = e.target.closest('.fav-badge');
-      if (!badge) return;
-      e.stopPropagation();
-      toggleFav(badge.dataset.favUrl);
-    });
+    // Fav-badge clicks are handled directly on each badge element in createPhotoThumb.
 
     // Wire lightbox fav button
     const favBtn = document.getElementById('lightbox-fav');
