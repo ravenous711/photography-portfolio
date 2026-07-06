@@ -2238,11 +2238,9 @@
         grid.classList.add('favorites-enabled');
       });
 
-      // Show lightbox fav button (only on full album pages)
-      if (document.body.classList.contains('full-album-mode')) {
-        const favBtn = document.getElementById('lightbox-fav');
-        if (favBtn) favBtn.style.display = '';
-      }
+      // Show lightbox fav button on all album pages
+      const favBtnLb = document.getElementById('lightbox-fav');
+      if (favBtnLb) favBtnLb.style.display = '';
 
       // Then async-load which photos this session already hearted, and backfill the state.
       const sessionId = getFavSessionId();
