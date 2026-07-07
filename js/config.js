@@ -994,6 +994,9 @@ const ALBUMS = [
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/Athena-Ultramax-1/athena_ultramax1_005.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/Athena-Ultramax-1/athena_ultramax1_013.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/Athena-Ultramax-1/athena_ultramax1_039.jpg',
+      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/Athena-Ultramax-1/athena_ultramax1_045.jpg',
+      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/Athena-Ultramax-1/athena_ultramax1_055.jpg',
+      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/Athena-Ultramax-1/athena_ultramax1_066.jpg',
     ],
   },
 
