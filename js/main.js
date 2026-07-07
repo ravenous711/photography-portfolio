@@ -330,12 +330,39 @@ function getItalyNavSequence() {
   });
 }
 
+// All non-Italy, non-family, non-hidden navigable albums in gallery display order,
+// with group sub-albums expanded inline (same traversal as the gallery page).
+function getGalleryNavSequence() {
+  return ALBUMS
+    .filter(a => !a.parentId && !a.hidden && a.id !== 'italy-2026' && !(a.audience || '').startsWith('family'))
+    .flatMap(a => {
+      if (a.type === 'group' && a.subAlbums?.length) {
+        return a.subAlbums
+          .map(id => ALBUMS.find(sub => sub.id === id && !sub.hidden))
+          .filter(sub => sub && sub.type !== 'group' && sub.albumKind !== 'film-roll' && getAlbumPhotoCount(sub) > 0);
+      }
+      if (a.type !== 'group' && a.albumKind !== 'film-roll' && getAlbumPhotoCount(a) > 0) return [a];
+      return [];
+    });
+}
+
 function getNextAlbum(album) {
-  if (!isItalyAlbum(album)) return null;
-  const sequence = getItalyNavSequence();
-  const index = sequence.findIndex(a => a.id === album.id);
-  if (index === -1 || index >= sequence.length - 1) return null;
-  return sequence[index + 1];
+  const italySeq = getItalyNavSequence();
+  const italyIdx = italySeq.findIndex(a => a.id === album.id);
+  if (italyIdx !== -1) {
+    // Within Italy: advance to next city; at the end, hand off to the gallery sequence
+    if (italyIdx < italySeq.length - 1) return italySeq[italyIdx + 1];
+    return getGalleryNavSequence()[0] || null;
+  }
+
+  // Within the public gallery: advance to the next album; stop at the last
+  const gallerySeq = getGalleryNavSequence();
+  const galleryIdx = gallerySeq.findIndex(a => a.id === album.id);
+  if (galleryIdx !== -1 && galleryIdx < gallerySeq.length - 1) {
+    return gallerySeq[galleryIdx + 1];
+  }
+
+  return null;
 }
 
 // Sibling photo albums within the same parent group, in the group's subAlbums
