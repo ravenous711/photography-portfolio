@@ -951,6 +951,7 @@
 
       const leafAlbums = ALBUMS.filter(a =>
         a.type !== 'group' &&
+        a.albumKind !== 'film-roll' &&
         getAlbumAllPhotos(a).some(p => !p.endsWith('.svg'))
       );
 
