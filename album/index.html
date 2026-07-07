@@ -1099,12 +1099,33 @@
 
     let _gridResizeBound = false;
 
+    function buildCuratedSections(album) {
+      const allFilmSections = getAlbumFilmSections(album);
+      const assigned = new Set();
+      const filmSections = [];
+      allFilmSections.forEach(section => {
+        const sectionSet = new Set(section.photos || []);
+        const inSection = (album.curated || []).filter(url => sectionSet.has(url));
+        if (inSection.length) {
+          filmSections.push({ ...section, photos: inSection });
+          inSection.forEach(url => assigned.add(url));
+        }
+      });
+      const digital = (album.curated || []).filter(url => !assigned.has(url));
+      return { digital, filmSections };
+    }
+
     function renderPhotoSections() {
       const showingFull = fullView || !hasCurated;
       isCuratedView = hasCurated && !fullView;
 
+      // In curated view, split curated URLs back into digital vs per-film-stock groups
+      const curatedSections = isCuratedView ? buildCuratedSections(album) : null;
+
       const fullPhotos = getAlbumAllPhotos(album);
-      allPhotos = showingFull ? fullPhotos : [...album.curated];
+      allPhotos = showingFull
+        ? fullPhotos
+        : [...curatedSections.digital, ...curatedSections.filmSections.flatMap(s => s.photos)];
       if (_privateToken) {
         allPhotos = allPhotos.map(url => toImageUrl(url, _privateToken));
       }
@@ -1117,7 +1138,8 @@
       digitalGrid.innerHTML = '';
       filmSection.innerHTML = '';
 
-      const digitalPhotos = showingFull ? (album.photos || []) : album.curated;
+      const digitalPhotos = showingFull ? (album.photos || []) : curatedSections.digital;
+      const hasCuratedFilm = isCuratedView && curatedSections.filmSections.length > 0;
       const digitalLabelEl = document.getElementById('digital-section-label');
       if (isFilmRollAlbum(album)) {
         digitalLabelEl.textContent = '';
@@ -1127,7 +1149,8 @@
         digitalLabelEl.textContent = hasSectionNav
           ? `Digital · ${album.digitalLabel}`
           : album.digitalLabel;
-        digitalLabelEl.hidden = !showingFull;
+        // In curated view, only show the digital label when film sections are also present
+        digitalLabelEl.hidden = isCuratedView ? !hasCuratedFilm : !showingFull;
       } else {
         digitalLabelEl.textContent = '';
         digitalLabelEl.hidden = true;
@@ -1138,7 +1161,7 @@
         digitalGrid.appendChild(createPhotoThumb(thumbUrl, i, album.title));
       });
 
-      const filmSections = showingFull ? getAlbumFilmSections(album) : [];
+      const filmSections = showingFull ? getAlbumFilmSections(album) : (curatedSections?.filmSections || []);
       let photoOffset = digitalPhotos.length;
 
       if (filmSections.length) {
@@ -1311,8 +1334,32 @@
     function getLightboxCaptionParts(index) {
       const overall = `${index + 1}/${allPhotos.length}`;
 
-      // In curated mode photos may come from any section; skip per-section labels
+      // In curated mode, attribute photos to their film stock section when possible
       if (isCuratedView) {
+        const { digital: curatedDigital, filmSections: curatedFilmSections } = buildCuratedSections(album);
+        const digitalCount = curatedDigital.length;
+        if (index < digitalCount) {
+          if (!curatedFilmSections.length) return { position: overall, detail: '', overall };
+          const nav = album.digitalNavLabel || 'Digital';
+          return {
+            position: `${nav} · ${index + 1}/${digitalCount}`,
+            detail: album.digitalLabel || '',
+            overall,
+          };
+        }
+        let offset = digitalCount;
+        for (const section of curatedFilmSections) {
+          const count = section.photos.length;
+          if (index < offset + count) {
+            const stockLabel = section.label || 'Film';
+            return {
+              position: `${stockLabel} · ${index - offset + 1}/${count}`,
+              detail: '',
+              overall,
+            };
+          }
+          offset += count;
+        }
         return { position: overall, detail: '', overall };
       }
 
