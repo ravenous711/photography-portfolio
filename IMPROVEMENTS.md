@@ -324,6 +324,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 
 ## Changelog (Done)
 
+- **FEAT — In-page full album toggle (replaces keyed hub)** — Jul 2026.
+  Removed gated `/fullalbums/?k=` hub and "Full Album" nav. Album pages default to curated set; public "See full album" / "See favorites" toggle (top + bottom) expands in place with `?full=1`. Full view enables anonymous heart voting + instructional note for all visitors. Old `/fullalbums/` URLs redirect to `/gallery/`.
+
 - **FEAT-2 — Full-album friends curation flow** — Jul 2026.
   New `/fullalbums/` URL namespace for the uncut album (distinct gold-accent theme, "FULL ALBUM" badge). Shareable capability link `?k=KEY` grants the `friends` tier — key stays in the URL, is bookmarkable, no typed password. Randos on `/gallery/` only see the curated highlights; `/fullalbums/` without a valid key redirects to `/gallery/`. Cross-links: full-album page → "View public gallery"; curated page → "Open full album" (visible only to granted friends). "All albums" nav hub at `/fullalbums/` lists every non-private album for friends. Favorites hearts now enabled on ALL grids (digital + film) in full mode via a document-level delegated handler, fixing the missing-hearts-on-film bug. Old typed friends password removed; key-only access. Branch: `feat/curated-gallery-friends-links`.
   **Store in 1Password:** plaintext share key `4289e2622ffb284c65c101210c81a389d8bdbfc053e3b822` under "photography portfolio share key".

@@ -18,8 +18,6 @@
     <ul class="nav-links">
       <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
-      <!-- "Full Album" appears for granted friends; "Unlock" stays for family/client access codes -->
-      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">Full Album</a></li>
       <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
       <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
       <li id="nav-unlock-item" style="display:none"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
@@ -34,7 +32,6 @@
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
-    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">Full Album</a>
     <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Albums</a>
     <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
     <a href="/unlock/" id="mobile-unlock-link" style="display:none">Unlock</a>
@@ -74,21 +71,9 @@
     // ── Render album grid grouped by year ──
     const main = document.getElementById('gallery-main');
 
-    const canSeeFamily  = TierAuth.canAccess('family') || TierAuth.canAccess('family:anger-ali') || TierAuth.canAccess('family:fernando');
-    const canSeeFriends = TierAuth.canAccess('friends');
-    const shareKey = Routes.getShareKey();
+    const canSeeFamily = TierAuth.canAccess('family') || TierAuth.canAccess('family:anger-ali') || TierAuth.canAccess('family:fernando');
 
-    // Nav: show "All albums" for granted friends; show "Unlock" only for family/client
-    if (canSeeFriends) {
-      const hubUrl = Routes.fullAlbumUrl(null, shareKey);
-      const allItem   = document.getElementById('nav-all-albums-item');
-      const allLink   = document.getElementById('nav-all-albums-link');
-      const mobileAll = document.getElementById('mobile-all-albums-link');
-      if (allItem)   allItem.style.display = '';
-      if (allLink)   allLink.href = hubUrl;
-      if (mobileAll) { mobileAll.style.display = ''; mobileAll.href = hubUrl; }
-    } else if (canSeeFamily) {
-      // Family-only: show unlock for access codes
+    if (canSeeFamily) {
       const unlockItem   = document.getElementById('nav-unlock-item');
       const mobileUnlock = document.getElementById('mobile-unlock-link');
       if (unlockItem)   unlockItem.style.display = '';

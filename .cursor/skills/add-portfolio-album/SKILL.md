@@ -22,7 +22,7 @@ Workflow for adding a new album to Raveen's photography portfolio. Always follow
 | Audience | Who sees it | Bucket | Shows on |
 |---|---|---|---|
 | `public` | Everyone | public | `/gallery/` |
-| `friends` | Friends password | public | `/gallery/` + `/fullalbums/` |
+| `friends` | Friends password (legacy tier) | public | `/gallery/` (full album via in-page toggle) |
 | `family` | Raveen master password | private | `/family/` (both groups) |
 | `family:anger-ali` | Anger-Ali family password | private | `/family/` (Anger-Ali section) |
 | `family:fernando` | Fernando family password | private | `/family/` (Fernando section) |

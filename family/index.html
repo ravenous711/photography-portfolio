@@ -17,7 +17,6 @@
     <ul class="nav-links">
       <li><a href="/"        data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
-      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">Full Album</a></li>
       <li id="nav-family-gallery-item"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
       <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
     </ul>
@@ -31,7 +30,6 @@
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
-    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">Full Album</a>
     <a href="/familyalbums/">Family Albums</a>
     <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
   </div>
@@ -88,19 +86,6 @@
 
     if (!canSeeAngerAli && !canSeeFernando && !canSeeAll) {
       window.location.replace('/unlock/?next=/family/');
-    }
-
-    // Show "All albums" in nav for friends-tier viewers
-    const canSeeFriends = TierAuth.canAccess('friends');
-    if (canSeeFriends) {
-      const shareKey = Routes.getShareKey();
-      const hubUrl = Routes.fullAlbumUrl(null, shareKey);
-      const allItem   = document.getElementById('nav-all-albums-item');
-      const allLink   = document.getElementById('nav-all-albums-link');
-      const mobileAll = document.getElementById('mobile-all-albums-link');
-      if (allItem)   allItem.style.display = '';
-      if (allLink)   allLink.href = hubUrl;
-      if (mobileAll) { mobileAll.style.display = ''; mobileAll.href = hubUrl; }
     }
 
     // ── Worker token helpers for private cover images ──
