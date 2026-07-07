@@ -8,8 +8,9 @@ description: Guides the user through adding a new photo album to the photography
 Workflow for adding a new album to Raveen's photography portfolio. Always follow all steps in order.
 
 ## Key facts
-- Public R2 bucket: `portfolio-images` — public albums + grid thumbnails for ALL albums
-- Private R2 bucket: `portfolio-images-private` — family and client album originals
+- Public R2 bucket: `portfolio-images` — public/friends album originals + their grid thumbnails (`grid/...`)
+- Private R2 bucket: `portfolio-images-private` — family/client album originals **and** their grid thumbnails (`grid/...`)
+- Family/client grids are never in the public bucket — the Worker serves `grid/<key>` from the private bucket behind a token
 - Cloudflare account ID: `723c27febd4a099c7884fdf00de2329f`
 - R2 base URL: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev`
 - Live site: `https://photography-portfolio-pi-blush.vercel.app`
@@ -19,14 +20,14 @@ Workflow for adding a new album to Raveen's photography portfolio. Always follow
 
 ## Audience tiers
 
-| Audience | Who sees it | Bucket | Shows on |
-|---|---|---|---|
-| `public` | Everyone | public | `/gallery/` |
-| `friends` | Friends password (legacy tier) | public | `/gallery/` (full album via in-page toggle) |
-| `family` | Raveen master password | private | `/family/` (both groups) |
-| `family:anger-ali` | Anger-Ali family password | private | `/family/` (Anger-Ali section) |
-| `family:fernando` | Fernando family password | private | `/family/` (Fernando section) |
-| `client:<name>` | Client access code | private | admin only |
+| Audience | Who sees it | Originals bucket | Grid bucket | Shows on |
+|---|---|---|---|---|
+| `public` | Everyone | public | public (`grid/...`) | `/gallery/` |
+| `friends` | Friends password (legacy tier) | public | public (`grid/...`) | `/gallery/` (full album via in-page toggle) |
+| `family` | Raveen master password | private | private (`grid/...`) | `/family/` (both groups) |
+| `family:anger-ali` | Anger-Ali family password | private | private (`grid/...`) | `/family/` (Anger-Ali section) |
+| `family:fernando` | Fernando family password | private | private (`grid/...`) | `/family/` (Fernando section) |
+| `client:<name>` | Client access code | private | private (`grid/...`) | admin only |
 
 **Always set `hidden: true` for family and client albums.**
 No `PASSWORD_TIERS` edit needed for family sub-tiers — they are already configured.
@@ -35,7 +36,7 @@ No `PASSWORD_TIERS` edit needed for family sub-tiers — they are already config
 - R2 API rate-limits sequential uploads — always auto-retry (see helper below)
 - During an active session, use `sleep 15` between originals, `sleep 10` between grids
 - **Never use `sleep 5`** — too fast, causes consistent failures
-- **Never interleave orig/grid per file** — upload all originals first, then all grids
+- **Never interleave orig/grid per file** — run as **two parallel processes**: originals sequential in one, grids parallel in the other
 
 ## Path gotchas (macOS + zsh)
 
@@ -96,8 +97,9 @@ exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null | awk -F'\t' '$1 > 0 {
 
 ## Step 3 — Generate grid images locally (1200px)
 
-Grids always go to the **public** bucket (`portfolio-images/grid/...`), even for private family albums.
-They power the album card thumbnails on `/gallery/` and `/family/`.
+Generate 1200px grids locally for every album. Upload destination depends on audience:
+- **Public / friends** → `portfolio-images/grid/<R2-folder-name>/`
+- **Family / client** → `portfolio-images-private/grid/<R2-folder-name>/` (served via Worker token)
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -119,7 +121,8 @@ echo "Done. $(ls "$GRID_DIR" | wc -l | tr -d ' ') grid images"
 - **Public / friends albums** → `portfolio-images/<R2-folder-name>`
 - **Family / client albums** → `portfolio-images-private/<R2-folder-name>`
 
-Run backgrounded (`block_until_ms: 0`, `required_permissions: ["all", "full_network"]`):
+Run as **process 1** (backgrounded, `block_until_ms: 0`). Sequential, one file at a time.
+Start **Step 5 grids in parallel** — do not wait for originals to finish.
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -144,21 +147,29 @@ echo "=== Done. Failures: $fail ==="
 
 ## Step 5 — Upload grid images
 
-Always to the **public** bucket. Run after originals complete:
+Run as **process 2** at the same time as Step 4 (also backgrounded). Match the audience bucket:
+- **Public / friends** → `portfolio-images/grid/<R2-folder-name>/`
+- **Family / client** → `portfolio-images-private/grid/<R2-folder-name>/`
+
+Grids are small (~1–3 MB) — upload **5 concurrent** within this process. Originals stay sequential in process 1.
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
 setopt nullglob
 GRID_DIR="/tmp/grid_<R2-folder-name>"
-DEST="portfolio-images/grid/<R2-folder-name>"
+DEST="portfolio-images/grid/<R2-folder-name>"   # or portfolio-images-private/grid/...
+CONCURRENCY=5
 gfail=0
 
 for f in "$GRID_DIR"/*.jpg; do
   [ -f "$f" ] || continue
-  upload_with_retry "$DEST/$(basename "$f")" "$f" "grid $(basename "$f")" || gfail=$((gfail+1))
-  sleep 10
+  while (( $(jobs | wc -l | tr -d ' ') >= CONCURRENCY )); do sleep 2; done
+  (
+    upload_with_retry "$DEST/$(basename "$f")" "$f" "grid $(basename "$f")" || exit 1
+  ) &
 done
-echo "=== Grid done. Failures: $gfail ==="
+wait || gfail=1
+echo "=== Grid done. Check output above for failures ==="
 ```
 
 ## Step 6 — Verify via manifest
@@ -182,7 +193,8 @@ print(f'Found {len(uploaded)} files')
 "
 
 echo "=== Grid ==="
-curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/portfolio-images/objects?prefix=grid/$FOLDER_NAME/&per_page=1000" \
+GRID_BUCKET="$BUCKET"   # same bucket as originals (public or private)
+curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/$GRID_BUCKET/objects?prefix=grid/$FOLDER_NAME/&per_page=1000" \
   -H "Authorization: Bearer $TOKEN" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)

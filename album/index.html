@@ -109,6 +109,7 @@
 
     <!-- Full/curated toggle + favorites note -->
     <div id="album-view-controls-top" class="album-view-controls px-6 md:px-12" hidden>
+      <p id="album-curated-label" class="album-curated-label">My favorites</p>
       <button type="button" id="album-view-toggle-top" class="album-view-toggle-btn"></button>
       <p id="album-favorites-note" class="album-favorites-note" hidden>
         Tap the heart on the photos you like best — it helps Raveen know which shots to keep and hone his craft.
@@ -1073,6 +1074,7 @@
     function updateViewControls(showingFull) {
       const topControls = document.getElementById('album-view-controls-top');
       const bottomControls = document.getElementById('album-view-controls-bottom');
+      const curatedLabel = document.getElementById('album-curated-label');
       const note = document.getElementById('album-favorites-note');
       const toggleTop = document.getElementById('album-view-toggle-top');
       const toggleBottom = document.getElementById('album-view-toggle-bottom');
@@ -1080,6 +1082,7 @@
 
       if (topControls) topControls.hidden = !hasCurated;
       if (bottomControls) bottomControls.hidden = !hasCurated;
+      if (curatedLabel) curatedLabel.hidden = showingFull;
       if (toggleTop) toggleTop.textContent = label;
       if (toggleBottom) toggleBottom.textContent = label;
       if (note) note.hidden = !showingFull;
@@ -2377,6 +2380,14 @@
       padding-top: 1.25rem;
       padding-bottom: 0.5rem;
       text-align: center;
+    }
+    .album-curated-label {
+      margin: 0 0 0.75rem;
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      color: var(--color-text);
     }
     .album-view-controls--bottom {
       padding-top: 2rem;
