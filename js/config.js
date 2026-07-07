@@ -220,7 +220,7 @@ const ALBUMS = [
     protected: false,
     familySlug: 'raveen-athena-maryland',
     digitalLabel: 'Fujifilm X-T5',
-    coverImage: `${R2_BASE_URL}/Maryland-2026-Digital/20260306-DSCF1772.jpg`,
+    coverImage: `${R2_BASE_URL}/Maryland-2026-Digital/20260307-_DSF1150.jpg`,
     photos: [
       `${R2_BASE_URL}/Maryland-2026-Digital/20260306-DSCF1772.jpg`,
       `${R2_BASE_URL}/Maryland-2026-Digital/20260306-DSCF1778.jpg`,

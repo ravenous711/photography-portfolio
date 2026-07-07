@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Family Gallery — Raveen Fernando</title>
+  <title>Family Albums — Raveen Fernando</title>
   <meta name="description" content="Private family photo albums." />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
@@ -17,9 +17,9 @@
     <ul class="nav-links">
       <li><a href="/"        data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
-      <li><a href="/about/"   data-nav-link data-nav="about">About</a></li>
-      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">All albums</a></li>
-      <li id="nav-family-gallery-item"><a href="/family/" data-nav-link data-nav="family">Family Gallery</a></li>
+      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">Full Album</a></li>
+      <li id="nav-family-gallery-item"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
+      <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -31,16 +31,16 @@
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
-    <a href="/about/">About</a>
-    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">All albums</a>
-    <a href="/family/">Family Gallery</a>
+    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">Full Album</a>
+    <a href="/familyalbums/">Family Albums</a>
+    <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
   </div>
 
   <!-- ── Page Header ── -->
   <header class="page-header page-header--compact fade-in">
     <p class="page-subtitle">Portfolio</p>
     <div class="gold-rule"></div>
-    <h1 class="page-title">Family Gallery</h1>
+    <h1 class="page-title">Family Albums</h1>
   </header>
 
   <!-- ── Album Grid ── -->
@@ -103,8 +103,44 @@
       if (mobileAll) { mobileAll.style.display = ''; mobileAll.href = hubUrl; }
     }
 
-    // ── Album card renderer (mirrors gallery/index.html) ──
-    function renderAlbumCard(album) {
+    // ── Worker token helpers for private cover images ──
+    const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+
+    async function getToken(audience) {
+      const cacheKey = `worker_token_${audience}`;
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+        // Invalidate if workerBase changed (e.g. stale localhost token)
+        if (cached && cached.workerBase && cached.workerBase !== workerBase) {
+          sessionStorage.removeItem(cacheKey);
+        } else if (cached && cached.expiresAt > Date.now() + 5 * 60 * 1000) {
+          return cached.token;
+        }
+      } catch {}
+      const hash = TierAuth.getHash(audience);
+      if (!hash || !workerBase) return null;
+      try {
+        const resp = await fetch(`${workerBase}/unlock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash }),
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        sessionStorage.setItem(cacheKey, JSON.stringify({ token: data.token, expiresAt: data.expiresAt, workerBase }));
+        return data.token;
+      } catch { return null; }
+    }
+
+    function toWorkerCoverUrl(coverUrl, token) {
+      if (!token || !coverUrl || !workerBase) return coverUrl;
+      const key = coverUrl.replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+/, '');
+      return `${workerBase}/image?key=${encodeURIComponent('grid/' + key)}&token=${encodeURIComponent(token)}`;
+    }
+
+    // ── Album card renderer ──
+    // token is pre-fetched so img.src is set correctly from the start (no lazy rewrite).
+    function renderAlbumCard(album, token) {
       const isGroup = album.type === 'group';
       const card = document.createElement('a');
       card.href = albumPageUrl(album);
@@ -112,39 +148,38 @@
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
       const dateline = albumDateline(album, { withDesc: !isGroup });
       const desc = albumCardDesc(album);
+      // Use the raw config coverImage (not albumCoverUrl, which applies gridUrl and
+      // would add grid/ prefix — toWorkerCoverUrl adds it exactly once itself).
+      const rawCover = album.coverImage || albumCoverUrl(album);
+      const coverSrc = toWorkerCoverUrl(rawCover, token) || albumCoverUrl(album);
       card.innerHTML = `
         <img class="album-card-img"
-             src="${albumCoverUrl(album)}"
+             src="${coverSrc}"
              alt="${album.title}"
-             loading="lazy"${posStyle} />
+             loading="eager"${posStyle} />
         <div class="album-card-overlay">
-          ${isGroup ? `
-            <div class="album-card-lock" style="background:rgba(201,169,110,0.15);border-color:rgba(201,169,110,0.3)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5">
-                <rect x="2" y="6" width="8" height="6" rx="1"/><rect x="14" y="6" width="8" height="6" rx="1"/>
-                <rect x="2" y="15" width="8" height="6" rx="1"/><rect x="14" y="15" width="8" height="6" rx="1"/>
-              </svg>
-            </div>` : ''}
           ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
           <h2 class="album-card-title">${album.title}</h2>
           ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
         </div>
       `;
+      // Fade in once loaded
+      const img = card.querySelector('img');
+      img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+      if (img.complete) img.classList.add('loaded');
       return card;
     }
 
     // ── Render a family group section (year-grouped) ──
-    function renderFamilySection(groupLabel, audienceFilter) {
+    function renderFamilySection(groupLabel, audienceFilter, tokens) {
       const albums = ALBUMS.filter(a => a.audience === audienceFilter && !a.parentId);
       if (albums.length === 0) return;
 
-      // Group heading
       const groupHead = document.createElement('h2');
       groupHead.className = 'family-group-heading';
       groupHead.textContent = groupLabel;
       main.appendChild(groupHead);
 
-      // Bucket by year
       const byYear = new Map();
       albums.forEach(album => {
         const year = albumYear(album) || 'Other';
@@ -164,18 +199,32 @@
         const count = byYear.get(year).length;
         grid.className = 'album-grid gallery-album-grid fade-in';
         if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
-        byYear.get(year).forEach(album => grid.appendChild(renderAlbumCard(album)));
+        byYear.get(year).forEach(album => {
+          grid.appendChild(renderAlbumCard(album, tokens[audienceFilter]));
+        });
         main.appendChild(grid);
       });
     }
 
-    // ── Render whichever sections this viewer can access ──
-    if (canSeeAll || canSeeAngerAli) {
-      renderFamilySection('Anger-Ali Family', 'family:anger-ali');
-    }
-    if (canSeeAll || canSeeFernando) {
-      renderFamilySection('Fernando Family', 'family:fernando');
-    }
+    // ── Fetch tokens for all visible tiers, then render ──
+    (async () => {
+      const tiers = [];
+      if (canSeeAll || canSeeAngerAli) tiers.push('family:anger-ali');
+      if (canSeeAll || canSeeFernando)  tiers.push('family:fernando');
+      if (canSeeAll) { tiers.push('family:anger-ali'); tiers.push('family:fernando'); }
+
+      const uniqueTiers = [...new Set(tiers)];
+      const tokens = Object.fromEntries(
+        await Promise.all(uniqueTiers.map(async t => [t, await getToken(t)]))
+      );
+
+      if (canSeeAll || canSeeAngerAli) {
+        renderFamilySection('Anger-Ali Family', 'family:anger-ali', tokens);
+      }
+      if (canSeeAll || canSeeFernando) {
+        renderFamilySection('Fernando Family', 'family:fernando', tokens);
+      }
+    })();
   </script>
 </body>
 </html>

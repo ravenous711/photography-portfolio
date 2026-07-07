@@ -40,6 +40,27 @@ function initNav() {
     if (item) item.style.display = '';
     if (mobileLink) mobileLink.style.display = '';
   }
+
+  // Show "Sign out" nav link whenever any access tier is unlocked
+  const hasAnyTier = (typeof TierAuth !== 'undefined') && TierAuth.grantedTiers().size > 0;
+  if (hasAnyTier) {
+    const so  = document.getElementById('nav-signout-item');
+    const mso = document.getElementById('mobile-signout-link');
+    if (so)  so.style.display = '';
+    if (mso) mso.style.display = '';
+  }
+}
+
+// ── Sign out: clear all unlocked tiers + cached tokens, return home ──
+function signOut() {
+  if (typeof TierAuth !== 'undefined') TierAuth.clear();
+  try {
+    // Drop any cached Worker image tokens so private albums re-gate immediately
+    Object.keys(sessionStorage)
+      .filter(k => k.startsWith('worker_token_'))
+      .forEach(k => sessionStorage.removeItem(k));
+  } catch {}
+  window.location.href = '/';
 }
 
 // ── Mobile menu toggle ──
@@ -101,6 +122,20 @@ function initScrollAnimations() {
 const R2_URL_RE = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/;
 
 function gridUrl(fullUrl) {
+  if (!fullUrl) return fullUrl;
+  // Worker-proxied private image URL (/image?key=...): serve the grid/ variant
+  // so thumbnails and lightbox previews load small files, not full-res originals.
+  if (fullUrl.includes('/image?') && fullUrl.includes('key=')) {
+    try {
+      const u = new URL(fullUrl);
+      const key = u.searchParams.get('key');
+      if (key && !key.startsWith('grid/')) {
+        u.searchParams.set('key', 'grid/' + key);
+        return u.toString();
+      }
+    } catch { /* fall through */ }
+    return fullUrl;
+  }
   const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
   return m ? `${m[1]}grid/${m[2]}` : fullUrl;
 }
@@ -567,6 +602,16 @@ const TierAuth = {
         const local = JSON.parse(localStorage.getItem(this._localKey) || '[]');
         const mergedLocal = [...new Set([...local, ...audiences])];
         localStorage.setItem(this._localKey, JSON.stringify(mergedLocal));
+
+        // Mirror the password hashes for these audiences into localStorage so a
+        // remembered login can still exchange them for a Worker token in a fresh
+        // session (otherwise private images fall back to non-existent public URLs).
+        const sessHashes = JSON.parse(sessionStorage.getItem('tier_hashes') || '{}');
+        const persistHashes = JSON.parse(localStorage.getItem('tier_hashes_persist') || '{}');
+        for (const a of audiences) {
+          if (sessHashes[a]) persistHashes[a] = sessHashes[a];
+        }
+        localStorage.setItem('tier_hashes_persist', JSON.stringify(persistHashes));
       }
     } catch {}
   },
@@ -576,6 +621,8 @@ const TierAuth = {
     try {
       sessionStorage.removeItem(this._sessionKey);
       localStorage.removeItem(this._localKey);
+      sessionStorage.removeItem('tier_hashes');
+      localStorage.removeItem('tier_hashes_persist');
     } catch {}
   },
 
@@ -600,7 +647,9 @@ const TierAuth = {
   // Falls back up the hierarchy so Raveen's master 'family' hash works for any sub-tier album.
   getHash(audience) {
     try {
-      const stored = JSON.parse(sessionStorage.getItem('tier_hashes') || '{}');
+      const session = JSON.parse(sessionStorage.getItem('tier_hashes') || '{}');
+      const persist = JSON.parse(localStorage.getItem('tier_hashes_persist') || '{}');
+      const stored = { ...persist, ...session };
       return stored[audience] || stored['family:anger-ali'] || stored['family:fernando'] || stored['family'] || null;
     } catch { return null; }
   },

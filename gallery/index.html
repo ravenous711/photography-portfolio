@@ -18,10 +18,10 @@
     <ul class="nav-links">
       <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
-      <li><a href="/about/" data-nav-link data-nav="about">About</a></li>
-      <!-- "All albums" appears for granted friends; "Unlock" stays for family/client access codes -->
-      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">All albums</a></li>
-      <li id="nav-family-gallery-item" style="display:none"><a href="/family/" data-nav-link data-nav="family">Family Gallery</a></li>
+      <!-- "Full Album" appears for granted friends; "Unlock" stays for family/client access codes -->
+      <li id="nav-all-albums-item" style="display:none"><a href="/fullalbums/" id="nav-all-albums-link" data-nav-link data-nav="fullalbums">Full Album</a></li>
+      <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
+      <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
       <li id="nav-unlock-item" style="display:none"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
@@ -34,9 +34,9 @@
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
-    <a href="/about/">About</a>
-    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">All albums</a>
-    <a href="/family/" id="mobile-family-gallery-link" style="display:none">Family Gallery</a>
+    <a href="/fullalbums/" id="mobile-all-albums-link" style="display:none">Full Album</a>
+    <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Albums</a>
+    <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
     <a href="/unlock/" id="mobile-unlock-link" style="display:none">Unlock</a>
   </div>
 
