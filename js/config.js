@@ -121,7 +121,7 @@ const ALBUMS = [
   // ── HIDDEN CLIENT ALBUMS ──────────────────────────────────
   {
     id: 'joel-bday-2025',
-    title: 'Joel Birthday 2025',
+    title: 'Joel\'s Birthday',
     description: 'Joel\'s birthday — October 2025.',
     location: 'Detroit',
     date: 'October 2025',
