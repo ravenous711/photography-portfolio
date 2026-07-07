@@ -209,6 +209,9 @@
       if (canSeeAll || canSeeFernando) {
         renderFamilySection('Fernando Family', 'family:fernando', tokens);
       }
+
+      // Cards are rendered after async token fetch — register them with the fade-in observer.
+      observeFadeInElements(main);
     })();
   </script>
 </body>

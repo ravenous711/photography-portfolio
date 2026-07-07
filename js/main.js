@@ -101,20 +101,28 @@ function setActiveNavLink() {
 }
 
 // ── Intersection observer for fade-in animations ──
+let fadeInObserver = null;
+
+function observeFadeInElements(root) {
+  if (!fadeInObserver) return;
+  const scope = (root && root.querySelectorAll) ? root : document;
+  scope.querySelectorAll('.fade-in:not(.visible)').forEach(el => fadeInObserver.observe(el));
+}
+
 function initScrollAnimations() {
-  const observer = new IntersectionObserver(
+  fadeInObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
+          fadeInObserver.unobserve(entry.target);
         }
       });
     },
     { threshold: 0.1 }
   );
 
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  observeFadeInElements();
 }
 
 // ── R2 image URL helpers ──
