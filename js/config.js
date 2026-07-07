@@ -496,6 +496,7 @@ const ALBUMS = [
       `${R2_BASE_URL}/California/Yosemite/California-594.jpg`,
     ],
     curated: [
+      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-344.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-346.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-362.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-381.jpg',
