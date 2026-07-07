@@ -670,7 +670,7 @@
         if (hEl && total) {
           const prev       = hEl.textContent.split(' · ');
           const heartsPart = prev.find(p => p.includes('hearted')) || '';
-          const curPart    = newCurated > 0 ? `${newCurated} curated` : 'no curated set';
+          const curPart    = newCurated > 0 ? `${newCurated} curated` : 'none curated';
           hEl.textContent  = [prev[0], curPart, heartsPart].filter(Boolean).join(' · ');
         }
       }
@@ -797,7 +797,7 @@
       const curatedCount2 = curatedSet.size;
       const parts = [`${allPhotos.length} photos`];
       if (curatedCount2 > 0) parts.push(`${curatedCount2} curated`);
-      else parts.push('no curated set');
+      else parts.push('none curated');
       if (heartedCount) parts.push(`${heartedCount} hearted`);
       document.getElementById('detail-status').textContent = parts.join(' · ');
 
@@ -970,7 +970,7 @@
           : 'color:var(--color-gold)';
         const curatedLabel = curatedCount === 0
           ? 'no curated set'
-          : `${curatedCount} / ${count} curated`;
+          : `${curatedCount} curated`;
 
         const row = document.createElement('div');
         row.className = 'album-row';
