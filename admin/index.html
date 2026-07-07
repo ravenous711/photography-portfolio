@@ -693,11 +693,12 @@
 
     // ── Justified layout (mirrors album page) ────────────────────────────────
     function runJustifiedLayout(grid) {
-      const items = Array.from(grid.querySelectorAll('.photo-thumb'));
-      if (!items.length) { grid.style.height = '0px'; return; }
+      const allItems     = Array.from(grid.querySelectorAll('.photo-thumb'));
+      const visibleItems = allItems.filter(el => el.style.display !== 'none');
+      if (!visibleItems.length) { grid.style.height = '0px'; return; }
       const containerWidth = grid.offsetWidth;
       if (!containerWidth) return;
-      const aspectRatios = items.map(item => {
+      const aspectRatios = visibleItems.map(item => {
         const img = item.querySelector('img');
         if (img && img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
         return 1.5;
@@ -709,7 +710,8 @@
         containerPadding: 0,
       });
       grid.style.height = layout.containerHeight + 'px';
-      items.forEach((item, i) => {
+      // Position only visible items; hidden items are left off-screen via display:none
+      visibleItems.forEach((item, i) => {
         const box = layout.boxes[i];
         item.style.left   = box.left   + 'px';
         item.style.top    = box.top    + 'px';
