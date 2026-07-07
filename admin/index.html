@@ -136,6 +136,17 @@
     }
 
     /* ── Album directory rows ── */
+    .album-section-heading {
+      font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--color-muted); padding: 1.75rem 0 0.5rem;
+      border-top: 1px solid var(--color-border); margin-top: 0.5rem;
+    }
+    .album-section-heading:first-child { border-top: none; padding-top: 0.25rem; }
+    .album-group-heading {
+      font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--color-muted); opacity: 0.55;
+      padding: 1rem 0 0.25rem 0.75rem;
+    }
     .album-row {
       display: flex; align-items: center; gap: 0.75rem;
       padding: 0.85rem 0;
@@ -144,12 +155,14 @@
       transition: opacity 0.15s;
       text-decoration: none;
     }
+    .album-row.indented { padding-left: 0.75rem; }
     .album-row:hover { opacity: 0.65; }
     .album-row-title {
       font-family: var(--font-serif);
       font-size: 1.2rem; font-weight: 300; letter-spacing: 0.04em;
       color: var(--color-text); flex: 1; margin: 0;
     }
+    .album-row.indented .album-row-title { font-size: 1rem; }
     .album-row-meta {
       font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--color-muted); white-space: nowrap;
@@ -948,6 +961,7 @@
     // ── Render (directory list) ───────────────────────────────────────────────
     function renderAlbums() {
       const container = document.getElementById('album-list');
+      container.innerHTML = '';
 
       const leafAlbums = ALBUMS.filter(a =>
         a.type !== 'group' &&
@@ -960,32 +974,113 @@
         return;
       }
 
-      leafAlbums.forEach(album => {
-        const photos      = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
+      function makeRow(album, indented = false) {
+        const photos       = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
         const curatedCount = Array.isArray(album.curated) ? album.curated.length : 0;
         const count        = photos.length;
-        const audienceBadge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
         const curatedStyle = curatedCount === 0
           ? 'color:var(--color-muted);opacity:0.55'
           : 'color:var(--color-gold)';
-        const curatedLabel = curatedCount === 0
-          ? 'no curated set'
-          : `${curatedCount} curated`;
-
+        const curatedLabel = curatedCount === 0 ? 'no curated set' : `${curatedCount} curated`;
         const row = document.createElement('div');
-        row.className = 'album-row';
+        row.className = 'album-row' + (indented ? ' indented' : '');
         row.innerHTML = `
           <span class="album-row-title">${album.title}</span>
           <span class="album-row-meta">
-            ${count} photo${count !== 1 ? 's' : ''} · <span style="${curatedStyle}">${curatedLabel}</span>${audienceBadge}
+            ${count} photo${count !== 1 ? 's' : ''} · <span style="${curatedStyle}">${curatedLabel}</span>
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="album-row-chevron" aria-hidden="true">
             <path d="M9 18l6-6-6-6"/>
           </svg>
         `;
         row.addEventListener('click', () => openAlbumDetail(album));
-        container.appendChild(row);
-      });
+        return row;
+      }
+
+      function sectionHeading(label) {
+        const el = document.createElement('div');
+        el.className = 'album-section-heading';
+        el.textContent = label;
+        return el;
+      }
+
+      function groupHeading(label) {
+        const el = document.createElement('div');
+        el.className = 'album-group-heading';
+        el.textContent = label;
+        return el;
+      }
+
+      // ── Family albums ──────────────────────────────────────────────────────
+      const familyAlbums = leafAlbums.filter(a => String(a.audience || '').startsWith('family'));
+      if (familyAlbums.length) {
+        container.appendChild(sectionHeading('Family'));
+        // Group by year (extracted from id or title)
+        const byYear = {};
+        familyAlbums.forEach(a => {
+          const m = (a.id + ' ' + a.title).match(/20\d\d/);
+          const yr = m ? m[0] : 'Other';
+          (byYear[yr] = byYear[yr] || []).push(a);
+        });
+        Object.keys(byYear).sort().forEach(yr => {
+          container.appendChild(groupHeading(yr));
+          byYear[yr].forEach(a => container.appendChild(makeRow(a, true)));
+        });
+      }
+
+      // ── Public / Friends albums ────────────────────────────────────────────
+      const publicAlbums = leafAlbums.filter(a => !String(a.audience || '').startsWith('family'));
+      if (publicAlbums.length) {
+        container.appendChild(sectionHeading('Public · Friends'));
+
+        // Build parent → children map from group albums
+        const groupMap = {};
+        ALBUMS.filter(a => a.type === 'group').forEach(g => {
+          (g.subAlbums || []).forEach(childId => { groupMap[childId] = g; });
+        });
+
+        // Separate top-level (no parent group) from children
+        const topLevel  = publicAlbums.filter(a => !groupMap[a.id]);
+        const childIds  = new Set(publicAlbums.filter(a => groupMap[a.id]).map(a => a.id));
+
+        // Group top-level by year
+        const byYear = {};
+        topLevel.forEach(a => {
+          const m = (a.id + ' ' + a.title).match(/20\d\d/);
+          const yr = m ? m[0] : 'Other';
+          (byYear[yr] = byYear[yr] || []).push(a);
+        });
+
+        // Also collect group albums that have children in leafAlbums
+        const usedGroups = new Set();
+        publicAlbums.filter(a => groupMap[a.id]).forEach(a => {
+          const g = groupMap[a.id];
+          const m = (g.id + ' ' + g.title).match(/20\d\d/);
+          const yr = m ? m[0] : 'Other';
+          if (!usedGroups.has(g.id)) {
+            usedGroups.add(g.id);
+            (byYear[yr] = byYear[yr] || [])._groups = (byYear[yr]._groups || new Map());
+            byYear[yr]._groups.set(g.id, { group: g, children: [] });
+          }
+          byYear[yr]._groups.get(g.id).children.push(a);
+        });
+
+        Object.keys(byYear).sort().reverse().forEach(yr => {
+          container.appendChild(groupHeading(yr));
+          // Render standalone albums for this year
+          (byYear[yr] || []).forEach(a => container.appendChild(makeRow(a)));
+          // Render grouped albums (e.g. Italy → Venice, Florence…)
+          (byYear[yr]._groups || new Map()).forEach(({ group, children }) => {
+            const subHeading = document.createElement('div');
+            subHeading.className = 'album-group-heading';
+            subHeading.style.paddingLeft = '0';
+            subHeading.style.opacity = '0.75';
+            subHeading.textContent = group.title;
+            container.appendChild(subHeading);
+            children.forEach(a => container.appendChild(makeRow(a, true)));
+          });
+        });
+      }
     }
 
     // ── Commit Deletions ─────────────────────────────────────────────────────
