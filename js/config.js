@@ -647,7 +647,7 @@ const ALBUMS = [
     type: 'group',
     audience: 'friends',
     protected: false,
-    filmRollsDesc: 'The film shot across this trip categorized by the roll. The same frames also appear in the city albums above, placed where they were made.',
+    filmRollsDesc: 'See all the film rolls used during the trip! These are also sprinkled into the respective cities',
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
     subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome'],
     coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,

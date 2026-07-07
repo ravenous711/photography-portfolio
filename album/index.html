@@ -997,7 +997,7 @@
 
       const layout = justifiedLayout(aspectRatios, {
         containerWidth: containerWidth,
-        targetRowHeight: window.innerWidth <= 640 ? 200 : window.innerWidth <= 1024 ? 280 : 420,
+        targetRowHeight: window.innerWidth <= 640 ? 175 : window.innerWidth <= 1024 ? 235 : 340,
         boxSpacing: window.innerWidth <= 640 ? 6 : 12,
         containerPadding: 0,
       });
@@ -1043,7 +1043,9 @@
     }
 
     function determineInitialFullView() {
-      hasCurated = Array.isArray(album.curated) && album.curated.length > 0;
+      const hasCuratedSet = Array.isArray(album.curated) && album.curated.length > 0;
+      // Film-roll pages are always the full roll — curated subset is for city albums only
+      hasCurated = hasCuratedSet && !isFilmRollAlbum(album);
       if (!hasCurated) {
         fullView = true;
         return;
