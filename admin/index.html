@@ -597,6 +597,9 @@
       }
 
       updateToolbar();
+      // Re-apply the curated filter so the grid updates live while the filter is active
+      const filterFn = document.getElementById('curated-filter-btn')?._applyFilter;
+      if (filterFn) filterFn();
     }
 
     // ── Save all pending curated changes ─────────────────────────────────────
@@ -796,9 +799,36 @@
       if (heartedCount) parts.push(`${heartedCount} hearted`);
       document.getElementById('detail-status').textContent = parts.join(' · ');
 
-      // Legend
+      // Legend + curated filter toggle
+      let curatedFilterActive = false;
       const legend = document.createElement('div');
       legend.style.cssText = 'display:flex;align-items:center;gap:1.25rem;margin-bottom:1rem;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-muted);flex-wrap:wrap';
+
+      const filterBtn = document.createElement('button');
+      filterBtn.id = 'curated-filter-btn';
+      filterBtn.textContent = 'Show curated only';
+      filterBtn.style.cssText = 'margin-left:auto;background:transparent;border:1px solid var(--color-border);color:var(--color-muted);padding:3px 10px;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.15s,color 0.15s';
+
+      function applyCuratedFilter() {
+        const thumbs = document.querySelectorAll('#pane-album-detail .photo-thumb');
+        thumbs.forEach(th => {
+          const isCurated = th.classList.contains('is-curated') || th.classList.contains('curate-pending-add');
+          th.style.display = curatedFilterActive && !isCurated ? 'none' : '';
+        });
+        // Force re-layout since visible set changed
+        const g = document.querySelector('#pane-album-detail .photo-grid');
+        if (g) runJustifiedLayout(g);
+        filterBtn.style.background = curatedFilterActive ? 'var(--color-gold)' : 'transparent';
+        filterBtn.style.color      = curatedFilterActive ? '#000' : 'var(--color-muted)';
+        filterBtn.style.borderColor = curatedFilterActive ? 'var(--color-gold)' : 'var(--color-border)';
+        filterBtn.textContent = curatedFilterActive ? 'Show all photos' : 'Show curated only';
+      }
+      filterBtn._applyFilter = applyCuratedFilter;
+      filterBtn.addEventListener('click', () => {
+        curatedFilterActive = !curatedFilterActive;
+        applyCuratedFilter();
+      });
+
       legend.innerHTML = `
         <span style="display:flex;align-items:center;gap:0.45rem">
           <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.75);color:#e85d6e;padding:2px 7px;border-radius:10px;font-size:0.65rem">
@@ -819,6 +849,7 @@
           Hover + click checkbox to mark for deletion
         </span>
       `;
+      legend.appendChild(filterBtn);
       container.appendChild(legend);
 
       // Grid wrapper — class album-section + data-album-id so existing savePendingCurated queries work
