@@ -376,6 +376,7 @@ const ALBUMS = [
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-362.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-381.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-404.jpg',
+      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-407.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-419.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-426.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-453.jpg',
@@ -383,6 +384,7 @@ const ALBUMS = [
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-488.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-517.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-540.jpg',
+      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-547.jpg',
     ],
   },
 
