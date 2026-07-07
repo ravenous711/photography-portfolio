@@ -184,7 +184,7 @@
         const count = byYear.get(year).length;
         grid.className = 'album-grid gallery-album-grid fade-in';
         if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
-        byYear.get(year).forEach(album => {
+        byYear.get(year).sort(compareAlbumsByDate).forEach(album => {
           grid.appendChild(renderAlbumCard(album, tokens[audienceFilter]));
         });
         main.appendChild(grid);

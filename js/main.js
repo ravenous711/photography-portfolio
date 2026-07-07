@@ -238,6 +238,27 @@ function albumYear(album) {
   return years ? years[years.length - 1] : null;
 }
 
+const MONTH_SORT_ORDER = {
+  january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
+  july: 7, august: 8, september: 9, october: 10, november: 11, december: 12,
+};
+
+/** Sort key for chronological album order within a year (year×100 + month). */
+function albumSortKey(album) {
+  const date = (album?.date || '').toLowerCase();
+  const yearMatch = date.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[0], 10) : 0;
+  const monthMatch = date.match(
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/
+  );
+  const month = monthMatch ? (MONTH_SORT_ORDER[monthMatch[1]] || 0) : 0;
+  return year * 100 + month;
+}
+
+function compareAlbumsByDate(a, b) {
+  return albumSortKey(a) - albumSortKey(b);
+}
+
 function albumDateline(album, { withDesc = false } = {}) {
   if (album.dateline) return album.dateline;
 
