@@ -665,9 +665,10 @@
         const total = document.querySelectorAll('#pane-album-detail .photo-thumb').length;
         const hEl = document.getElementById('detail-status');
         if (hEl && total) {
-          const prev = hEl.textContent.split(' · ');
+          const prev       = hEl.textContent.split(' · ');
           const heartsPart = prev.find(p => p.includes('hearted')) || '';
-          hEl.textContent = [prev[0], heartsPart].filter(Boolean).join(' · ');
+          const curPart    = newCurated > 0 ? `${newCurated} curated` : 'no curated set';
+          hEl.textContent  = [prev[0], curPart, heartsPart].filter(Boolean).join(' · ');
         }
       }
     }
@@ -787,10 +788,13 @@
       const heartMap  = new Map(tally.map(({ photoUrl, count }) => [photoUrl, count]));
       const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
 
-      const heartedCount = tally.length;
-      document.getElementById('detail-status').textContent = heartedCount
-        ? `${allPhotos.length} photos · ${heartedCount} hearted`
-        : `${allPhotos.length} photos`;
+      const heartedCount  = tally.length;
+      const curatedCount2 = curatedSet.size;
+      const parts = [`${allPhotos.length} photos`];
+      if (curatedCount2 > 0) parts.push(`${curatedCount2} curated`);
+      else parts.push('no curated set');
+      if (heartedCount) parts.push(`${heartedCount} hearted`);
+      document.getElementById('detail-status').textContent = parts.join(' · ');
 
       // Legend
       const legend = document.createElement('div');
@@ -927,13 +931,19 @@
         const curatedCount = Array.isArray(album.curated) ? album.curated.length : 0;
         const count        = photos.length;
         const audienceBadge = album.hidden ? ' · Hidden' : album.protected ? ' · Protected' : '';
+        const curatedStyle = curatedCount === 0
+          ? 'color:var(--color-muted);opacity:0.55'
+          : 'color:var(--color-gold)';
+        const curatedLabel = curatedCount === 0
+          ? 'no curated set'
+          : `${curatedCount} / ${count} curated`;
 
         const row = document.createElement('div');
         row.className = 'album-row';
         row.innerHTML = `
           <span class="album-row-title">${album.title}</span>
           <span class="album-row-meta">
-            ${count} photo${count !== 1 ? 's' : ''}${curatedCount > 0 ? ` · ${curatedCount} curated` : ''}${audienceBadge}
+            ${count} photo${count !== 1 ? 's' : ''} · <span style="${curatedStyle}">${curatedLabel}</span>${audienceBadge}
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="album-row-chevron" aria-hidden="true">
             <path d="M9 18l6-6-6-6"/>
