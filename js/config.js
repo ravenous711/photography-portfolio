@@ -369,10 +369,10 @@ const ALBUMS = [
     ],
   },
 
-  // ── APRIL IN MARYLAND 2025 — Family ─────────────────────────
+  // ── VISITING ELENA IN MD 2025 — Family ──────────────────────
   {
     id: 'elena-visit-2025',
-    title: 'April in Maryland',
+    title: 'Visiting Elena in MD',
     description: 'Elena visit — April 2025.',
     location: 'Maryland',
     date: 'April 2025',

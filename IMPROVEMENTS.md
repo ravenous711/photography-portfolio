@@ -47,14 +47,14 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums. Remove rows when fully done.
 
-*Last updated: Jul 8 2026 (~04:02 UTC) — Thanksgiving complete; April originals in progress.*
+*Last updated: Jul 8 2026 (~04:05 UTC) — April originals ~38% done.*
 
 ### In progress
 
 | ID | Album | Audience | Photos | Config | R2 folder | R2 originals | R2 grids | Status |
 |----|-------|----------|--------|--------|-----------|--------------|----------|--------|
-| MD-25 | **April in Maryland** | `family` | 50 (1★) | ✅ `main` | `Elena-Visit-2025/` | **~16/50** 🔄 | ✅ 50/50 | IN PROGRESS |
-| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | ✅ `main` | `Ali-Visit-2025/` | **~14/70** 🔄 | ✅ 70/70 | IN PROGRESS |
+| MD-25 | **Visiting Elena in MD** | `family` | 50 (1★) | ✅ `main` | `Elena-Visit-2025/` | **~19/50** 🔄 | ✅ 50/50 | IN PROGRESS |
+| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | ✅ `main` | `Ali-Visit-2025/` | **~20/70** 🔄 | ✅ 70/70 | IN PROGRESS |
 
 ### Queued (approved, not started)
 
@@ -72,7 +72,7 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 **Local sources**
 - Elena's Birthday: `/Volumes/PhotosSSD/Photos/2025/10 - 0ctober/24-Elenas Bday` → `/tmp/elenas-bday-3star.txt`
 - Thanksgiving: `/Volumes/PhotosSSD/Photos/2025/11-November/Thanksgiving` → `/tmp/thanksgiving-2star.txt`
-- April in Maryland: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Elena Visit` → `/tmp/elena-visit-1star.txt`
+- Visiting Elena in MD: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Elena Visit` → `/tmp/elena-visit-1star.txt`
 - Ali's in Michigan: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Ali Visit` (70× `.jpg`)
 
 **Unlock / URLs**
