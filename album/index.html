@@ -458,6 +458,9 @@
               window.location.replace(Routes.group(album.parentId));
             }
           }
+        } else if (album.familySlug) {
+          document.getElementById('back-link').href = '/familyalbums/';
+          document.getElementById('back-link-sticky').href = '/familyalbums/';
         }
 
         // ── Auth check ──

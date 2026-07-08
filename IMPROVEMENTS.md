@@ -47,15 +47,14 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums. Remove rows when fully done.
 
-*Last updated: Jul 8 2026 (~04:00 UTC) — 3-way parallel originals in flight; both April grids done.*
+*Last updated: Jul 8 2026 (~04:02 UTC) — Thanksgiving complete; April originals in progress.*
 
 ### In progress
 
 | ID | Album | Audience | Photos | Config | R2 folder | R2 originals | R2 grids | Status |
 |----|-------|----------|--------|--------|-----------|--------------|----------|--------|
-| TG-25 | [Thanksgiving](https://photography-portfolio-pi-blush.vercel.app/familyalbums/2025/thanksgiving/) | `family` | 82 (2★) | ✅ `main` | `Thanksgiving-2025/` | **~77/82** 🔄 | ✅ 82/82 | IN PROGRESS (~5 left) |
-| MD-25 | **April in Maryland** | `family` | 50 (1★) | ✅ pending push | `Elena-Visit-2025/` | **~5/50** 🔄 | ✅ 50/50 | IN PROGRESS |
-| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | ✅ pending push | `Ali-Visit-2025/` | **~6/70** 🔄 | ✅ 70/70 | IN PROGRESS |
+| MD-25 | **April in Maryland** | `family` | 50 (1★) | ✅ `main` | `Elena-Visit-2025/` | **~16/50** 🔄 | ✅ 50/50 | IN PROGRESS |
+| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | ✅ `main` | `Ali-Visit-2025/` | **~14/70** 🔄 | ✅ 70/70 | IN PROGRESS |
 
 ### Queued (approved, not started)
 
@@ -67,6 +66,7 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 |-------|----------|-------|
 | **Misc Film Rolls 2026** | `public` | 49 originals + grids; group first in 2026 gallery. `main` @ `2b590d8`. |
 | **Elena's Birthday** | `family` | 57 originals + grids ✅ (`DSCF6794.JPG` blocker cleared parallel retry). |
+| **Thanksgiving** | `family` | 82 originals + 82 grids ✅ (0 failures). |
 | Fernando password | — | Consolidated to single `family` tier; password `fernando-family`; Worker `FAMILY_HASH` updated. |
 
 **Local sources**

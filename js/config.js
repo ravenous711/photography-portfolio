@@ -380,7 +380,7 @@ const ALBUMS = [
     audience: 'family',
     protected: false,
     familySlug: 'april-in-maryland',
-    coverImage: `${R2_BASE_URL}/Elena-Visit-2025/20250419-_DSF3267.jpg`,
+    coverImage: `${R2_BASE_URL}/Elena-Visit-2025/20250419-_DSF3483.jpg`,
     photos: [
       `${R2_BASE_URL}/Elena-Visit-2025/20250419-_DSF3267.jpg`,
       `${R2_BASE_URL}/Elena-Visit-2025/20250419-_DSF3277.jpg`,
@@ -446,7 +446,7 @@ const ALBUMS = [
     audience: 'family',
     protected: false,
     familySlug: 'alis-in-michigan',
-    coverImage: `${R2_BASE_URL}/Ali-Visit-2025/20250412-_DSF2703.jpg`,
+    coverImage: `${R2_BASE_URL}/Ali-Visit-2025/20250413-_DSF3176.jpg`,
     photos: [
       `${R2_BASE_URL}/Ali-Visit-2025/20250412-_DSF2703.jpg`,
       `${R2_BASE_URL}/Ali-Visit-2025/20250412-_DSF2718.jpg`,
