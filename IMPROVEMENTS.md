@@ -47,27 +47,26 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums. Remove rows when fully done.
 
-*Last updated: Jul 8 2026 (~03:45 UTC) — refresh R2 counts after each upload batch.*
+*Last updated: Jul 8 2026 (~04:00 UTC) — 3-way parallel originals in flight; both April grids done.*
 
 ### In progress
 
 | ID | Album | Audience | Photos | Config | R2 folder | R2 originals | R2 grids | Status |
 |----|-------|----------|--------|--------|-----------|--------------|----------|--------|
-| ELENA-25 | [Elena's Birthday](https://photography-portfolio-pi-blush.vercel.app/familyalbums/2025/elenas-bday/) | `family` | 57 (3★) | ✅ `main` | `Elenas-Bday-2025/` | **56/57** — retry **`DSCF6794.JPG`** | ✅ 57/57 | IN PROGRESS |
-| TG-25 | [Thanksgiving](https://photography-portfolio-pi-blush.vercel.app/familyalbums/2025/thanksgiving/) | `family` | 82 (2★) | ✅ `main` | `Thanksgiving-2025/` | **~44/82** 🔄 uploading | ✅ 82/82 | IN PROGRESS |
+| TG-25 | [Thanksgiving](https://photography-portfolio-pi-blush.vercel.app/familyalbums/2025/thanksgiving/) | `family` | 82 (2★) | ✅ `main` | `Thanksgiving-2025/` | **~77/82** 🔄 | ✅ 82/82 | IN PROGRESS (~5 left) |
+| MD-25 | **April in Maryland** | `family` | 50 (1★) | ✅ pending push | `Elena-Visit-2025/` | **~5/50** 🔄 | ✅ 50/50 | IN PROGRESS |
+| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | ✅ pending push | `Ali-Visit-2025/` | **~6/70** 🔄 | ✅ 70/70 | IN PROGRESS |
 
 ### Queued (approved, not started)
 
-| ID | Album | Audience | Photos | Config (planned) | R2 folder (planned) | Status |
-|----|-------|----------|--------|------------------|----------------------|--------|
-| MD-25 | **April in Maryland** | `family` | 50 (1★ only) | `id: elena-visit-2025` · `familySlug: april-in-maryland` · `location: Maryland` · `date: April 2025` | `Elena-Visit-2025/` | TODO — after TG-25 + `DSCF6794` retry |
-| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | `id: ali-visit-2025` · `familySlug: alis-in-michigan` · `location: Michigan` · `date: April 2025` | `Ali-Visit-2025/` | TODO — after MD-25 |
+*(none — MD-25 and MI-25 now uploading)*
 
 ### Done this session (R2 + config complete)
 
 | Album | Audience | Notes |
 |-------|----------|-------|
 | **Misc Film Rolls 2026** | `public` | 49 originals + grids; group first in 2026 gallery. `main` @ `2b590d8`. |
+| **Elena's Birthday** | `family` | 57 originals + grids ✅ (`DSCF6794.JPG` blocker cleared parallel retry). |
 | Fernando password | — | Consolidated to single `family` tier; password `fernando-family`; Worker `FAMILY_HASH` updated. |
 
 **Local sources**
@@ -80,11 +79,9 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 - Family: `/unlock/` → `fernando-family` → `/familyalbums/` (all family albums in one list)
 
 **Agent next steps (strict order)**
-1. Let Thanksgiving originals finish (~82, `sleep 10`).
-2. Retry **`DSCF6794.JPG`** → mark ELENA-25 DONE when 57/57.
-3. **April in Maryland** — filter 1★, upload, config, push if asked.
-4. **Ali's in Michigan** — all 70, upload, config, push if asked.
-5. Mark rows DONE + **Changelog** line each; remove from In progress / Queued.
+1. Let TG-25 / MD-25 / MI-25 uploads finish; verify manifests.
+2. Add **config.js** entries (or placeholders) for MD-25 + MI-25; push if asked.
+3. Mark rows DONE + **Changelog** line each.
 
 **Upload pacing (Jul 2026):** `sleep 10` between large originals; retries on `fetch failed`. Skill updated (`.cursor/skills/add-portfolio-album/SKILL.md`).
 
