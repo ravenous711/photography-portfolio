@@ -949,6 +949,7 @@ const ALBUMS = [
     title: 'Misc Film Rolls',
     description: 'Standalone film rolls from 2026.',
     date: 'July 2026',
+    dateline: false,
     type: 'group',
     audience: 'public',
     protected: false,

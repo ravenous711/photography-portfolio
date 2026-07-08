@@ -256,6 +256,7 @@ function compareAlbumsByDate(a, b) {
 }
 
 function albumDateline(album, { withDesc = false } = {}) {
+  if (album.dateline === false) return '';
   if (album.dateline) return album.dateline;
 
   if (isEmptyAlbum(album)) {
