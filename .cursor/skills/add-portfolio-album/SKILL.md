@@ -24,19 +24,19 @@ Workflow for adding a new album to Raveen's photography portfolio. Always follow
 |---|---|---|---|---|
 | `public` | Everyone | public | public (`grid/...`) | `/gallery/` |
 | `friends` | Friends password (legacy tier) | public | public (`grid/...`) | `/gallery/` (full album via in-page toggle) |
-| `family` | Raveen master password | private | private (`grid/...`) | `/family/` (both groups) |
-| `family:anger-ali` | Anger-Ali family password | private | private (`grid/...`) | `/family/` (Anger-Ali section) |
-| `family:fernando` | Fernando family password | private | private (`grid/...`) | `/family/` (Fernando section) |
+| `family` | Family password | private | private (`grid/...`) | `/family/` |
 | `client:<name>` | Client access code | private | private (`grid/...`) | admin only |
 
 **Always set `hidden: true` for family and client albums.**
-No `PASSWORD_TIERS` edit needed for family sub-tiers — they are already configured.
+Family albums use `audience: 'family'` — password hash is already in `PASSWORD_TIERS`.
 
 ## Cloudflare rate limit behaviour
 - R2 API rate-limits sequential uploads — always auto-retry (see helper below)
-- During an active session, use `sleep 15` between originals, `sleep 10` between grids
-- **Never use `sleep 5`** — too fast, causes consistent failures
+- During an active session, use **`sleep 10` between originals** (~26MB JPGs), `sleep 10` between grids
+- Jul 2026 tuning: 8s between originals caused frequent `fetch failed` retries; 14–15s was very stable; **10s is the practical default** (retries still handle transient blips)
+- Avoid `sleep 5` between large originals unless you accept more retries
 - **Never interleave orig/grid per file** — run as **two parallel processes**: originals sequential in one, grids parallel in the other
+- **Check `IMPROVEMENTS.md` → Active album session** for in-flight uploads and the album queue before starting new work
 
 ## Path gotchas (macOS + zsh)
 
@@ -140,7 +140,7 @@ IFS=$'\n' FILES=($(printf '%s\n' "${FILES[@]}" | sort)); unset IFS
 
 for f in "${FILES[@]}"; do
   upload_with_retry "$DEST/$(basename "$f")" "$f" "$(basename "$f")" || fail=$((fail+1))
-  sleep 15
+  sleep 10
 done
 echo "=== Done. Failures: $fail ==="
 ```
@@ -219,7 +219,7 @@ Use this for a single event with mixed digital and film:
   description: '<Short description.>',
   location: '<City>',
   date: '<Month YYYY>',
-  audience: 'family:anger-ali',        // or family:fernando / friends / public
+  audience: 'family',                  // or friends / public / client:<name>
   hidden: true,                        // always true for family albums
   protected: false,
   familySlug: 'short-descriptive-slug', // gives URL /familyalbums/YYYY/short-descriptive-slug/

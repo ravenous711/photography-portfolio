@@ -35,6 +35,59 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 - **Risk:** Low (isolated) · Med (touches shared code) · High (broad refactor)
 - **Status:** `TODO` · `IN PROGRESS` · `DONE` · `WON'T DO`
 
+### Album adds (agent)
+- Use the **add-portfolio-album** skill (`.cursor/skills/add-portfolio-album/SKILL.md`).
+- **Check [Active album session](#active-album-session) first** — it tracks in-flight R2 uploads,
+  config/deploy state, and the queue. Update it as you go (status + changelog when done).
+
+---
+
+## Active album session
+
+Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
+**Update this section** when starting, finishing, or queueing albums. Remove rows when fully done.
+
+*Last updated: Jul 8 2026 (~03:45 UTC) — refresh R2 counts after each upload batch.*
+
+### In progress
+
+| ID | Album | Audience | Photos | Config | R2 folder | R2 originals | R2 grids | Status |
+|----|-------|----------|--------|--------|-----------|--------------|----------|--------|
+| ELENA-25 | [Elena's Birthday](https://photography-portfolio-pi-blush.vercel.app/familyalbums/2025/elenas-bday/) | `family` | 57 (3★) | ✅ `main` | `Elenas-Bday-2025/` | **56/57** — retry **`DSCF6794.JPG`** | ✅ 57/57 | IN PROGRESS |
+| TG-25 | [Thanksgiving](https://photography-portfolio-pi-blush.vercel.app/familyalbums/2025/thanksgiving/) | `family` | 82 (2★) | ✅ `main` | `Thanksgiving-2025/` | **~44/82** 🔄 uploading | ✅ 82/82 | IN PROGRESS |
+
+### Queued (approved, not started)
+
+| ID | Album | Audience | Photos | Config (planned) | R2 folder (planned) | Status |
+|----|-------|----------|--------|------------------|----------------------|--------|
+| MD-25 | **April in Maryland** | `family` | 50 (1★ only) | `id: elena-visit-2025` · `familySlug: april-in-maryland` · `location: Maryland` · `date: April 2025` | `Elena-Visit-2025/` | TODO — after TG-25 + `DSCF6794` retry |
+| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | `id: ali-visit-2025` · `familySlug: alis-in-michigan` · `location: Michigan` · `date: April 2025` | `Ali-Visit-2025/` | TODO — after MD-25 |
+
+### Done this session (R2 + config complete)
+
+| Album | Audience | Notes |
+|-------|----------|-------|
+| **Misc Film Rolls 2026** | `public` | 49 originals + grids; group first in 2026 gallery. `main` @ `2b590d8`. |
+| Fernando password | — | Consolidated to single `family` tier; password `fernando-family`; Worker `FAMILY_HASH` updated. |
+
+**Local sources**
+- Elena's Birthday: `/Volumes/PhotosSSD/Photos/2025/10 - 0ctober/24-Elenas Bday` → `/tmp/elenas-bday-3star.txt`
+- Thanksgiving: `/Volumes/PhotosSSD/Photos/2025/11-November/Thanksgiving` → `/tmp/thanksgiving-2star.txt`
+- April in Maryland: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Elena Visit` → `/tmp/elena-visit-1star.txt`
+- Ali's in Michigan: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Ali Visit` (70× `.jpg`)
+
+**Unlock / URLs**
+- Family: `/unlock/` → `fernando-family` → `/familyalbums/` (all family albums in one list)
+
+**Agent next steps (strict order)**
+1. Let Thanksgiving originals finish (~82, `sleep 10`).
+2. Retry **`DSCF6794.JPG`** → mark ELENA-25 DONE when 57/57.
+3. **April in Maryland** — filter 1★, upload, config, push if asked.
+4. **Ali's in Michigan** — all 70, upload, config, push if asked.
+5. Mark rows DONE + **Changelog** line each; remove from In progress / Queued.
+
+**Upload pacing (Jul 2026):** `sleep 10` between large originals; retries on `fetch failed`. Skill updated (`.cursor/skills/add-portfolio-album/SKILL.md`).
+
 ---
 
 ## Status board
@@ -323,6 +376,18 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **AUTH — Single family tier** — Jul 2026.
+  Removed `family:fernando` / `family:anger-ali` sub-groups; one `family` audience + password `fernando-family`. Worker `FAMILY_HASH` updated; all family albums use `audience: 'family'`.
+
+- **Runbook — Active album session board** — Jul 2026.
+  Added living tracker for multi-album R2 work (in progress / queued / done); Fernando Family batch + April/Michigan queue documented.
+
+- **Albums — Fernando Family (config on main)** — Jul 2026.
+  Elena's Birthday (57× 3★) + Thanksgiving (82× 2★) added to `config.js`; private R2 uploads in progress. Fernando password confirmed + Worker secret set. Push: `c5801fb`.
+
+- **Album — Misc Film Rolls 2026** — Jul 2026.
+  Public group + Ultramax/T-Max sub-albums; reordered first in 2026 gallery section. Push: `2b590d8`.
 
 - **FEAT — In-page full album toggle (replaces keyed hub)** — Jul 2026.
   Removed gated `/fullalbums/?k=` hub and "Full Album" nav. Album pages default to curated set; public "See full album" / "See favorites" toggle (top + bottom) expands in place with `?full=1`. Full view enables anonymous heart voting + instructional note for all visitors. Old `/fullalbums/` URLs redirect to `/gallery/`.

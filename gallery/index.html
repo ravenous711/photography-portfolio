@@ -71,7 +71,7 @@
     // ── Render album grid grouped by year ──
     const main = document.getElementById('gallery-main');
 
-    const canSeeFamily = TierAuth.canAccess('family') || TierAuth.canAccess('family:anger-ali') || TierAuth.canAccess('family:fernando');
+    const canSeeFamily = TierAuth.canAccess('family');
 
     if (canSeeFamily) {
       const unlockItem   = document.getElementById('nav-unlock-item');

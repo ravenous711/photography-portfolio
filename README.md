@@ -25,7 +25,7 @@ The site has four audience tiers. Every album in `js/config.js` has an `audience
 | Tier | Password | Hash |
 |---|---|---|
 | Friends | see 1Password | `a8b3ec8e...` |
-| Family | see 1Password | `29637b2d...` |
+| Family | see 1Password | `c403bc24...` |
 | Admin panel | see 1Password | `7a65b8f6...` |
 
 Passwords are stored in 1Password only — **never in the repo** (not even in comments). Only SHA-256 hashes live in `PASSWORD_TIERS` in `js/config.js`.

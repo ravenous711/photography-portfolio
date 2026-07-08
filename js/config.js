@@ -41,13 +41,10 @@ const WORKER_BASE_URL = (() => {
 // audience — who can see an album's full content:
 //   'public'             no unlock needed; curated set shown to all, full set shown if no curated
 //   'friends'            full content after entering friends password (D1 client-side gating)
-//   'family'             master key — grants access to all family sub-tiers (Raveen only)
-//   'family:anger-ali'   Anger-Ali family group — private R2, via Worker
-//   'family:fernando'    Fernando family group  — private R2, via Worker
+//   'family'             family password — private R2 albums, via Worker
 //   'client:<name>'      full content after entering that client's password (D2 private)
 //
-// Tier inheritance: family (master) grants all sub-tiers + friends.
-//                   family:anger-ali / family:fernando each grant friends.
+// Tier inheritance: family grants friends access.
 //
 // PASSWORD_TIERS maps SHA-256(password) → array of audiences granted.
 // Passwords themselves are NEVER stored here — only their hashes.
@@ -65,12 +62,8 @@ const PASSWORD_TIERS = {
   //
   // Friends capability-link key (used in /fullalbums/...?k=KEY share links):
   '1cf3ce8ffa39c24b2ae128eefe6d292f8b18136716da8026d35baa0d67ec35a4': ['friends'],
-  // Master family password — grants all sub-tiers (Raveen only; stored in 1Password):
-  '29637b2dac604d65e5b1c095b9911b51624cf76deb84733612a323476c7d9ece': ['family', 'family:anger-ali', 'family:fernando', 'friends'],
-  // Anger-Ali family password — TODO: replace hash before deploying to main (stored in 1Password):
-  'f965656f1e3bfcbca8584fcc175ae66738218b05e1f81d5d89de8be17423b5cc': ['family:anger-ali', 'friends'],
-  // Fernando family password (stored in 1Password):
-  '7985ab4784d9ac0c49b490befba89c3a29a1855355122a4a5b8b459b4f3efb1c': ['family:fernando', 'friends'],
+  // Family password (stored in 1Password):
+  'c403bc24f61b121c4bb12f2455f4e2f6559d17742df491913bc7e6914014a8fb': ['family', 'friends'],
 };
 
 // Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)
@@ -126,7 +119,7 @@ const ALBUMS = [
     location: 'Detroit',
     date: 'October 2025',
     hidden: true,
-    audience: 'family:anger-ali',
+    audience: 'family',
     protected: false,
     familySlug: 'joel-birthday',
     coverImage: `${R2_BASE_URL}/Joel-Bday-2025/DSCF6970.JPG`,
@@ -215,7 +208,7 @@ const ALBUMS = [
     description: 'Elena\'s birthday — October 2025.',
     date: 'October 2025',
     hidden: true,
-    audience: 'family:fernando',
+    audience: 'family',
     protected: false,
     familySlug: 'elenas-bday',
     coverImage: `${R2_BASE_URL}/Elenas-Bday-2025/DSCF6305.JPG`,
@@ -287,7 +280,7 @@ const ALBUMS = [
     description: 'Thanksgiving — November 2025.',
     date: 'November 2025',
     hidden: true,
-    audience: 'family:fernando',
+    audience: 'family',
     protected: false,
     familySlug: 'thanksgiving',
     coverImage: `${R2_BASE_URL}/Thanksgiving-2025/DSCF9199.JPG`,
@@ -385,7 +378,7 @@ const ALBUMS = [
     description: 'Paulina\'s wedding — July 2025.',
     date: 'July 2025',
     hidden: true,
-    audience: 'family:anger-ali',
+    audience: 'family',
     protected: false,
     familySlug: 'paulinas-wedding',
     coverImage: `${R2_BASE_URL}/Paulinas-Wedding-2025/_DSF8327.jpg`,
@@ -487,7 +480,7 @@ const ALBUMS = [
     description: 'A visit with Athena\'s family — March 2026.',
     location: 'Maryland',
     date: 'March 2026',
-    audience: 'family:anger-ali',
+    audience: 'family',
     hidden: true,
     protected: false,
     familySlug: 'raveen-athena-maryland',

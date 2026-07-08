@@ -254,8 +254,7 @@
 
     function tierLabel(tier) {
       if (tier === 'family') return 'Family';
-      if (tier === 'family:anger-ali') return 'Anger-Ali Family';
-      if (tier === 'family:fernando') return 'Fernando Family';
+      if (tier === 'family:anger-ali' || tier === 'family:fernando') return 'Family';
       if (tier === 'friends') return 'Friends';
       if (tier.startsWith('client:')) return tier.slice(7).replace(/-/g, ' ');
       return tier;
@@ -362,7 +361,7 @@
             return;
           }
 
-          // Family sub-tier: redirect to Family Gallery
+          // Family tier: redirect to Family Gallery
           const hasFamilyTier = granted.some(t => t === 'family' || t.startsWith('family:'));
           if (hasFamilyTier) {
             showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')} — loading Family Albums…`);

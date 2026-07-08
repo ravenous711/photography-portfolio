@@ -28,12 +28,8 @@ function initNav() {
   window.addEventListener('scroll', updateNav, { passive: true });
   updateNav();
 
-  // Show "Family Gallery" nav link when any family tier is unlocked
-  const canSeeAnyFamily = (typeof TierAuth !== 'undefined') && (
-    TierAuth.canAccess('family') ||
-    TierAuth.canAccess('family:anger-ali') ||
-    TierAuth.canAccess('family:fernando')
-  );
+  // Show "Family Gallery" nav link when family tier is unlocked
+  const canSeeAnyFamily = (typeof TierAuth !== 'undefined') && TierAuth.canAccess('family');
   if (canSeeAnyFamily) {
     const item = document.getElementById('nav-family-gallery-item');
     const mobileLink = document.getElementById('mobile-family-gallery-link');
@@ -631,19 +627,15 @@ const TierAuth = {
   },
 
   // Does the viewer have access to this audience?
-  // Rules: 'public' is always granted.
-  //        'family' (master) grants all sub-tiers and friends.
-  //        'family:anger-ali' / 'family:fernando' each grant friends.
+  // Rules: 'public' is always granted; 'family' grants friends.
+  // Legacy sub-tiers (pre-consolidation) still grant family + friends until users re-unlock.
   canAccess(audience) {
     if (!audience || audience === 'public') return true;
     const tiers = this.grantedTiers();
     if (tiers.has(audience)) return true;
-    // Master family tier grants all sub-tiers and friends
-    if (tiers.has('family')) {
-      if (audience === 'friends' || audience === 'family:anger-ali' || audience === 'family:fernando') return true;
-    }
-    // Any family sub-tier grants friends access
-    if (audience === 'friends' && (tiers.has('family:anger-ali') || tiers.has('family:fernando'))) return true;
+    if (tiers.has('family') && audience === 'friends') return true;
+    const hasLegacyFamily = tiers.has('family:anger-ali') || tiers.has('family:fernando');
+    if (hasLegacyFamily && (audience === 'family' || audience === 'friends')) return true;
     return false;
   },
 
@@ -700,13 +692,12 @@ const TierAuth = {
   },
 
   // Retrieve the stored password hash for a given audience (for Worker token exchange).
-  // Falls back up the hierarchy so Raveen's master 'family' hash works for any sub-tier album.
   getHash(audience) {
     try {
       const session = JSON.parse(sessionStorage.getItem('tier_hashes') || '{}');
       const persist = JSON.parse(localStorage.getItem('tier_hashes_persist') || '{}');
       const stored = { ...persist, ...session };
-      return stored[audience] || stored['family:anger-ali'] || stored['family:fernando'] || stored['family'] || null;
+      return stored[audience] || stored['family'] || stored['family:fernando'] || stored['family:anger-ali'] || null;
     } catch { return null; }
   },
 };

@@ -56,17 +56,6 @@
 
   <style>
     .album-card { display: block; text-decoration: none; }
-    .family-group-heading {
-      font-family: var(--font-serif);
-      font-size: 0.75rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--color-text-muted, #888);
-      margin: 3rem 0 1.25rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .family-group-heading:first-child { margin-top: 0; }
   </style>
 
   <script src="/js/config.js"></script>
@@ -79,12 +68,8 @@
     const main = document.getElementById('family-main');
 
     // ── Auth gate ──
-    // Redirect to unlock if no family tier is active
-    const canSeeAngerAli  = TierAuth.canAccess('family:anger-ali');
-    const canSeeFernando  = TierAuth.canAccess('family:fernando');
-    const canSeeAll       = TierAuth.canAccess('family'); // master key
-
-    if (!canSeeAngerAli && !canSeeFernando && !canSeeAll) {
+    const canSeeFamily = TierAuth.canAccess('family');
+    if (!canSeeFamily) {
       window.location.replace('/unlock/?next=/family/');
     }
 
@@ -155,15 +140,10 @@
       return card;
     }
 
-    // ── Render a family group section (year-grouped) ──
-    function renderFamilySection(groupLabel, audienceFilter, tokens) {
-      const albums = ALBUMS.filter(a => a.audience === audienceFilter && !a.parentId);
+    // ── Render family albums (year-grouped) ──
+    function renderFamilyAlbums(token) {
+      const albums = ALBUMS.filter(a => a.audience === 'family' && !a.parentId);
       if (albums.length === 0) return;
-
-      const groupHead = document.createElement('h2');
-      groupHead.className = 'family-group-heading';
-      groupHead.textContent = groupLabel;
-      main.appendChild(groupHead);
 
       const byYear = new Map();
       albums.forEach(album => {
@@ -185,32 +165,16 @@
         grid.className = 'album-grid gallery-album-grid fade-in';
         if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
         byYear.get(year).sort(compareAlbumsByDate).forEach(album => {
-          grid.appendChild(renderAlbumCard(album, tokens[audienceFilter]));
+          grid.appendChild(renderAlbumCard(album, token));
         });
         main.appendChild(grid);
       });
     }
 
-    // ── Fetch tokens for all visible tiers, then render ──
+    // ── Fetch token, then render ──
     (async () => {
-      const tiers = [];
-      if (canSeeAll || canSeeAngerAli) tiers.push('family:anger-ali');
-      if (canSeeAll || canSeeFernando)  tiers.push('family:fernando');
-      if (canSeeAll) { tiers.push('family:anger-ali'); tiers.push('family:fernando'); }
-
-      const uniqueTiers = [...new Set(tiers)];
-      const tokens = Object.fromEntries(
-        await Promise.all(uniqueTiers.map(async t => [t, await getToken(t)]))
-      );
-
-      if (canSeeAll || canSeeAngerAli) {
-        renderFamilySection('Anger-Ali Family', 'family:anger-ali', tokens);
-      }
-      if (canSeeAll || canSeeFernando) {
-        renderFamilySection('Fernando Family', 'family:fernando', tokens);
-      }
-
-      // Cards are rendered after async token fetch — register them with the fade-in observer.
+      const token = await getToken('family');
+      renderFamilyAlbums(token);
       observeFadeInElements(main);
     })();
   </script>
