@@ -45,45 +45,17 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 ## Active album session
 
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
-**Update this section** when starting, finishing, or queueing albums. Remove rows when fully done.
+**Update this section** when starting, finishing, or queueing albums.
 
-*Last updated: Jul 8 2026 (~04:05 UTC) — April originals ~38% done.*
+*No active session (Jul 8 2026 — Fernando family + April albums shipped to R2).*
 
 ### In progress
 
-| ID | Album | Audience | Photos | Config | R2 folder | R2 originals | R2 grids | Status |
-|----|-------|----------|--------|--------|-----------|--------------|----------|--------|
-| MD-25 | **Visiting Elena in MD** | `family` | 50 (1★) | ✅ `main` | `Elena-Visit-2025/` | **~19/50** 🔄 | ✅ 50/50 | IN PROGRESS |
-| MI-25 | **Ali's in Michigan** | `family` | 70 (all) | ✅ `main` | `Ali-Visit-2025/` | **~20/70** 🔄 | ✅ 70/70 | IN PROGRESS |
+*(none)*
 
 ### Queued (approved, not started)
 
-*(none — MD-25 and MI-25 now uploading)*
-
-### Done this session (R2 + config complete)
-
-| Album | Audience | Notes |
-|-------|----------|-------|
-| **Misc Film Rolls 2026** | `public` | 49 originals + grids; group first in 2026 gallery. `main` @ `2b590d8`. |
-| **Elena's Birthday** | `family` | 57 originals + grids ✅ (`DSCF6794.JPG` blocker cleared parallel retry). |
-| **Thanksgiving** | `family` | 82 originals + 82 grids ✅ (0 failures). |
-| Fernando password | — | Consolidated to single `family` tier; password `fernando-family`; Worker `FAMILY_HASH` updated. |
-
-**Local sources**
-- Elena's Birthday: `/Volumes/PhotosSSD/Photos/2025/10 - 0ctober/24-Elenas Bday` → `/tmp/elenas-bday-3star.txt`
-- Thanksgiving: `/Volumes/PhotosSSD/Photos/2025/11-November/Thanksgiving` → `/tmp/thanksgiving-2star.txt`
-- Visiting Elena in MD: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Elena Visit` → `/tmp/elena-visit-1star.txt`
-- Ali's in Michigan: `/Volumes/PhotosSSD/Photos/2025/04 - April/2025-04 Ali Visit` (70× `.jpg`)
-
-**Unlock / URLs**
-- Family: `/unlock/` → `fernando-family` → `/familyalbums/` (all family albums in one list)
-
-**Agent next steps (strict order)**
-1. Let TG-25 / MD-25 / MI-25 uploads finish; verify manifests.
-2. Add **config.js** entries (or placeholders) for MD-25 + MI-25; push if asked.
-3. Mark rows DONE + **Changelog** line each.
-
-**Upload pacing (Jul 2026):** `sleep 10` between large originals; retries on `fetch failed`. Skill updated (`.cursor/skills/add-portfolio-album/SKILL.md`).
+*(none)*
 
 ---
 
@@ -374,14 +346,20 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 
 ## Changelog (Done)
 
+- **Albums — April family (MD + MI)** — Jul 2026.
+  Visiting Elena in MD (50× 1★) + Ali's in Michigan (70× all) on `main`; R2 originals + grids complete. MI had one `fetch failed` on `20250413-_DSF3189.jpg` (manual retry OK).
+
+- **Site — Link preview meta** — Jul 2026.
+  Homepage Open Graph tags + hero image; title `Raveen Fernando` (fixes iMessage "Photography" label). Push: `26dea8f`.
+
 - **AUTH — Single family tier** — Jul 2026.
   Removed `family:fernando` / `family:anger-ali` sub-groups; one `family` audience + password `fernando-family`. Worker `FAMILY_HASH` updated; all family albums use `audience: 'family'`.
 
 - **Runbook — Active album session board** — Jul 2026.
   Added living tracker for multi-album R2 work (in progress / queued / done); Fernando Family batch + April/Michigan queue documented.
 
-- **Albums — Fernando Family (config on main)** — Jul 2026.
-  Elena's Birthday (57× 3★) + Thanksgiving (82× 2★) added to `config.js`; private R2 uploads in progress. Fernando password confirmed + Worker secret set. Push: `c5801fb`.
+- **Albums — Fernando Family (R2 complete)** — Jul 2026.
+  Elena's Birthday (57× 3★) + Thanksgiving (82× 2★) on `main`; private R2 originals + grids complete. Push: `c5801fb`.
 
 - **Album — Misc Film Rolls 2026** — Jul 2026.
   Public group + Ultramax/T-Max sub-albums; reordered first in 2026 gallery section. Push: `2b590d8`.
