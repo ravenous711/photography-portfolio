@@ -5,8 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" as="image" href="/images/hero.jpg" />
-  <title>Raveen Fernando — Photography</title>
+  <title>Raveen Fernando</title>
   <meta name="description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://raveenfernando.com/" />
+  <meta property="og:title" content="Raveen Fernando" />
+  <meta property="og:description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+  <meta property="og:image" content="https://raveenfernando.com/images/hero.jpg" />
+  <meta property="og:image:width" content="1920" />
+  <meta property="og:image:height" content="1280" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Raveen Fernando" />
+  <meta name="twitter:description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+  <meta name="twitter:image" content="https://raveenfernando.com/images/hero.jpg" />
 
   <!-- Custom styles -->
   <link rel="stylesheet" href="/css/style.css" />
@@ -181,7 +192,7 @@
     heroBg.appendChild(heroImg);
     document.getElementById('hero-name').textContent = SITE_CONFIG.photographerName;
     document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
-    document.title = `${SITE_CONFIG.photographerName} — Photography`;
+    document.title = SITE_CONFIG.photographerName;
 
     // ── Featured photos grid ──────────────────────────────────────────────────
     const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
