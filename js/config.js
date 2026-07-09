@@ -740,38 +740,17 @@ const ALBUMS = [
     ],
   },
 
-  // ── HOLLAND TULIP FESTIVAL 2026 — Family group ─────────────
+  // ── HOLLAND TULIP FESTIVAL 2026 — Family (Venice-style layout) ──
   {
     id: 'holland-tulip-2026',
     title: 'Holland Tulip Festival',
     description: 'Keukenhof and the tulip fields, May 2026.',
     location: 'Holland',
     date: 'May 2026',
-    type: 'group',
     audience: 'family',
     hidden: true,
     protected: false,
     familySlug: 'holland-tulip',
-    subAlbums: [
-      'holland-tulip-digital',
-      'holland-tulip-raveen-film',
-      'holland-tulip-athena-film',
-      'holland-tulip-kids-disp1',
-      'holland-tulip-kids-disp2',
-    ],
-    coverImage: `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2541.JPG`,
-  },
-
-  {
-    id: 'holland-tulip-digital',
-    slug: 'digital',
-    title: 'Digital',
-    parentId: 'holland-tulip-2026',
-    description: 'Holland Tulip Festival, May 2026.',
-    location: 'Holland',
-    date: 'May 2026',
-    audience: 'family',
-    protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2541.JPG`,
     photos: [
@@ -864,23 +843,10 @@ const ALBUMS = [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF3313.JPG`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF3323.JPG`,
     ],
-  },
-
-  {
-    id: 'holland-tulip-raveen-film',
-    slug: 'raveen-film',
-    title: "Raveen's Film",
-    parentId: 'holland-tulip-2026',
-    description: 'Holland Tulip Festival, May 2026.',
-    location: 'Holland',
-    date: 'May 2026',
-    audience: 'family',
-    protected: false,
-    coverImage: `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_003.jpg`,
-    photos: [],
     filmSections: [
       {
-        label: 'Kodak Ultramax 400',
+        label: "Raveen's Kodak Ultramax 400",
+        navLabel: "Raveen's Film",
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_003.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_004.jpg`,
@@ -905,24 +871,9 @@ const ALBUMS = [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_027.jpg`,
         ],
       },
-    ],
-  },
-
-  {
-    id: 'holland-tulip-athena-film',
-    slug: 'athena-film',
-    title: "Athena's Film",
-    parentId: 'holland-tulip-2026',
-    description: 'Holland Tulip Festival, May 2026.',
-    location: 'Holland',
-    date: 'May 2026',
-    audience: 'family',
-    protected: false,
-    coverImage: `${R2_BASE_URL}/Holland-Tulip-Festival/Athena-Ultramax/athena_ultramax_0501_003.jpg`,
-    photos: [],
-    filmSections: [
       {
         label: 'Kodak Ultramax 400 (half-frame)',
+        navLabel: "Athena's Film",
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Athena-Ultramax/athena_ultramax_0501_003.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Athena-Ultramax/athena_ultramax_0501_004.jpg`,
@@ -984,24 +935,9 @@ const ALBUMS = [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Athena-Ultramax/athena_ultramax_0501_068.jpg`,
         ],
       },
-    ],
-  },
-
-  {
-    id: 'holland-tulip-kids-disp1',
-    slug: 'kids-disposable-1',
-    title: 'Kids Disposable 1',
-    parentId: 'holland-tulip-2026',
-    description: 'Holland Tulip Festival, May 2026.',
-    location: 'Holland',
-    date: 'May 2026',
-    audience: 'family',
-    protected: false,
-    coverImage: `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-1/kids_disp1_0501_001.jpg`,
-    photos: [],
-    filmSections: [
       {
         label: 'Disposable',
+        navLabel: 'Kids Disposable 1',
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-1/kids_disp1_0501_001.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-1/kids_disp1_0501_002.jpg`,
@@ -1019,24 +955,9 @@ const ALBUMS = [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-1/kids_disp1_0501_014.jpg`,
         ],
       },
-    ],
-  },
-
-  {
-    id: 'holland-tulip-kids-disp2',
-    slug: 'kids-disposable-2',
-    title: 'Kids Disposable 2',
-    parentId: 'holland-tulip-2026',
-    description: 'Holland Tulip Festival, May 2026.',
-    location: 'Holland',
-    date: 'May 2026',
-    audience: 'family',
-    protected: false,
-    coverImage: `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-2/kids_disp2_0501_001.jpg`,
-    photos: [],
-    filmSections: [
       {
         label: 'Disposable',
+        navLabel: 'Kids Disposable 2',
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-2/kids_disp2_0501_001.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-2/kids_disp2_0501_002.jpg`,
