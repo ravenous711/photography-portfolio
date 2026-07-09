@@ -165,7 +165,7 @@
         grid.className = 'album-grid gallery-album-grid fade-in';
         if (count > 0 && count < 3) grid.classList.add(`gallery-album-grid--count-${count}`);
         byYear.get(year).sort((a, b) => compareAlbumsByDate(b, a)).forEach(album => {
-          grid.appendChild(renderAlbumCard(album, tokens[audienceFilter]));
+          grid.appendChild(renderAlbumCard(album, token));
         });
         main.appendChild(grid);
       });
