@@ -783,7 +783,7 @@ const ALBUMS = [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2750.JPG`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2751.JPG`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2753.JPG`,
-      `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2766.JPG`,
+      `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2766-2.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2773.JPG`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2774.JPG`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Digital/DSCF2794.JPG`,

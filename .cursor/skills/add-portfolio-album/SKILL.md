@@ -31,12 +31,95 @@ Workflow for adding a new album to Raveen's photography portfolio. Always follow
 Family albums use `audience: 'family'` — password hash is already in `PASSWORD_TIERS`.
 
 ## Cloudflare rate limit behaviour
-- R2 API rate-limits sequential uploads — always auto-retry (see helper below)
-- During an active session, use **`sleep 10` between originals** (~26MB JPGs), `sleep 10` between grids
-- Jul 2026 tuning: 8s between originals caused frequent `fetch failed` retries; 14–15s was very stable; **10s is the practical default** (retries still handle transient blips)
-- Avoid `sleep 5` between large originals unless you accept more retries
-- **Never interleave orig/grid per file** — run as **two parallel processes**: originals sequential in one, grids parallel in the other
+- R2 API rate-limits concurrent uploads — always auto-retry (see helper below)
+- **Never interleave orig/grid per file** — run originals and grids as **separate parallel processes**
 - **Check `IMPROVEMENTS.md` → Active album session** for in-flight uploads and the album queue before starting new work
+
+### Sleep between originals (~26 MB Fujifilm JPGs)
+| Gap | Result |
+|---|---|
+| 8s | Frequent `fetch failed` retries |
+| **10s** | Practical default (1 sequential worker) |
+| 14–15s | Very stable |
+| 2–3s | OK when using **4–6 parallel workers** on the same folder |
+
+### How many parallel workers?
+
+| File type | Safe concurrency | Notes |
+|---|---|---|
+| **Grids** (~1–3 MB) | **5–10** concurrent | Rarely rate-limits; default `CONCURRENCY=5` |
+| **Originals, one R2 sub-folder** | **4–6** workers | Split file list evenly; **2–3s sleep** inside each worker |
+| **Originals, multiple sub-folders** | **Up to 10 jobs** | One job per sub-folder (e.g. Digital + each film roll); sequential inside each job |
+
+**Rule of thumb:** ~6 concurrent large original PUTs is the sweet spot before retries spike. Ten jobs works when spread across **different R2 paths**, not 10 workers all hitting the same `Digital/` prefix.
+
+### Recommended upload layout
+
+**Single folder** (one R2 path): 2 processes — originals sequential (10s) + grids (5 concurrent).
+
+**Multi-folder album** (Digital + film rolls — e.g. Holland Tulip, Venice): launch **all jobs in parallel**:
+- One originals job per R2 sub-folder (`Digital/`, `Raveen-Ultramax/`, …)
+- One grids job per matching sub-folder
+- Example: 5 sub-folders → **10 parallel jobs** (5 orig + 5 grid)
+
+**Finishing stragglers:** If a sequential job is slow or has failures, stop it and split the **remaining file list** across **4 parallel workers** (2s sleep, auto-retry). Re-verify manifest and retry any still missing.
+
+### Parallel multi-folder launcher (template)
+
+Save manifests to `/tmp/<album>-manifest/` (one filename per line, sorted). Then:
+
+```bash
+export PATH="/opt/homebrew/bin:$PATH"
+BUCKET="portfolio-images-private"   # or portfolio-images
+PREFIX="<R2-folder-name>"
+BASE="/Volumes/PhotosSSD/Photos/..."
+MANIFEST="/tmp/<album>-manifest"
+LOGDIR="/tmp/<album>-logs"
+mkdir -p "$LOGDIR"
+
+# upload_with_retry() — copy from helper below
+
+upload_orig_section() {
+  local key="$1" local_dir="$2" r2_sub="$3" log="$4"
+  { echo "=== START orig $r2_sub $(date) ==="
+    fail=0
+    while IFS= read -r fname; do
+      [[ -z "$fname" ]] && continue
+      upload_with_retry "$BUCKET/$PREFIX/$r2_sub/$fname" "$local_dir/$fname" "orig $r2_sub/$fname" || fail=$((fail+1))
+      sleep 10
+    done < "$MANIFEST/$key.txt"
+    echo "=== DONE orig $r2_sub fail=$fail $(date) ==="; exit $fail
+  } > "$log" 2>&1
+}
+
+upload_grid_section() {
+  local grid_dir="$1" r2_sub="$2" log="$3"
+  { echo "=== START grid $r2_sub $(date) ==="
+    fail=0
+    for f in "/tmp/grid_$PREFIX/$grid_dir"/*; do
+      [[ -f "$f" ]] || continue
+      fname=$(basename "$f")
+      upload_with_retry "$BUCKET/grid/$PREFIX/$r2_sub/$fname" "$f" "grid $r2_sub/$fname" || fail=$((fail+1))
+    done
+    echo "=== DONE grid $r2_sub fail=$fail $(date) ==="; exit $fail
+  } > "$log" 2>&1
+}
+
+# Launch all jobs in parallel (adjust keys/paths per album)
+upload_orig_section digital "$BASE" Digital "$LOGDIR/01-orig-digital.log" &
+upload_orig_section raveen-film "$BASE/Raveen-Ultramax" Raveen-Ultramax "$LOGDIR/02-orig-raveen.log" &
+# ... one orig + one grid job per sub-folder ...
+wait
+```
+
+Monitor: `grep -c '^✓' $LOGDIR/*.log` and `grep '^✗ FAILED' $LOGDIR/*.log`.
+
+### Replacing or removing R2 objects
+```bash
+wrangler r2 object delete portfolio-images-private/<key> --remote
+wrangler r2 object delete portfolio-images-private/grid/<key> --remote
+```
+Update `config.js` to point at the new filename, then upload original + grid for the replacement.
 
 ## Path gotchas (macOS + zsh)
 
@@ -83,7 +166,7 @@ upload_with_retry() {
 1. **Photo folder path** — where are the photos locally?
 2. **All photos or starred only?** — all JPGs, or only Lightroom star rating > 0?
 3. **Audience** — see tier table above
-4. **Album structure** — flat album (digital + optional filmSections) or multi-city group?
+4. **Album structure** — Venice-style (one page: digital + `filmSections` tabs), flat album, or multi-city group (Italy)
 5. **Album name** — suggest one from the folder name if not given
 
 ## Step 2 — Find starred photos (if filtering by rating)
@@ -121,7 +204,9 @@ echo "Done. $(ls "$GRID_DIR" | wc -l | tr -d ' ') grid images"
 - **Public / friends albums** → `portfolio-images/<R2-folder-name>`
 - **Family / client albums** → `portfolio-images-private/<R2-folder-name>`
 
-Run as **process 1** (backgrounded, `block_until_ms: 0`). Sequential, one file at a time.
+**Single R2 folder:** run as **process 1** (backgrounded). Sequential, 10s sleep between files.
+**Multiple R2 sub-folders:** use the **parallel multi-folder launcher** above — one background job per sub-folder, all at once.
+
 Start **Step 5 grids in parallel** — do not wait for originals to finish.
 
 ```bash
@@ -208,9 +293,24 @@ Retry any missing files before moving on.
 
 Read `js/config.js` first. Use `${R2_BASE_URL}/<R2-folder-name>/` for all photo URLs regardless of bucket — the album page rewrites family/client URLs to Worker tokens at runtime via `toImageUrl()`.
 
+### Venice-style album (digital + film sections on one page)
+
+Use for a single trip/event with digital + multiple film rolls — **one album page** with section nav tabs (Digital, each roll), like `italy-venice` or `holland-tulip-2026`. **Do not** split digital and each roll into separate sub-albums unless the user explicitly wants a group index.
+
+- **Family:** flat album with `familySlug`, `photos` + `filmSections`, `hidden: true`
+- **Friends/public:** sub-album under a group with `parentId` + `slug`, same `photos` + `filmSections` shape
+- R2: separate sub-folders per roll (`Digital/`, `Raveen-Ultramax/`, …) but **one config entry**
+- `filmSections[].navLabel` — short tab label; `label` — heading above that roll's grid
+
+See `holland-tulip-2026` (family) and `italy-venice` (friends) in `config.js`.
+
+### Multi-city group album (Italy pattern)
+
+Use for trips with **multiple distinct locations** (Venice, Florence, Rome…). Each city is a sub-album with `parentId` + `slug`. Each city album can itself be Venice-style (digital + `filmSections`). See Italy 2026 in `config.js`.
+
 ### Flat album with digital + film sections (Maryland / Red Rock pattern)
 
-Use this for a single event with mixed digital and film:
+Same `photos` + `filmSections` shape as Venice-style; use for family events without needing section nav labels:
 
 ```js
 {
@@ -222,25 +322,22 @@ Use this for a single event with mixed digital and film:
   audience: 'family',                  // or friends / public / client:<name>
   hidden: true,                        // always true for family albums
   protected: false,
-  familySlug: 'short-descriptive-slug', // gives URL /familyalbums/YYYY/short-descriptive-slug/
-  digitalLabel: 'Fujifilm X-T5',       // optional — label above digital grid
+  familySlug: 'short-descriptive-slug', // URL: /familyalbums/YYYY/short-descriptive-slug/
+  digitalLabel: 'Fujifilm X-T5',
   coverImage: `${R2_BASE_URL}/<R2-folder-name>/<COVER.jpg>`,
   photos: [
-    `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.jpg>`,
+    `${R2_BASE_URL}/<R2-folder-name>/Digital/<PHOTO1.jpg>`,
     // ...
   ],
   filmSections: [
     {
       label: '<Camera> — <Film Stock>',
-      navLabel: '<Short label>',   // shown in jump nav
-      camera: '<Camera>',
-      filmStock: '<Film Stock>',
+      navLabel: '<Short tab label>',   // optional; shown in section nav
       photos: [
-        `${R2_BASE_URL}/<film-R2-folder>/<FRAME1.jpg>`,
+        `${R2_BASE_URL}/<R2-folder-name>/<Roll-folder>/<FRAME1.jpg>`,
         // ...
       ],
     },
-    // add more sections for additional rolls
   ],
 },
 ```
@@ -259,10 +356,6 @@ Use this for a single event with mixed digital and film:
   // curated: []  ← add via admin "Save as curated set" after photos are live
 },
 ```
-
-### Multi-city group album (Italy pattern)
-
-Use for trips with multiple distinct locations. Each city is a sub-album with `parentId` + `slug`. Separate hidden film-roll albums can be linked from the group page. See existing Italy 2026 albums in config for the full pattern.
 
 ## Step 8 — Commit
 
