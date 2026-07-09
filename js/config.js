@@ -872,8 +872,7 @@ const ALBUMS = [
         ],
       },
       {
-        label: 'Kodak Ultramax 400 (half-frame)',
-        navLabel: "Athena's Film",
+        label: "Athena's Film",
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Athena-Ultramax/athena_ultramax_0501_003.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Athena-Ultramax/athena_ultramax_0501_004.jpg`,
@@ -936,8 +935,7 @@ const ALBUMS = [
         ],
       },
       {
-        label: 'Disposable',
-        navLabel: 'Kids Disposable 1',
+        label: "Kid's Film 1",
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-1/kids_disp1_0501_001.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-1/kids_disp1_0501_002.jpg`,
@@ -956,8 +954,7 @@ const ALBUMS = [
         ],
       },
       {
-        label: 'Disposable',
-        navLabel: 'Kids Disposable 2',
+        label: "Kid's Film 2",
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-2/kids_disp2_0501_001.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Kids-Disposable-2/kids_disp2_0501_002.jpg`,
