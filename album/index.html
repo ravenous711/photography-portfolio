@@ -331,6 +331,7 @@
     let currentIndex = 0;
     let albumPageTitle = '';
     let selectMode   = false;
+    let _gridResizeBound = false; // hoisted: showAlbum() runs synchronously for public albums, before the old declaration site executed (TDZ crash)
     const selected   = new Set();
     let refreshAlbumNavMenu = null;
 
@@ -1124,8 +1125,6 @@
       const anchor = document.getElementById('album-view-controls-top');
       if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-
-    let _gridResizeBound = false;
 
     function buildCuratedSections(album) {
       const allFilmSections = getAlbumFilmSections(album);
