@@ -331,7 +331,9 @@
     let currentIndex = 0;
     let albumPageTitle = '';
     let selectMode   = false;
-    let _gridResizeBound = false; // hoisted: showAlbum() runs synchronously for public albums, before the old declaration site executed (TDZ crash)
+    let _gridResizeBound = false; // hoisted — TDZ: showAlbum() runs sync for public albums
+    let heartedUrls = new Set(); // hoisted — TDZ: initFavorites() called sync from showAlbum
+    let favEnabled = false;      // hoisted — TDZ: same
     const selected   = new Set();
     let refreshAlbumNavMenu = null;
 
@@ -2291,7 +2293,7 @@
       if (selDlBtn) { selDlBtn.disabled = true; }
 
       label.textContent = `Preparing ${list.length} photo${list.length !== 1 ? 's' : ''}…`;
-      sublabel.textContent = 'Your browser will save the ZIP when it\'s ready.';
+      sublabel.textContent = 'Downloading…';
       bar.classList.add('indeterminate');
       bar.style.width = '';
       progress.classList.add('show');
@@ -2325,8 +2327,7 @@
     // ════════════════════════════════════════════════════════
 
     const FAV_SESSION_KEY = 'fav_session_id';
-    let heartedUrls = new Set();  // URLs the current session has hearted
-    let favEnabled = false;       // true when tier unlocked for this album
+    // heartedUrls and favEnabled are hoisted to the top-level state block to avoid TDZ
 
     function getFavSessionId() {
       try {
