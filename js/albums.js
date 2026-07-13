@@ -6,7 +6,8 @@
 // Each album group lives in its own file under js/albums/:
 //
 //   clients.js          — hidden/private client albums
-//   family.js           — family event albums
+//   family-2025.js      — family event albums from 2025
+//   family-2026.js      — family event albums from 2026
 //   california-2025.js  — California 2025 trip
 //   misc-2026.js        — standalone 2026 public albums (Film Rolls, Red Rock)
 //   italy-2026.js       — Italy 2026 trip (cities + film rolls)
@@ -17,6 +18,10 @@
 //   3. Add it to the spread below
 //   4. Add <script src="/js/albums/my-trip-YYYY.js"></script> to
 //      every HTML page (right before this file's script tag)
+//
+// ── To add a new family album ─────────────────────────────────
+//   Open js/albums/family-YYYY.js for the right year and add the
+//   album object at the top of the array (newest first).
 // ============================================================
 
 // ── Album field reference ──────────────────────────────────────
@@ -45,7 +50,8 @@
 
 const ALBUMS = [
   ...ALBUMS_CLIENTS,
-  ...ALBUMS_FAMILY,
+  ...ALBUMS_FAMILY_2026,
+  ...ALBUMS_FAMILY_2025,
   ...ALBUMS_CALIFORNIA,
   ...ALBUMS_MISC_2026,
   ...ALBUMS_ITALY_2026,
