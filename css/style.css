@@ -1826,15 +1826,37 @@ textarea.form-field {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1.25rem 1rem 1.5rem;
   z-index: 300;
   font-size: 0.8rem;
   color: var(--color-muted);
   display: none;
-  min-width: 220px;
+  min-width: 260px;
+  max-width: 320px;
 }
 
 #download-progress.show { display: block; }
+
+#dl-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+#dl-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+#dl-dismiss:hover { opacity: 1; }
 
 .progress-bar-wrap {
   width: 100%;
@@ -1850,6 +1872,17 @@ textarea.form-field {
   background: var(--color-gold);
   transition: width 0.3s ease;
   width: 0%;
+}
+
+/* Indeterminate shimmer while ZIP is being prepared */
+.progress-bar.indeterminate {
+  width: 40%;
+  animation: dl-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes dl-shimmer {
+  0%   { transform: translateX(-200%); }
+  100% { transform: translateX(350%); }
 }
 
 /* ============================================================

@@ -290,9 +290,15 @@
 
   <!-- ── Download Progress Toast ── -->
   <div id="download-progress">
-    <p id="dl-label" class="font-sans text-sm" style="color:var(--color-text)">Preparing…</p>
+    <div id="dl-header">
+      <p id="dl-label" class="font-sans text-sm" style="color:var(--color-text);margin:0">Preparing…</p>
+      <button id="dl-dismiss" aria-label="Dismiss">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p id="dl-sublabel" class="font-sans" style="font-size:0.72rem;color:var(--color-muted);margin:0.3rem 0 0"></p>
     <div class="progress-bar-wrap">
-      <div class="progress-bar" id="dl-bar"></div>
+      <div class="progress-bar indeterminate" id="dl-bar"></div>
     </div>
   </div>
 
@@ -750,12 +756,24 @@
     // the whole archive in memory (which crashes iOS on large, full-res albums).
     const ZIP_WORKER_URL = 'https://portfolio-zip-download.raveenfernando.workers.dev';
 
+    let _dlDismissTimeout = null;
+
     function resetDownloadProgressUI() {
       const progress = document.getElementById('download-progress');
       const bar = document.getElementById('dl-bar');
       progress.classList.remove('show');
-      bar.style.width = '0%';
+      bar.classList.add('indeterminate');
+      bar.style.width = '';
+      if (_dlDismissTimeout) { clearTimeout(_dlDismissTimeout); _dlDismissTimeout = null; }
     }
+
+    document.getElementById('dl-dismiss').addEventListener('click', () => {
+      resetDownloadProgressUI();
+      const dlBtn = document.getElementById('download-btn');
+      const selDlBtn = document.getElementById('download-selected-btn');
+      if (dlBtn) dlBtn.disabled = false;
+      if (selDlBtn) selDlBtn.disabled = selected.size === 0;
+    });
 
     function photoUrlToKey(url) {
       if (!url) return '';
@@ -2259,6 +2277,7 @@
       const selDlBtn = document.getElementById('download-selected-btn');
       const progress = document.getElementById('download-progress');
       const label    = document.getElementById('dl-label');
+      const sublabel = document.getElementById('dl-sublabel');
       const bar      = document.getElementById('dl-bar');
 
       const list = (photos || []).filter(Boolean);
@@ -2271,15 +2290,21 @@
 
       if (dlBtn)    { dlBtn.disabled = true; }
       if (selDlBtn) { selDlBtn.disabled = true; }
+
+      label.textContent = `Preparing ${list.length} photo${list.length !== 1 ? 's' : ''}…`;
+      sublabel.textContent = 'Your browser will save the ZIP when it\'s ready.';
+      bar.classList.add('indeterminate');
+      bar.style.width = '';
       progress.classList.add('show');
-      bar.style.width = '100%';
-      label.textContent = `Zipping ${list.length} photo${list.length !== 1 ? 's' : ''}… your device will save it shortly.`;
 
       // The Worker builds and streams the ZIP; the browser handles the actual
       // download + progress, so memory stays flat even for full-res albums.
       submitWorkerZip(keys, filename);
 
-      setTimeout(() => {
+      // Keep the toast up long enough for even large albums to start downloading.
+      // ~3s per photo is a safe ceiling; minimum 20s, max 3 min.
+      const waitMs = Math.min(Math.max(list.length * 3000, 20000), 180000);
+      _dlDismissTimeout = setTimeout(() => {
         resetDownloadProgressUI();
         if (dlBtn) {
           dlBtn.disabled = false;
@@ -2292,7 +2317,7 @@
             Download All`;
         }
         if (selDlBtn) { selDlBtn.disabled = selected.size === 0; }
-      }, 6000);
+      }, waitMs);
     }
 
     // ════════════════════════════════════════════════════════
