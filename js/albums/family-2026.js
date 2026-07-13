@@ -227,7 +227,7 @@ const ALBUMS_FAMILY_2026 = [
     ],
     filmSections: [
       {
-        label: "Raveen's Kodak Ultramax 400",
+        label: "Raveen's Film",
         navLabel: "Raveen's Film",
         photos: [
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_003.jpg`,
@@ -363,7 +363,5 @@ const ALBUMS_FAMILY_2026 = [
       },
     ],
   },
-
-];
 
 ];
