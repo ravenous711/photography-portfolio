@@ -230,8 +230,6 @@ const ALBUMS_FAMILY_2026 = [
         label: "Raveen's Film",
         navLabel: "Raveen's Film",
         photos: [
-      `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_003.jpg`,
-      `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_004.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_005.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_006.jpg`,
       `${R2_BASE_URL}/Holland-Tulip-Festival/Raveen-Ultramax/raveen_ultramax_0501_007.jpg`,
