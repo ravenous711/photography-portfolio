@@ -2298,13 +2298,9 @@
       bar.style.width = '';
       progress.classList.add('show');
 
-      // The Worker builds and streams the ZIP; the browser handles the actual
-      // download + progress, so memory stays flat even for full-res albums.
       submitWorkerZip(keys, filename);
 
-      // Keep the toast up long enough for even large albums to start downloading.
-      // ~3s per photo is a safe ceiling; minimum 20s, max 3 min.
-      const waitMs = Math.min(Math.max(list.length * 3000, 20000), 180000);
+      // 15 s is enough — the stream starts within a second of the click.
       _dlDismissTimeout = setTimeout(() => {
         resetDownloadProgressUI();
         if (dlBtn) {
@@ -2318,7 +2314,7 @@
             Download All`;
         }
         if (selDlBtn) { selDlBtn.disabled = selected.size === 0; }
-      }, waitMs);
+      }, 15000);
     }
 
     // ════════════════════════════════════════════════════════
