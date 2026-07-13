@@ -175,7 +175,13 @@
     <!-- Photo grids -->
     <main class="px-6 md:px-8 pb-24">
       <div id="digital-section" class="album-content-section">
-        <p id="digital-section-label" class="album-section-label" hidden></p>
+        <div id="digital-section-label-row" class="album-section-label-row" hidden>
+          <p id="digital-section-label" class="album-section-label"></p>
+          <button type="button" id="digital-section-dl-btn" class="album-section-dl-btn" aria-label="Download digital section">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
         <div class="photo-grid" id="photo-grid">
           <!-- Digital photos populated by JS -->
         </div>
@@ -1170,19 +1176,24 @@
       const digitalPhotos = showingFull ? (album.photos || []) : curatedSections.digital;
       const hasCuratedFilm = isCuratedView && curatedSections.filmSections.length > 0;
       const digitalLabelEl = document.getElementById('digital-section-label');
+      const digitalLabelRow = document.getElementById('digital-section-label-row');
+      const digitalDlBtn = document.getElementById('digital-section-dl-btn');
       if (isFilmRollAlbum(album)) {
         digitalLabelEl.textContent = '';
-        digitalLabelEl.hidden = true;
+        digitalLabelRow.hidden = true;
       } else if (album.digitalLabel) {
         const hasSectionNav = getAlbumSectionNavItems(album).length >= 2;
         digitalLabelEl.textContent = hasSectionNav
           ? `Digital · ${album.digitalLabel}`
           : album.digitalLabel;
-        // In curated view, only show the digital label when film sections are also present
-        digitalLabelEl.hidden = isCuratedView ? !hasCuratedFilm : !showingFull;
+        const showRow = isCuratedView ? hasCuratedFilm : showingFull;
+        digitalLabelRow.hidden = !showRow;
+        if (digitalDlBtn) {
+          digitalDlBtn.onclick = () => downloadPhotos(digitalPhotos);
+        }
       } else {
         digitalLabelEl.textContent = '';
-        digitalLabelEl.hidden = true;
+        digitalLabelRow.hidden = true;
       }
 
       digitalPhotos.forEach((url, i) => {
@@ -1201,10 +1212,21 @@
           block.className = 'album-film-block';
           if (sectionIndex > 0) block.classList.add('album-film-block--continued');
 
+          const labelRow = document.createElement('div');
+          labelRow.className = 'album-section-label-row';
           const label = document.createElement('p');
           label.className = 'album-section-label';
           label.textContent = section.label || 'On film';
-          block.appendChild(label);
+          const dlSectionBtn = document.createElement('button');
+          dlSectionBtn.type = 'button';
+          dlSectionBtn.className = 'album-section-dl-btn';
+          dlSectionBtn.setAttribute('aria-label', `Download ${section.label || 'this section'}`);
+          dlSectionBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download`;
+          const sectionPhotos = section.photos || [];
+          dlSectionBtn.addEventListener('click', () => downloadPhotos(sectionPhotos));
+          labelRow.appendChild(label);
+          labelRow.appendChild(dlSectionBtn);
+          block.appendChild(labelRow);
 
           const grid = document.createElement('div');
           grid.className = 'photo-grid';

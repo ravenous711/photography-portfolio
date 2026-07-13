@@ -1345,6 +1345,34 @@ a.album-sibling-link:hover {
   margin-bottom: 2rem;
 }
 
+.album-section-label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.album-section-label-row .album-section-label {
+  margin-bottom: 0;
+}
+
+.album-section-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.album-section-dl-btn:hover { opacity: 1; }
+
 .album-film-block--continued {
   margin-top: 3rem;
   padding-top: 2rem;
