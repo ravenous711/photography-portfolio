@@ -147,13 +147,6 @@ function gridUrl(fullUrl) {
 // alias kept for admin/curate call sites
 function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
-// Journal-style dateline: "Venice · May 2026 · 95 frames"
-function locationMatchesTitle(album) {
-  if (!album.location || !album.title) return false;
-  const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-  return norm(album.location) === norm(album.title);
-}
-
 function getAlbumFilmSections(album) {
   if (!album) return [];
   if (album.filmSections?.length) return album.filmSections;
@@ -255,6 +248,7 @@ function compareAlbumsByDate(a, b) {
   return albumSortKey(a) - albumSortKey(b);
 }
 
+// Journal-style dateline: date only (e.g. "May 2026"); groups also show sub-album count.
 function albumDateline(album, { withDesc = false } = {}) {
   if (album.dateline === false) return '';
   if (album.dateline) return album.dateline;
@@ -264,19 +258,10 @@ function albumDateline(album, { withDesc = false } = {}) {
   }
 
   const parts = [];
-  // Skip location when the title already names the place (e.g. "Venice", "Italy 2026")
-  if (album.type !== 'group' && album.location && !locationMatchesTitle(album)) {
-    parts.push(album.location);
-  }
   if (album.date) parts.push(album.date);
 
   if (album.type === 'group' && album.subAlbums?.length) {
     parts.push(`${album.subAlbums.length} albums`);
-  } else if (!album.curated?.length) {
-    // Omit frame count for highlight albums — curated shows a subset, so the
-    // full-album count is misleading on the card.
-    const count = getAlbumPhotoCount(album);
-    if (count) parts.push(`${count} frames`);
   }
 
   return parts.join(' · ');
