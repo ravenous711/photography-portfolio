@@ -9,6 +9,20 @@
 // eslint-disable-next-line no-unused-vars
 const ALBUMS_CLIENTS = [
   {
+    id: 'moksha-yoga',
+    title: 'Moksha Yoga',
+    description: 'Moksha Yoga — July 2026.',
+    date: 'July 2026',
+    audience: 'client:moksha-yoga',
+    hidden: true,
+    protected: false,
+    coverImage: '',
+    photos: [
+      // Photos added after private R2 upload
+    ],
+  },
+
+  {
     id: 'joel-bday-2025',
     title: 'Joel\'s Birthday',
     description: 'Joel\'s birthday — October 2025.',
