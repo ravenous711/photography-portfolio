@@ -281,7 +281,7 @@ Password-protected panel for deleting photos from R2 and the live site.
 ### How it works
 1. Go to `/admin.html` and log in with the admin password
 2. Expand an album, click photos to mark them for deletion (they go red)
-3. Hit **Commit Deletions** — this deletes from R2 and auto-updates `config.js` via GitHub API, triggering a Vercel redeploy
+3. Hit **Commit Deletions** — this deletes from R2 and auto-updates the matching `js/albums/*.js` file via GitHub API, triggering a Vercel redeploy
 
 ### Required Vercel environment variables
 | Variable | Description |

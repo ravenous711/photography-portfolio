@@ -1,11 +1,12 @@
 /**
  * POST /api/admin-curate
  *
- * Writes a curated photo list for a given album into js/config.js via the GitHub API.
- * The endpoint does NOT touch R2 — it only updates config.js.
+ * Writes a curated photo list for a given album into the album source file
+ * under js/albums/*.js (or legacy js/config.js) via the GitHub API.
+ * The endpoint does NOT touch R2 — it only updates source.
  *
  * Body: { albumId: string, photos: string[] }
- *   albumId — the album's `id` field in config.js
+ *   albumId — the album's `id` field
  *   photos  — ordered array of full R2 photo URLs to set as `curated`
  *
  * Requires a valid admin session cookie (set by api/admin-login.js).
@@ -44,7 +45,7 @@ export default async function handler(req, res) {
 
   // Allowlist: every URL must be from the known R2 public bucket.
   // This prevents an attacker with a stolen session from injecting
-  // arbitrary JS/expressions into the backtick literals in config.js.
+  // arbitrary JS/expressions into the backtick literals in album files.
   const R2_ORIGIN = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/';
   const invalidUrls = photos.filter(u => {
     if (typeof u !== 'string') return true;
@@ -62,123 +63,38 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── Fetch config.js from GitHub ───────────────────────────────────────────
   const [owner, repo] = GITHUB_REPO.split('/');
-  const filePath = 'js/config.js';
-  const apiBase  = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
   const ghHeaders = {
     Authorization: `Bearer ${GITHUB_TOKEN}`,
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   };
 
-  let fileData;
+  let albumFile;
   try {
-    const getRes = await fetch(apiBase, { headers: ghHeaders });
-    if (!getRes.ok) throw new Error(`GitHub GET failed: ${getRes.status}`);
-    fileData = await getRes.json();
+    albumFile = await findAlbumSourceFile(owner, repo, albumId, ghHeaders);
   } catch (err) {
-    return res.status(502).json({ error: `Failed to fetch config.js: ${err.message}` });
+    return res.status(502).json({ error: `Failed to locate album source: ${err.message}` });
   }
 
-  const originalContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
-
-  // ── Insert or replace the curated[] array in the album block ─────────────
-  //
-  // Strategy:
-  //   1. Find the album object by its `id: 'albumId'` line.
-  //   2. Find the closing `},` of that object (tracking brace depth).
-  //   3. If a `curated:` line already exists in the block, replace it.
-  //      If not, insert it before the closing `},`.
-  //
-  // This is intentionally conservative: we never reformat or rewrite anything
-  // outside the curated line itself.
-
-  const lines = originalContent.split('\n');
-
-  // Find the line index that starts this album's object
-  const albumStartPattern = new RegExp(`\\bid:\\s*['"]${escapeRegex(albumId)}['"]`);
-  let albumStartLine = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (albumStartPattern.test(lines[i])) {
-      albumStartLine = i;
-      break;
-    }
+  if (!albumFile) {
+    return res.status(404).json({
+      error: `Album '${albumId}' not found in js/albums/*.js or js/config.js`,
+    });
   }
 
-  if (albumStartLine === -1) {
-    return res.status(404).json({ error: `Album '${albumId}' not found in config.js` });
+  const { filePath, fileData, content: originalContent } = albumFile;
+  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+  let updatedContent;
+  try {
+    updatedContent = applyCuratedUpdate(originalContent, albumId, photos);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
-
-  // Walk back to find the opening `{` of the album object (usually on the line before `id:`)
-  let blockStart = albumStartLine;
-  while (blockStart > 0 && !lines[blockStart].includes('{')) blockStart--;
-
-  // Walk forward from blockStart to find the matching closing `}` / `},`
-  let depth = 0;
-  let blockEnd = -1;
-  for (let i = blockStart; i < lines.length; i++) {
-    for (const ch of lines[i]) {
-      if (ch === '{') depth++;
-      else if (ch === '}') {
-        depth--;
-        if (depth === 0) { blockEnd = i; break; }
-      }
-    }
-    if (blockEnd !== -1) break;
-  }
-
-  if (blockEnd === -1) {
-    return res.status(500).json({ error: `Could not find closing brace for album '${albumId}'` });
-  }
-
-  // Build the curated line (indented 4 spaces to match the rest of the config)
-  const indent = '    ';
-  const curatedLine = buildCuratedLine(photos, indent);
-
-  // Check if a `curated:` key already exists in the block
-  const curatedPattern = /^\s*curated\s*:/;
-  let existingCuratedLine = -1;
-  for (let i = blockStart; i <= blockEnd; i++) {
-    if (curatedPattern.test(lines[i])) {
-      existingCuratedLine = i;
-      break;
-    }
-  }
-
-  let updatedLines;
-  if (existingCuratedLine !== -1) {
-    // Replace the existing curated line (may span multiple lines if it's a multi-line array)
-    // Find where it ends: the line ending with ],  or ] and the next non-array line
-    let curatedEnd = existingCuratedLine;
-    // If the line contains the full array on one line, it ends here
-    if (!lines[existingCuratedLine].includes('[') || lines[existingCuratedLine].trimEnd().endsWith('],') || lines[existingCuratedLine].trimEnd().endsWith(']')) {
-      curatedEnd = existingCuratedLine;
-    } else {
-      // Multi-line array: scan forward until we see the closing `]`
-      for (let i = existingCuratedLine + 1; i <= blockEnd; i++) {
-        curatedEnd = i;
-        if (/^\s*\]/.test(lines[i])) break;
-      }
-    }
-    updatedLines = [
-      ...lines.slice(0, existingCuratedLine),
-      curatedLine,
-      ...lines.slice(curatedEnd + 1),
-    ];
-  } else {
-    // Insert before the closing `},` of the album block
-    updatedLines = [
-      ...lines.slice(0, blockEnd),
-      curatedLine,
-      ...lines.slice(blockEnd),
-    ];
-  }
-
-  const updatedContent = updatedLines.join('\n');
 
   if (updatedContent === originalContent) {
-    return res.status(200).json({ ok: true, changed: false, message: 'curated set unchanged' });
+    return res.status(200).json({ ok: true, changed: false, message: 'curated set unchanged', file: filePath });
   }
 
   // ── Write back to GitHub ──────────────────────────────────────────────────
@@ -200,15 +116,16 @@ export default async function handler(req, res) {
       throw new Error(`GitHub PUT failed: ${putRes.status} — ${errBody}`);
     }
   } catch (err) {
-    return res.status(502).json({ error: `Failed to write config.js: ${err.message}` });
+    return res.status(502).json({ error: `Failed to write ${filePath}: ${err.message}` });
   }
 
   return res.status(200).json({
     ok: true,
     changed: true,
     albumId,
+    file: filePath,
     curatedCount: photos.length,
-    message: `curated[${photos.length}] saved for ${albumId} — Vercel will redeploy`,
+    message: `curated[${photos.length}] saved for ${albumId} in ${filePath} — Vercel will redeploy`,
   });
 }
 
@@ -216,6 +133,143 @@ export default async function handler(req, res) {
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Locate which source file contains the album object.
+ * Prefers js/albums/*.js; falls back to legacy js/config.js.
+ */
+async function findAlbumSourceFile(owner, repo, albumId, ghHeaders) {
+  const candidates = [];
+
+  const listRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/js/albums`,
+    { headers: ghHeaders },
+  );
+  if (listRes.ok) {
+    const entries = await listRes.json();
+    if (Array.isArray(entries)) {
+      for (const entry of entries) {
+        if (entry?.type === 'file' && typeof entry.name === 'string' && entry.name.endsWith('.js')) {
+          candidates.push(entry.path);
+        }
+      }
+    }
+  }
+
+  // Legacy fallback for any albums still inlined in config.js
+  candidates.push('js/config.js');
+
+  const albumStartPattern = new RegExp(`\\bid:\\s*['"]${escapeRegex(albumId)}['"]`);
+
+  const hits = await Promise.all(candidates.map(async (filePath) => {
+    const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+    const getRes = await fetch(apiBase, { headers: ghHeaders });
+    if (!getRes.ok) return null;
+    const fileData = await getRes.json();
+    if (!fileData?.content) return null;
+    const content = Buffer.from(fileData.content, 'base64').toString('utf-8');
+    if (!albumStartPattern.test(content)) return null;
+    return { filePath, fileData, content };
+  }));
+
+  return hits.find(Boolean) || null;
+}
+
+/**
+ * Insert or replace the curated[] array in the album block.
+ *
+ * Strategy:
+ *   1. Find the album object by its `id: 'albumId'` line.
+ *   2. Find the closing `},` of that object (tracking brace depth).
+ *   3. If a `curated:` line already exists in the block, replace it.
+ *      If not, insert it before the closing `},`.
+ *
+ * Intentionally conservative: never reformat anything outside the curated line.
+ */
+function applyCuratedUpdate(originalContent, albumId, photos) {
+  const lines = originalContent.split('\n');
+
+  const albumStartPattern = new RegExp(`\\bid:\\s*['"]${escapeRegex(albumId)}['"]`);
+  let albumStartLine = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (albumStartPattern.test(lines[i])) {
+      albumStartLine = i;
+      break;
+    }
+  }
+
+  if (albumStartLine === -1) {
+    throw new Error(`Album '${albumId}' not found in source file`);
+  }
+
+  // Walk back to find the opening `{` of the album object (usually on the line before `id:`)
+  let blockStart = albumStartLine;
+  while (blockStart > 0 && !lines[blockStart].includes('{')) blockStart--;
+
+  // Walk forward from blockStart to find the matching closing `}` / `},`
+  let depth = 0;
+  let blockEnd = -1;
+  for (let i = blockStart; i < lines.length; i++) {
+    for (const ch of lines[i]) {
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth === 0) { blockEnd = i; break; }
+      }
+    }
+    if (blockEnd !== -1) break;
+  }
+
+  if (blockEnd === -1) {
+    throw new Error(`Could not find closing brace for album '${albumId}'`);
+  }
+
+  // Match surrounding property indent (album files use 4 spaces)
+  const indentMatch = lines[albumStartLine].match(/^(\s*)/);
+  const indent = indentMatch ? indentMatch[1] : '    ';
+  const curatedLine = buildCuratedLine(photos, indent);
+
+  const curatedPattern = /^\s*curated\s*:/;
+  let existingCuratedLine = -1;
+  for (let i = blockStart; i <= blockEnd; i++) {
+    if (curatedPattern.test(lines[i])) {
+      existingCuratedLine = i;
+      break;
+    }
+  }
+
+  let updatedLines;
+  if (existingCuratedLine !== -1) {
+    // Replace the existing curated line (may span multiple lines if it's a multi-line array)
+    let curatedEnd = existingCuratedLine;
+    if (
+      !lines[existingCuratedLine].includes('[')
+      || lines[existingCuratedLine].trimEnd().endsWith('],')
+      || lines[existingCuratedLine].trimEnd().endsWith(']')
+    ) {
+      curatedEnd = existingCuratedLine;
+    } else {
+      for (let i = existingCuratedLine + 1; i <= blockEnd; i++) {
+        curatedEnd = i;
+        if (/^\s*\]/.test(lines[i])) break;
+      }
+    }
+    updatedLines = [
+      ...lines.slice(0, existingCuratedLine),
+      curatedLine,
+      ...lines.slice(curatedEnd + 1),
+    ];
+  } else {
+    // Insert before the closing `},` of the album block
+    updatedLines = [
+      ...lines.slice(0, blockEnd),
+      curatedLine,
+      ...lines.slice(blockEnd),
+    ];
+  }
+
+  return updatedLines.join('\n');
 }
 
 /**
@@ -229,7 +283,7 @@ function buildCuratedLine(photos, indent) {
     return `${indent}curated: [],`;
   }
   // Use JSON.stringify to get a safely escaped string, then convert outer
-  // double-quotes to single-quotes (config.js convention).
+  // double-quotes to single-quotes (album file convention).
   const safeStr = (u) => JSON.stringify(u).replace(/^"|"$/g, "'");
   if (photos.length <= 3) {
     const inner = photos.map(safeStr).join(', ');

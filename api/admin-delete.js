@@ -72,10 +72,9 @@ export default async function handler(req, res) {
     .filter(r => r.status === 'rejected' || !r.value?.ok)
     .map(r => r.value?.key || 'unknown');
 
-  // ── 2. Update config.js via GitHub API ────────────────────────────────────
+  // ── 2. Update album source files via GitHub API ────────────────────────────
+  // Albums live in js/albums/*.js (legacy leftovers may still be in js/config.js).
   const [owner, repo] = GITHUB_REPO.split('/');
-  const filePath = 'js/config.js';
-  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
   const ghHeaders = {
     Authorization: `Bearer ${GITHUB_TOKEN}`,
     Accept: 'application/vnd.github+json',
@@ -84,67 +83,51 @@ export default async function handler(req, res) {
 
   let configUpdated = false;
   let configError = null;
+  const updatedFiles = [];
 
   try {
-    // Fetch current file
-    const getRes = await fetch(apiBase, { headers: ghHeaders });
-    if (!getRes.ok) throw new Error(`GitHub GET failed: ${getRes.status}`);
-    const fileData = await getRes.json();
-    const originalContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
+    const sourceFiles = await listAlbumSourceFiles(owner, repo, ghHeaders);
+    const fileResults = await Promise.all(sourceFiles.map(async (filePath) => {
+      const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+      const getRes = await fetch(apiBase, { headers: ghHeaders });
+      if (!getRes.ok) return { filePath, changed: false, error: `GitHub GET failed: ${getRes.status}` };
+      const fileData = await getRes.json();
+      const originalContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
+      const updatedContent = removeUrlsFromSource(originalContent, urls);
 
-    // Remove deleted photos from config.js
-    // config.js uses `${R2_BASE_URL}/path/file.jpg` — not the expanded full URL
-    let updatedContent = originalContent;
-    for (const url of urls) {
-      const path = url.startsWith(R2_BASE_URL)
-        ? url.slice(R2_BASE_URL.length).replace(/^\//, '')
-        : null;
-      if (!path) continue;
+      if (updatedContent === originalContent) {
+        return { filePath, changed: false };
+      }
 
-      const pathPattern = escapeRegex(path);
-
-      // Photo array entry: `${R2_BASE_URL}/path/file.jpg`,
-      updatedContent = updatedContent.replace(
-        new RegExp(`\\s*\`\\$\\{R2_BASE_URL\\}/${pathPattern}\`,\\n`, 'g'),
-        '\n'
-      );
-      // Legacy: full URL string (if any old entries exist)
-      updatedContent = updatedContent.replace(
-        new RegExp(`\\s*\`${escapeRegex(url)}\`,\\n`, 'g'),
-        '\n'
-      );
-      // coverImage
-      updatedContent = updatedContent.replace(
-        new RegExp(`(coverImage:\\s*)\`\\$\\{R2_BASE_URL\\}/${pathPattern}\``, 'g'),
-        "$1'/images/placeholder-album.svg'"
-      );
-      updatedContent = updatedContent.replace(
-        new RegExp(`(coverImage:\\s*)\`${escapeRegex(url)}\``, 'g'),
-        "$1'/images/placeholder-album.svg'"
-      );
-    }
-
-    // Clean up any double blank lines introduced by removal
-    updatedContent = updatedContent.replace(/\n{3,}/g, '\n\n');
-
-    if (updatedContent === originalContent) {
-      configError = 'No changes found in config.js (URLs may already be removed)';
-    } else {
-      const newContentB64 = Buffer.from(updatedContent).toString('base64');
       const putRes = await fetch(apiBase, {
         method: 'PUT',
         headers: { ...ghHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Admin: remove ${deleted.length} photo${deleted.length !== 1 ? 's' : ''}`,
-          content: newContentB64,
+          message: `Admin: remove ${deleted.length} photo${deleted.length !== 1 ? 's' : ''} from ${filePath}`,
+          content: Buffer.from(updatedContent).toString('base64'),
           sha: fileData.sha,
         }),
       });
       if (!putRes.ok) {
         const errBody = await putRes.text();
-        throw new Error(`GitHub PUT failed: ${putRes.status} — ${errBody}`);
+        return { filePath, changed: false, error: `GitHub PUT failed: ${putRes.status} — ${errBody}` };
       }
-      configUpdated = true;
+      return { filePath, changed: true };
+    }));
+
+    for (const result of fileResults) {
+      if (result.changed) {
+        configUpdated = true;
+        updatedFiles.push(result.filePath);
+      } else if (result.error) {
+        configError = configError
+          ? `${configError}; ${result.filePath}: ${result.error}`
+          : `${result.filePath}: ${result.error}`;
+      }
+    }
+
+    if (!configUpdated && !configError) {
+      configError = 'No matching photo URLs found in js/albums/*.js or js/config.js';
     }
   } catch (err) {
     configError = err.message;
@@ -154,10 +137,72 @@ export default async function handler(req, res) {
     deleted,
     deleteFailed,
     configUpdated,
+    updatedFiles,
     configError: configError || null,
   });
 }
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function listAlbumSourceFiles(owner, repo, ghHeaders) {
+  const files = [];
+  const listRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/js/albums`,
+    { headers: ghHeaders },
+  );
+  if (listRes.ok) {
+    const entries = await listRes.json();
+    if (Array.isArray(entries)) {
+      for (const entry of entries) {
+        if (entry?.type === 'file' && typeof entry.name === 'string' && entry.name.endsWith('.js')) {
+          files.push(entry.path);
+        }
+      }
+    }
+  }
+  files.push('js/config.js');
+  return files;
+}
+
+function removeUrlsFromSource(originalContent, urls) {
+  // Album files use `${R2_BASE_URL}/path/file.jpg` — not the expanded full URL
+  let updatedContent = originalContent;
+  for (const url of urls) {
+    const path = url.startsWith(R2_BASE_URL)
+      ? url.slice(R2_BASE_URL.length).replace(/^\//, '')
+      : null;
+    if (!path) continue;
+
+    const pathPattern = escapeRegex(path);
+
+    // Photo array entry: `${R2_BASE_URL}/path/file.jpg`,
+    updatedContent = updatedContent.replace(
+      new RegExp(`\\s*\`\\$\\{R2_BASE_URL\\}/${pathPattern}\`,\\n`, 'g'),
+      '\n'
+    );
+    // Legacy: full URL string (if any old entries exist)
+    updatedContent = updatedContent.replace(
+      new RegExp(`\\s*\`${escapeRegex(url)}\`,\\n`, 'g'),
+      '\n'
+    );
+    // curated entries are single-quoted full URLs
+    updatedContent = updatedContent.replace(
+      new RegExp(`\\s*'${escapeRegex(url)}',\\n`, 'g'),
+      '\n'
+    );
+    // coverImage
+    updatedContent = updatedContent.replace(
+      new RegExp(`(coverImage:\\s*)\`\\$\\{R2_BASE_URL\\}/${pathPattern}\``, 'g'),
+      "$1'/images/placeholder-album.svg'"
+    );
+    updatedContent = updatedContent.replace(
+      new RegExp(`(coverImage:\\s*)\`${escapeRegex(url)}\``, 'g'),
+      "$1'/images/placeholder-album.svg'"
+    );
+  }
+
+  // Clean up any double blank lines introduced by removal
+  return updatedContent.replace(/\n{3,}/g, '\n\n');
 }
