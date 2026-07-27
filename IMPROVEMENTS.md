@@ -61,7 +61,7 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 
 | Album | Audience | Notes |
 |-------|----------|-------|
-| **Moksha Yoga** | `client:moksha-yoga` | 50 photos on `portfolio-images-private/Moksha-Yoga/` + grids. Merged to `main` (`c0ae2cf`). Access code created in D1 (id 1). |
+| **Moksha Yoga** | `client:moksha-yoga` | 50 photos on `portfolio-images-private/Moksha-Yoga/` + grids. Merged to `main` (`c0ae2cf`); client return navigation and album-specific grid controls shipped in `7a18855`. Access code created in D1 (id 1). |
 
 ---
 
@@ -351,6 +351,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **Client album navigation and grid controls** — Jul 2026.
+  Unlocked clients retain a `Client Gallery` return link across the site, Sign out stays rightmost, and Moksha Yoga grid hearts are hidden. Shipped on `main` (`7a18855`).
 
 - **Album — Moksha Yoga (client drop)** — Jul 2026.
   Hidden `client:moksha-yoga` album (50 photos) on private R2; shipped on `main` (`c0ae2cf`). Access code created via Worker D1 (shown once to operator).
