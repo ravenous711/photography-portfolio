@@ -61,8 +61,9 @@ while [[ $# -gt 0 ]]; do
     --batch)     ONLY_BATCH="$2"; shift 2 ;;
     --dry-run)   PASSTHROUGH+=(--dry-run); shift ;;
     --fast)      PASSTHROUGH+=(--fast); shift ;;
-    --view-only) PASSTHROUGH+=(--view-only); shift ;;
-    --grid-only) PASSTHROUGH+=(--grid-only); shift ;;
+    --view-only)  PASSTHROUGH+=(--view-only); shift ;;
+    --grid-only)  PASSTHROUGH+=(--grid-only); shift ;;
+    --force-grid) PASSTHROUGH+=(--force-grid); shift ;;
     --from)      FROM_PREFIX="$2"; shift 2 ;;
     -h|--help)   usage 0 ;;
     *)

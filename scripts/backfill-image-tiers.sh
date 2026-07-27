@@ -43,6 +43,7 @@ FAST=0
 LIMIT=0
 VIEW_ONLY=0
 GRID_ONLY=0
+FORCE_GRID=0
 SLEEP_BETWEEN=5
 
 usage() {
@@ -57,8 +58,9 @@ while [[ $# -gt 0 ]]; do
     --dry-run)   DRY_RUN=1; shift ;;
     --fast)      FAST=1; SLEEP_BETWEEN=0; shift ;;
     --limit)     LIMIT="$2"; shift 2 ;;
-    --view-only) VIEW_ONLY=1; shift ;;
-    --grid-only) GRID_ONLY=1; shift ;;
+    --view-only)  VIEW_ONLY=1; shift ;;
+    --grid-only)  GRID_ONLY=1; shift ;;
+    --force-grid) FORCE_GRID=1; shift ;;
     --sleep)     SLEEP_BETWEEN="$2"; shift 2 ;;
     -h|--help)   usage 0 ;;
     *)
@@ -202,11 +204,11 @@ for key in "${ORIG_KEYS[@]}"; do
     fi
   fi
 
-  # Skip check: does grid/ already exist?
+  # Skip check: does grid/ already exist? (bypass if --force-grid)
   if [[ "$NEED_GRID" == "1" ]]; then
     if [[ "$DRY_RUN" == "1" ]]; then
       GRID_STATUS="would-create"
-    elif r2_key_exists "$GRID_KEY"; then
+    elif [[ "$FORCE_GRID" == "0" ]] && r2_key_exists "$GRID_KEY"; then
       NEED_GRID=0
       GRID_STATUS="skipped"
     fi
