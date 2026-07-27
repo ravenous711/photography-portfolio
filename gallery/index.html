@@ -20,7 +20,7 @@
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
       <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
       <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
-      <li id="nav-unlock-item" style="display:none"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
+      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -34,7 +34,7 @@
     <a href="/gallery/">Gallery</a>
     <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Albums</a>
     <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
-    <a href="/unlock/" id="mobile-unlock-link" style="display:none">Unlock</a>
+    <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
   </div>
 
   <!-- ── Page Header ── -->
@@ -77,15 +77,6 @@
 
     // ── Render album grid grouped by year ──
     const main = document.getElementById('gallery-main');
-
-    const canSeeFamily = TierAuth.canAccess('family');
-
-    if (canSeeFamily) {
-      const unlockItem   = document.getElementById('nav-unlock-item');
-      const mobileUnlock = document.getElementById('mobile-unlock-link');
-      if (unlockItem)   unlockItem.style.display = '';
-      if (mobileUnlock) mobileUnlock.style.display = '';
-    }
 
     // Top-level non-hidden albums (public and friends-visible)
     const topLevel = ALBUMS.filter(a => !a.parentId && !a.hidden);

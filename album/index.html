@@ -24,7 +24,7 @@
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
       <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
       <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
-      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
+      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -38,7 +38,7 @@
     <a href="/gallery/">Gallery</a>
     <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Albums</a>
     <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
-    <a href="/unlock/">Unlock</a>
+    <a href="/unlock/">Private Access</a>
   </div>
 
   <!-- ── Password Modal (shown for protected albums) ── -->
@@ -2491,7 +2491,7 @@
     }
     .album-curated-label {
       margin: 0 auto 0.75rem;
-      max-width: 34rem;
+      max-width: 54rem;
       font-family: var(--font-serif);
       font-size: clamp(1.25rem, 1.8vw, 1.45rem);
       font-weight: 300;
@@ -2505,19 +2505,18 @@
     }
     .album-view-toggle-btn {
       display: inline-block;
-      background: transparent;
-      border: 1px solid var(--color-border);
-      color: var(--color-muted);
+      background: var(--color-gold);
+      border: 1px solid var(--color-gold);
+      color: #1a1a1a;
       padding: 0.55rem 1.35rem;
       font-size: 0.72rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
+      transition: filter 0.2s;
     }
     .album-view-toggle-btn:hover {
-      border-color: var(--color-text);
-      color: var(--color-text);
+      filter: brightness(0.92);
     }
     .album-favorites-note {
       margin: 0.85rem auto 0;

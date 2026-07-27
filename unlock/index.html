@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Unlock — Raveen Fernando</title>
+  <title>Private Access — Raveen Fernando</title>
   <meta name="description" content="Enter your access code to view private albums." />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
@@ -178,7 +178,7 @@
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
       <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
       <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
-      <li><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Unlock</a></li>
+      <li><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -192,7 +192,7 @@
     <a href="/gallery/">Gallery</a>
     <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Albums</a>
     <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
-    <a href="/unlock/">Unlock</a>
+    <a href="/unlock/">Private Access</a>
   </div>
 
   <div class="unlock-wrap">
@@ -216,14 +216,14 @@
         <!-- Divider before additional-code form -->
         <div style="width:100%;border-top:1px solid var(--color-border);margin:1.5rem 0 0.25rem"></div>
         <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">
-          Unlock another tier
+          Access another code
         </p>
       </div>
 
       <!-- Password form — always visible so additional tiers can be added -->
       <div id="form-view">
         <div id="form-title-block">
-          <p class="unlock-title">Unlock</p>
+          <p class="unlock-title">Private Access</p>
           <p class="unlock-subtitle">Enter your access code</p>
         </div>
 
@@ -262,7 +262,7 @@
             <input type="checkbox" id="unlock-remember" />
             Remember on this device
           </label>
-          <button type="submit" class="unlock-btn" id="unlock-btn">Unlock</button>
+          <button type="submit" class="unlock-btn" id="unlock-btn">Continue</button>
         </form>
       </div>
 
@@ -340,17 +340,17 @@
       renderSignedIn();
       document.getElementById('unlock-input').value = '';
       document.getElementById('unlock-error').textContent = '';
-      document.getElementById('unlock-btn').textContent = 'Unlock';
+      document.getElementById('unlock-btn').textContent = 'Continue';
       document.getElementById('unlock-btn').disabled = false;
       showToast('Signed out');
     }
 
-    // Update nav to show "Sign out" text if already unlocked
+    // Update nav to show signed-in state if already unlocked
     function updateNavLink() {
       const link = document.getElementById('nav-unlock-link');
       if (!link) return;
       if (TierAuth.grantedTiers().size > 0) {
-        link.textContent = 'Unlocked ✓';
+        link.textContent = 'Private Access ✓';
       }
     }
 
@@ -401,7 +401,7 @@
               ? ALBUMS.find(a => a.id === clientId || a.id === clientId.replace(':', '-'))
               : null;
             if (album) {
-              showToast(`Unlocked — loading your album…`);
+              showToast(`Access granted — loading your album…`);
               setTimeout(() => window.location.href = Routes.albumPageUrl(album), 800);
               return;
             }
@@ -419,7 +419,7 @@
             } catch { return null; }
           })();
           if (safeNext) {
-            showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')} — redirecting…`);
+            showToast(`Access granted: ${granted.map(tierLabel).join(' + ')} — redirecting…`);
             setTimeout(() => window.location.href = safeNext, 800);
             return;
           }
@@ -427,23 +427,23 @@
           // Family tier: redirect to Family Gallery
           const hasFamilyTier = granted.some(t => t === 'family' || t.startsWith('family:'));
           if (hasFamilyTier) {
-            showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')} — loading Family Albums…`);
+            showToast(`Access granted: ${granted.map(tierLabel).join(' + ')} — loading Family Albums…`);
             setTimeout(() => window.location.href = '/familyalbums/', 800);
             return;
           }
 
           // Re-render signed-in banner (additive — shows all currently granted tiers)
-          showToast(`Unlocked: ${granted.map(tierLabel).join(' + ')}`);
+          showToast(`Access granted: ${granted.map(tierLabel).join(' + ')}`);
           renderSignedIn();
           // Clear the input for the next optional code
           input.value = '';
-          btn.textContent = 'Unlock';
+          btn.textContent = 'Continue';
           btn.disabled = false;
         } else {
           error.textContent = 'Incorrect access code. Please try again.';
           input.focus();
           input.select();
-          btn.textContent = 'Unlock';
+          btn.textContent = 'Continue';
           btn.disabled = false;
           input.classList.add('shake');
           input.addEventListener('animationend', () => input.classList.remove('shake'), { once: true });
