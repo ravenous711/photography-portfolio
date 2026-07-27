@@ -508,7 +508,6 @@ const ALBUMS_ITALY_2026 = [
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_055.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_093.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_097-Edit.jpg',
-      'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_137.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_162.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/FP4/Fernando000799-R1-E024.jpg',
       'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Film/FP4/Fernando000799-R1-E028.jpg',
