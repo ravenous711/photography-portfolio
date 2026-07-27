@@ -205,6 +205,23 @@ function gridUrl(fullUrl) {
   return m ? `${m[1]}grid/${m[2]}` : fullUrl;
 }
 
+function viewUrl(fullUrl) {
+  if (!fullUrl) return fullUrl;
+  if (fullUrl.includes('/image?') && fullUrl.includes('key=')) {
+    try {
+      const u = new URL(fullUrl);
+      const key = u.searchParams.get('key');
+      if (key && !key.startsWith('view/')) {
+        u.searchParams.set('key', 'view/' + key);
+        return u.toString();
+      }
+    } catch { /* fall through */ }
+    return fullUrl;
+  }
+  const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+  return m ? `${m[1]}view/${m[2]}` : fullUrl;
+}
+
 // alias kept for admin/curate call sites
 function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
@@ -549,7 +566,7 @@ const ImagePreload = {
     for (const i of order) {
       const u = urls[i];
       this.load(gridUrl(u)).catch(() => {});
-      if (!slow) this.load(u).catch(() => {});
+      if (!slow) this.load(viewUrl(u)).catch(() => {});
     }
   },
 
