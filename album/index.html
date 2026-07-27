@@ -483,6 +483,11 @@
         } else if (album.familySlug) {
           document.getElementById('back-link').href = '/familyalbums/';
           document.getElementById('back-link-sticky').href = '/familyalbums/';
+        } else if ((album.audience || '').startsWith('client:')) {
+          // Client albums are hidden from the public gallery — "All Albums" would
+          // strand the client on a page that never links back here.
+          document.getElementById('back-link').hidden = true;
+          document.getElementById('back-link-sticky').hidden = true;
         }
 
         // ── Auth check ──
@@ -1166,6 +1171,7 @@
       }
 
       document.body.classList.toggle('full-album-mode', showingFull);
+      document.body.classList.toggle('grid-favorites-disabled', album.gridFavorites === false);
       updateViewControls(showingFull);
 
       const digitalGrid = document.getElementById('photo-grid');
@@ -2364,9 +2370,11 @@
 
       // Enable hearts immediately (synchronously) so they appear as soon as the grid renders.
       // Previously this happened only after the fetch, causing visible delay or missing hearts.
-      document.querySelectorAll('.photo-grid').forEach(grid => {
-        grid.classList.add('favorites-enabled');
-      });
+      if (album?.gridFavorites !== false) {
+        document.querySelectorAll('.photo-grid').forEach(grid => {
+          grid.classList.add('favorites-enabled');
+        });
+      }
 
       // Show lightbox fav button on all album pages
       const favBtnLb = document.getElementById('lightbox-fav');
@@ -2720,7 +2728,7 @@
     .fav-badge.hearted svg { fill: #e85d6e; stroke: #e85d6e; }
     .fav-badge:hover { background: rgba(0,0,0,0.7); }
     /* Show fav badges on tiles in full-album mode (body class set by applyFullAlbumMode) */
-    body.full-album-mode .photo-thumb .fav-badge { display: flex; }
+    body.full-album-mode:not(.grid-favorites-disabled) .photo-thumb .fav-badge { display: flex; }
     /* Legacy class-based rule kept for safety */
     .favorites-enabled .photo-thumb .fav-badge { display: flex; }
     /* Keep fav badge hidden in select mode (ZIP selection UI takes over) */

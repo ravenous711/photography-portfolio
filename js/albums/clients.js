@@ -16,6 +16,7 @@ const ALBUMS_CLIENTS = [
     audience: 'client:moksha-yoga',
     hidden: true,
     protected: false,
+    gridFavorites: false,
     coverImage: `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-01.jpg`,
     photos: [
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-01.jpg`,

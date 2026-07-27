@@ -45,6 +45,67 @@ function initNav() {
     if (so)  so.style.display = '';
     if (mso) mso.style.display = '';
   }
+
+  injectClientAlbumNavLinks();
+
+  // Keep sign out as the final action at the far right, after any links that
+  // are revealed or injected for an unlocked tier.
+  if (hasAnyTier) {
+    const signOutItem = document.getElementById('nav-signout-item');
+    const navLinks = signOutItem?.parentElement;
+    if (signOutItem && navLinks) navLinks.appendChild(signOutItem);
+
+    const mobileSignOut = document.getElementById('mobile-signout-link');
+    const mobileMenu = mobileSignOut?.parentElement;
+    if (mobileSignOut && mobileMenu) mobileMenu.appendChild(mobileSignOut);
+  }
+}
+
+// Client albums are hidden from the public gallery, so once a client navigates
+// away (e.g. to /gallery/) there is no link back. Add a "Client Gallery" nav
+// link for every client tier they have unlocked.
+function getUnlockedClientAlbums() {
+  if (typeof TierAuth === 'undefined' || typeof ALBUMS === 'undefined') return [];
+  return [...TierAuth.grantedTiers()]
+    .filter(tier => tier.startsWith('client:'))
+    .map(tier => ALBUMS.find(a => a.audience === tier) || ALBUMS.find(a => a.id === tier.slice(7)))
+    .filter(Boolean);
+}
+
+function injectClientAlbumNavLinks() {
+  const albums = getUnlockedClientAlbums();
+  if (!albums.length || typeof Routes === 'undefined') return;
+
+  const list = document.querySelector('#main-nav .nav-links');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const signOutItem = document.getElementById('nav-signout-item');
+  const mobileSignOut = document.getElementById('mobile-signout-link');
+  const currentPath = window.location.pathname.replace(/\/?$/, '/');
+
+  albums.forEach(album => {
+    const href = Routes.albumPageUrl(album);
+    const isCurrent = href.replace(/\/?$/, '/') === currentPath;
+    const label = 'Client Gallery';
+
+    if (list && !list.querySelector(`[data-client-album="${album.id}"]`)) {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = href;
+      link.textContent = label;
+      link.dataset.clientAlbum = album.id;
+      if (isCurrent) link.classList.add('nav-active');
+      li.appendChild(link);
+      list.insertBefore(li, signOutItem);
+    }
+
+    if (mobileMenu && !mobileMenu.querySelector(`[data-client-album="${album.id}"]`)) {
+      const link = document.createElement('a');
+      link.href = href;
+      link.textContent = label;
+      link.dataset.clientAlbum = album.id;
+      mobileMenu.insertBefore(link, mobileSignOut);
+    }
+  });
 }
 
 // ── Sign out: clear all unlocked tiers + cached tokens, return home ──
