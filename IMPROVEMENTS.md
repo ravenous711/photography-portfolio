@@ -47,17 +47,17 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums.
 
-*Active session (Jul 27 2026 — Moksha Yoga client album shell prepared; awaiting photo exports).*
+*Active session (Jul 27 2026 — Moksha Yoga: private R2 upload complete; awaiting deploy approval).*
 
 ### In progress
 
-*(none)*
+| Album | Audience | R2 folder | Status |
+|-------|----------|-----------|--------|
+| **Moksha Yoga** | `client:moksha-yoga` | `portfolio-images-private/Moksha-Yoga/` | Upload done. 50 grids + originals on private R2 (sample-verified incl. previously stuck `41`). Config populated. **Awaiting deploy approval + access code creation.** |
 
 ### Queued (approved, not started)
 
-| Album | Audience | R2 folder | Status |
-|-------|----------|-----------|--------|
-| **Moksha Yoga** | `client:moksha-yoga` | `portfolio-images-private/Moksha-Yoga/` (TBD) | Shell in `js/albums/clients.js`; no upload yet. Direct URL `/album/moksha-yoga/`. Create access code in `/admin/` after deploy. |
+*(none)*
 
 ---
 
