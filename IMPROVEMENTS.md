@@ -47,11 +47,13 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums.
 
-*No active session (Jul 8 2026 — Fernando family + April albums shipped to R2).*
+*Active session (Jul 27 2026 — Moksha Yoga: private R2 upload complete; awaiting deploy approval).*
 
 ### In progress
 
-*(none)*
+| Album | Audience | R2 folder | Status |
+|-------|----------|-----------|--------|
+| **Moksha Yoga** | `client:moksha-yoga` | `portfolio-images-private/Moksha-Yoga/` | Upload done. 50 grids + originals on private R2 (sample-verified incl. previously stuck `41`). Config populated. **Awaiting deploy approval + access code creation.** |
 
 ### Queued (approved, not started)
 
@@ -345,6 +347,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **Album shell — Moksha Yoga (client)** — Jul 2026.
+  Hidden `client:moksha-yoga` album shell in `js/albums/clients.js`; queued for private R2 upload when exports are ready. No deploy/access code yet.
 
 - **Albums — April family (MD + MI)** — Jul 2026.
   Visiting Elena in MD (50× 1★) + Ali's in Michigan (70× all) on `main`; R2 originals + grids complete. MI had one `fetch failed` on `20250413-_DSF3189.jpg` (manual retry OK).
