@@ -128,9 +128,11 @@ upload_status "Listing originals under ${BUCKET_NAME}/${PREFIX}/ ..."
 ORIG_KEYS=()
 while IFS= read -r key; do
   [[ -n "$key" ]] || continue
-  # Skip tier prefixes and anything that already looks like a derived key
+  # Skip tier prefixes, directory markers, and non-image entries
   [[ "$key" == grid/* ]] && continue
   [[ "$key" == view/* ]] && continue
+  [[ "$key" == */ ]] && continue
+  [[ "$key" =~ \.(jpg|JPG|jpeg|JPEG|png|PNG|webp|WEBP)$ ]] || continue
   ORIG_KEYS+=("$key")
 done < <(
   r2_list_objects "$PREFIX/" 2>/dev/null | python3 -c '

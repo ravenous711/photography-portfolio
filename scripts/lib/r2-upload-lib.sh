@@ -172,7 +172,11 @@ r2_list_objects() {
   local prefix="$1"
   local token
 
-  token=$(grep 'oauth_token' ~/Library/Preferences/.wrangler/config/default.toml 2>/dev/null | awk -F'"' '{print $2}')
+  # Wrangler 4.x writes to ~/.wrangler/; older versions used ~/Library/Preferences/.wrangler/
+  token=$(grep 'oauth_token' ~/.wrangler/config/default.toml 2>/dev/null | awk -F'"' '{print $2}')
+  if [[ -z "$token" ]]; then
+    token=$(grep 'oauth_token' ~/Library/Preferences/.wrangler/config/default.toml 2>/dev/null | awk -F'"' '{print $2}')
+  fi
   if [[ -z "$token" ]]; then
     echo "Error: could not read wrangler oauth token" >&2
     return 1
