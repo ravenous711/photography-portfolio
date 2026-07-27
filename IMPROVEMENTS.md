@@ -47,17 +47,21 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums.
 
-*Active session (Jul 27 2026 — Moksha Yoga: private R2 upload complete; awaiting deploy approval).*
+*Active session (Jul 27 2026 — Moksha Yoga client drop shipped).*
 
 ### In progress
 
-| Album | Audience | R2 folder | Status |
-|-------|----------|-----------|--------|
-| **Moksha Yoga** | `client:moksha-yoga` | `portfolio-images-private/Moksha-Yoga/` | Upload done. 50 grids + originals on private R2 (sample-verified incl. previously stuck `41`). Config populated. **Awaiting deploy approval + access code creation.** |
+*(none)*
 
 ### Queued (approved, not started)
 
 *(none)*
+
+### Done (this session)
+
+| Album | Audience | Notes |
+|-------|----------|-------|
+| **Moksha Yoga** | `client:moksha-yoga` | 50 photos on `portfolio-images-private/Moksha-Yoga/` + grids. Merged to `main` (`c0ae2cf`). Access code created in D1 (id 1). |
 
 ---
 
@@ -347,6 +351,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **Album — Moksha Yoga (client drop)** — Jul 2026.
+  Hidden `client:moksha-yoga` album (50 photos) on private R2; shipped on `main` (`c0ae2cf`). Access code created via Worker D1 (shown once to operator).
 
 - **Album shell — Moksha Yoga (client)** — Jul 2026.
   Hidden `client:moksha-yoga` album shell in `js/albums/clients.js`; queued for private R2 upload when exports are ready. No deploy/access code yet.
