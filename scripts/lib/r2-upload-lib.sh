@@ -225,6 +225,10 @@ upload_with_retry() {
 }
 
 generate_grids() {
+  # Generates 1200px q80 grid/ thumbnails for upload-album.sh.
+  # NOTE: New albums should also generate a view/ tier (2048px q80) for the
+  # lightbox. Use scripts/backfill-image-tiers.sh to derive view/ and grid/
+  # (900px q75) in one pass from originals already in R2.
   local folder="$1"
   local grid_dir="$2"
   local fname ok=0 fail=0 skipped=0
