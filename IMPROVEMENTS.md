@@ -69,6 +69,7 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 
 | Ticket | Area | Effort | Risk | Status |
 |--------|------|--------|------|--------|
+| PERF-1 | Performance | L | Med | IN PROGRESS |
 | BUG-1 | Correctness | S | Low | TODO |
 | BUG-2 | Correctness | S | Low | TODO |
 | BUG-3 | Correctness | S | Low | TODO |
@@ -103,6 +104,24 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 ---
 
 ## Tickets
+
+### Performance
+
+#### PERF-1 — Add view/ image tier; stop lightbox serving 15-40MB originals
+- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Jul 2026, branch `perf/lightbox-image-tiers`)
+- **Why:** The lightbox upgrades to the raw original on every open, `preloadAdjacent` prefetches originals for 4+ neighbours, and `prefetchDownloadBlob` fires eagerly. Opening 20 photos can pull hundreds of MB on mobile.
+- **Target model:** `grid/` (thumbnails) → `view/` ~2048px (lightbox) → original (download only, explicitly chosen).
+- **Phases:**
+  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend-only. Stop eager prefetch; add `viewUrl()`; point lightbox at `view/` with 404 fallback (stays on grid on slow connections; caches miss per album). Ships before backfill; self-retiring as albums are backfilled.
+  - **Phase 2** (`feat/download-size-picker`): Worker ACL — allow `view/<client>/` keys for client tier so client albums don't 403 on the new tier.
+  - **Phase 3** (`feat/backfill-image-tiers`): `scripts/backfill-image-tiers.sh` — derive 2048px `view/` and 900px `grid/` from R2 originals in one resumable pass, public or private bucket.
+  - **Phase 4**: Run backfill per album, starting with Italy. Verify one album on a phone first.
+  - **Phase 5** (`feat/download-size-picker`): Download size chooser modal (web/large/original) with per-tier estimates; wired to all download entry points.
+  - **Phase 6** (`feat/download-size-picker`): Private album ZIP — token-gated `PRIVATE_BUCKET` reads in the ZIP Worker; same ACL as `/image`, extended for `view/`.
+- **Files:** `js/main.js`, `album/index.html`, `workers/zip-download/src/index.js`, `scripts/backfill-image-tiers.sh`
+- **Done when:** Lightbox serves `view/` for all backfilled albums; download chooser lets users pick web/large/original; private albums can ZIP; originals are only pulled on explicit download.
+
+---
 
 ### Correctness / robustness
 
@@ -351,6 +370,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **PERF-1 — Image tier infrastructure (Phases 1–3, 6)** — Jul 2026.
+  Frontend stops serving originals in the lightbox; `viewUrl()` + 404 fallback added (`perf/lightbox-image-tiers`). Worker ACL extended for `view/<client>/` keys; ZIP Worker gains token-gated `PRIVATE_BUCKET` support (`feat/download-size-picker`). `scripts/backfill-image-tiers.sh` written for resumable view/ + grid/ derivation (`feat/backfill-image-tiers`). Deploy, backfill run, and download chooser (Phase 4, 5) pending.
 
 - **Client album navigation and grid controls** — Jul 2026.
   Unlocked clients retain a `Client Gallery` return link across the site, Sign out stays rightmost, and Moksha Yoga grid hearts are hidden. Shipped on `main` (`7a18855`).

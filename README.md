@@ -323,7 +323,11 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 - [x] **California 2025** — 111 photos + grid (`California/Santa-Cruz-Big-Sur/`, `California/Yosemite/`)
 - [x] **On Film** — 4 rolls, 150 photos + grid at `Italy/Film/Ultramax/`, `FP4/`, `TMAX/`, `Portra/`
 - [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
-- [x] **Grid tier** — album, admin, and curate use 1200px grid previews
+- [x] **Image tiers** — three R2 key tiers per photo:
+  - `grid/<key>` — 900px q75 thumbnails for album scroll (replaces 1200px originals after backfill)
+  - `view/<key>` — ~2048px q80 for the lightbox (NEW; derived by `scripts/backfill-image-tiers.sh`)
+  - `<key>` — original full-res, pulled only on explicit download
+  Album, admin, and curate grids use `grid/`; lightbox targets `view/` with 404 fallback to original.
 - [x] **GitHub token** — admin deletions auto-update `config.js`
 - [x] **RF favicon** — tab icon on all pages
 - [x] **Hero image** — `DSCF1569.jpg` (Italy) on home page

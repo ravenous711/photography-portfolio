@@ -178,25 +178,45 @@ FOLDER="<path>"
 exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null | awk -F'\t' '$1 > 0 {print $2}' | sort
 ```
 
-## Step 3 — Generate grid images locally (1200px)
+## Step 3 — Generate grid and view images locally
 
-Generate 1200px grids locally for every album. Upload destination depends on audience:
-- **Public / friends** → `portfolio-images/grid/<R2-folder-name>/`
-- **Family / client** → `portfolio-images-private/grid/<R2-folder-name>/` (served via Worker token)
+New albums should generate **two derived tiers** from the originals:
+
+| Tier | Size | Quality | R2 prefix | Purpose |
+|------|------|---------|-----------|---------|
+| `grid/` | 900px | q75 | `grid/<R2-folder-name>/` | Album scroll thumbnails |
+| `view/` | 2048px | q80 | `view/<R2-folder-name>/` | Lightbox display |
+
+Upload destination depends on audience:
+- **Public / friends** → `portfolio-images/grid/` and `portfolio-images/view/`
+- **Family / client** → `portfolio-images-private/grid/` and `portfolio-images-private/view/` (served via Worker token)
+
+Generate both tiers locally before uploading:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
 setopt nullglob
 FOLDER="<local path>"
-GRID_DIR="/tmp/grid_<R2-folder-name>"
-mkdir -p "$GRID_DIR"
+R2_NAME="<R2-folder-name>"
+GRID_DIR="/tmp/grid_${R2_NAME}"
+VIEW_DIR="/tmp/view_${R2_NAME}"
+mkdir -p "$GRID_DIR" "$VIEW_DIR"
 
 for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
   [ -f "$f" ] || continue
-  sips -Z 1200 "$f" --out "$GRID_DIR/$(basename "$f")" --setProperty formatOptions 80 2>/dev/null \
-    && echo "✓ grid $(basename "$f")" || echo "✗ FAILED grid: $(basename "$f")"
+  b="$(basename "$f")"
+  sips -Z 900 "$f" --out "$GRID_DIR/$b" --setProperty formatOptions 75 2>/dev/null \
+    && echo "✓ grid $b" || echo "✗ FAILED grid: $b"
+  sips -Z 2048 "$f" --out "$VIEW_DIR/$b" --setProperty formatOptions 80 2>/dev/null \
+    && echo "✓ view $b" || echo "✗ FAILED view: $b"
 done
-echo "Done. $(ls "$GRID_DIR" | wc -l | tr -d ' ') grid images"
+echo "Done. grid=$(ls "$GRID_DIR" | wc -l | tr -d ' ')  view=$(ls "$VIEW_DIR" | wc -l | tr -d ' ')"
+```
+
+If originals are already in R2 (backfill scenario), use `scripts/backfill-image-tiers.sh` instead:
+```bash
+./scripts/backfill-image-tiers.sh --prefix "<R2-folder-name>"          # public
+./scripts/backfill-image-tiers.sh --prefix "<R2-folder-name>" --private # private bucket
 ```
 
 ## Step 4 — Upload originals
