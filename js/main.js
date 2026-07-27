@@ -661,11 +661,44 @@ const TierAuth = {
   },
 
   // Try to unlock via a password. Returns the granted audiences array, or null.
+  // Checks PASSWORD_TIERS first, then falls back to Worker D1 access codes
+  // (used for client:<name> codes created in /admin/).
   async tryUnlock(password) {
     if (typeof hashPassword !== 'function') return null;
     const hash = await hashPassword(password);
     const tiers = (typeof PASSWORD_TIERS !== 'undefined') ? PASSWORD_TIERS : {};
-    const audiences = tiers[hash] || null;
+    let audiences = tiers[hash] || null;
+
+    if (!audiences) {
+      const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+      if (workerBase) {
+        try {
+          const resp = await fetch(`${workerBase}/unlock`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hash }),
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.tier) {
+              audiences = [data.tier];
+              // Cache the Worker token so the album page can load private images immediately.
+              try {
+                sessionStorage.setItem(
+                  `worker_token_${data.tier}`,
+                  JSON.stringify({
+                    token: data.token,
+                    expiresAt: data.expiresAt,
+                    workerBase,
+                  }),
+                );
+              } catch {}
+            }
+          }
+        } catch {}
+      }
+    }
+
     if (audiences) {
       // Persist hash keyed by audience so album pages can exchange it for a Worker token
       try {

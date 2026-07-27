@@ -52,12 +52,16 @@
       flex-direction: column;
       gap: 0.75rem;
     }
+    .unlock-input-wrap {
+      position: relative;
+      width: 100%;
+    }
     .unlock-input {
       width: 100%;
       background: transparent;
       border: 1px solid var(--color-border);
       color: var(--color-text);
-      padding: 0.75rem 1rem;
+      padding: 0.75rem 2.75rem 0.75rem 1rem;
       font-size: 0.9rem;
       letter-spacing: 0.04em;
       outline: none;
@@ -66,6 +70,23 @@
     }
     .unlock-input:focus { border-color: var(--color-text); }
     .unlock-input::placeholder { color: var(--color-muted); }
+    .unlock-visibility-btn {
+      position: absolute;
+      right: 0.55rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      padding: 0.35rem;
+      color: var(--color-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+    .unlock-visibility-btn:hover { color: var(--color-text); }
+    .unlock-visibility-btn[aria-pressed="true"] { color: var(--color-text); }
     .unlock-btn {
       width: 100%;
       background: var(--color-text);
@@ -207,14 +228,35 @@
         </div>
 
         <form class="unlock-form" id="unlock-form" novalidate>
-          <input
-            type="password"
-            id="unlock-input"
-            class="unlock-input"
-            placeholder="Access code"
-            autocomplete="current-password"
-            aria-label="Access code"
-          />
+          <div class="unlock-input-wrap">
+            <input
+              type="password"
+              id="unlock-input"
+              class="unlock-input"
+              placeholder="Access code"
+              autocomplete="current-password"
+              aria-label="Access code"
+            />
+            <button
+              type="button"
+              id="unlock-visibility"
+              class="unlock-visibility-btn"
+              aria-label="Show access code"
+              aria-pressed="false"
+              title="Show access code"
+            >
+              <svg id="unlock-eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="unlock-eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" hidden>
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
           <p class="unlock-error" id="unlock-error" role="alert"></p>
           <label class="unlock-remember">
             <input type="checkbox" id="unlock-remember" />
@@ -321,6 +363,20 @@
       const error = document.getElementById('unlock-error');
       const btn   = document.getElementById('unlock-btn');
       const remember = document.getElementById('unlock-remember');
+      const visibilityBtn = document.getElementById('unlock-visibility');
+      const eyeOpen = document.getElementById('unlock-eye-open');
+      const eyeClosed = document.getElementById('unlock-eye-closed');
+
+      visibilityBtn?.addEventListener('click', () => {
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        visibilityBtn.setAttribute('aria-pressed', String(!showing));
+        visibilityBtn.setAttribute('aria-label', showing ? 'Show access code' : 'Hide access code');
+        visibilityBtn.title = showing ? 'Show access code' : 'Hide access code';
+        if (eyeOpen) eyeOpen.hidden = !showing;
+        if (eyeClosed) eyeClosed.hidden = showing;
+        input.focus();
+      });
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -385,8 +441,8 @@
           btn.disabled = false;
         } else {
           error.textContent = 'Incorrect access code. Please try again.';
-          input.value = '';
           input.focus();
+          input.select();
           btn.textContent = 'Unlock';
           btn.disabled = false;
           input.classList.add('shake');
