@@ -240,13 +240,26 @@
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
       </button>
-      <button type="button" id="lightbox-download" class="lightbox-action-btn" aria-label="Download photo">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-      </button>
+      <div class="lb-dl-wrap">
+        <button type="button" id="lightbox-download" class="lightbox-action-btn" aria-label="Download photo" aria-haspopup="true" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+        <div id="dl-size-dropdown-lb" class="dl-size-dropdown dl-size-dropdown--lb" hidden role="menu">
+          <button class="dl-size-option" data-size="grid" role="menuitem">
+            <span class="dl-size-name">Low</span><span class="dl-size-hint">~95 KB</span>
+          </button>
+          <button class="dl-size-option" id="dl-size-opt-med-lb" data-size="view" role="menuitem">
+            <span class="dl-size-name">Med</span><span class="dl-size-hint">~1.5 MB</span>
+          </button>
+          <button class="dl-size-option" data-size="original" role="menuitem">
+            <span class="dl-size-name">Full</span><span class="dl-size-hint">~original</span>
+          </button>
+        </div>
+      </div>
       <button type="button" id="lightbox-close" class="lightbox-action-btn" aria-label="Close lightbox" onclick="closeLightbox()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -342,8 +355,8 @@
     let favEnabled = false;      // hoisted — TDZ: same
     const selected   = new Set();
     let refreshAlbumNavMenu = null;
-    // Tracks album prefixes whose view/ tier is not yet backfilled (404 probe result)
-    const _viewMissingPrefixes = new Set();
+    // Current download size preference — initialised from localStorage by initDlSizePicker
+    let _dlSize = 'original';
 
     // ── Private image token (Phase 3) ────────────────────────────────────────
     // For family/client albums, images are served from a private R2 bucket via
@@ -764,7 +777,65 @@
 
     const INDIVIDUAL_THRESHOLD = 5;
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    const DL_SIZE_PREF_KEY = 'dl_size_pref';
+
+    function getSelectedDlSize() {
+      return _dlSize;
+    }
+
+    function setDlSizePref(size) {
+      _dlSize = size;
+      localStorage.setItem(DL_SIZE_PREF_KEY, size);
+    }
+
+    // Initialise dropdown state and wire up dropdown toggle / option clicks
+    (function initDlSizePicker() {
+      _dlSize = localStorage.getItem(DL_SIZE_PREF_KEY) || 'original';
+
+      const lbBtn  = document.getElementById('lightbox-download');
+      const lbDrop = document.getElementById('dl-size-dropdown-lb');
+
+      function closeAll() {
+        if (lbDrop) { lbDrop.hidden = true; lbBtn?.setAttribute('aria-expanded', 'false'); }
+      }
+
+      function openDrop(trigger, menu) {
+        const isOpen = !menu.hidden;
+        closeAll();
+        if (!isOpen) {
+          menu.hidden = false;
+          trigger.setAttribute('aria-expanded', 'true');
+          menu.querySelectorAll('.dl-size-option').forEach(opt => {
+            opt.classList.toggle('is-current', opt.dataset.size === _dlSize);
+          });
+        }
+      }
+
+      // Lightbox button → open size dropdown (never calls navigator.share)
+      bindTapWithoutScroll(lbBtn, (e) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        openDrop(lbBtn, lbDrop);
+      });
+
+      // Lightbox dropdown options → pick size and download
+      lbDrop?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const opt = e.target.closest('.dl-size-option');
+        if (!opt || opt.disabled || opt.hidden) return;
+        setDlSizePref(opt.dataset.size);
+        closeAll();
+        const rawUrl = allPhotos[currentIndex];
+        if (!rawUrl) return;
+        const dlUrl = _dlSize === 'grid' ? gridUrl(rawUrl)
+                    : _dlSize === 'view' ? viewUrl(rawUrl)
+                    : rawUrl;
+        downloadLightboxPhoto(dlUrl);
+      });
+
+      // Escape and click-outside close the dropdown
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+      document.addEventListener('click', closeAll);
+    })();
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isMobileDownload = isIOS || /Android/i.test(navigator.userAgent);
 
@@ -1962,34 +2033,15 @@
       ImagePreload.preloadAdjacent(allPhotos, index, 4);
     }
 
-    // Extract the top-level album prefix from a photo URL (R2 key first segment).
-    // Used to cache view/ 404 results per album rather than per photo.
-    function _viewAlbumPrefix(url) {
-      if (!url) return '';
-      let key = '';
-      if (url.includes('/image?') && url.includes('key=')) {
-        try {
-          const u = new URL(url, location.origin);
-          key = u.searchParams.get('key') || '';
-        } catch { return ''; }
-      } else {
-        const m = url.match(/^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/);
-        key = m ? m[1] : '';
-      }
-      key = key.replace(/^(grid|view)\//, '');
-      return key.split('/')[0] || '';
-    }
-
     function prefetchLightboxIndex(index) {
       if (index < 0 || index >= allPhotos.length) return;
       const url = allPhotos[index];
       ImagePreload.load(gridUrl(url)).catch(() => {});
-      if (!ImagePreload.isSlowConnection()) ImagePreload.load(viewUrl(url)).catch(() => {});
+      if (!ImagePreload.isSlowConnection()) ImagePreload.load(url).catch(() => {});
     }
 
     async function showLightboxPhoto(fullResUrl, index, generation) {
       const grid = gridUrl(fullResUrl);
-      const vUrl = viewUrl(fullResUrl);
       const nextLayer = 1 - activeLayer;
       const nextImg = lightboxLayers[nextLayer];
       const currentImg = lightboxLayers[activeLayer];
@@ -2000,9 +2052,7 @@
       const thumbImg = document.querySelector(`.photo-thumb[data-photo-index="${index}"] img`);
 
       let instantSrc = grid;
-      if (ImagePreload.isLoaded(vUrl)) {
-        instantSrc = vUrl;
-      } else if (ImagePreload.isLoaded(fullResUrl)) {
+      if (ImagePreload.isLoaded(fullResUrl)) {
         instantSrc = fullResUrl;
       } else if (thumbImg?.complete && thumbImg.naturalWidth) {
         instantSrc = thumbImg.src;
@@ -2019,37 +2069,12 @@
       activeLayer = nextLayer;
       requestAnimationFrame(syncLightboxCaptionWidth);
 
-      // Upgrade quality in background: grid → view/ (with 404 fallback).
-      // If the view/ tier hasn't been backfilled yet (prefix in _viewMissingPrefixes),
-      // fall back to the original only on fast connections + large viewports; otherwise
-      // stay on grid (phones on slow connections shouldn't pull a 15-40 MB original).
-      if (instantSrc !== vUrl && instantSrc !== fullResUrl) {
-        const prefix = _viewAlbumPrefix(fullResUrl);
-        const slow = ImagePreload.isSlowConnection();
-        const smallViewport = window.innerWidth < 960 || window.innerHeight < 640;
-
-        const upgradeToFull = () => {
-          if (slow || smallViewport) return;
-          ImagePreload.load(fullResUrl).then(async () => {
-            if (!isCurrent()) return;
-            await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
-            if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
-          }).catch(() => {});
-        };
-
-        if (_viewMissingPrefixes.has(prefix)) {
-          upgradeToFull();
-        } else {
-          ImagePreload.load(vUrl).then(async () => {
-            if (!isCurrent()) return;
-            await ImagePreload.apply(lightboxLayers[activeLayer], vUrl);
-            if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
-          }).catch(() => {
-            if (prefix) _viewMissingPrefixes.add(prefix);
-            upgradeToFull();
-          });
-        }
-      }
+      // Upgrade quality in background (grid → full-res).
+      ImagePreload.showProgressive(lightboxLayers[activeLayer], fullResUrl, grid, { isCurrent })
+        .then(() => {
+          if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
+        })
+        .catch(() => {});
 
       prefetchLightboxIndex(index + 1);
       prefetchLightboxIndex(index + 2);
@@ -2072,6 +2097,7 @@
       lightbox.classList.add('open');
       lockPageScroll();
       loadLightboxImage(index, lightboxNavGeneration);
+      prefetchDownloadBlob(allPhotos[index]);
     }
 
     function closeLightbox() {
@@ -2109,8 +2135,8 @@
 
     const isIOSDevice = isIOS;
 
-    async function downloadLightboxPhoto() {
-      const url = allPhotos[currentIndex];
+    async function downloadLightboxPhoto(urlOverride) {
+      const url = urlOverride !== undefined ? urlOverride : allPhotos[currentIndex];
       if (!url) return;
 
       const btn = document.getElementById('lightbox-download');
@@ -2128,23 +2154,7 @@
         if (!result) throw new Error('Fetch failed');
         const { blob, filename } = result;
 
-        // 1. Try Web Share API — opens iOS share sheet → Save Image → Photos
-        const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({ files: [file] });
-            if (btn) btn.disabled = false;
-            return;
-          } catch (shareErr) {
-            if (shareErr.name === 'AbortError') {
-              if (btn) btn.disabled = false;
-              return; // user cancelled share sheet — fine
-            }
-            // share failed, fall through to next method
-          }
-        }
-
-        // 2. iOS fallback — open blob URL in new tab; user can long-press → Save to Photos
+        // iOS fallback — open blob URL in new tab; user can long-press → Save to Photos
         if (isIOSDevice) {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, '_blank');
@@ -2160,7 +2170,7 @@
           return;
         }
 
-        // 3. Desktop — standard FileSaver download
+        // Desktop — standard FileSaver download
         saveAs(blob, filename);
         progress.classList.add('show');
         label.textContent = 'Download started!';
@@ -2272,10 +2282,9 @@
     bindLightboxPrefetch(document.getElementById('lightbox-next'), 1);
 
     // Prefetch blob as soon as user touches the download button — gives the
-    // fetch a head start so navigator.share() fires within iOS gesture window.
+    // fetch a head start before the dropdown option is selected.
     const dlBtn = document.getElementById('lightbox-download');
     dlBtn?.addEventListener('touchstart', () => prefetchDownloadBlob(allPhotos[currentIndex]), { passive: true });
-    bindTapWithoutScroll(dlBtn, () => downloadLightboxPhoto());
 
     const likeBtn = document.getElementById('lightbox-like');
     bindTapWithoutScroll(likeBtn, () => togglePhotoSelected(currentIndex));
@@ -2845,6 +2854,56 @@
     .photo-thumb-like {
       display: none !important;
     }
+    /* ── Download size dropdown (lightbox) ── */
+    .lb-dl-wrap { position: relative; }
+    .dl-size-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 164px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+      z-index: 200;
+    }
+    .dl-size-dropdown[hidden] { display: none; }
+    .dl-size-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      color: #1a1a1a;
+      text-align: left;
+      transition: background 0.12s;
+    }
+    .dl-size-option:hover,
+    .dl-size-option:focus { background: #f0f0f0; outline: none; }
+    .dl-size-option.is-current { background: #e8e8e8; }
+    .dl-size-option[hidden],
+    .dl-size-option:disabled { display: none; }
+    .dl-size-name { font-weight: 500; }
+    .dl-size-hint { font-size: 0.71rem; color: #888; margin-left: 1rem; }
+    /* Lightbox dark dropdown — centered below the icon button */
+    .dl-size-dropdown--lb {
+      background: rgba(24,24,26,0.97);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3);
+      right: auto;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .dl-size-dropdown--lb .dl-size-option { color: rgba(255,255,255,0.9); }
+    .dl-size-dropdown--lb .dl-size-option:hover,
+    .dl-size-dropdown--lb .dl-size-option:focus { background: rgba(255,255,255,0.1); }
+    .dl-size-dropdown--lb .dl-size-option.is-current { background: rgba(255,255,255,0.08); }
+    .dl-size-dropdown--lb .dl-size-hint { color: rgba(255,255,255,0.42); }
+
   </style>
 </body>
 </html>

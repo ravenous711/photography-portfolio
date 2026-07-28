@@ -566,7 +566,7 @@ const ImagePreload = {
     for (const i of order) {
       const u = urls[i];
       this.load(gridUrl(u)).catch(() => {});
-      if (!slow) this.load(viewUrl(u)).catch(() => {});
+      if (!slow) this.load(u).catch(() => {});
     }
   },
 
