@@ -2172,9 +2172,6 @@
 
         // Desktop — standard FileSaver download
         saveAs(blob, filename);
-        progress.classList.add('show');
-        label.textContent = 'Download started!';
-        bar.style.width = '100%';
       } catch (err) {
         progress.classList.add('show');
         label.textContent = 'Download failed. Try again.';
