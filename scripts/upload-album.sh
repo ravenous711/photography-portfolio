@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Upload album photos to Cloudflare R2 (originals + grid previews).
 #
+# NOTE: New albums should also generate a view/ tier (2048px q80) in addition
+# to the grid/ tier (900px q75). Use scripts/backfill-image-tiers.sh to derive
+# both tiers from originals that are already in R2, or generate them locally
+# alongside grids before uploading.
+#
 # Usage:
 #   ./scripts/upload-album.sh \
 #     --folder "/Volumes/PhotosSSD/Photos/2026/06 June/Italy/Export/Rome" \

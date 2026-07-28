@@ -157,7 +157,9 @@ run_prefix() {
 
   local exit_code=0
   set +e
-  "$SCRIPT_DIR/backfill-image-tiers.sh" \
+  # Unset LOG_FILE for the subprocess so upload_status doesn't also write directly
+  # to the log — tee -a below is the sole writer, preventing duplicate log lines.
+  LOG_FILE="" "$SCRIPT_DIR/backfill-image-tiers.sh" \
     --prefix "$prefix" \
     "${extra[@]+"${extra[@]}"}" \
     "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}" \
@@ -285,25 +287,25 @@ run_batch_4() {
   run_prefix "Red-Rock-Canyon-2026"
   run_prefix "Red-Rock-Canyon-2026/Film/Ektar100"
   run_prefix "Red-Rock-Canyon-2026/Film/Lomography400"
-  run_prefix "Holland-Tulip-Festival/Athena-Ultramax"
-  run_prefix "Holland-Tulip-Festival/Digital"
-  run_prefix "Holland-Tulip-Festival/Kids-Disposable-1"
-  run_prefix "Holland-Tulip-Festival/Kids-Disposable-2"
-  run_prefix "Holland-Tulip-Festival/Raveen-Ultramax"
+  run_prefix "Holland-Tulip-Festival/Athena-Ultramax" --private
+  run_prefix "Holland-Tulip-Festival/Digital" --private
+  run_prefix "Holland-Tulip-Festival/Kids-Disposable-1" --private
+  run_prefix "Holland-Tulip-Festival/Kids-Disposable-2" --private
+  run_prefix "Holland-Tulip-Festival/Raveen-Ultramax" --private
   end_batch
 }
 
 run_batch_5() {
   begin_batch 5 "Events / visits"
-  run_prefix "Ali-Visit-2025"
-  run_prefix "Elena-Visit-2025"
-  run_prefix "Elenas-Bday-2025"
+  run_prefix "Ali-Visit-2025" --private
+  run_prefix "Elena-Visit-2025" --private
+  run_prefix "Elenas-Bday-2025" --private
   run_prefix "Joel-Bday-2025" --private      # portfolio-images-private
-  run_prefix "Paulinas-Wedding-2025"
-  run_prefix "Thanksgiving-2025"
-  run_prefix "Maryland-2026-Digital"
-  run_prefix "Maryland-2026-Roll-Fernando7623"
-  run_prefix "Maryland-2026-Roll-Fernando7624"
+  run_prefix "Paulinas-Wedding-2025" --private
+  run_prefix "Thanksgiving-2025" --private
+  run_prefix "Maryland-2026-Digital" --private
+  run_prefix "Maryland-2026-Roll-Fernando7623" --private
+  run_prefix "Maryland-2026-Roll-Fernando7624" --private
   end_batch
 }
 
