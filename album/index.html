@@ -836,7 +836,7 @@
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
       document.addEventListener('click', closeAll);
     })();
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isIOS = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isMobileDownload = isIOS || /Android/i.test(navigator.userAgent);
 
     // Server-side streaming ZIP — builds + streams from R2 so phones never hold
