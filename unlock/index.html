@@ -208,7 +208,7 @@
       <div id="signed-in-view" class="unlock-signed-in" style="display:none">
         <p class="unlock-title">You're in</p>
         <div id="signed-in-tiers" style="margin-bottom:0.5rem"></div>
-        <a href="/gallery/" class="unlock-btn" style="display:inline-block;text-decoration:none;padding:0.75rem 2rem;width:auto">
+        <a id="signed-in-gallery-btn" href="/gallery/" class="unlock-btn" style="display:inline-block;text-decoration:none;padding:0.75rem 2rem;width:auto">
           View gallery
         </a>
         <button class="unlock-signout-btn" onclick="signOut()">Sign out</button>
@@ -327,6 +327,27 @@
       tiersEl.innerHTML = [...tiers]
         .map(t => `<span class="unlock-tier-badge">${tierLabel(t)}</span>`)
         .join(' ');
+
+      // Point VIEW GALLERY to the client's specific album if a client tier is active
+      const galleryBtn = document.getElementById('signed-in-gallery-btn');
+      if (galleryBtn) {
+        const clientTier = [...tiers].find(t => t.startsWith('client:'));
+        if (clientTier && typeof ALBUMS !== 'undefined') {
+          const clientId = clientTier.slice(7);
+          const album = ALBUMS.find(a => a.id === clientId || a.id === clientId.replace(':', '-'));
+          if (album) {
+            galleryBtn.href = Routes.albumPageUrl(album);
+            galleryBtn.textContent = 'View your album';
+          } else {
+            galleryBtn.href = '/gallery/';
+            galleryBtn.textContent = 'View gallery';
+          }
+        } else {
+          galleryBtn.href = '/gallery/';
+          galleryBtn.textContent = 'View gallery';
+        }
+      }
+
       return true;
     }
 
