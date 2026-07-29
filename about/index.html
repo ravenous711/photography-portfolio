@@ -231,7 +231,6 @@
       emailEl.href = `mailto:${SITE_CONFIG.email}`;
       document.getElementById('about-email-text').textContent = SITE_CONFIG.email;
     } else {
-      emailEl.closest('.about-contact') && (emailEl.closest('.about-contact').style.display = 'none');
       emailEl.style.display = 'none';
     }
     document.getElementById('footer-copyright').textContent =
