@@ -34,6 +34,7 @@ const ALBUMS_CLIENTS = [
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-13.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-14.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-15.jpg`,
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-15b.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-16.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-17.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-18.jpg`,
