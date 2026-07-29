@@ -226,8 +226,14 @@
   <script>
     document.getElementById('about-photo').src = SITE_CONFIG.aboutPhoto;
     document.getElementById('about-name').textContent = SITE_CONFIG.photographerName;
-    document.getElementById('about-email').href = `mailto:${SITE_CONFIG.email}`;
-    document.getElementById('about-email-text').textContent = SITE_CONFIG.email;
+    const emailEl = document.getElementById('about-email');
+    if (SITE_CONFIG.email) {
+      emailEl.href = `mailto:${SITE_CONFIG.email}`;
+      document.getElementById('about-email-text').textContent = SITE_CONFIG.email;
+    } else {
+      emailEl.closest('.about-contact') && (emailEl.closest('.about-contact').style.display = 'none');
+      emailEl.style.display = 'none';
+    }
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
     document.title = `About — ${SITE_CONFIG.photographerName}`;

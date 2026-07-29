@@ -11,7 +11,7 @@ const SITE_CONFIG = {
   heroPositionMobile: '50% 40%',
 
   aboutPhoto: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/about/portrait.jpg`,
-  email: 'raveen.l.fernando@gmail.com',
+  email: '',
 };
 
 // ============================================================
