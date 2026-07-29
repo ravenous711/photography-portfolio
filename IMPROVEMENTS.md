@@ -47,11 +47,13 @@ hand it to the agent ("do ticket BUG-1"), and it has the context to act.
 Living tracker for multi-step album work (local photos → R2 → `config.js` → deploy).
 **Update this section** when starting, finishing, or queueing albums.
 
-*Active session (Jul 27 2026 — Moksha Yoga client drop shipped).*
+*Active session (Jul 29 2026 — Moksha Yoga renumber: R2 done; config on branch, not on main yet).*
 
 ### In progress
 
-*(none)*
+| Album | Audience | Notes |
+|-------|----------|-------|
+| **Moksha Yoga renumber** | `client:moksha-yoga` | Renumbered `15b`→`16`, shifted former `16`–`50`→`17`–`51`. Local + private R2 complete (orig / `grid/` / `view/` for `16`–`51`); orphaned `15b` deleted. Config (`js/albums/clients.js`) sequential `01`–`51` on branch `album/moksha-yoga-renumber-15b` — **uncommitted, not on main yet**. |
 
 ### Queued (approved, not started)
 
@@ -61,7 +63,7 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 
 | Album | Audience | Notes |
 |-------|----------|-------|
-| **Moksha Yoga** | `client:moksha-yoga` | 51 photos on `portfolio-images-private/Moksha-Yoga/` + grids. Merged to `main` (`c0ae2cf`); client return navigation and album-specific grid controls shipped in `7a18855`. Access code created in D1 (id 1). Missed export added later as `Moksha-Yoga-15b.jpg` (see changelog). |
+| **Moksha Yoga** | `client:moksha-yoga` | 51 photos on `portfolio-images-private/Moksha-Yoga/` + grids. Merged to `main` (`c0ae2cf`); client return navigation and album-specific grid controls shipped in `7a18855`. Access code created in D1 (id 1). Missed export was `Moksha-Yoga-15b.jpg`; renumber in progress (see In progress). |
 
 ---
 
@@ -370,6 +372,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **Album — Moksha Yoga, renumber 15b → sequential 01–51** — Jul 2026.
+  Renamed `Moksha-Yoga-15b` → `16` and shifted former `16`–`50` → `17`–`51` so the album uses clean `01`–`51` filenames. Local + private R2 complete (original / `grid/` / `view/` for `16`–`51`); orphaned `15b` objects deleted. Status: R2 complete; config on branch `album/moksha-yoga-renumber-15b` pending commit/push (not on `main` yet).
 
 - **Album — Moksha Yoga, added missed photo** — Jul 2026.
   One export missed in the original drop (local `Moksha-Yoga-53.jpg`) uploaded to `portfolio-images-private` as `Moksha-Yoga-15b.jpg` across all three tiers (original, `grid/`, `view/`) and slotted directly after `Moksha-Yoga-15.jpg` in `js/albums/clients.js`. Album is now 51 photos. Shipped on `main` (`0a35d49`); no new access code needed.
