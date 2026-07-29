@@ -372,7 +372,7 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ## Changelog (Done)
 
 - **Album — Moksha Yoga, added missed photo** — Jul 2026.
-  One export missed in the original drop (local `Moksha-Yoga-53.jpg`) uploaded to `portfolio-images-private` as `Moksha-Yoga-15b.jpg` across all three tiers (original, `grid/`, `view/`) and slotted directly after `Moksha-Yoga-15.jpg` in `js/albums/clients.js`. Album is now 51 photos. Branch `album/moksha-yoga-add-15b`; not yet on `main`.
+  One export missed in the original drop (local `Moksha-Yoga-53.jpg`) uploaded to `portfolio-images-private` as `Moksha-Yoga-15b.jpg` across all three tiers (original, `grid/`, `view/`) and slotted directly after `Moksha-Yoga-15.jpg` in `js/albums/clients.js`. Album is now 51 photos. Shipped on `main` (`0a35d49`); no new access code needed.
 
 - **PERF-1 — Image tier infrastructure (Phases 1–3, 6)** — Jul 2026.
   Frontend stops serving originals in the lightbox; `viewUrl()` + 404 fallback added (`perf/lightbox-image-tiers`). Worker ACL extended for `view/<client>/` keys; ZIP Worker gains token-gated `PRIVATE_BUCKET` support (`feat/download-size-picker`). `scripts/backfill-image-tiers.sh` written for resumable view/ + grid/ derivation (`feat/backfill-image-tiers`). Deploy, backfill run, and download chooser (Phase 4, 5) pending.
