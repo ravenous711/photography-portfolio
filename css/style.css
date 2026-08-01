@@ -1449,7 +1449,7 @@ a.album-sibling-link:hover {
 
 .lightbox-shell {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: 0.75rem;
   width: 100%;
@@ -1510,6 +1510,16 @@ a.album-sibling-link:hover {
   top: auto;
   left: auto;
   transform: none;
+}
+
+/* Wide viewports are height-bound, so an image smaller than the frame would
+   otherwise paint at its intrinsic size and jump when the sharper tier lands.
+   Pinning the height scales every tier into the same box. Phones are
+   width-bound and already fill the frame, so they keep intrinsic sizing. */
+@media (min-width: 769px) {
+  #lightbox-stage .lightbox-layer {
+    height: var(--lb-avail);
+  }
 }
 
 @media (max-width: 768px) {
