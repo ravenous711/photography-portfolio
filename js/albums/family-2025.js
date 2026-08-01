@@ -331,8 +331,8 @@ const ALBUMS_FAMILY_2025 = [
   // ── PAULINA'S WEDDING 2025 — Anger-Ali Family ───────────
   {
     id: 'paulinas-wedding-2025',
-    title: 'Paulina\'s Wedding',
-    description: 'Paulina\'s wedding — July 2025.',
+    title: 'Paulina and Maleek\'s Wedding',
+    description: 'Paulina and Maleek\'s wedding — July 2025.',
     date: 'July 2025',
     hidden: true,
     audience: 'family',
