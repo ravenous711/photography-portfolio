@@ -183,7 +183,8 @@ function initScrollAnimations() {
 }
 
 // ── R2 image URL helpers ──
-// grid/ = 1200px for album grid, admin, and curate previews (lightbox uses full-res)
+// grid/ = 900px for album grid, admin, and curate previews
+// view/ = ~2048px for lightbox (see viewUrl); originals are download-only
 const R2_URL_RE = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/;
 
 function gridUrl(fullUrl) {
@@ -522,7 +523,7 @@ function renderFilmRollLinks(parentAlbum) {
   section.classList.add('visible');
 }
 
-// Preload images for lightbox — grid first on slow links, full-res upgrades in background
+// Preload images for lightbox — grid first on slow links, view/ upgrades in background
 const ImagePreload = {
   _cache: new Map(),
   _loaded: new Set(),
