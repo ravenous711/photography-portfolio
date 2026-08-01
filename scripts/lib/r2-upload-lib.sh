@@ -6,6 +6,7 @@
 : "${CF_ACCOUNT_ID:=723c27febd4a099c7884fdf00de2329f}"
 : "${ORIG_SLEEP:=15}"
 : "${GRID_SLEEP:=10}"
+: "${VIEW_SLEEP:=10}"
 : "${DRY_RUN:=0}"
 : "${LOG_FILE:=}"
 : "${VERBOSE:=0}"
@@ -135,6 +136,11 @@ grid_dir_for_prefix() {
   echo "/tmp/grid_${prefix//\//_}"
 }
 
+view_dir_for_prefix() {
+  local prefix="$1"
+  echo "/tmp/view_${prefix//\//_}"
+}
+
 r2_fetch_index() {
   local prefix="$1"
   R2_INDEX_FILE="/tmp/r2_index_${prefix//\//_}.txt"
@@ -229,10 +235,7 @@ upload_with_retry() {
 }
 
 generate_grids() {
-  # Generates 1200px q80 grid/ thumbnails for upload-album.sh.
-  # NOTE: New albums should also generate a view/ tier (2048px q80) for the
-  # lightbox. Use scripts/backfill-image-tiers.sh to derive view/ and grid/
-  # (900px q75) in one pass from originals already in R2.
+  # Generates 900px q75 grid/ thumbnails for album scroll (matches backfill-image-tiers.sh).
   local folder="$1"
   local grid_dir="$2"
   local fname ok=0 fail=0 skipped=0
@@ -252,7 +255,7 @@ generate_grids() {
       ok=$((ok + 1))
       continue
     fi
-    if sips -Z 1200 "$folder/$fname" --out "$grid_dir/$fname" --setProperty formatOptions 80 >/dev/null 2>&1; then
+    if sips -Z 900 "$folder/$fname" --out "$grid_dir/$fname" --setProperty formatOptions 75 >/dev/null 2>&1; then
       upload_status "[$i/$total] $fname  ok (grid)"
       ok=$((ok + 1))
     else
@@ -268,6 +271,46 @@ generate_grids() {
     upload_status "grids  ok ($((ok + skipped))/$total)"
   fi
   [[ "$fail" -gt 0 ]] && upload_status "grids  failed ($fail)"
+  return "$fail"
+}
+
+generate_views() {
+  # Generates 2048px q80 view/ images for the lightbox (matches backfill-image-tiers.sh).
+  local folder="$1"
+  local view_dir="$2"
+  local fname ok=0 fail=0 skipped=0
+  local total=${#FILES[@]} i=0
+
+  mkdir -p "$view_dir"
+
+  for fname in "${FILES[@]}"; do
+    i=$((i + 1))
+    if [[ -f "$view_dir/$fname" && "$SKIP_EXISTING" == "1" ]]; then
+      upload_status "[$i/$total] $fname  ok (view cached)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+    if [[ "$DRY_RUN" == "1" ]]; then
+      upload_status "[$i/$total] $fname  ok (view dry-run)"
+      ok=$((ok + 1))
+      continue
+    fi
+    if sips -Z 2048 "$folder/$fname" --out "$view_dir/$fname" --setProperty formatOptions 80 >/dev/null 2>&1; then
+      upload_status "[$i/$total] $fname  ok (view)"
+      ok=$((ok + 1))
+    else
+      upload_status "[$i/$total] $fname  failed (view generation)"
+      fail=$((fail + 1))
+    fi
+  done
+
+  local total=$((${#FILES[@]}))
+  if [[ "$skipped" -eq "$total" ]]; then
+    upload_status "views  ok ($total cached)"
+  else
+    upload_status "views  ok ($((ok + skipped))/$total)"
+  fi
+  [[ "$fail" -gt 0 ]] && upload_status "views  failed ($fail)"
   return "$fail"
 }
 
@@ -330,18 +373,50 @@ upload_grids() {
   return "$fail"
 }
 
+upload_views() {
+  local view_dir="$1"
+  local r2_prefix="$2"
+  local fname fail=0 skipped=0
+  local view_prefix="view/$r2_prefix"
+  local total=${#FILES[@]} i=0 progress=""
+
+  upload_log "views -> $R2_BUCKET/$view_prefix/"
+  if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
+    r2_fetch_index "$view_prefix/" || true
+  fi
+
+  for fname in "${FILES[@]}"; do
+    i=$((i + 1))
+    progress="$i/$total"
+    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${view_prefix}/${fname}"; then
+      upload_status "[$progress] $fname  ok (exists)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+    upload_with_retry "$R2_BUCKET/$view_prefix/$fname" "$view_dir/$fname" "$fname" "$progress" || fail=$((fail + 1))
+    if [[ "$VIEW_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
+      sleep "$VIEW_SLEEP"
+    fi
+  done
+
+  upload_log "views done (uploaded $((${#FILES[@]} - skipped - fail)), skipped $skipped, failed $fail)"
+  return "$fail"
+}
+
 verify_uploads() {
   local r2_prefix="$1"
   local missing=0
 
   upload_log "verifying R2 manifest..."
 
-  for kind in originals grid; do
+  for kind in originals grid view; do
     local key_prefix
     if [[ "$kind" == "originals" ]]; then
       key_prefix="${r2_prefix}/"
-    else
+    elif [[ "$kind" == "grid" ]]; then
       key_prefix="grid/${r2_prefix}/"
+    else
+      key_prefix="view/${r2_prefix}/"
     fi
 
     local missing_list=()
@@ -359,12 +434,20 @@ verify_uploads() {
       missing=$((missing + ${#missing_list[@]}))
       if [[ "$kind" == "originals" ]]; then
         printf '%s\n' "${missing_list[@]}" > "/tmp/missing_orig_${r2_prefix//\//_}.txt"
-      else
+      elif [[ "$kind" == "grid" ]]; then
         printf '%s\n' "${missing_list[@]}" > "/tmp/missing_grid_${r2_prefix//\//_}.txt"
+      else
+        printf '%s\n' "${missing_list[@]}" > "/tmp/missing_view_${r2_prefix//\//_}.txt"
       fi
     else
       upload_log "$kind: complete (${#FILES[@]}/${#FILES[@]})"
-      rm -f "/tmp/missing_orig_${r2_prefix//\//_}.txt" "/tmp/missing_grid_${r2_prefix//\//_}.txt"
+      if [[ "$kind" == "originals" ]]; then
+        rm -f "/tmp/missing_orig_${r2_prefix//\//_}.txt"
+      elif [[ "$kind" == "grid" ]]; then
+        rm -f "/tmp/missing_grid_${r2_prefix//\//_}.txt"
+      else
+        rm -f "/tmp/missing_view_${r2_prefix//\//_}.txt"
+      fi
     fi
   done
 
@@ -374,9 +457,11 @@ verify_uploads() {
 retry_missing() {
   local folder="$1"
   local grid_dir="$2"
-  local r2_prefix="$3"
+  local view_dir="$3"
+  local r2_prefix="$4"
   local orig_missing="/tmp/missing_orig_${r2_prefix//\//_}.txt"
   local grid_missing="/tmp/missing_grid_${r2_prefix//\//_}.txt"
+  local view_missing="/tmp/missing_view_${r2_prefix//\//_}.txt"
   local fname fail=0
 
   SKIP_EXISTING=0
@@ -395,6 +480,14 @@ retry_missing() {
       [[ -n "$fname" ]] || continue
       upload_with_retry "$R2_BUCKET/grid/$r2_prefix/$fname" "$grid_dir/$fname" "$fname" || fail=$((fail + 1))
     done < "$grid_missing"
+  fi
+
+  if [[ -f "$view_missing" ]]; then
+    upload_log "retrying missing views..."
+    while IFS= read -r fname; do
+      [[ -n "$fname" ]] || continue
+      upload_with_retry "$R2_BUCKET/view/$r2_prefix/$fname" "$view_dir/$fname" "$fname" || fail=$((fail + 1))
+    done < "$view_missing"
   fi
 
   SKIP_EXISTING=1

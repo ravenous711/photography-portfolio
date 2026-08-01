@@ -228,6 +228,34 @@
     </div>
   </div>
 
+  <!-- ── Download size picker (ZIP / multi-download) ── -->
+  <div id="dl-size-picker" class="liked-download-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="dl-size-title">
+    <div class="liked-download-confirm-inner dl-size-picker-inner">
+      <p id="dl-size-title" class="font-serif text-xl font-light">Download size</p>
+      <p id="dl-size-subtitle" class="dl-size-subtitle"></p>
+      <div class="dl-size-picker-options" role="group" aria-label="Download size">
+        <button type="button" class="dl-size-opt" data-size="grid">
+          <span class="dl-size-opt-name">Low</span>
+          <span class="dl-size-opt-desc">Web · ~95 KB each</span>
+          <span class="dl-size-opt-est" id="dl-est-grid"></span>
+        </button>
+        <button type="button" class="dl-size-opt" data-size="view" id="dl-size-opt-med">
+          <span class="dl-size-opt-name">Med</span>
+          <span class="dl-size-opt-desc">Lightbox · ~1.5 MB each</span>
+          <span class="dl-size-opt-est" id="dl-est-view"></span>
+        </button>
+        <button type="button" class="dl-size-opt" data-size="original">
+          <span class="dl-size-opt-name">Full</span>
+          <span class="dl-size-opt-desc">Original · ~15–40 MB each</span>
+          <span class="dl-size-opt-est" id="dl-est-original"></span>
+        </button>
+      </div>
+      <div class="liked-download-confirm-actions">
+        <button type="button" id="dl-size-cancel" class="btn-ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Lightbox ── -->
   <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
     <div class="lightbox-actions">
@@ -359,6 +387,8 @@
     let refreshAlbumNavMenu = null;
     // Current download size preference — initialised from localStorage by initDlSizePicker
     let _dlSize = 'original';
+    let _dlSizeCallback = null;
+    const DL_SIZE_AVG_MB = { grid: 0.095, view: 1.5, original: 20 };
     // Tracks album prefixes whose view/ tier is not yet backfilled (404 probe result)
     const _viewMissingPrefixes = new Set();
 
@@ -683,7 +713,9 @@
     function setupSelectModeControls() {
       bindTapWithoutScroll(document.getElementById('select-btn'), () => toggleSelectMode());
       bindTapWithoutScroll(document.getElementById('cancel-select-btn'), () => toggleSelectMode());
-      bindTapWithoutScroll(document.getElementById('download-btn'), () => downloadPhotos(allPhotos));
+      bindTapWithoutScroll(document.getElementById('download-btn'), () => {
+        showDownloadSizePicker(allPhotos, (size) => downloadPhotos(allPhotos, size));
+      });
       bindTapWithoutScroll(document.getElementById('liked-count-btn'), () => showLikedDownloadConfirm());
       bindTapWithoutScroll(document.getElementById('clear-selection-btn'), () => clearSelection());
       document.getElementById('select-all-btn').addEventListener('click', () => toggleSelectAll());
@@ -836,8 +868,27 @@
         downloadLightboxPhoto(dlUrl);
       });
 
+      // ZIP / multi-download size picker modal
+      const sizeModal = document.getElementById('dl-size-picker');
+      sizeModal?.addEventListener('click', (e) => {
+        if (e.target.id === 'dl-size-picker') { hideDownloadSizePicker(); return; }
+        const opt = e.target.closest('.dl-size-opt');
+        if (!opt || opt.hidden) return;
+        const size = opt.dataset.size;
+        if (!size) return;
+        setDlSizePref(size);
+        const cb = _dlSizeCallback;
+        hideDownloadSizePicker();
+        cb?.(size);
+      });
+      document.getElementById('dl-size-cancel')?.addEventListener('click', hideDownloadSizePicker);
+
       // Escape and click-outside close the dropdown
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeAll();
+        hideDownloadSizePicker();
+      });
       document.addEventListener('click', closeAll);
     })();
     const isIOS = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -868,7 +919,67 @@
 
     function photoUrlToKey(url) {
       if (!url) return '';
+      // Worker-proxied private URL: extract the R2 key from ?key=
+      if (url.includes('/image?') && url.includes('key=')) {
+        try {
+          const u = new URL(url, location.origin);
+          const key = u.searchParams.get('key');
+          if (key) return key;
+        } catch {}
+      }
       return url.startsWith(`${R2_BASE_URL}/`) ? url.slice(R2_BASE_URL.length + 1) : url;
+    }
+
+    // Strip any existing tier prefix and re-prefix for the chosen download size.
+    function sizedKey(baseKey, size) {
+      const bare = (baseKey || '').replace(/^(grid|view)\//, '');
+      if (!bare) return '';
+      if (size === 'grid') return `grid/${bare}`;
+      if (size === 'view') return `view/${bare}`;
+      return bare;
+    }
+
+    function _formatDlSize(mb) {
+      if (mb < 1) return `~${Math.round(mb * 1000)} KB`;
+      if (mb >= 1000) return `~${(mb / 1000).toFixed(1)} GB`;
+      return `~${mb >= 10 ? Math.round(mb) : mb.toFixed(1)} MB`;
+    }
+
+    function showDownloadSizePicker(photos, callback) {
+      const list = (photos || []).filter(Boolean);
+      const count = list.length;
+      if (!count) return;
+      const saved = localStorage.getItem(DL_SIZE_PREF_KEY) || _dlSize || 'original';
+      const modal = document.getElementById('dl-size-picker');
+      const subtitle = document.getElementById('dl-size-subtitle');
+      const medOpt = document.getElementById('dl-size-opt-med');
+
+      const prefix = _viewAlbumPrefix(list[0] || allPhotos[0] || '');
+      if (medOpt) medOpt.hidden = Boolean(prefix && _viewMissingPrefixes.has(prefix));
+
+      subtitle.textContent = count === 1 ? '1 photo' : `${count} photos`;
+      for (const [size, avgMB] of Object.entries(DL_SIZE_AVG_MB)) {
+        const est = document.getElementById(`dl-est-${size}`);
+        if (est) {
+          const total = avgMB * count;
+          est.textContent = count > 1
+            ? `≈ ${_formatDlSize(total)} total`
+            : _formatDlSize(avgMB);
+        }
+      }
+      for (const opt of modal.querySelectorAll('.dl-size-opt')) {
+        if (opt.hidden) continue;
+        opt.classList.toggle('is-selected', opt.dataset.size === saved);
+      }
+
+      _dlSizeCallback = callback;
+      modal.hidden = false;
+    }
+
+    function hideDownloadSizePicker() {
+      const modal = document.getElementById('dl-size-picker');
+      if (modal) modal.hidden = true;
+      _dlSizeCallback = null;
     }
 
     // Trigger a native streaming download from the ZIP Worker. A plain anchor
@@ -881,6 +992,8 @@
       const params = new URLSearchParams();
       params.set('filename', filename);
       params.set('keys', keys.join(','));
+      // Private albums: pass unlock token so the Worker can read PRIVATE_BUCKET.
+      if (_privateToken) params.set('token', _privateToken);
       const getUrl = `${ZIP_WORKER_URL}/?${params.toString()}`;
 
       if (getUrl.length <= 12000) {
@@ -911,6 +1024,7 @@
       };
       addField('keys', keys.join('\n'));
       addField('filename', filename);
+      if (_privateToken) addField('token', _privateToken);
 
       document.body.appendChild(form);
       form.submit();
@@ -964,16 +1078,19 @@
         .sort((a, b) => a - b)
         .map(i => allPhotos[i])
         .filter(Boolean);
-      // Mobile saveAs() is unreliable, so always ZIP via the Worker there.
-      // Desktop keeps the convenience of separate files for small selections.
-      if (!isMobileDownload && urls.length <= INDIVIDUAL_THRESHOLD) {
-        downloadIndividually(urls);
-      } else {
-        downloadPhotos(urls);
-      }
+      if (!urls.length) return;
+      showDownloadSizePicker(urls, (size) => {
+        // Mobile saveAs() is unreliable, so always ZIP via the Worker there.
+        // Desktop keeps the convenience of separate files for small selections.
+        if (!isMobileDownload && urls.length <= INDIVIDUAL_THRESHOLD) {
+          downloadIndividually(urls, size);
+        } else {
+          downloadPhotos(urls, size);
+        }
+      });
     }
 
-    async function downloadIndividually(photos) {
+    async function downloadIndividually(photos, size = 'original') {
       const label    = document.getElementById('dl-label');
       const bar      = document.getElementById('dl-bar');
       const progress = document.getElementById('download-progress');
@@ -985,9 +1102,11 @@
 
       let failed = 0;
       for (let i = 0; i < photos.length; i++) {
+        const raw = photos[i];
+        const dlUrl = size === 'grid' ? gridUrl(raw) : size === 'view' ? viewUrl(raw) : raw;
         try {
-          const blob = await fetchPhotoBlob(photos[i]);
-          saveAs(blob, photoFilename(photos[i], i));
+          const blob = await fetchPhotoBlob(dlUrl);
+          saveAs(blob, photoFilename(dlUrl, i));
         } catch (err) {
           failed++;
           console.warn(`Could not download photo ${i + 1}:`, err.message);
@@ -1272,7 +1391,7 @@
         const showRow = isCuratedView ? hasCuratedFilm : showingFull;
         digitalLabelRow.hidden = !showRow;
         if (digitalDlBtn) {
-          digitalDlBtn.onclick = () => downloadPhotos(digitalPhotos);
+          digitalDlBtn.onclick = () => showDownloadSizePicker(digitalPhotos, (size) => downloadPhotos(digitalPhotos, size));
         }
       } else {
         digitalLabelEl.textContent = '';
@@ -1306,7 +1425,7 @@
           dlSectionBtn.setAttribute('aria-label', `Download ${section.label || 'this section'}`);
           dlSectionBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download`;
           const sectionPhotos = section.photos || [];
-          dlSectionBtn.addEventListener('click', () => downloadPhotos(sectionPhotos));
+          dlSectionBtn.addEventListener('click', () => showDownloadSizePicker(sectionPhotos, (size) => downloadPhotos(sectionPhotos, size)));
           labelRow.appendChild(label);
           labelRow.appendChild(dlSectionBtn);
           block.appendChild(labelRow);
@@ -1880,7 +1999,7 @@
 
       downloadBtn?.addEventListener('click', () => {
         closeAlbumNavMenu();
-        downloadPhotos(allPhotos);
+        showDownloadSizePicker(allPhotos, (size) => downloadPhotos(allPhotos, size));
       });
 
       document.addEventListener('click', (e) => {
@@ -2400,9 +2519,10 @@
     // ════════════════════════════════════════════════════════
     // ALBUM DOWNLOAD (ZIP)
     // ════════════════════════════════════════════════════════
-    // ZIP downloads try R2 directly first (full-res), then /api/download as fallback.
+    // ZIP downloads stream from the Worker. Size (grid/view/original) is chosen
+    // via the size picker; private albums pass an unlock token for PRIVATE_BUCKET.
 
-    function downloadPhotos(photos) {
+    function downloadPhotos(photos, size = 'original') {
       const dlBtn    = document.getElementById('download-btn');
       const selDlBtn = document.getElementById('download-selected-btn');
       const progress = document.getElementById('download-progress');
@@ -2414,15 +2534,17 @@
       if (!list.length) return;
 
       const isAll = photos === allPhotos;
-      const keys = list.map(photoUrlToKey);
+      const keys = list.map(photoUrlToKey).map((k) => sizedKey(k, size)).filter(Boolean);
+      if (!keys.length) return;
+      const sizeLabel = size === 'grid' ? 'web' : size === 'view' ? 'large' : 'original';
       const suffix = isAll ? 'photos' : 'selection';
-      const filename = `${album.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${suffix}.zip`;
+      const filename = `${album.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${suffix}-${sizeLabel}.zip`;
 
       if (dlBtn)    { dlBtn.disabled = true; }
       if (selDlBtn) { selDlBtn.disabled = true; }
 
       label.textContent = `Preparing ${list.length} photo${list.length !== 1 ? 's' : ''}…`;
-      sublabel.textContent = 'Downloading…';
+      sublabel.textContent = size === 'original' ? 'Downloading originals…' : `Downloading ${sizeLabel}…`;
       bar.classList.add('indeterminate');
       bar.style.width = '';
       progress.classList.add('show');
@@ -2871,6 +2993,44 @@
       gap: 0.75rem;
       margin-top: 1.5rem;
     }
+
+    .dl-size-picker-inner {
+      width: min(100%, 24rem);
+      text-align: left;
+    }
+    .dl-size-subtitle {
+      margin: 0.35rem 0 1rem;
+      font-size: 0.85rem;
+      color: var(--color-muted, #888);
+    }
+    .dl-size-picker-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .dl-size-opt {
+      display: grid;
+      grid-template-columns: 3.5rem 1fr auto;
+      gap: 0.5rem 0.75rem;
+      align-items: baseline;
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--color-border);
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      color: inherit;
+    }
+    .dl-size-opt:hover,
+    .dl-size-opt.is-selected {
+      border-color: var(--color-gold, #b08d57);
+      background: rgba(176, 141, 87, 0.08);
+    }
+    .dl-size-opt[hidden] { display: none; }
+    .dl-size-opt-name { font-weight: 600; font-size: 0.9rem; }
+    .dl-size-opt-desc { font-size: 0.78rem; color: var(--color-muted, #888); }
+    .dl-size-opt-est { font-size: 0.78rem; color: var(--color-muted, #888); white-space: nowrap; }
 
     /* ── Select button active state ── */
     #select-btn.active {

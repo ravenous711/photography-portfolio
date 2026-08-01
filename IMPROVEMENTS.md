@@ -109,17 +109,18 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 ### Performance
 
 #### PERF-1 — Add view/ image tier; stop lightbox serving 15-40MB originals
-- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Phases 1–4 live on `main` + Worker; 5–6 still open)
-- **Why:** The lightbox upgrades to the raw original on every open, `preloadAdjacent` prefetches originals for 4+ neighbours, and `prefetchDownloadBlob` fires eagerly. Opening 20 photos can pull hundreds of MB on mobile.
+- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Phases 1–6 implemented on `feat/perf1-download-and-upload-tiers`; Worker redeploy needed for Phase 6)
+- **Why:** ~~The lightbox upgrades to the raw original on every open…~~ *(fixed Aug 2026 for viewing.)* Remaining work was the download path and making new uploads emit `view/` so albums don't regress.
 - **Target model:** `grid/` (thumbnails) → `view/` ~2048px (lightbox) → original (download only, explicitly chosen).
 - **Phases:**
-  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend-only. Stop eager prefetch; add `viewUrl()`; point lightbox at `view/` with 404 fallback (stays on grid on slow connections; caches miss per album). Ships before backfill; self-retiring as albums are backfilled. **Shipped Jul 2026, silently reverted by merge `028c108`, restored and merged to `main` Aug 2026 (`48495fc`) — see the regression note below.**
-  - **Phase 2** (`feat/download-size-picker`): Worker ACL — allow `view/<client>/` keys for client tier so client albums don't 403 on the new tier. **On `main`; Worker `portfolio-zip-download` deployed Aug 2026 (version `7b5b3de5-51ce-4fea-8b09-a1170515c2d7`).**
-  - **Phase 3** (`feat/backfill-image-tiers`): `scripts/backfill-image-tiers.sh` — derive 2048px `view/` and 900px `grid/` from R2 originals in one resumable pass, public or private bucket. **On `main`.**
-  - **Phase 4**: Run backfill per album, starting with Italy. Verify one album on a phone first. **Done — Aug 2026 audit confirms every live album in both buckets has a complete `view/` tier. Only legacy `Film2`–`Film4`/`Film-Test` and the `about`/`hero`/`test` asset prefixes lack one, and none are reachable from the lightbox.**
-  - **Phase 5** (`feat/download-size-picker`): Download size chooser modal (web/large/original) with per-tier estimates; wired to all download entry points. **Not on `main`. A simpler inline dropdown shipped instead in `05cb4c9`; decide whether Phase 5 is still wanted.**
-  - **Phase 6** (`feat/download-size-picker`): Private album ZIP — token-gated `PRIVATE_BUCKET` reads in the ZIP Worker; same ACL as `/image`, extended for `view/`. **Not on `main` — the ZIP path still reads only the public `env.BUCKET`.**
-- **Files:** `js/main.js`, `album/index.html`, `workers/zip-download/src/index.js`, `scripts/backfill-image-tiers.sh`
+  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend lightbox → `view/` with 404 fallback. **Shipped on `main` (`48495fc`).**
+  - **Phase 2**: Worker ACL for `view/<client>/`. **On `main`; Worker deployed.**
+  - **Phase 3**: `scripts/backfill-image-tiers.sh`. **On `main`.**
+  - **Phase 4**: Backfill live albums. **Done** (every live album has `view/`).
+  - **Phase 5** (`feat/perf1-download-and-upload-tiers`): Size chooser on ZIP / Download All / section downloads (Low/Med/Full), keys remapped via `sizedKey`, preference shared with lightbox dropdown. **Implemented; awaiting merge.**
+  - **Phase 6** (`feat/perf1-download-and-upload-tiers`): Private album ZIP — token-gated `PRIVATE_BUCKET` reads in the ZIP Worker. **Implemented; needs Worker redeploy after merge.**
+  - **Upload path:** `upload-album.sh` now generates/uploads `grid/` (900px q75) + `view/` (2048px q80) alongside originals. **Implemented; awaiting merge.**
+- **Files:** `js/main.js`, `album/index.html`, `workers/zip-download/src/index.js`, `scripts/backfill-image-tiers.sh`, `scripts/upload-album.sh`, `scripts/lib/r2-upload-lib.sh`
 - **Done when:** Lightbox serves `view/` for all backfilled albums; download chooser lets users pick web/large/original; private albums can ZIP; originals are only pulled on explicit download.
 
 > **Regression note (Aug 2026).** Phase 1 landed on `main` as `7edbd70`/`8f5b705` and was wiped an hour later by `028c108` (`Merge branch 'feat/backfill-image-tiers'`). That branch forked before Phase 1, and the conflict resolution took its copy of `album/index.html` and `js/main.js` verbatim — the merge result is byte-identical to the branch side for both files. Only the Phase 1 *docs* survived, which is why this ticket read as shipped for a week while the lightbox served originals. Measured on Venice before the fix: opening one photo and pressing next three times pulled **255 MB**; after, **5.2 MB**. When merging a branch that forks before a perf change, diff the result against the pre-merge tip before pushing.
@@ -373,6 +374,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 ---
 
 ## Changelog (Done)
+
+- **PERF-1 Phases 5–6 + upload-album tiers** — Aug 2026.
+  On `feat/perf1-download-and-upload-tiers`: ZIP/Download All size picker (Low/Med/Full), private ZIP via unlock token + `PRIVATE_BUCKET`, and `upload-album.sh` emits 900px `grid/` + 2048px `view/`. Awaiting merge to `main` and Worker redeploy for Phase 6.
 
 - **PERF-1 Phases 1–2 + lightbox layout — shipped** — Aug 2026.
   Merged to `main` (`48495fc`): restored `view/` lightbox path, Worker `view/<client>/` ACL, no eager original blob prefetch, lightbox size/centering fix. Deployed Worker `portfolio-zip-download` version `7b5b3de5-51ce-4fea-8b09-a1170515c2d7`. Public + private albums now serve mid-res in the lightbox; Phases 5–6 still open.
