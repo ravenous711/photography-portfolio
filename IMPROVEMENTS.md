@@ -374,6 +374,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 
 ## Changelog (Done)
 
+- **Lightbox — no resize or re-centre when the sharper tier loads** — Aug 2026.
+  `.lightbox-layer` only had `max-width`/`max-height`, so the `grid/` preview painted at its intrinsic size and grew when `view/` arrived, and `.lightbox-shell` top-aligned it. Layer height is now pinned to `--lb-avail` above the 768px breakpoint (phones are width-bound and already filled the frame) and the shell centres vertically. Verified at 393×852, 800×600, 1440×420, 1440×900 and 2560×1080: size is identical before and after the upgrade, captions still hug the photo. On `fix/restore-perf1-view-tier`.
+
 - **PERF-1 — Phase 1 restored, Phase 2 cherry-picked** — Aug 2026.
   Re-applied the `view/` tier lightbox logic that merge `028c108` reverted (`_viewMissingPrefixes`, `_viewAlbumPrefix()`, the grid → `view/` upgrade, `view/` prefetching), removed the eager `prefetchDownloadBlob` calls in `openLightbox` *and* `lightboxNav` so originals are only fetched on download intent, deleted the now-dead `ImagePreload.showProgressive`, and brought the `view/<client>/` Worker ACL over from `feat/download-size-picker`. Verified headless on Venice: 255 MB → 5.2 MB for one open plus three nav steps, no raw originals, no JS errors. On `fix/restore-perf1-view-tier`; Worker deploy still pending.
 
