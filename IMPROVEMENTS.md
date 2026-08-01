@@ -12,19 +12,6 @@ done, move it out of Open, add a Changelog line.
 
 *Only unfinished work. Sorted by what to do next.*
 
-### 1 — Decide / verify first
-| ID | One-liner | Effort |
-|----|-----------|--------|
-| **OPS-5** | Confirm Worker redeploy so private/family ZIP downloads work in prod | S |
-
-### 2 — Quick wins
-| ID | One-liner | Effort |
-|----|-----------|--------|
-| **BUG-2** | Null-safe `subAlbums` on group page | S |
-| **BUG-3** | Fix athena-manifest `--upload-lists` writing only last batch | S |
-| **A11Y-2** | Better lightbox alt text (`Album — photo N`) | S |
-| **OPS-7** | Delete stale feature branches | S |
-
 ### 3 — Content & ops
 | ID | One-liner | Effort |
 |----|-----------|--------|
@@ -79,37 +66,6 @@ Album workflow: **add-portfolio-album** skill. Update this table when queueing/s
 ## Ticket details (open)
 
 Jump here after picking an ID from Open tickets.
-
-### OPS-5 — Confirm Worker Phase 6 deploy (private ZIP)
-- **Effort:** S · **Risk:** Med · **Status:** TODO
-- **Why:** Phase 6 code is on `main`; last documented Worker deploy was Phases 1–2. Family/client ZIP may fail until redeployed.
-- **Fix:** Redeploy Worker (with approval), smoke-test ZIP on a family album + Moksha at Low/Med/Full while unlocked.
-- **Files:** `workers/zip-download/`
-- **Done when:** Private ZIP works in prod; Changelog has Worker version id.
-
-### BUG-2 — Group page unguarded `subAlbums`
-- **Effort:** S · **Risk:** Low · **Status:** TODO
-- **Why:** `group.subAlbums.map(...)` (~line 218) throws if `subAlbums` missing.
-- **Files:** `group/index.html`
-- **Done when:** Null-safe; empty group renders without throw.
-
-### BUG-3 — athena-manifest `--upload-lists` last batch only
-- **Effort:** S · **Risk:** Low · **Status:** TODO
-- **Why:** `with open(...)` is outside the `for` loop (~182–190) — only last batch written.
-- **Files:** `scripts/lib/athena-manifest.py`
-- **Done when:** Every batch file written; mode verified.
-
-### A11Y-2 — Lightbox alt text
-- **Effort:** S · **Risk:** Low · **Status:** TODO
-- **Why:** Generic `alt="Photo"`.
-- **Files:** `album/index.html`
-- **Done when:** Alt like "Venice — photo 12".
-
-### OPS-7 — Clean up stale feature branches
-- **Effort:** S · **Risk:** Low · **Status:** TODO
-- **Why:** Old branches (`feat/download-size-picker`, `feat/backfill-image-tiers`, `feat/family-groups`, …) confuse merges.
-- **Fix:** Confirm merged/abandoned → delete local + remote (remote needs approval).
-- **Done when:** Only active branches remain; list in Changelog.
 
 ### ALBUM-1 — London 2025 shell
 - **Effort:** M · **Risk:** Low · **Status:** TODO
@@ -212,8 +168,13 @@ Jump here after picking an ID from Open tickets.
 
 | ID | Status | Note |
 |----|--------|------|
+| BUG-2 | ✅ DONE | Null-safe `subAlbums` on group page |
+| BUG-3 | ✅ DONE | `--upload-lists` writes every batch file |
+| A11Y-2 | ✅ DONE | Lightbox alt `Album — photo N` |
+| OPS-7 | ✅ DONE | Deleted stale local/remote feature branches (see Changelog) |
+| OPS-5 | ✅ DONE | Worker redeployed `4a59797b-0a4f-4a44-850b-3cc00f69d104`; private ZIP smoke OK |
 | AUTH-2 | ✅ DONE | Public curated + full; friends unlock removed Aug 2026 |
-| PERF-1 | ✅ DONE | view/ + download size picker + private ZIP code on `main` (`7535d57`); prod verify → OPS-5 |
+| PERF-1 | ✅ DONE | view/ + download size picker + private ZIP code on `main` (`7535d57`); prod verified via OPS-5 |
 | UX-NAV | ✅ DONE | Nav order/labels (`0d59b08`) |
 | OPS-3 | ✅ DONE | `__pycache__/` gitignored |
 | AUTH-1 | ✅ DONE | Family/client private R2 + D1 access codes |
@@ -226,7 +187,7 @@ Jump here after picking an ID from Open tickets.
 ### PERF-1 notes (shipped)
 - Model: `grid/` → `view/` (~2048px lightbox) → original (download only).
 - Regression (Aug 2026): Phase 1 briefly wiped by merge `028c108`; restored in `48495fc`. Venice open+3 nav: 255 MB → 5.2 MB.
-- Follow-up: **OPS-5** for Worker redeploy.
+- Follow-up **OPS-5** closed: Worker redeploy + private ZIP smoke (Aug 2026).
 
 ### AUTH-1 notes (shipped)
 - Tiers: `public` / `friends` / `family` / `client:<name>`
@@ -240,6 +201,21 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **OPS-7 — Stale branch cleanup** — Aug 2026.
+  Deleted local: `feat/backfill-image-tiers`, `feat/download-size-picker`, `feat/family-groups`,
+  `feat/perf1-download-and-upload-tiers`, `fix/curated-favorites-copy`, `fix/restore-perf1-view-tier`.
+  Deleted remote: `feat/perf1-download-and-upload-tiers`, `fix/restore-perf1-view-tier`, `feat/phase3-private-r2`.
+  Kept: `fix/gate-middleware` (active worktree at `photography-portfolio-2`).
+
+- **BUG-2 / BUG-3 / A11Y-2 — Quick wins** — Aug 2026.
+  Null-safe `subAlbums` on group page; athena-manifest `--upload-lists` writes all batches;
+  lightbox alt text `Album — photo N`.
+
+- **OPS-5 — Worker Phase 6 redeploy (private ZIP)** — Aug 2026.
+  Redeployed `portfolio-zip-download` → version `4a59797b-0a4f-4a44-850b-3cc00f69d104`.
+  Smoke (family unlock): Elena original/view/grid + Moksha original/view/grid all `200` ZIP;
+  no-token private key `404`; `family/` prefix `403`; public Venice ZIP still works.
 
 - **AUTH-2 — Public curated + full; drop friends unlock** — Aug 2026.
   City albums retagged `public`; removed friends hash from `PASSWORD_TIERS`; docs/skill/runbook cleaned. Anyone can see curated and full album.

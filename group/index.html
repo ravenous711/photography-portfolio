@@ -215,7 +215,7 @@
       }
 
       const grid = document.getElementById('sub-album-grid');
-      const subAlbums = group.subAlbums
+      const subAlbums = (group.subAlbums || [])
         .map(id => ALBUMS.find(a => a.id === id))
         .filter(a => a && !a.hidden);
 

@@ -183,9 +183,9 @@ def main():
         for prefix, batch in manifest["upload_batches"].items():
             safe = prefix.replace("/", "_")
             path = f"/tmp/athena_upload_{safe}.txt"
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write("\n".join(batch["files"]))
-            fh.write("\n")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write("\n".join(batch["files"]))
+                fh.write("\n")
             print(f"{path} ({len(batch['files'])} files)")
         return
 

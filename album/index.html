@@ -2410,6 +2410,8 @@
 
     function loadLightboxImage(index, generation = lightboxNavGeneration) {
       const url = allPhotos[index];
+      const alt = `${album.title} — photo ${index + 1}`;
+      lightboxLayers.forEach((img) => { img.alt = alt; });
 
       updateLightboxMeta(index);
       syncLightboxPhotoUrl(index);
