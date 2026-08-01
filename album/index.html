@@ -2147,7 +2147,6 @@
       lightbox.classList.add('open');
       lockPageScroll();
       loadLightboxImage(index, lightboxNavGeneration);
-      prefetchDownloadBlob(allPhotos[index]);
     }
 
     function closeLightbox() {
@@ -2313,7 +2312,6 @@
         currentIndex = newIndex;
         lightboxNavGeneration += 1;
         loadLightboxImage(currentIndex, lightboxNavGeneration);
-        prefetchDownloadBlob(allPhotos[currentIndex]);
       }
     }
 
