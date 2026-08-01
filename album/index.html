@@ -359,6 +359,8 @@
     let refreshAlbumNavMenu = null;
     // Current download size preference — initialised from localStorage by initDlSizePicker
     let _dlSize = 'original';
+    // Tracks album prefixes whose view/ tier is not yet backfilled (404 probe result)
+    const _viewMissingPrefixes = new Set();
 
     // ── Private image token (Phase 3) ────────────────────────────────────────
     // For family/client albums, images are served from a private R2 bucket via
@@ -2035,15 +2037,34 @@
       ImagePreload.preloadAdjacent(allPhotos, index, 4);
     }
 
+    // Extract the top-level album prefix from a photo URL (R2 key first segment).
+    // Used to cache view/ 404 results per album rather than per photo.
+    function _viewAlbumPrefix(url) {
+      if (!url) return '';
+      let key = '';
+      if (url.includes('/image?') && url.includes('key=')) {
+        try {
+          const u = new URL(url, location.origin);
+          key = u.searchParams.get('key') || '';
+        } catch { return ''; }
+      } else {
+        const m = url.match(/^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/);
+        key = m ? m[1] : '';
+      }
+      key = key.replace(/^(grid|view)\//, '');
+      return key.split('/')[0] || '';
+    }
+
     function prefetchLightboxIndex(index) {
       if (index < 0 || index >= allPhotos.length) return;
       const url = allPhotos[index];
       ImagePreload.load(gridUrl(url)).catch(() => {});
-      if (!ImagePreload.isSlowConnection()) ImagePreload.load(url).catch(() => {});
+      if (!ImagePreload.isSlowConnection()) ImagePreload.load(viewUrl(url)).catch(() => {});
     }
 
     async function showLightboxPhoto(fullResUrl, index, generation) {
       const grid = gridUrl(fullResUrl);
+      const vUrl = viewUrl(fullResUrl);
       const nextLayer = 1 - activeLayer;
       const nextImg = lightboxLayers[nextLayer];
       const currentImg = lightboxLayers[activeLayer];
@@ -2054,7 +2075,9 @@
       const thumbImg = document.querySelector(`.photo-thumb[data-photo-index="${index}"] img`);
 
       let instantSrc = grid;
-      if (ImagePreload.isLoaded(fullResUrl)) {
+      if (ImagePreload.isLoaded(vUrl)) {
+        instantSrc = vUrl;
+      } else if (ImagePreload.isLoaded(fullResUrl)) {
         instantSrc = fullResUrl;
       } else if (thumbImg?.complete && thumbImg.naturalWidth) {
         instantSrc = thumbImg.src;
@@ -2071,12 +2094,37 @@
       activeLayer = nextLayer;
       requestAnimationFrame(syncLightboxCaptionWidth);
 
-      // Upgrade quality in background (grid → full-res).
-      ImagePreload.showProgressive(lightboxLayers[activeLayer], fullResUrl, grid, { isCurrent })
-        .then(() => {
-          if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
-        })
-        .catch(() => {});
+      // Upgrade quality in background: grid → view/ (with 404 fallback).
+      // If the view/ tier hasn't been backfilled yet (prefix in _viewMissingPrefixes),
+      // fall back to the original only on fast connections + large viewports; otherwise
+      // stay on grid (phones on slow connections shouldn't pull a 15-40 MB original).
+      if (instantSrc !== vUrl && instantSrc !== fullResUrl) {
+        const prefix = _viewAlbumPrefix(fullResUrl);
+        const slow = ImagePreload.isSlowConnection();
+        const smallViewport = window.innerWidth < 960 || window.innerHeight < 640;
+
+        const upgradeToFull = () => {
+          if (slow || smallViewport) return;
+          ImagePreload.load(fullResUrl).then(async () => {
+            if (!isCurrent()) return;
+            await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
+            if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
+          }).catch(() => {});
+        };
+
+        if (_viewMissingPrefixes.has(prefix)) {
+          upgradeToFull();
+        } else {
+          ImagePreload.load(vUrl).then(async () => {
+            if (!isCurrent()) return;
+            await ImagePreload.apply(lightboxLayers[activeLayer], vUrl);
+            if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
+          }).catch(() => {
+            if (prefix) _viewMissingPrefixes.add(prefix);
+            upgradeToFull();
+          });
+        }
+      }
 
       prefetchLightboxIndex(index + 1);
       prefetchLightboxIndex(index + 2);
