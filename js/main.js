@@ -37,32 +37,61 @@ function initNav() {
     if (mobileLink) mobileLink.style.display = '';
   }
 
-  // Show "Sign out" nav link whenever any access tier is unlocked
+  // Show "Sign out" + rename unlock → "Add Access" whenever any tier is unlocked
   const hasAnyTier = (typeof TierAuth !== 'undefined') && TierAuth.grantedTiers().size > 0;
   if (hasAnyTier) {
     const so  = document.getElementById('nav-signout-item');
     const mso = document.getElementById('mobile-signout-link');
     if (so)  so.style.display = '';
     if (mso) mso.style.display = '';
+
+    const unlockLink = document.getElementById('nav-unlock-link');
+    const mobileUnlock = document.getElementById('mobile-unlock-link');
+    if (unlockLink) unlockLink.textContent = 'Add Access';
+    if (mobileUnlock) mobileUnlock.textContent = 'Add Access';
   }
 
+  // Desired order: Home · Gallery · Family · Client(s) · About · Unlock · Sign out
   injectClientAlbumNavLinks();
+  finalizeNavOrder();
+}
 
-  // Keep sign out as the final action at the far right, after any links that
-  // are revealed or injected for an unlocked tier.
-  if (hasAnyTier) {
-    const signOutItem = document.getElementById('nav-signout-item');
-    const navLinks = signOutItem?.parentElement;
-    if (signOutItem && navLinks) navLinks.appendChild(signOutItem);
+// Enforce nav order after revealing/injecting tier links.
+// Home · Gallery · Family Gallery · Client: … · About · Add Access · Sign out
+function finalizeNavOrder() {
+  const list = document.querySelector('#main-nav .nav-links');
+  if (list) {
+    const family = document.getElementById('nav-family-gallery-item');
+    const about = document.getElementById('nav-about-item');
+    const unlock = document.getElementById('nav-unlock-item');
+    const signOut = document.getElementById('nav-signout-item');
+    const clients = [...list.querySelectorAll('[data-client-album]')].map(a => a.parentElement);
 
-    const mobileSignOut = document.getElementById('mobile-signout-link');
-    const mobileMenu = mobileSignOut?.parentElement;
-    if (mobileSignOut && mobileMenu) mobileMenu.appendChild(mobileSignOut);
+    if (family) list.appendChild(family);
+    clients.forEach(li => { if (li) list.appendChild(li); });
+    if (about) list.appendChild(about);
+    if (unlock) list.appendChild(unlock);
+    if (signOut) list.appendChild(signOut);
+  }
+
+  const mobileMenu = document.getElementById('mobile-menu');
+  if (mobileMenu) {
+    const family = document.getElementById('mobile-family-gallery-link');
+    const about = document.getElementById('mobile-about-link');
+    const unlock = document.getElementById('mobile-unlock-link');
+    const signOut = document.getElementById('mobile-signout-link');
+    const clients = [...mobileMenu.querySelectorAll('[data-client-album]')];
+
+    if (family) mobileMenu.appendChild(family);
+    clients.forEach(link => mobileMenu.appendChild(link));
+    if (about) mobileMenu.appendChild(about);
+    if (unlock) mobileMenu.appendChild(unlock);
+    if (signOut) mobileMenu.appendChild(signOut);
   }
 }
 
 // Client albums are hidden from the public gallery, so once a client navigates
-// away (e.g. to /gallery/) there is no link back. Add a "Client Gallery" nav
+// away (e.g. to /gallery/) there is no link back. Add a "Client: <title>" nav
 // link for every client tier they have unlocked.
 function getUnlockedClientAlbums() {
   if (typeof TierAuth === 'undefined' || typeof ALBUMS === 'undefined') return [];
@@ -78,14 +107,14 @@ function injectClientAlbumNavLinks() {
 
   const list = document.querySelector('#main-nav .nav-links');
   const mobileMenu = document.getElementById('mobile-menu');
-  const signOutItem = document.getElementById('nav-signout-item');
-  const mobileSignOut = document.getElementById('mobile-signout-link');
+  const aboutItem = document.getElementById('nav-about-item');
+  const mobileAbout = document.getElementById('mobile-about-link');
   const currentPath = window.location.pathname.replace(/\/?$/, '/');
 
   albums.forEach(album => {
     const href = Routes.albumPageUrl(album);
     const isCurrent = href.replace(/\/?$/, '/') === currentPath;
-    const label = 'Client Gallery';
+    const label = `Client: ${album.title}`;
 
     if (list && !list.querySelector(`[data-client-album="${album.id}"]`)) {
       const li = document.createElement('li');
@@ -95,7 +124,7 @@ function injectClientAlbumNavLinks() {
       link.dataset.clientAlbum = album.id;
       if (isCurrent) link.classList.add('nav-active');
       li.appendChild(link);
-      list.insertBefore(li, signOutItem);
+      list.insertBefore(li, aboutItem);
     }
 
     if (mobileMenu && !mobileMenu.querySelector(`[data-client-album="${album.id}"]`)) {
@@ -103,7 +132,8 @@ function injectClientAlbumNavLinks() {
       link.href = href;
       link.textContent = label;
       link.dataset.clientAlbum = album.id;
-      mobileMenu.insertBefore(link, mobileSignOut);
+      if (mobileAbout) mobileMenu.insertBefore(link, mobileAbout);
+      else mobileMenu.appendChild(link);
     }
   });
 }

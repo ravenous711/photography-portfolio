@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Family Albums — Raveen Fernando</title>
+  <title>Family Gallery — Raveen Fernando</title>
   <meta name="description" content="Private family photo albums." />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
@@ -17,9 +17,9 @@
     <ul class="nav-links">
       <li><a href="/"        data-nav-link data-nav="home">Home</a></li>
       <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
-      <li><a href="/about/" data-nav-link data-nav="about">About</a></li>
-      <li id="nav-family-gallery-item"><a href="/familyalbums/" data-nav-link data-nav="family">Family Albums</a></li>
-      <li><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
+      <li id="nav-family-gallery-item"><a href="/familyalbums/" data-nav-link data-nav="family">Family Gallery</a></li>
+      <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
       <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
@@ -32,9 +32,9 @@
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
     <a href="/gallery/">Gallery</a>
-    <a href="/about/">About</a>
-    <a href="/familyalbums/">Family Albums</a>
-    <a href="/unlock/">Private Access</a>
+    <a href="/familyalbums/" id="mobile-family-gallery-link">Family Gallery</a>
+    <a href="/about/" id="mobile-about-link">About</a>
+    <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
     <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
   </div>
 
@@ -42,7 +42,7 @@
   <header class="page-header page-header--compact fade-in">
     <p class="page-subtitle">Portfolio</p>
     <div class="gold-rule"></div>
-    <h1 class="page-title">Family Albums</h1>
+    <h1 class="page-title">Family Gallery</h1>
   </header>
 
   <!-- ── Album Grid ── -->
