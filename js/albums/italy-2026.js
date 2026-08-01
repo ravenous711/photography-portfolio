@@ -2,7 +2,7 @@
 // italy-2026.js
 // ============================================================
 // This file is loaded by all pages via albums.js.
-// Italy 2026 — public/friends trip.
+// Italy 2026 — public trip (curated highlights + optional full-album toggle).
 // Includes: group index, city sub-albums (Venice, Pisa, Florence, Assisi, Rome),
 // and all individual film roll albums (hidden, linked from group page).
 // ============================================================
@@ -19,7 +19,7 @@ const ALBUMS_ITALY_2026 = [
     location: 'Italy',
     date: 'May–June 2026',
     type: 'group',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     filmRollsDesc: 'See all the film rolls used during the trip! These are also sprinkled into the respective cities',
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
@@ -36,7 +36,7 @@ const ALBUMS_ITALY_2026 = [
     description: 'Venice, 30–31 May 2026.',
     location: 'Venice',
     date: 'May 2026',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
@@ -278,7 +278,7 @@ const ALBUMS_ITALY_2026 = [
     description: 'Florence, 1–2 June 2026.',
     location: 'Florence',
     date: 'June 2026',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
@@ -436,7 +436,7 @@ const ALBUMS_ITALY_2026 = [
     description: 'Pisa, 1 June 2026.',
     location: 'Pisa',
     date: 'June 2026',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
@@ -517,7 +517,7 @@ const ALBUMS_ITALY_2026 = [
     description: 'Assisi, 3 June 2026.',
     location: 'Assisi',
     date: 'June 2026',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
@@ -587,7 +587,7 @@ const ALBUMS_ITALY_2026 = [
     parentId: 'italy-2026',
     location: 'Rome',
     date: 'June 2026',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Rome/Digital/rome_495.jpg`,

@@ -39,31 +39,24 @@ const WORKER_BASE_URL = (() => {
 // ── Access tier system ──────────────────────────────────────────────────────
 //
 // audience — who can see an album's full content:
-//   'public'             no unlock needed; curated set shown to all, full set shown if no curated
-//   'friends'            full content after entering friends password (D1 client-side gating)
+//   'public'             everyone; curated[] is the default view, "See full album" toggles the rest
 //   'family'             family password — private R2 albums, via Worker
-//   'client:<name>'      full content after entering that client's password (D2 private)
+//   'client:<name>'      client access code — private R2, via Worker
 //
-// Tier inheritance: family grants friends access.
+// (Legacy `friends` tier removed Aug 2026 — city albums are public; curated + full both open.)
 //
 // PASSWORD_TIERS maps SHA-256(password) → array of audiences granted.
 // Passwords themselves are NEVER stored here — only their hashes.
-// Change a password by replacing its hash; add new clients by adding entries.
+// Change a password by replacing its hash; add new clients via admin Access codes (D1), not here.
 //
 // To generate a hash: open browser console and run:
 //   hashPassword('your-password').then(h => console.log(h))
 // Or: python3 -c "import hashlib; print(hashlib.sha256(b'your-password').hexdigest())"
 
 const PASSWORD_TIERS = {
-  // Hashes only — plaintext keys are in 1Password under "photography portfolio share key".
-  // To rotate the friends link key: generate a new hex key, update the hash below,
-  // and hand out new /fullalbums/?k=<newkey> links.
-  // Generate hash: python3 -c "import hashlib; print(hashlib.sha256(b'key'.encode()).hexdigest())"
-  //
-  // Friends capability-link key (used in /fullalbums/...?k=KEY share links):
-  '1cf3ce8ffa39c24b2ae128eefe6d292f8b18136716da8026d35baa0d67ec35a4': ['friends'],
-  // Family password (stored in 1Password):
-  'c403bc24f61b121c4bb12f2455f4e2f6559d17742df491913bc7e6914014a8fb': ['family', 'friends'],
+  // Hashes only — plaintext passwords are in 1Password.
+  // Family password:
+  'c403bc24f61b121c4bb12f2455f4e2f6559d17742df491913bc7e6914014a8fb': ['family'],
 };
 
 // Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)

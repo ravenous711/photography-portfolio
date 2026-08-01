@@ -2,7 +2,7 @@
 // california-2025.js
 // ============================================================
 // This file is loaded by all pages via albums.js.
-// California 2025 — public friends-visible trip.
+// California 2025 — public trip.
 // ============================================================
 
 // eslint-disable-next-line no-unused-vars
@@ -15,7 +15,7 @@ const ALBUMS_CALIFORNIA = [
     location: 'California',
     date: 'July 2025',
     type: 'group',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     subAlbums: ['california-santa-cruz', 'california-yosemite'],
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
@@ -27,7 +27,7 @@ const ALBUMS_CALIFORNIA = [
     parentId: 'california',
     location: 'Santa Cruz & Big Sur',
     date: 'July 2025',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-141.jpg`,
     photos: [
@@ -114,7 +114,7 @@ const ALBUMS_CALIFORNIA = [
     parentId: 'california',
     location: 'Yosemite',
     date: 'July 2025',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
     photos: [

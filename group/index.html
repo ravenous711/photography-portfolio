@@ -144,7 +144,7 @@
       document.title = `${group.title} — ${SITE_CONFIG.photographerName}`;
       document.getElementById('modal-group-title').textContent = group.title;
 
-      // Tier-auth gate for family/client group albums
+      // Tier-auth gate for family/client group albums (public is always open)
       const groupAudience = group.audience || 'public';
       if (groupAudience !== 'public' && groupAudience !== 'friends') {
         if (!TierAuth.canAccess(groupAudience)) {

@@ -8,7 +8,7 @@ description: Guides the user through adding a new photo album to the photography
 Workflow for adding a new album to Raveen's photography portfolio. Always follow all steps in order.
 
 ## Key facts
-- Public R2 bucket: `portfolio-images` — public/friends album originals + their grid thumbnails (`grid/...`)
+- Public R2 bucket: `portfolio-images` — public album originals + their grid thumbnails (`grid/...`)
 - Private R2 bucket: `portfolio-images-private` — family/client album originals **and** their grid thumbnails (`grid/...`)
 - Family/client grids are never in the public bucket — the Worker serves `grid/<key>` from the private bucket behind a token
 - Cloudflare account ID: `723c27febd4a099c7884fdf00de2329f`
@@ -22,13 +22,13 @@ Workflow for adding a new album to Raveen's photography portfolio. Always follow
 
 | Audience | Who sees it | Originals bucket | Grid bucket | Shows on |
 |---|---|---|---|---|
-| `public` | Everyone | public | public (`grid/...`) | `/gallery/` |
-| `friends` | Friends password (legacy tier) | public | public (`grid/...`) | `/gallery/` (full album via in-page toggle) |
-| `family` | Family password | private | private (`grid/...`) | `/family/` |
-| `client:<name>` | Client access code | private | private (`grid/...`) | admin only |
+| `public` | Everyone (curated default; full album via toggle) | public | public (`grid/...`) | `/gallery/` |
+| `family` | Family password | private | private (`grid/...`) | `/familyalbums/` |
+| `client:<name>` | Client access code | private | private (`grid/...`) | album URL only |
 
 **Always set `hidden: true` for family and client albums.**
 Family albums use `audience: 'family'` — password hash is already in `PASSWORD_TIERS`.
+City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 2026.)
 
 ## Cloudflare rate limit behaviour
 - R2 API rate-limits concurrent uploads — always auto-retry (see helper below)
@@ -188,7 +188,7 @@ New albums should generate **two derived tiers** from the originals:
 | `view/` | 2048px | q80 | `view/<R2-folder-name>/` | Lightbox display |
 
 Upload destination depends on audience:
-- **Public / friends** → `portfolio-images/grid/` and `portfolio-images/view/`
+- **Public** → `portfolio-images/grid/` and `portfolio-images/view/`
 - **Family / client** → `portfolio-images-private/grid/` and `portfolio-images-private/view/` (served via Worker token)
 
 Generate both tiers locally before uploading (or use `./scripts/upload-album.sh`, which now generates and uploads originals + `grid/` + `view/` in one pass):
@@ -226,7 +226,7 @@ If originals are already in R2 (backfill scenario), use `scripts/backfill-image-
 
 ## Step 4 — Upload originals
 
-- **Public / friends albums** → `portfolio-images/<R2-folder-name>`
+- **Public albums** → `portfolio-images/<R2-folder-name>`
 - **Family / client albums** → `portfolio-images-private/<R2-folder-name>`
 
 **Single R2 folder:** run as **process 1** (backgrounded). Sequential, 10s sleep between files.
@@ -258,7 +258,7 @@ echo "=== Done. Failures: $fail ==="
 ## Step 5 — Upload grid images
 
 Run as **process 2** at the same time as Step 4 (also backgrounded). Match the audience bucket:
-- **Public / friends** → `portfolio-images/grid/<R2-folder-name>/`
+- **Public** → `portfolio-images/grid/<R2-folder-name>/`
 - **Family / client** → `portfolio-images-private/grid/<R2-folder-name>/`
 
 Grids are small (~1–3 MB) — upload **5 concurrent** within this process. Originals stay sequential in process 1.
@@ -323,11 +323,11 @@ Read `js/config.js` first. Use `${R2_BASE_URL}/<R2-folder-name>/` for all photo 
 Use for a single trip/event with digital + multiple film rolls — **one album page** with section nav tabs (Digital, each roll), like `italy-venice` or `holland-tulip-2026`. **Do not** split digital and each roll into separate sub-albums unless the user explicitly wants a group index.
 
 - **Family:** flat album with `familySlug`, `photos` + `filmSections`, `hidden: true`
-- **Friends/public:** sub-album under a group with `parentId` + `slug`, same `photos` + `filmSections` shape
+- **Public:** sub-album under a group with `parentId` + `slug`, same `photos` + `filmSections` shape
 - R2: separate sub-folders per roll (`Digital/`, `Raveen-Ultramax/`, …) but **one config entry**
 - `filmSections[].navLabel` — short tab label; `label` — heading above that roll's grid
 
-See `holland-tulip-2026` (family) and `italy-venice` (friends) in `config.js`.
+See `holland-tulip-2026` (family) and `italy-venice` (public) in `config.js`.
 
 ### Multi-city group album (Italy pattern)
 
@@ -344,7 +344,7 @@ Same `photos` + `filmSections` shape as Venice-style; use for family events with
   description: '<Short description.>',
   location: '<City>',
   date: '<Month YYYY>',
-  audience: 'family',                  // or friends / public / client:<name>
+  audience: 'public',                  // or family / client:<name>
   hidden: true,                        // always true for family albums
   protected: false,
   familySlug: 'short-descriptive-slug', // URL: /familyalbums/YYYY/short-descriptive-slug/
@@ -367,14 +367,14 @@ Same `photos` + `filmSections` shape as Venice-style; use for family events with
 },
 ```
 
-### Public/friends flat album
+### Public flat album
 
 ```js
 {
   id: '<slug>',
   title: '<Title>',
   description: '<Short description.>',
-  audience: 'friends',
+  audience: 'public',
   protected: false,
   coverImage: `${R2_BASE_URL}/<R2-folder-name>/<FIRST.jpg>`,
   photos: [ `${R2_BASE_URL}/<R2-folder-name>/<PHOTO1.jpg>`, ... ],

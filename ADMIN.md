@@ -206,12 +206,10 @@ shown as the **public preview** of the album — the photos visible without unlo
 
 | Album type | Without curated | With curated |
 |------------|-----------------|--------------|
-| `public`   | All photos shown | Only curated photos shown publicly |
-| `friends`  | Friends see all; public sees nothing | Public sees curated set; friends unlock to see all |
-| `family` / `client:*` | Hidden — no public preview | Hidden — access code required for everything |
+| `public`   | All photos shown | Curated by default; anyone can toggle to full album |
+| `family` / `client:*` | Hidden — no public preview | Hidden — password/code required for everything |
 
-City trip albums (friends audience) typically have a curated set of 20–40 highlights that
-anyone can browse, with the full album unlocked by the friends password.
+City trip albums are `public` with a curated set of highlights; the full album is open via **"See full album"**.
 
 ### How to update the curated set via the admin panel
 
@@ -246,7 +244,7 @@ If you prefer to edit the config file directly (e.g. for batch changes):
 {
   id: 'california-santa-cruz',
   title: 'Santa Cruz & Big Sur',
-  audience: 'friends',
+  audience: 'public',
   photos: [
     `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-009.jpg`,
     `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-011.jpg`,
@@ -371,7 +369,7 @@ Albums live in `js/albums/` — one file per category. Edit the relevant file or
   description: 'Amsterdam, Netherlands — June 2026.',
   location: 'Amsterdam, Netherlands',
   date: 'June 2026',
-  audience: 'friends',            // public, friends, family, or client:<name>
+  audience: 'public',            // public, family, or client:<name>
   protected: false,               // true if album has its own password gate
   coverImage: `${R2_BASE_URL}/Amsterdam-2026/photo-001.jpg`,
   photos: [
@@ -488,10 +486,11 @@ once the Vercel build completes (you can monitor it in the Vercel dashboard).
 
 | Value | Who can see the album | Notes |
 |-------|-----------------------|-------|
-| `'public'` | Everyone | If `curated[]` is set, only curated photos are shown to the public. Omit curated to show all. |
-| `'friends'` | Public sees curated set; full album unlocked with friends password | Typical for city/travel albums. |
-| `'family'` | Requires family password; photos in private R2 bucket | Family tier also grants friends access. |
+| `'public'` | Everyone | If `curated[]` is set, that is the default view; anyone can toggle to the full album. |
+| `'family'` | Requires family password; photos in private R2 bucket | Hidden from public gallery. |
 | `'client:<name>'` | Requires client-specific access code; photos in private R2 bucket | `<name>` must match the album `id` and the D1 access code's `audience` field exactly. |
+
+> Legacy `'friends'` was removed Aug 2026 — use `'public'` for city/travel albums.
 
 ### How `hidden: true` works
 
@@ -514,24 +513,22 @@ live in:
 - **Vercel environment variables** — for server-side secrets used by API routes.
 - **Wrangler secrets** — for secrets used inside the Cloudflare Worker.
 
-### Friends password
+### Friends password — removed
 
-- Stored as a SHA-256 hash in `PASSWORD_TIERS` in `js/config.js`.
-- The hash maps to `['friends']` (grants friends-tier access).
-- The plaintext is in 1Password under **"photography portfolio share key"**.
-- To rotate: generate a new password, compute its hash, update the hash in `config.js`,
-  and send new `/fullalbums/?k=<newkey>` share links to friends.
+Friends capability-link / password unlock was removed Aug 2026. Public albums need no password.
+The old share key in 1Password is obsolete (safe to archive).
+
+### Family password
+
+- Stored as a SHA-256 hash in `PASSWORD_TIERS`, mapping to `['family']`.
+- The plaintext is in 1Password under **"photography portfolio family password"**.
+- To rotate: generate a new password, compute its hash, update the hash in `js/config.js`,
+  and update the Worker `FAMILY_HASH` secret to match.
 
 ```python
 # Generate a new hash:
 python3 -c "import hashlib; print(hashlib.sha256(b'new-password'.encode()).hexdigest())"
 ```
-
-### Family password
-
-- Also stored as a SHA-256 hash in `PASSWORD_TIERS`, mapping to `['family', 'friends']`.
-- The plaintext is in 1Password under **"photography portfolio family password"**.
-- Rotate the same way as the friends password.
 
 ### Admin password
 
@@ -842,20 +839,20 @@ npx wrangler deploy
 
 ---
 
-### Rotate the friends or family password
+### Rotate the family password
 
 1. Generate a new password and compute its SHA-256 hash:
    ```bash
    python3 -c "import hashlib; print(hashlib.sha256(b'new-password'.encode()).hexdigest())"
    ```
-2. Open `js/config.js` and replace the old hash in `PASSWORD_TIERS` with the new hash.
+2. Open `js/config.js` and replace the old family hash in `PASSWORD_TIERS` with the new hash (`['family']`).
 3. Update 1Password with the new plaintext password.
-4. If rotating the friends password, generate new share links (`/fullalbums/?k=<new-hex-key>`)
-   and send them to friends. Old links will stop working immediately on deploy.
-5. Commit and push to `main`.
-6. Update `FRIENDS_HASH` or `FAMILY_HASH` wrangler secret to match:
+4. Commit and push to `main`.
+5. Update the Worker `FAMILY_HASH` secret to match:
    ```bash
    cd workers/zip-download
-   echo "new-hash-here" | npx wrangler secret put FRIENDS_HASH
-   npx wrangler deploy
+   echo "new-hash-here" | npx wrangler secret put FAMILY_HASH
+   npx wrangler deploy   # only with explicit approval
    ```
+
+> Friends password / share-key rotation is obsolete (tier removed Aug 2026). `FRIENDS_HASH` Worker secret can be left unused or deleted later.

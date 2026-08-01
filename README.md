@@ -158,31 +158,27 @@ function viewUrl(url)  { return url.replace(R2_BASE_URL, R2_BASE_URL + '/view');
 | `audience` | Visible to | Storage | Image delivery |
 |---|---|---|---|
 | `public` | Everyone | Public R2 | Direct CDN URL |
-| `friends` | Friends (capability link) | Public R2 | Direct CDN URL |
 | `family` | Family (password) | **Private R2** | Worker-signed proxy |
 | `client:<name>` | That client only (access code) | **Private R2** | Worker-signed proxy |
 
+> Legacy `friends` tier removed Aug 2026. City albums are `public`: curated is the default view; anyone can toggle to the full album.
+
 ### Curated sets
 
-A `curated: [...]` array on an album controls what the public sees by default:
+A `curated: [...]` array on an album controls what visitors see **by default**:
 
 ```
   ┌─────────────────────────────────────────────────────────────────┐
-  │  PUBLIC VISITOR                                                  │
+  │  ANY VISITOR                                                     │
   │                                                                  │
-  │  friends album without curated[]  → sees all photos             │
-  │  friends album with    curated[]  → sees curated subset only    │
-  │                                     + "Unlock to see all N" CTA │
-  │                                                                  │
-  │  UNLOCKED VISITOR (friends tier)                                 │
-  │                                                                  │
-  │  same album                       → sees full set               │
-  │                                     + "See favorites" toggle    │
+  │  album without curated[]  → sees all photos                      │
+  │  album with    curated[]  → sees curated subset by default       │
+  │                              + "See full album" toggle (public)  │
   └─────────────────────────────────────────────────────────────────┘
 ```
 
 To pick curated photos: `/admin/` → expand album → select top photos
-→ **Save as curated set** — writes `curated[]` to `config.js` via GitHub API
+→ **Save as curated set** — writes `curated[]` to the album shard via GitHub API
 and triggers a Vercel redeploy.
 
 ### How `hidden` works
@@ -209,12 +205,12 @@ session. Family and client albums are always `hidden: true`.
 },
 ```
 
-**Friends** (curated set public; full album unlocked with friends capability link):
+**Public** (optional curated highlights; full album open to everyone via toggle):
 ```js
 {
   id: 'my-city-2026',
   title: 'My City 2026',
-  audience: 'friends',
+  audience: 'public',
   protected: false,
   coverImage: `${R2_BASE_URL}/My-City-2026/COVER.JPG`,
   photos: [ /* … */ ],
@@ -258,33 +254,21 @@ session. Family and client albums are always `hidden: true`.
 
 | Tier | Password | Notes |
 |---|---|---|
-| Friends | see 1Password ("photography portfolio share key") | Capability link key `?k=KEY` — rotate by changing hash in `PASSWORD_TIERS` |
-| Family | see 1Password | One password; grants `family` + `friends` tiers |
+| Family | see 1Password | Unlocks family gallery (`audience: 'family'`) |
 | Admin | see 1Password | Server-side only; hash in Vercel env `ADMIN_PASSWORD_HASH` |
 
 Passwords are never stored in the repo — only SHA-256 hashes in `PASSWORD_TIERS` in
 `js/config.js`. The admin password hash is a Vercel env var, not in the config file at all.
+Client codes are created in `/admin/` → Access codes (D1), not in `PASSWORD_TIERS`.
 
 ---
 
 ## Auth Flow
 
-### Friends (capability-link tier)
+### Friends unlock — removed
 
-```
-  Browser                       config.js / js/main.js
-     │                                  │
-     │  Visit /gallery/italy/?k=KEY     │
-     │ ─────────────────────────────►  │
-     │                                  │  sha256(KEY) matches PASSWORD_TIERS
-     │                                  │  TierAuth.setTier('friends')
-     │                                  │  sessionStorage + optional localStorage
-     │  Album renders (full set)        │
-     │ ◄─────────────────────────────  │
-```
-
-No Worker call needed — photos are plain public R2 URLs. The "lock" is
-client-side only (hash comparison in the browser).
+Friends capability-link unlock (`?k=` / `/fullalbums/`) was removed Aug 2026.
+Public city albums need no unlock: curated is the default; **"See full album"** is open to everyone.
 
 ### Family (password tier → Worker token)
 
@@ -430,43 +414,39 @@ so old bookmarks and shared links continue to work.
 
 ## How access tiers work
 
-The site has four audience tiers. Every album in `js/config.js` has an `audience` field:
+Every album in `js/albums/*.js` has an `audience` field:
 
 | Audience | Who sees it | How |
 |---|---|---|
-| `public` | Everyone | Always visible; shows curated subset if `curated[]` is set |
-| `friends` | Friends with capability link | Capability-link key `?k=KEY` unlocks full albums; curated set is public default |
-| `family` | Family with password | Hidden albums that appear in gallery after unlock; photos served via Worker |
-| `client:<name>` | One client | Hidden album, only their access code works; photos served via Worker |
+| `public` | Everyone | Always visible; curated subset by default if `curated[]` is set; anyone can toggle to full album |
+| `family` | Family with password | Hidden albums; photos served via Worker |
+| `client:<name>` | One client | Hidden album; access code; photos served via Worker |
 
 ### Passwords (keep in 1Password)
 
 | Tier | Password | Hash |
 |---|---|---|
-| Friends | see 1Password | `1cf3ce8f…` (SHA-256 of the capability-link key) |
-| Family | see 1Password | `c403bc24…` |
-| Admin panel | see 1Password | Stored as Vercel env `ADMIN_PASSWORD_HASH` only |
+| Family | see 1Password | `c403bc24…` in `PASSWORD_TIERS` |
+| Admin panel | see 1Password | Vercel env `ADMIN_PASSWORD_HASH` only |
 
-Passwords are stored in 1Password only — **never in the repo** (not even in comments). Only
-SHA-256 hashes live in `PASSWORD_TIERS` in `js/config.js`. The admin password hash is a
-Vercel env var, not in the config file at all.
+Passwords are stored in 1Password only — **never in the repo**. Only SHA-256 hashes live in
+`PASSWORD_TIERS` in `js/config.js`. Client codes are D1-backed via the admin panel.
 
 ### Handing out access
 
-- **Friends:** send `raveenfernando.com/gallery/?k=<key>` (or a specific album URL with `?k=`) — see 1Password for the key
-- **Family:** text/email them `raveenfernando.com/unlock/` + the family password (see 1Password)
-- **Clients:** create an access code in the admin panel (see "Full client gallery workflow" below) — no password hash editing needed
+- **Public albums:** just share the album URL — curated + full are open
+- **Family:** text/email `raveenfernando.com/unlock/` + the family password (1Password)
+- **Clients:** create an access code in the admin panel — no password hash editing needed
 
 ### Curated sets
 
-Each public/friends album can have a `curated: [...]` array — the highlight photos shown to
-everyone by default. To pick curated photos:
+Each public album can have a `curated: [...]` array — the highlight photos shown by default.
+To pick curated photos:
 1. Go to `/admin/` → expand an album → select your top photos
-2. Click **Save as curated set** — writes to `config.js` via GitHub, triggers Vercel redeploy
+2. Click **Save as curated set** — writes to the album shard via GitHub, triggers Vercel redeploy
 
-Friends/family who unlock see a **"See all N photos"** button to expand to the full album.
-
-Albums without a `curated[]` array show the full photo set to everyone (fallback).
+Anyone can use **"See full album"** / **"See favorites"** to toggle between curated and full.
+Albums without a `curated[]` array show the full photo set to everyone.
 
 ---
 

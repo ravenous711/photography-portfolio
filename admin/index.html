@@ -403,7 +403,6 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem">
           <input id="code-label" placeholder="Label (e.g. Smith Wedding)" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px;width:100%">
           <select id="code-audience" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:0.5rem 0.75rem;font-size:0.8rem;border-radius:2px">
-            <option value="friends">friends</option>
             <option value="family">family</option>
             <option value="client:">client:name — edit below</option>
           </select>
@@ -1037,7 +1036,7 @@
       // ── Public / Friends albums ────────────────────────────────────────────
       const publicAlbums = leafAlbums.filter(a => !String(a.audience || '').startsWith('family'));
       if (publicAlbums.length) {
-        container.appendChild(sectionHeading('Public · Friends'));
+        container.appendChild(sectionHeading('Public'));
 
         // Build parent → children map from group albums
         const groupMap = {};

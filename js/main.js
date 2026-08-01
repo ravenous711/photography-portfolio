@@ -673,7 +673,7 @@ const AlbumAuth = {
 };
 
 // ── Tier-based access store ──────────────────────────────────────────────────
-// Tracks which audience tiers (friends / family / client:x) have been unlocked
+// Tracks which audience tiers (family / client:x) have been unlocked
 // via the shared unlock modal. Stored in sessionStorage so it clears on tab close.
 // "Remember me" (localStorage) is opt-in, set in the unlock flow.
 const TierAuth = {
@@ -692,19 +692,18 @@ const TierAuth = {
   },
 
   // Does the viewer have access to this audience?
-  // Rules: 'public' is always granted; 'family' grants friends.
-  // Legacy sub-tiers (pre-consolidation) still grant family + friends until users re-unlock.
+  // Rules: 'public' (and legacy 'friends') always granted.
+  // Legacy family sub-tiers still grant family until users re-unlock.
   canAccess(audience) {
-    if (!audience || audience === 'public') return true;
+    if (!audience || audience === 'public' || audience === 'friends') return true;
     const tiers = this.grantedTiers();
     if (tiers.has(audience)) return true;
-    if (tiers.has('family') && audience === 'friends') return true;
     const hasLegacyFamily = tiers.has('family:anger-ali') || tiers.has('family:fernando');
-    if (hasLegacyFamily && (audience === 'family' || audience === 'friends')) return true;
+    if (hasLegacyFamily && audience === 'family') return true;
     return false;
   },
 
-  // Grant a list of audiences (e.g. ['family', 'friends'])
+  // Grant a list of audiences (e.g. ['family'])
   grant(audiences, persist = false) {
     try {
       const session = JSON.parse(sessionStorage.getItem(this._sessionKey) || '[]');

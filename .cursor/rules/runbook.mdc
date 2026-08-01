@@ -5,13 +5,9 @@ alwaysApply: true
 
 # Photography portfolio — start here
 
-- **`IMPROVEMENTS.md` is the runbook + backlog.** Before starting non-trivial work, skim it:
-  the "How to use this runbook" section (dev/test/git conventions), the Status board, the open
-  tickets, and the Ideas section.
-- When the user says "do ticket X" (e.g. `BUG-1`, `MNT-1`, `ADMIN-1`), follow that ticket's
-  **Why / Fix / Files / Done when** as the brief.
-- After shipping a ticket: update its **Status** (ticket + Status board) and add a line to the
-  runbook **Changelog**.
+- **`IMPROVEMENTS.md` is the runbook + backlog.** Before starting non-trivial work, skim
+  **Open tickets**, then the ticket details. Hand work to the agent as *"do ticket OPS-5"*.
+- After shipping a ticket: move it out of Open, add a Changelog line.
 - **`README.md`** covers the album *content* workflow (R2 uploads, grid generation, adding
   albums, admin panel). Use it for anything about uploading or managing photos.
 
@@ -21,18 +17,18 @@ alwaysApply: true
 - Production auto-deploys from `main` via Vercel — **push to `main` only when explicitly asked.**
 - **Never deploy, publish, or upload files/data to an external endpoint without explicit approval.**
 
-## Access tiers (AUTH-1 — fully shipped, Phases 1–3b)
-Every album in `js/config.js` has an `audience` field:
-- `public` — visible to all; curated subset shown if `curated[]` set
-- `friends` — curated set public; full album unlocked with friends password (see 1Password)
+## Access tiers (AUTH-1 shipped; friends unlock removed Aug 2026)
+Every album has an `audience` field in `js/albums/*.js`:
+- `public` — visible to all; if `curated[]` is set, that is the default view and anyone can toggle to the full album
 - `family` — hidden album; photos in **private R2 bucket**; served via Worker signed tokens
 - `client:<name>` — hidden album; photos in **private R2 bucket**; access code from admin panel
 
-When creating or editing albums, **always set `audience`**. City albums are typically `friends`. Sensitive albums (family/kids/clients) use `family` or `client:<name>` + `hidden: true` + upload to `portfolio-images-private` bucket.
+When creating or editing albums, **always set `audience`**. City/travel albums are `public`.
+Sensitive albums (family/kids/clients) use `family` or `client:<name>` + `hidden: true` + upload to `portfolio-images-private` bucket.
 
 **Client access codes** — never edit `PASSWORD_TIERS` for new clients. Instead:
 1. Upload photos to `portfolio-images-private`
-2. Add album to `config.js` with `audience: 'client:<name>'`
+2. Add album to `js/albums/*.js` with `audience: 'client:<name>'`
 3. Go to `/admin/` → **Access codes** tab → create code (shown once) → send to client
 
 The `adminPasswordHash` field has been removed from config — admin auth is server-side via `/api/admin-login`. Passwords live in 1Password only.

@@ -30,7 +30,7 @@
 //   description – short caption shown on gallery card
 //   date        – date string for dateline (e.g. "May 2026")
 //   dateline    – optional override string (or false to hide)
-//   audience    – 'public' | 'friends' | 'family' | 'client:<name>'
+//   audience    – 'public' | 'family' | 'client:<name>'  (legacy 'friends' = public)
 //   hidden      – true = exclude from gallery grid
 //   protected   – true = password required (legacy per-album gate)
 //   coverImage  – full URL to cover photo

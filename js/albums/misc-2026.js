@@ -105,7 +105,7 @@ const ALBUMS_MISC_2026 = [
     location: 'Red Rock Canyon',
     date: 'January 2026',
     description: 'Red Rock Canyon National Conservation Area, Nevada.',
-    audience: 'friends',
+    audience: 'public',
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg`,
