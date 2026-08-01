@@ -109,12 +109,12 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 ### Performance
 
 #### PERF-1 — Add view/ image tier; stop lightbox serving 15-40MB originals
-- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Aug 2026, branch `fix/restore-perf1-view-tier`)
+- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Phases 1–4 live on `main` + Worker; 5–6 still open)
 - **Why:** The lightbox upgrades to the raw original on every open, `preloadAdjacent` prefetches originals for 4+ neighbours, and `prefetchDownloadBlob` fires eagerly. Opening 20 photos can pull hundreds of MB on mobile.
 - **Target model:** `grid/` (thumbnails) → `view/` ~2048px (lightbox) → original (download only, explicitly chosen).
 - **Phases:**
-  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend-only. Stop eager prefetch; add `viewUrl()`; point lightbox at `view/` with 404 fallback (stays on grid on slow connections; caches miss per album). Ships before backfill; self-retiring as albums are backfilled. **Shipped Jul 2026, silently reverted by merge `028c108`, re-applied on `fix/restore-perf1-view-tier` (Aug 2026) — see the regression note below.**
-  - **Phase 2** (`feat/download-size-picker`): Worker ACL — allow `view/<client>/` keys for client tier so client albums don't 403 on the new tier. **Never merged to `main`; cherry-picked onto `fix/restore-perf1-view-tier`. Needs a Worker deploy.**
+  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend-only. Stop eager prefetch; add `viewUrl()`; point lightbox at `view/` with 404 fallback (stays on grid on slow connections; caches miss per album). Ships before backfill; self-retiring as albums are backfilled. **Shipped Jul 2026, silently reverted by merge `028c108`, restored and merged to `main` Aug 2026 (`48495fc`) — see the regression note below.**
+  - **Phase 2** (`feat/download-size-picker`): Worker ACL — allow `view/<client>/` keys for client tier so client albums don't 403 on the new tier. **On `main`; Worker `portfolio-zip-download` deployed Aug 2026 (version `7b5b3de5-51ce-4fea-8b09-a1170515c2d7`).**
   - **Phase 3** (`feat/backfill-image-tiers`): `scripts/backfill-image-tiers.sh` — derive 2048px `view/` and 900px `grid/` from R2 originals in one resumable pass, public or private bucket. **On `main`.**
   - **Phase 4**: Run backfill per album, starting with Italy. Verify one album on a phone first. **Done — Aug 2026 audit confirms every live album in both buckets has a complete `view/` tier. Only legacy `Film2`–`Film4`/`Film-Test` and the `about`/`hero`/`test` asset prefixes lack one, and none are reachable from the lightbox.**
   - **Phase 5** (`feat/download-size-picker`): Download size chooser modal (web/large/original) with per-tier estimates; wired to all download entry points. **Not on `main`. A simpler inline dropdown shipped instead in `05cb4c9`; decide whether Phase 5 is still wanted.**
@@ -374,11 +374,14 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 
 ## Changelog (Done)
 
+- **PERF-1 Phases 1–2 + lightbox layout — shipped** — Aug 2026.
+  Merged to `main` (`48495fc`): restored `view/` lightbox path, Worker `view/<client>/` ACL, no eager original blob prefetch, lightbox size/centering fix. Deployed Worker `portfolio-zip-download` version `7b5b3de5-51ce-4fea-8b09-a1170515c2d7`. Public + private albums now serve mid-res in the lightbox; Phases 5–6 still open.
+
 - **Lightbox — no resize or re-centre when the sharper tier loads** — Aug 2026.
-  `.lightbox-layer` only had `max-width`/`max-height`, so the `grid/` preview painted at its intrinsic size and grew when `view/` arrived, and `.lightbox-shell` top-aligned it. Layer height is now pinned to `--lb-avail` above the 768px breakpoint (phones are width-bound and already filled the frame) and the shell centres vertically. Verified at 393×852, 800×600, 1440×420, 1440×900 and 2560×1080: size is identical before and after the upgrade, captions still hug the photo. On `fix/restore-perf1-view-tier`.
+  `.lightbox-layer` only had `max-width`/`max-height`, so the `grid/` preview painted at its intrinsic size and grew when `view/` arrived, and `.lightbox-shell` top-aligned it. Layer height is now pinned to `--lb-avail` above the 768px breakpoint (phones are width-bound and already filled the frame) and the shell centres vertically. Verified at 393×852, 800×600, 1440×420, 1440×900 and 2560×1080: size is identical before and after the upgrade, captions still hug the photo. Shipped on `main` (`48495fc`).
 
 - **PERF-1 — Phase 1 restored, Phase 2 cherry-picked** — Aug 2026.
-  Re-applied the `view/` tier lightbox logic that merge `028c108` reverted (`_viewMissingPrefixes`, `_viewAlbumPrefix()`, the grid → `view/` upgrade, `view/` prefetching), removed the eager `prefetchDownloadBlob` calls in `openLightbox` *and* `lightboxNav` so originals are only fetched on download intent, deleted the now-dead `ImagePreload.showProgressive`, and brought the `view/<client>/` Worker ACL over from `feat/download-size-picker`. Verified headless on Venice: 255 MB → 5.2 MB for one open plus three nav steps, no raw originals, no JS errors. On `fix/restore-perf1-view-tier`; Worker deploy still pending.
+  Re-applied the `view/` tier lightbox logic that merge `028c108` reverted (`_viewMissingPrefixes`, `_viewAlbumPrefix()`, the grid → `view/` upgrade, `view/` prefetching), removed the eager `prefetchDownloadBlob` calls in `openLightbox` *and* `lightboxNav` so originals are only fetched on download intent, deleted the now-dead `ImagePreload.showProgressive`, and brought the `view/<client>/` Worker ACL over from `feat/download-size-picker`. Verified headless on Venice: 255 MB → 5.2 MB for one open plus three nav steps, no raw originals, no JS errors. Merged to `main`; Worker deployed.
 
 - **Album — Moksha Yoga, renumber 15b → sequential 01–51** — Jul 2026.
   Renamed `Moksha-Yoga-15b` → `16` and shifted former `16`–`50` → `17`–`51` so the album uses clean `01`–`51` filenames. Local + private R2 complete (original / `grid/` / `view/` for `16`–`51`); orphaned `15b` objects deleted. Config updated in `js/albums/clients.js`. Shipped on `main` (`1cbdeaa`).
