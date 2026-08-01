@@ -399,6 +399,7 @@ async function parseKeys(request) {
   const url = new URL(request.url);
   let rawKeys = [];
   let filename = url.searchParams.get('filename') || '';
+  let token = url.searchParams.get('token') || '';
 
   if (request.method === 'POST') {
     const contentType = request.headers.get('Content-Type') || '';
@@ -406,11 +407,13 @@ async function parseKeys(request) {
       const body = await request.json().catch(() => ({}));
       rawKeys = Array.isArray(body.keys) ? body.keys : [];
       filename = body.filename || filename;
+      token = body.token || token;
     } else {
       const form = await request.formData();
       const raw = form.get('keys') || '';
       rawKeys = String(raw).split(/[\n,]/);
       filename = form.get('filename') || filename;
+      token = String(form.get('token') || token);
     }
   } else {
     const raw = url.searchParams.get('keys') || '';
@@ -426,7 +429,11 @@ async function parseKeys(request) {
       keys.push(key);
     }
   }
-  return { keys, filename: sanitizeFilename(filename.endsWith('.zip') ? filename : `${filename}.zip`) };
+  return {
+    keys,
+    filename: sanitizeFilename(filename.endsWith('.zip') ? filename : `${filename}.zip`),
+    token,
+  };
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -472,13 +479,58 @@ export default {
       return new Response('Method not allowed', { status: 405, headers: cors });
     }
 
-    const { keys, filename } = await parseKeys(request);
+    const { keys, filename, token } = await parseKeys(request);
 
     if (!keys.length) {
       return new Response('No valid photo keys provided', { status: 400, headers: cors });
     }
     if (keys.length > MAX_FILES) {
       return new Response(`Too many files (max ${MAX_FILES})`, { status: 400, headers: cors });
+    }
+
+    // ── Private bucket access (PERF-1 Phase 6) ─────────────────────────────
+    // Strip a view/ or grid/ tier prefix to get the "base path" of a key.
+    const basePath = (key) => {
+      const k = key.toLowerCase();
+      if (k.startsWith('view/')) return k.slice(5);
+      if (k.startsWith('grid/')) return k.slice(5);
+      return k;
+    };
+
+    let zipPayload = null;
+    if (token && env.UNLOCK_SECRET) {
+      zipPayload = await verifyToken(token, env.UNLOCK_SECRET);
+    }
+
+    // Select bucket and enforce ACL rules mirroring handleImage (+ view/ tier).
+    let bucket = env.BUCKET;
+    if (zipPayload) {
+      const { tier } = zipPayload;
+      // friends tier only unlocks public albums — no private bucket access.
+      if (tier === 'friends') {
+        return new Response('Forbidden', { status: 403, headers: cors });
+      }
+      if (tier.startsWith('client:')) {
+        const clientName = tier.slice(7).toLowerCase();
+        for (const key of keys) {
+          const base = basePath(key);
+          const allowed =
+            base.startsWith(`${clientName}/`) ||
+            key.toLowerCase().startsWith(`grid/${clientName}/`) ||
+            key.toLowerCase().startsWith(`view/${clientName}/`);
+          if (!allowed) return new Response('Forbidden', { status: 403, headers: cors });
+        }
+      }
+      // family (any sub-tier) or client → private bucket
+      if (env.PRIVATE_BUCKET) bucket = env.PRIVATE_BUCKET;
+    } else {
+      // No valid token — reject unambiguously private family/ paths.
+      // Client paths naturally 404 from the public bucket without a token.
+      for (const key of keys) {
+        if (basePath(key).startsWith('family/')) {
+          return new Response('Forbidden', { status: 403, headers: cors });
+        }
+      }
     }
 
     // Dedupe entry names so the archive stays valid when two folders share a filename.
@@ -509,7 +561,7 @@ export default {
       const batch = keys.slice(i, i + CONCURRENCY);
       const heads = await Promise.all(
         batch.map(async (key) => {
-          const head = await env.BUCKET.head(key);
+          const head = await bucket.head(key);
           return head ? { key, size: head.size, lastModified: head.uploaded } : null;
         })
       );
@@ -534,7 +586,7 @@ export default {
     // Lazily pull each object from R2 so memory stays flat while the ZIP streams.
     async function* entries() {
       for (const f of files) {
-        const object = await env.BUCKET.get(f.key);
+        const object = await bucket.get(f.key);
         if (!object || !object.body) continue;
         yield {
           name: f.name,
