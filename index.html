@@ -26,56 +26,126 @@
 
   <style>
     #selected-work {
-      padding-bottom: 2rem;
+      background: #0c0c0b;
+      color: #f3f0e9;
     }
-    #selected-work .feat-label {
-      font-family: var(--font-serif);
-      font-size: 1.5rem;
-      font-weight: 300;
-      letter-spacing: 0.06em;
-      color: var(--color-muted);
-      text-transform: none;
+    #selected-work .chapters {
+      display: flex;
+      flex-direction: column;
     }
-    @media (min-width: 768px) {
-      #selected-work .feat-label {
-        font-size: 1.75rem;
-      }
-    }
-    #featured-photos-wrap .feat-preview-inner {
-      max-width: none;
-      margin: 0 auto;
-      padding: 0 1.5rem 1rem;
-    }
-    #featured-photos-grid {
-      /* flex layout — see inline style, columns set in HTML */
-    }
-    #featured-photos-wrap a {
-      display: block;
+    #selected-work .chapter {
       position: relative;
+      display: block;
+      min-height: 88svh;
       overflow: hidden;
+      color: inherit;
+      text-decoration: none;
     }
-    #featured-photos-wrap img {
+    #selected-work .chapter-media {
+      position: absolute;
+      inset: 0;
+      background: #161615;
+    }
+    #selected-work .chapter-media img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
       display: block;
       opacity: 0;
-      transition: opacity 0.6s ease;
+      transform: scale(1.03);
+      transition: opacity 0.8s ease, transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
     }
-    #featured-photos-wrap img.loaded,
-    #featured-photos-wrap img[style*="opacity: 1"] {
+    #selected-work .chapter-media img.loaded {
       opacity: 1;
+      transform: scale(1);
     }
-    @media (min-width: 768px) {
-      #featured-photos-wrap .feat-preview-inner {
-        padding: 0 3rem 1rem;
-      }
+    #selected-work .chapter:hover .chapter-media img.loaded {
+      transform: scale(1.03);
+    }
+    #selected-work .chapter-shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.72) 0%,
+        rgba(0,0,0,0.18) 42%,
+        rgba(0,0,0,0.08) 100%
+      );
+      pointer-events: none;
+    }
+    #selected-work .chapter-copy {
+      position: absolute;
+      left: clamp(1.25rem, 4vw, 4rem);
+      right: clamp(1.25rem, 4vw, 4rem);
+      bottom: clamp(2rem, 5vw, 4rem);
+      z-index: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+    #selected-work .chapter-meta {
+      min-width: 0;
+    }
+    #selected-work .chapter-date {
+      margin: 0 0 0.55rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(243,240,233,0.55);
+    }
+    #selected-work .chapter-title {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: clamp(2.5rem, 6vw, 5.5rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 0.95;
+      color: #fff;
+    }
+    #selected-work .chapter-go {
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(243,240,233,0.72);
+      border-bottom: 1px solid rgba(243,240,233,0.28);
+      padding-bottom: 0.2rem;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    #selected-work .chapter:hover .chapter-go {
+      color: #fff;
+      border-bottom-color: rgba(255,255,255,0.7);
+    }
+    #selected-work .chapters-foot {
+      padding: clamp(3.5rem, 7vw, 5.5rem) 1.5rem;
+      text-align: center;
+    }
+    #selected-work .chapters-foot a {
+      color: #f3f0e9;
+      background: transparent;
+      border-color: rgba(243,240,233,0.28);
+    }
+    #selected-work .chapters-foot a:hover {
+      background: rgba(243,240,233,0.08);
+      border-color: rgba(243,240,233,0.55);
+    }
+    body:has(.hero) footer {
+      background: #0c0c0b;
+      border-top-color: rgba(243,240,233,0.12);
+      color: rgba(243,240,233,0.45);
+    }
+    body:has(.hero) footer a {
+      color: rgba(243,240,233,0.45);
     }
     @media (max-width: 640px) {
-      #featured-photos-grid { gap: 20px !important; }
-      #feat-col-0, #feat-col-1, #feat-col-2 { gap: 20px !important; }
-      #feat-col-2 { display: none; }
-      #featured-photos-wrap .feat-preview-inner {
-        padding: 0 1.25rem 0.5rem;
+      #selected-work .chapter {
+        min-height: 78svh;
+      }
+      #selected-work .chapter-copy {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.25rem;
       }
     }
   </style>
@@ -137,31 +207,10 @@
     </div>
   </section>
 
-  <!-- ── A few shots ── -->
+  <!-- ── Album chapters ── -->
   <section id="selected-work">
-    <div class="text-center fade-in" style="padding:5rem 1.5rem 3.5rem">
-      <p class="feat-label">Some cherry picked favorites</p>
-    </div>
-
-    <!-- Featured photos: 3-col preview, random subset each load -->
-    <div id="featured-photos-wrap" style="display:none">
-      <div class="feat-preview-inner fade-in fade-in-delay-1">
-        <div id="featured-photos-grid" style="display:flex;gap:48px;align-items:start">
-          <div id="feat-col-0" style="flex:1;display:flex;flex-direction:column;gap:48px"></div>
-          <div id="feat-col-1" style="flex:1;display:flex;flex-direction:column;gap:48px"></div>
-          <div id="feat-col-2" style="flex:1;display:flex;flex-direction:column;gap:48px"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Fallback: album cards (shown when featuredPhotos is empty) -->
-    <div id="featured-albums-wrap" class="fade-in fade-in-delay-1" style="display:none">
-      <div id="featured-grid" class="editorial-grid">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-
-    <div class="text-center fade-in fade-in-delay-2" style="padding:4rem 1.5rem 5rem">
+    <div id="home-chapters" class="chapters"></div>
+    <div class="chapters-foot fade-in">
       <a href="/gallery/" class="btn-ghost">Browse Gallery</a>
     </div>
   </section>
@@ -204,71 +253,47 @@
     document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
     document.title = SITE_CONFIG.photographerName;
 
-    // ── Featured photos grid ──────────────────────────────────────────────────
-    const featuredPhotos = SITE_CONFIG.featuredPhotos || [];
-    const featShown = [...featuredPhotos].sort(() => Math.random() - 0.5).slice(0, 9);
+    // ── Album chapters (Italy / California / Red Rock) ─────────────────────────
+    const chapterIds = ['italy-2026', 'california', 'red-rock-canyon-2026'];
+    const chaptersEl = document.getElementById('home-chapters');
 
-    // Find which album a photo URL belongs to
-    function findAlbumForPhoto(url) {
-      return ALBUMS.find(a => a.type !== 'group' && getAlbumAllPhotos(a).includes(url));
-    }
+    chapterIds.forEach((id, i) => {
+      const album = ALBUMS.find(a => a.id === id);
+      if (!album || !isCompleteAlbum(album)) return;
 
-    if (featuredPhotos.length > 0) {
-      document.getElementById('featured-photos-wrap').style.display = '';
+      const link = document.createElement('a');
+      link.href = Routes.albumPageUrl(album);
+      link.className = 'chapter fade-in';
+      if (i > 0) link.classList.add(`fade-in-delay-${Math.min(i, 2)}`);
 
-      const cols = [
-        document.getElementById('feat-col-0'),
-        document.getElementById('feat-col-1'),
-        document.getElementById('feat-col-2'),
-      ];
+      const media = document.createElement('div');
+      media.className = 'chapter-media';
 
-      featShown.forEach((url, i) => {
-        const album = findAlbumForPhoto(url);
-        const href  = album ? Routes.albumPageUrl(album) : '/gallery/';
+      const img = document.createElement('img');
+      img.alt = album.title;
+      img.loading = i === 0 ? 'eager' : 'lazy';
+      img.fetchPriority = i === 0 ? 'high' : 'auto';
+      if (album.coverPosition) img.style.objectPosition = album.coverPosition;
+      img.addEventListener('load', () => img.classList.add('loaded'));
+      img.src = albumCoverUrl(album);
+      media.appendChild(img);
 
-        const link = document.createElement('a');
-        link.href = href;
+      const shade = document.createElement('div');
+      shade.className = 'chapter-shade';
 
-        const img = document.createElement('img');
-        img.alt     = album ? album.title : '';
-        img.loading = i < 3 ? 'eager' : 'lazy';
-        img.addEventListener('load',  () => { img.classList.add('loaded'); img.style.opacity = '1'; });
-        img.addEventListener('error', () => { img.src = url; }, { once: true });
-        img.src = gridUrl(url);
+      const copy = document.createElement('div');
+      copy.className = 'chapter-copy';
+      copy.innerHTML = `
+        <div class="chapter-meta">
+          ${album.date ? `<p class="chapter-date">${album.date}</p>` : ''}
+          <h2 class="chapter-title">${album.location || album.title}</h2>
+        </div>
+        <span class="chapter-go">View album</span>
+      `;
 
-        link.appendChild(img);
-        cols[i % 3].appendChild(link);
-      });
-
-    } else {
-      // Fallback: show recent album cards
-      document.getElementById('featured-albums-wrap').style.display = '';
-
-      const publicAlbums = ALBUMS.filter(a => !a.protected && !a.hidden && !a.parentId && isCompleteAlbum(a)).slice(0, 3);
-      const grid = document.getElementById('featured-grid');
-      if (publicAlbums.length > 0 && publicAlbums.length < 3) {
-        grid.classList.add(`editorial-grid--count-${publicAlbums.length}`);
-      }
-      publicAlbums.forEach((album, i) => {
-        const isGroup = album.type === 'group';
-        const card = document.createElement('a');
-        card.href = albumPageUrl(album);
-        card.className = 'album-card block';
-        card.style.animationDelay = `${i * 0.1}s`;
-        const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
-        const dateline = albumDateline(album, { withDesc: !isGroup });
-        const desc = albumCardDesc(album);
-        card.innerHTML = `
-          <img class="album-card-img" src="${albumCoverUrl(album)}" alt="${album.title}" loading="${i === 0 ? 'eager' : 'lazy'}"${posStyle} />
-          <div class="album-card-overlay">
-            ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
-            <h3 class="album-card-title">${album.title}</h3>
-            ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
+      link.append(media, shade, copy);
+      chaptersEl.appendChild(link);
+    });
   </script>
 </body>
 </html>
