@@ -615,36 +615,6 @@ const ImagePreload = {
     }
     await this.apply(imgEl, fallbackSrc);
   },
-
-  // Show grid immediately, then swap to full-res once it finishes downloading.
-  async showProgressive(imgEl, fullResUrl, gridSrc, { isCurrent } = {}) {
-    const stillCurrent = () => !isCurrent || isCurrent();
-
-    if (this.isLoaded(fullResUrl)) {
-      await this.apply(imgEl, fullResUrl);
-      return 'full';
-    }
-
-    try {
-      await this.apply(imgEl, gridSrc);
-    } catch {
-      try {
-        await this.apply(imgEl, fullResUrl);
-        return 'full';
-      } catch {
-        return 'error';
-      }
-    }
-
-    if (!stillCurrent()) return 'grid';
-
-    this.load(fullResUrl).then(async () => {
-      if (!stillCurrent()) return;
-      await this.apply(imgEl, fullResUrl);
-    }).catch(() => {});
-
-    return 'grid';
-  },
 };
 
 // ── Session-based album unlock store (legacy per-album gating) ──
