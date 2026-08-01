@@ -191,7 +191,7 @@ Upload destination depends on audience:
 - **Public / friends** → `portfolio-images/grid/` and `portfolio-images/view/`
 - **Family / client** → `portfolio-images-private/grid/` and `portfolio-images-private/view/` (served via Worker token)
 
-Generate both tiers locally before uploading:
+Generate both tiers locally before uploading (or use `./scripts/upload-album.sh`, which now generates and uploads originals + `grid/` + `view/` in one pass):
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -211,6 +211,11 @@ for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
     && echo "✓ view $b" || echo "✗ FAILED view: $b"
 done
 echo "Done. grid=$(ls "$GRID_DIR" | wc -l | tr -d ' ')  view=$(ls "$VIEW_DIR" | wc -l | tr -d ' ')"
+```
+
+Preferred one-liner for public albums:
+```bash
+./scripts/upload-album.sh --folder "<local path>" --r2-prefix "<R2-folder-name>"
 ```
 
 If originals are already in R2 (backfill scenario), use `scripts/backfill-image-tiers.sh` instead:
