@@ -140,7 +140,7 @@ async function handleImage(request, url, env, cors) {
 
   // Tier access rules:
   // - 'family' or 'family:*' → any key in the private bucket
-  // - 'client:<name>' → keys under '<name>/' or 'grid/<name>/' (case-insensitive)
+  // - 'client:<name>' → keys under '<name>/', 'grid/<name>/' or 'view/<name>/' (case-insensitive)
   // - 'friends' → no private bucket access (friends albums use public R2)
   const { tier } = payload;
   if (tier === 'friends') return err('Forbidden', 403);
@@ -149,7 +149,8 @@ async function handleImage(request, url, env, cors) {
     const keyLower = key.toLowerCase();
     const allowed =
       keyLower.startsWith(`${clientName}/`) ||
-      keyLower.startsWith(`grid/${clientName}/`);
+      keyLower.startsWith(`grid/${clientName}/`) ||
+      keyLower.startsWith(`view/${clientName}/`);
     if (!allowed) return err('Forbidden', 403);
   }
   // 'family' tier → allow any private bucket key
