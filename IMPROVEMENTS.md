@@ -109,18 +109,20 @@ Living tracker for multi-step album work (local photos → R2 → `config.js` �
 ### Performance
 
 #### PERF-1 — Add view/ image tier; stop lightbox serving 15-40MB originals
-- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Jul 2026, branch `perf/lightbox-image-tiers`)
+- **Effort:** L · **Risk:** Med · **Status:** IN PROGRESS (Aug 2026, branch `fix/restore-perf1-view-tier`)
 - **Why:** The lightbox upgrades to the raw original on every open, `preloadAdjacent` prefetches originals for 4+ neighbours, and `prefetchDownloadBlob` fires eagerly. Opening 20 photos can pull hundreds of MB on mobile.
 - **Target model:** `grid/` (thumbnails) → `view/` ~2048px (lightbox) → original (download only, explicitly chosen).
 - **Phases:**
-  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend-only. Stop eager prefetch; add `viewUrl()`; point lightbox at `view/` with 404 fallback (stays on grid on slow connections; caches miss per album). Ships before backfill; self-retiring as albums are backfilled.
-  - **Phase 2** (`feat/download-size-picker`): Worker ACL — allow `view/<client>/` keys for client tier so client albums don't 403 on the new tier.
-  - **Phase 3** (`feat/backfill-image-tiers`): `scripts/backfill-image-tiers.sh` — derive 2048px `view/` and 900px `grid/` from R2 originals in one resumable pass, public or private bucket.
-  - **Phase 4**: Run backfill per album, starting with Italy. Verify one album on a phone first.
-  - **Phase 5** (`feat/download-size-picker`): Download size chooser modal (web/large/original) with per-tier estimates; wired to all download entry points.
-  - **Phase 6** (`feat/download-size-picker`): Private album ZIP — token-gated `PRIVATE_BUCKET` reads in the ZIP Worker; same ACL as `/image`, extended for `view/`.
+  - **Phase 1** (`perf/lightbox-image-tiers`): Frontend-only. Stop eager prefetch; add `viewUrl()`; point lightbox at `view/` with 404 fallback (stays on grid on slow connections; caches miss per album). Ships before backfill; self-retiring as albums are backfilled. **Shipped Jul 2026, silently reverted by merge `028c108`, re-applied on `fix/restore-perf1-view-tier` (Aug 2026) — see the regression note below.**
+  - **Phase 2** (`feat/download-size-picker`): Worker ACL — allow `view/<client>/` keys for client tier so client albums don't 403 on the new tier. **Never merged to `main`; cherry-picked onto `fix/restore-perf1-view-tier`. Needs a Worker deploy.**
+  - **Phase 3** (`feat/backfill-image-tiers`): `scripts/backfill-image-tiers.sh` — derive 2048px `view/` and 900px `grid/` from R2 originals in one resumable pass, public or private bucket. **On `main`.**
+  - **Phase 4**: Run backfill per album, starting with Italy. Verify one album on a phone first. **Done — Aug 2026 audit confirms every live album in both buckets has a complete `view/` tier. Only legacy `Film2`–`Film4`/`Film-Test` and the `about`/`hero`/`test` asset prefixes lack one, and none are reachable from the lightbox.**
+  - **Phase 5** (`feat/download-size-picker`): Download size chooser modal (web/large/original) with per-tier estimates; wired to all download entry points. **Not on `main`. A simpler inline dropdown shipped instead in `05cb4c9`; decide whether Phase 5 is still wanted.**
+  - **Phase 6** (`feat/download-size-picker`): Private album ZIP — token-gated `PRIVATE_BUCKET` reads in the ZIP Worker; same ACL as `/image`, extended for `view/`. **Not on `main` — the ZIP path still reads only the public `env.BUCKET`.**
 - **Files:** `js/main.js`, `album/index.html`, `workers/zip-download/src/index.js`, `scripts/backfill-image-tiers.sh`
 - **Done when:** Lightbox serves `view/` for all backfilled albums; download chooser lets users pick web/large/original; private albums can ZIP; originals are only pulled on explicit download.
+
+> **Regression note (Aug 2026).** Phase 1 landed on `main` as `7edbd70`/`8f5b705` and was wiped an hour later by `028c108` (`Merge branch 'feat/backfill-image-tiers'`). That branch forked before Phase 1, and the conflict resolution took its copy of `album/index.html` and `js/main.js` verbatim — the merge result is byte-identical to the branch side for both files. Only the Phase 1 *docs* survived, which is why this ticket read as shipped for a week while the lightbox served originals. Measured on Venice before the fix: opening one photo and pressing next three times pulled **255 MB**; after, **5.2 MB**. When merging a branch that forks before a perf change, diff the result against the pre-merge tip before pushing.
 
 ---
 
@@ -372,6 +374,9 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 
 ## Changelog (Done)
 
+- **PERF-1 — Phase 1 restored, Phase 2 cherry-picked** — Aug 2026.
+  Re-applied the `view/` tier lightbox logic that merge `028c108` reverted (`_viewMissingPrefixes`, `_viewAlbumPrefix()`, the grid → `view/` upgrade, `view/` prefetching), removed the eager `prefetchDownloadBlob` calls in `openLightbox` *and* `lightboxNav` so originals are only fetched on download intent, deleted the now-dead `ImagePreload.showProgressive`, and brought the `view/<client>/` Worker ACL over from `feat/download-size-picker`. Verified headless on Venice: 255 MB → 5.2 MB for one open plus three nav steps, no raw originals, no JS errors. On `fix/restore-perf1-view-tier`; Worker deploy still pending.
+
 - **Album — Moksha Yoga, renumber 15b → sequential 01–51** — Jul 2026.
   Renamed `Moksha-Yoga-15b` → `16` and shifted former `16`–`50` → `17`–`51` so the album uses clean `01`–`51` filenames. Local + private R2 complete (original / `grid/` / `view/` for `16`–`51`); orphaned `15b` objects deleted. Config updated in `js/albums/clients.js`. Shipped on `main` (`1cbdeaa`).
 
@@ -380,6 +385,7 @@ These are bigger than a single ticket — capture the intent now, scope into tic
 
 - **PERF-1 — Image tier infrastructure (Phases 1–3, 6)** — Jul 2026.
   Frontend stops serving originals in the lightbox; `viewUrl()` + 404 fallback added (`perf/lightbox-image-tiers`). Worker ACL extended for `view/<client>/` keys; ZIP Worker gains token-gated `PRIVATE_BUCKET` support (`feat/download-size-picker`). `scripts/backfill-image-tiers.sh` written for resumable view/ + grid/ derivation (`feat/backfill-image-tiers`). Deploy, backfill run, and download chooser (Phase 4, 5) pending.
+  **Correction (Aug 2026):** only Phase 3 actually reached `main`. Phase 1 was reverted by merge `028c108`; Phases 2 and 6 never left `feat/download-size-picker`. See the PERF-1 regression note.
 
 - **Client album navigation and grid controls** — Jul 2026.
   Unlocked clients retain a `Client Gallery` return link across the site, Sign out stays rightmost, and Moksha Yoga grid hearts are hidden. Shipped on `main` (`7a18855`).
