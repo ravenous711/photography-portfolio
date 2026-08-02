@@ -2009,6 +2009,8 @@ textarea.form-field {
 /* ============================================================
    GALLERY CATALOG — dark, quiet album indexes (Gallery / Family)
    ============================================================ */
+/* Shared dark palette for the pages that follow the homepage's ground. */
+body.dark-page,
 body.gallery-catalog {
   --color-bg: #0c0c0b;
   --color-surface: #161615;
@@ -2019,6 +2021,15 @@ body.gallery-catalog {
   --mobile-menu-bg: rgba(12,12,11,0.97);
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+body.dark-page footer {
+  border-top-color: rgba(243,240,233,0.12);
+  color: rgba(243,240,233,0.45);
+}
+
+body.dark-page footer a {
+  color: rgba(243,240,233,0.45);
 }
 
 body.gallery-catalog .page-header--catalog {
