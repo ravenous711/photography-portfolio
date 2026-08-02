@@ -19,6 +19,7 @@ const ALBUMS_FAMILY_2026 = [
     familySlug: 'raveen-athena-maryland',
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Maryland-2026-Digital/20260307-_DSF1150.jpg`,
+    coverPosition: '50% 25%',
     photos: [
       `${R2_BASE_URL}/Maryland-2026-Digital/20260306-DSCF1772.jpg`,
       `${R2_BASE_URL}/Maryland-2026-Digital/20260306-DSCF1778.jpg`,
