@@ -238,6 +238,38 @@ body:has(.hero) #main-nav:not(.nav-scrolled) .bar {
   background: #fff;
 }
 
+/* Once the hero has scrolled away, keep the navigation in the same dark
+   visual system as the homepage photo sequence. */
+body:has(.hero) #main-nav.nav-scrolled {
+  background: rgba(12,12,11,0.92);
+  border-bottom-color: rgba(243,240,233,0.12);
+}
+
+body:has(.hero) #main-nav.nav-scrolled .nav-logo {
+  color: #f3f0e9;
+}
+
+body:has(.hero) #main-nav.nav-scrolled .nav-links a {
+  color: rgba(243,240,233,0.55);
+}
+
+body:has(.hero) #main-nav.nav-scrolled .nav-links a:hover,
+body:has(.hero) #main-nav.nav-scrolled .nav-links a.nav-active {
+  color: #f3f0e9;
+}
+
+body:has(.hero) #main-nav.nav-scrolled .bar {
+  background: #f3f0e9;
+}
+
+body:has(.hero) #mobile-menu {
+  background: rgba(12,12,11,0.97);
+}
+
+body:has(.hero) #mobile-menu a {
+  color: #f3f0e9;
+}
+
 /* ============================================================
    HERO
    ============================================================ */
