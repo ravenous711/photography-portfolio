@@ -2113,9 +2113,12 @@ body.gallery-year-chapters .gallery-album-grid--count-1 {
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
+/* Explicit height (not aspect-ratio + max-height, which shrinks the width and
+   pulls the cover out of alignment with the page gutters). */
 body.gallery-year-chapters .album-card {
-  aspect-ratio: 2.8 / 1;
-  max-height: 38vh;
+  aspect-ratio: auto;
+  width: 100%;
+  height: clamp(190px, 30vh, 340px);
 }
 
 body.gallery-year-chapters .album-card-overlay {
@@ -2159,8 +2162,9 @@ body.group-catalog #sub-album-grid {
 }
 
 body.group-catalog #sub-album-grid .album-card {
-  aspect-ratio: 2.8 / 1;
-  max-height: 38vh;
+  aspect-ratio: auto;
+  width: 100%;
+  height: clamp(190px, 30vh, 340px);
 }
 
 body.group-catalog #sub-album-grid .album-card-overlay {
@@ -2235,6 +2239,7 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
   }
 
   body.gallery-year-chapters .album-card {
+    height: auto;
     aspect-ratio: 4 / 3;
   }
 
@@ -2244,6 +2249,7 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
   }
 
   body.group-catalog #sub-album-grid .album-card {
+    height: auto;
     aspect-ratio: 4 / 3;
   }
 
