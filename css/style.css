@@ -2252,6 +2252,137 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
 }
 
 /* ============================================================
+   ALBUM PAGE — dark quiet chrome (photos stay justified)
+   ============================================================ */
+body.album-dark-quiet {
+  --color-bg: #0c0c0b;
+  --color-surface: #161615;
+  --color-border: rgba(243,240,233,0.12);
+  --color-text: #f3f0e9;
+  --color-muted: rgba(243,240,233,0.45);
+  --color-gold: #c9a96e;
+  --nav-scrolled-bg: rgba(12,12,11,0.92);
+  --mobile-menu-bg: rgba(12,12,11,0.97);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body.album-dark-quiet .album-page-header {
+  padding-top: calc(var(--nav-height) + 2rem);
+  padding-bottom: 0.5rem;
+}
+
+body.album-dark-quiet .album-header-rule {
+  display: none;
+}
+
+body.album-dark-quiet .album-header-title-row #album-title {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: #f3f0e9;
+}
+
+body.album-dark-quiet .album-page-dateline,
+body.album-dark-quiet .album-page-subtitle {
+  color: rgba(243,240,233,0.45);
+}
+
+body.album-dark-quiet .album-sibling-link {
+  border: none;
+  padding: 0.2rem 0;
+  letter-spacing: 0.14em;
+  color: rgba(243,240,233,0.5);
+}
+
+body.album-dark-quiet a.album-sibling-link:hover {
+  color: #f3f0e9;
+  border: none;
+}
+
+body.album-dark-quiet .album-sibling-link.is-active {
+  background: transparent;
+  border: none;
+  color: #f3f0e9;
+  box-shadow: inset 0 -1px 0 rgba(243,240,233,0.55);
+}
+
+body.album-dark-quiet .album-section-nav-btn {
+  border: none;
+  padding: 0.2rem 0;
+  color: rgba(243,240,233,0.5);
+}
+
+body.album-dark-quiet .album-section-nav-btn:hover {
+  color: #f3f0e9;
+  border: none;
+  background: transparent;
+}
+
+body.album-dark-quiet .album-section-nav-btn.is-active {
+  background: transparent;
+  border: none;
+  color: #f3f0e9;
+  box-shadow: inset 0 -1px 0 rgba(243,240,233,0.55);
+}
+
+body.album-dark-quiet .album-header-toolbar .album-section-nav {
+  gap: 1rem;
+}
+
+body.album-dark-quiet .album-header-toolbar .album-section-nav-btn {
+  padding: 0.2rem 0;
+}
+
+body.album-dark-quiet .album-header-actions .btn-ghost {
+  background: transparent;
+  border-color: rgba(243,240,233,0.22);
+  color: rgba(243,240,233,0.72);
+}
+
+body.album-dark-quiet .album-header-actions .btn-ghost:hover {
+  background: rgba(243,240,233,0.06);
+  border-color: rgba(243,240,233,0.4);
+  color: #f3f0e9;
+}
+
+body.album-dark-quiet .album-header-actions .btn-primary {
+  background: rgba(243,240,233,0.92);
+  color: #0c0c0b;
+  border: 1px solid transparent;
+}
+
+body.album-dark-quiet .album-header-actions .btn-primary:hover {
+  background: #f3f0e9;
+}
+
+body.album-dark-quiet .album-section-label {
+  letter-spacing: 0.2em;
+  color: rgba(243,240,233,0.4);
+}
+
+body.album-dark-quiet .album-film-section {
+  border-top-color: rgba(243,240,233,0.12);
+}
+
+body.album-dark-quiet .photo-thumb {
+  background: #161615;
+}
+
+body.album-dark-quiet footer {
+  border-top-color: rgba(243,240,233,0.12);
+  color: rgba(243,240,233,0.45);
+}
+
+body.album-dark-quiet footer a {
+  color: rgba(243,240,233,0.45);
+}
+
+body.album-dark-quiet .album-next-link:hover .album-next-title {
+  color: #f3f0e9;
+}
+
+/* ============================================================
    FOOTER
    ============================================================ */
 footer {
