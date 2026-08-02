@@ -2156,12 +2156,12 @@ body.group-catalog .group-catalog-main {
 }
 
 body.group-catalog #sub-album-grid {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
 body.group-catalog #sub-album-grid .album-card {
-  aspect-ratio: 2.8 / 1;
+  aspect-ratio: 16 / 10;
   width: 100%;
   height: auto;
 }
@@ -2250,6 +2250,10 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
   body.group-catalog #sub-album-grid .album-card {
     height: auto;
     aspect-ratio: 4 / 3;
+  }
+
+  body.group-catalog #sub-album-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   body.group-catalog .group-film-roll-card {
