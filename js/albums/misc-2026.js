@@ -21,7 +21,7 @@ const ALBUMS_MISC_2026 = [
     audience: 'public',
     protected: false,
     subAlbums: ['misc-tmax-0726', 'misc-ultramax-0314'],
-    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_02.jpg`,
+    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg`,
   },
 
   {
@@ -32,7 +32,7 @@ const ALBUMS_MISC_2026 = [
     date: 'March 2026',
     audience: 'public',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_02.jpg`,
+    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg`,
     photos: [
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_02.jpg`,
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_05.jpg`,
