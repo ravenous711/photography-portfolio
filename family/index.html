@@ -111,10 +111,12 @@
       } catch { return null; }
     }
 
-    function toWorkerCoverUrl(coverUrl, token) {
+    // Wide catalog covers use the ~2048px view/ tier so they stay sharp on
+    // high-DPI screens; grid/ (900px) would upscale.
+    function toWorkerCoverUrl(coverUrl, token, tier = 'view/') {
       if (!token || !coverUrl || !workerBase) return coverUrl;
       const key = coverUrl.replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+/, '');
-      return `${workerBase}/image?key=${encodeURIComponent('grid/' + key)}&token=${encodeURIComponent(token)}`;
+      return `${workerBase}/image?key=${encodeURIComponent(tier + key)}&token=${encodeURIComponent(token)}`;
     }
 
     // ── Album card renderer ──
@@ -128,9 +130,9 @@
       const dateline = albumDateline(album, { withDesc: !isGroup });
       const desc = albumCardDesc(album);
       // Use the raw config coverImage (not albumCoverUrl, which applies gridUrl and
-      // would add grid/ prefix — toWorkerCoverUrl adds it exactly once itself).
+      // would add grid/ prefix — toWorkerCoverUrl adds its tier exactly once itself).
       const rawCover = album.coverImage || albumCoverUrl(album);
-      const coverSrc = toWorkerCoverUrl(rawCover, token) || albumCoverUrl(album);
+      const coverSrc = toWorkerCoverUrl(rawCover, token) || albumCoverUrlWide(album);
       card.innerHTML = `
         <img class="album-card-img"
              src="${coverSrc}"
@@ -145,6 +147,9 @@
       // Fade in once loaded
       const img = card.querySelector('img');
       img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+      img.addEventListener('error', () => {
+        img.src = toWorkerCoverUrl(rawCover, token, 'grid/') || albumCoverUrl(album);
+      }, { once: true });
       if (img.complete) img.classList.add('loaded');
       return card;
     }

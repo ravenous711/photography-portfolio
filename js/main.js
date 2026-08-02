@@ -389,6 +389,16 @@ function albumCoverUrl(album) {
   return `/${src.replace(/^\.\/?/, '')}`;
 }
 
+// Catalog covers span most of the page, so the 900px grid/ variant upscales on
+// high-DPI screens — use the ~2048px view/ tier instead.
+function albumCoverUrlWide(album) {
+  const src = album?.coverImage || '';
+  if (!src) return '';
+  if (src.startsWith('/')) return src;
+  if (/^https?:\/\//.test(src)) return viewUrl(src);
+  return `/${src.replace(/^\.\/?/, '')}`;
+}
+
 function albumPageUrl(album) {
   return Routes.albumPageUrl(album);
 }

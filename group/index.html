@@ -229,7 +229,7 @@
         const dateline = albumDateline(album);
         card.innerHTML = `
           <img class="album-card-img"
-               src="${albumCoverUrl(album)}"
+               src="${albumCoverUrlWide(album)}"
                alt="${album.title}"
                loading="lazy"${posStyle} />
           <div class="album-card-overlay">
@@ -237,6 +237,8 @@
             <h2 class="album-card-title">${album.title}</h2>
           </div>
         `;
+        const cardImg = card.querySelector('img');
+        cardImg.addEventListener('error', () => { cardImg.src = albumCoverUrl(album); }, { once: true });
         grid.appendChild(card);
       });
 

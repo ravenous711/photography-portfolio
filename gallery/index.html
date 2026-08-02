@@ -91,7 +91,7 @@
       const desc = albumCardDesc(album);
       card.innerHTML = `
         <img class="album-card-img"
-             src="${albumCoverUrl(album)}"
+             src="${albumCoverUrlWide(album)}"
              alt="${album.title}"
              loading="lazy"${posStyle} />
         <div class="album-card-overlay">
@@ -107,6 +107,8 @@
           ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
         </div>
       `;
+      const img = card.querySelector('img');
+      img.addEventListener('error', () => { img.src = albumCoverUrl(album); }, { once: true });
       return card;
     }
 
