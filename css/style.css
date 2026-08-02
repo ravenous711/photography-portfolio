@@ -2118,7 +2118,7 @@ body.gallery-year-chapters .gallery-album-grid--count-1 {
 body.gallery-year-chapters .album-card {
   aspect-ratio: auto;
   width: 100%;
-  height: clamp(190px, 30vh, 340px);
+  height: clamp(240px, 40vh, 420px);
 }
 
 body.gallery-year-chapters .album-card-overlay {
@@ -2164,7 +2164,7 @@ body.group-catalog #sub-album-grid {
 body.group-catalog #sub-album-grid .album-card {
   aspect-ratio: auto;
   width: 100%;
-  height: clamp(190px, 30vh, 340px);
+  height: clamp(240px, 40vh, 420px);
 }
 
 body.group-catalog #sub-album-grid .album-card-overlay {
