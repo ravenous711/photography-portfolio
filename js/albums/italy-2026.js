@@ -24,8 +24,7 @@ const ALBUMS_ITALY_2026 = [
     filmRollsDesc: 'See all the film rolls used during the trip! These are also sprinkled into the respective cities',
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
     subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome'],
-    coverImage: `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
-    coverPosition: '50% 22%',
+    coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
   },
 
   {
@@ -282,7 +281,7 @@ const ALBUMS_ITALY_2026 = [
     protected: false,
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
-    coverPosition: '50% 35%',
+    coverPosition: '50% 45%',
     photos: [
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_006.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_016.jpg`,
