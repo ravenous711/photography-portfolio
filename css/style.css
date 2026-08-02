@@ -2113,12 +2113,11 @@ body.gallery-year-chapters .gallery-album-grid--count-1 {
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
-/* Explicit height (not aspect-ratio + max-height, which shrinks the width and
-   pulls the cover out of alignment with the page gutters). */
+/* Width-driven ratio keeps the same visual weight across viewport heights and zoom levels. */
 body.gallery-year-chapters .album-card {
-  aspect-ratio: auto;
+  aspect-ratio: 2.8 / 1;
   width: 100%;
-  height: clamp(240px, 40vh, 420px);
+  height: auto;
 }
 
 body.gallery-year-chapters .album-card-overlay {
@@ -2162,9 +2161,9 @@ body.group-catalog #sub-album-grid {
 }
 
 body.group-catalog #sub-album-grid .album-card {
-  aspect-ratio: auto;
+  aspect-ratio: 2.8 / 1;
   width: 100%;
-  height: clamp(240px, 40vh, 420px);
+  height: auto;
 }
 
 body.group-catalog #sub-album-grid .album-card-overlay {
