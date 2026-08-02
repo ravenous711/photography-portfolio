@@ -51,7 +51,7 @@ const ALBUMS_MISC_2026 = [
         ],
       },
     ],
-    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg`,
+    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0726/tmax_400_0726_14.jpg`,
   },
 
   {

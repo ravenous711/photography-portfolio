@@ -2134,7 +2134,8 @@ body.gallery-year-chapters .gallery-main {
 }
 
 body.gallery-year-chapters .page-header--catalog {
-  padding-bottom: clamp(2rem, 4vw, 3rem);
+  padding-top: calc(var(--nav-height) + 2.75rem);
+  padding-bottom: clamp(1.4rem, 2.5vw, 2rem);
 }
 
 body.gallery-year-chapters .gallery-year-heading {
@@ -2145,7 +2146,7 @@ body.gallery-year-chapters .gallery-year-heading {
   letter-spacing: -0.025em;
   text-transform: none;
   color: rgba(243,240,233,0.72);
-  margin-bottom: 1.1rem;
+  margin-bottom: 1rem;
 }
 
 body.gallery-year-chapters .gallery-year-heading:not(.gallery-year-heading--first) {
