@@ -3,7 +3,7 @@
 // ============================================================
 // This file is loaded by all pages via albums.js.
 // Standalone public 2026 albums:
-//   - 2026 Film rolls group (Ultramax March, T-Max July)
+//   - 2026 Film rolls group (all public rolls; Italy dual-listed)
 //   - Red Rock Canyon 2026
 // Add new standalone public albums here.
 // ============================================================
@@ -11,16 +11,28 @@
 // eslint-disable-next-line no-unused-vars
 const ALBUMS_MISC_2026 = [
   // ── MISC FILM ROLLS 2026 — Public Group ───────────────────
+  // Italy roll ids live in italy-2026.js (parentId italy-2026) and are
+  // dual-listed here so the catalog shows every public 2026 roll.
   {
     id: 'misc-film-rolls-2026',
     title: '2026 Film rolls',
-    description: 'Standalone film rolls from 2026.',
-    date: 'July 2026',
+    description: 'A collection of all my film rolls from throughout 2026.',
+    date: '2026',
     dateline: false,
     type: 'group',
     audience: 'public',
     protected: false,
-    subAlbums: ['misc-tmax-0726', 'misc-ultramax-0314'],
+    includeHiddenSubAlbums: true,
+    subAlbums: [
+      'red-rock-roll-lomo',
+      'red-rock-roll-ektar',
+      'misc-ultramax-0314',
+      'italy-roll-ultramax',
+      'italy-roll-fp4',
+      'italy-roll-tmax',
+      'italy-roll-portra',
+      'misc-tmax-0726',
+    ],
     coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg`,
   },
 
@@ -96,6 +108,79 @@ const ALBUMS_MISC_2026 = [
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0726/tmax_400_0726_32.jpg`,
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0726/tmax_400_0726_34.jpg`,
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0726/tmax_400_0726_35.jpg`,
+    ],
+  },
+
+  // ── Red Rock film rolls (also remain as filmSections on the trip album) ──
+  {
+    id: 'red-rock-roll-lomo',
+    slug: 'red-rock-lomo',
+    parentId: 'misc-film-rolls-2026',
+    hidden: true,
+    albumKind: 'film-roll',
+    title: 'Lomography Color 400',
+    camera: 'Minolta X-700',
+    filmStock: 'Lomography Color 400',
+    rollNumber: 1,
+    description: 'Full film roll — Red Rock Canyon 2026.',
+    location: 'Red Rock Canyon',
+    date: 'January 2026',
+    dateline: 'Red Rock Canyon · January 2026',
+    audience: 'public',
+    protected: false,
+    coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_09.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_03.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_04.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_05.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_08.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_09.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_14.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_16.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_19.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_20.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_21.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_22.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_24.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_27.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_29.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_30.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_31.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_33.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_35.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_36.jpg`,
+    ],
+  },
+
+  {
+    id: 'red-rock-roll-ektar',
+    slug: 'red-rock-ektar',
+    parentId: 'misc-film-rolls-2026',
+    hidden: true,
+    albumKind: 'film-roll',
+    title: 'Kodak Ektar 100',
+    camera: 'Minolta X-700',
+    filmStock: 'Kodak Ektar 100',
+    rollNumber: 2,
+    description: 'Full film roll — Red Rock Canyon 2026.',
+    location: 'Red Rock Canyon',
+    date: 'January 2026',
+    dateline: 'Red Rock Canyon · January 2026',
+    audience: 'public',
+    protected: false,
+    coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_14.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_02.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_07.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_10.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_12.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_14.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_18.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_21.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_30.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_32.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_33.jpg`,
+      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_38.jpg`,
     ],
   },
 

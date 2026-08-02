@@ -367,6 +367,8 @@ function albumDateline(album, { withDesc = false } = {}) {
   }
 
   const parts = [];
+  // Film-roll cards share stock names across trips — lead with place when set.
+  if (album.albumKind === 'film-roll' && album.location) parts.push(album.location);
   if (album.date) parts.push(album.date);
 
   if (album.type === 'group' && album.subAlbums?.length) {

@@ -195,12 +195,12 @@
       document.getElementById('group-dateline').textContent = albumDateline(group);
       document.getElementById('group-title').textContent = group.title;
       const groupDesc = document.getElementById('group-desc');
-      if (group.subAlbums?.length) {
+      if (group.description) {
+        groupDesc.style.display = '';
+        groupDesc.textContent = group.description;
+      } else {
         groupDesc.style.display = 'none';
         groupDesc.textContent = '';
-      } else {
-        groupDesc.style.display = '';
-        groupDesc.textContent = group.description || '';
       }
 
       const backLink = document.getElementById('back-link');
@@ -216,10 +216,9 @@
       const grid = document.getElementById('sub-album-grid');
       const subAlbums = group.subAlbums
         .map(id => ALBUMS.find(a => a.id === id))
-        .filter(a => a && !a.hidden);
+        .filter(a => a && (!a.hidden || group.includeHiddenSubAlbums));
 
       subAlbums.forEach(album => {
-        const isGroup = album.type === 'group';
         const href = albumPageUrl(album);
 
         const card = document.createElement('a');
@@ -242,7 +241,10 @@
         grid.appendChild(card);
       });
 
-      renderFilmRollLinks(group);
+      // Catalog groups show every roll as a cover card — skip the text film-roll strip.
+      if (!group.includeHiddenSubAlbums) {
+        renderFilmRollLinks(group);
+      }
     }
     })();
   </script>
