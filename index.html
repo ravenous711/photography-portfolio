@@ -47,6 +47,10 @@
       color: inherit;
       text-decoration: none;
     }
+    #featured-photos-wrap .feat-card.fade-in {
+      transform: none;
+      transition: opacity 1s ease;
+    }
     #featured-photos-wrap .feat-card:nth-child(1) { width: 64%; }
     #featured-photos-wrap .feat-card:nth-child(2) { width: 48%; margin-left: auto; }
     #featured-photos-wrap .feat-card:nth-child(3) { width: 42%; margin-left: 9%; }
@@ -253,7 +257,7 @@
         const album = findAlbumForPhoto(url);
         const link = document.createElement('a');
         link.href = album ? Routes.albumPageUrl(album) : '/gallery/';
-        link.className = 'feat-card';
+        link.className = 'feat-card fade-in';
 
         const imageWrap = document.createElement('div');
         imageWrap.className = 'feat-image-wrap';
