@@ -2080,6 +2080,51 @@ body.gallery-catalog footer a {
   color: rgba(243,240,233,0.45);
 }
 
+/* Year-chapters variant: one near-bleed album per row. */
+body.gallery-year-chapters .page-header--catalog,
+body.gallery-year-chapters .gallery-main {
+  width: min(100% - 3rem, 1200px);
+}
+
+body.gallery-year-chapters .page-header--catalog {
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+body.gallery-year-chapters .gallery-year-heading {
+  font-family: var(--font-serif);
+  font-size: clamp(2.75rem, 7vw, 5.5rem);
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+  text-transform: none;
+  color: rgba(243,240,233,0.72);
+  margin-bottom: 1.75rem;
+}
+
+body.gallery-year-chapters .gallery-year-heading:not(.gallery-year-heading--first) {
+  margin-top: clamp(5rem, 10vw, 9rem);
+  padding-top: 0;
+  border-top: none;
+}
+
+body.gallery-year-chapters .gallery-album-grid,
+body.gallery-year-chapters .gallery-album-grid--count-1 {
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+body.gallery-year-chapters .album-card {
+  aspect-ratio: 21 / 9;
+}
+
+body.gallery-year-chapters .album-card-overlay {
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+body.gallery-year-chapters .album-card-title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+}
+
 @media (max-width: 640px) {
   body.gallery-catalog .page-header--catalog,
   body.gallery-catalog .gallery-main {
@@ -2088,6 +2133,10 @@ body.gallery-catalog footer a {
 
   body.gallery-catalog .gallery-album-grid {
     gap: 1rem;
+  }
+
+  body.gallery-year-chapters .album-card {
+    aspect-ratio: 4 / 3;
   }
 }
 
