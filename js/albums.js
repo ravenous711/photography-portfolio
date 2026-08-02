@@ -43,6 +43,7 @@
 //   camera / filmStock / rollNumber – for film-roll albums
 //   type        – 'group' for trip index pages (shows sub-album grid)
 //   subAlbums   – array of sub-album ids (for type:'group')
+//   subAlbumSections – optional [{ title, albums }] to section the group card grid
 //   includeHiddenSubAlbums – group flag: show hidden sub-albums in the card grid
 //   parentId    – parent group id (for sub-albums)
 //   slug        – URL slug within parent group (for sub-albums)

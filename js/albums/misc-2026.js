@@ -23,15 +23,33 @@ const ALBUMS_MISC_2026 = [
     audience: 'public',
     protected: false,
     includeHiddenSubAlbums: true,
+    // Flat list kept for nav/siblings; sections drive the group page layout.
     subAlbums: [
+      'misc-ultramax-0314',
+      'misc-tmax-0726',
       'red-rock-roll-lomo',
       'red-rock-roll-ektar',
-      'misc-ultramax-0314',
       'italy-roll-ultramax',
       'italy-roll-fp4',
       'italy-roll-tmax',
       'italy-roll-portra',
-      'misc-tmax-0726',
+    ],
+    subAlbumSections: [
+      {
+        title: 'Standalone',
+        albums: ['misc-ultramax-0314', 'misc-tmax-0726'],
+      },
+      {
+        title: 'From trips',
+        albums: [
+          'red-rock-roll-lomo',
+          'red-rock-roll-ektar',
+          'italy-roll-ultramax',
+          'italy-roll-fp4',
+          'italy-roll-tmax',
+          'italy-roll-portra',
+        ],
+      },
     ],
     coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg`,
   },

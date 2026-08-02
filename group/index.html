@@ -75,7 +75,7 @@
 
   <!-- ── Sub-album Grid ── -->
   <main class="group-catalog-main">
-    <div class="album-grid fade-in fade-in-delay-1" id="sub-album-grid">
+    <div class="fade-in fade-in-delay-1" id="sub-album-sections">
       <!-- Populated by JS -->
     </div>
     <section class="group-film-rolls fade-in fade-in-delay-2" id="film-roll-section" hidden>
@@ -213,16 +213,17 @@
         document.getElementById('back-link-label').textContent = 'Family Gallery';
       }
 
-      const grid = document.getElementById('sub-album-grid');
-      const subAlbums = group.subAlbums
-        .map(id => ALBUMS.find(a => a.id === id))
-        .filter(a => a && (!a.hidden || group.includeHiddenSubAlbums));
+      const sectionsRoot = document.getElementById('sub-album-sections');
 
-      subAlbums.forEach(album => {
-        const href = albumPageUrl(album);
+      function resolveSubAlbums(ids) {
+        return (ids || [])
+          .map(id => ALBUMS.find(a => a.id === id))
+          .filter(a => a && (!a.hidden || group.includeHiddenSubAlbums));
+      }
 
+      function appendAlbumCard(grid, album) {
         const card = document.createElement('a');
-        card.href = href;
+        card.href = albumPageUrl(album);
         card.className = 'album-card fade-in visible';
         const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
         const dateline = albumDateline(album);
@@ -239,7 +240,32 @@
         const cardImg = card.querySelector('img');
         cardImg.addEventListener('error', () => { cardImg.src = albumCoverUrl(album); }, { once: true });
         grid.appendChild(card);
-      });
+      }
+
+      function renderSection(title, albums, { first = false } = {}) {
+        if (!albums.length) return;
+        const section = document.createElement('section');
+        section.className = 'group-sub-section';
+        if (title) {
+          const heading = document.createElement('h2');
+          heading.className = 'group-sub-section-title' + (first ? ' group-sub-section-title--first' : '');
+          heading.textContent = title;
+          section.appendChild(heading);
+        }
+        const grid = document.createElement('div');
+        grid.className = 'album-grid group-sub-album-grid';
+        albums.forEach(album => appendAlbumCard(grid, album));
+        section.appendChild(grid);
+        sectionsRoot.appendChild(section);
+      }
+
+      if (group.subAlbumSections?.length) {
+        group.subAlbumSections.forEach((sec, i) => {
+          renderSection(sec.title, resolveSubAlbums(sec.albums), { first: i === 0 });
+        });
+      } else {
+        renderSection('', resolveSubAlbums(group.subAlbums), { first: true });
+      }
 
       // Catalog groups show every roll as a cover card — skip the text film-roll strip.
       if (!group.includeHiddenSubAlbums) {

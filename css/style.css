@@ -2202,22 +2202,37 @@ body.group-catalog .group-catalog-main {
   padding-bottom: clamp(4rem, 8vw, 7rem);
 }
 
-body.group-catalog #sub-album-grid {
+body.group-catalog .group-sub-section + .group-sub-section {
+  margin-top: clamp(3rem, 6vw, 5rem);
+}
+
+body.group-catalog .group-sub-section-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-transform: none;
+  color: rgba(243,240,233,0.72);
+  margin-bottom: 1.1rem;
+}
+
+body.group-catalog .group-sub-album-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
-body.group-catalog #sub-album-grid .album-card {
+body.group-catalog .group-sub-album-grid .album-card {
   aspect-ratio: 16 / 10;
   width: 100%;
   height: auto;
 }
 
-body.group-catalog #sub-album-grid .album-card-overlay {
+body.group-catalog .group-sub-album-grid .album-card-overlay {
   padding: clamp(1rem, 2vw, 1.5rem);
 }
 
-body.group-catalog #sub-album-grid .album-card-title {
+body.group-catalog .group-sub-album-grid .album-card-title {
   font-size: clamp(1.25rem, 2.4vw, 1.85rem);
 }
 
@@ -2294,12 +2309,12 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
     width: calc(100% - 2.5rem);
   }
 
-  body.group-catalog #sub-album-grid .album-card {
+  body.group-catalog .group-sub-album-grid .album-card {
     height: auto;
     aspect-ratio: 4 / 3;
   }
 
-  body.group-catalog #sub-album-grid {
+  body.group-catalog .group-sub-album-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
