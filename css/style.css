@@ -1971,6 +1971,127 @@ textarea.form-field {
 }
 
 /* ============================================================
+   GALLERY CATALOG — dark, quiet album indexes (Gallery / Family)
+   ============================================================ */
+body.gallery-catalog {
+  --color-bg: #0c0c0b;
+  --color-surface: #161615;
+  --color-border: rgba(243,240,233,0.12);
+  --color-text: #f3f0e9;
+  --color-muted: rgba(243,240,233,0.45);
+  --nav-scrolled-bg: rgba(12,12,11,0.92);
+  --mobile-menu-bg: rgba(12,12,11,0.97);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body.gallery-catalog .page-header--catalog {
+  padding-top: calc(var(--nav-height) + 3.5rem);
+  padding-bottom: 2.5rem;
+  text-align: left;
+  width: min(100% - 3rem, 920px);
+  margin-inline: auto;
+}
+
+body.gallery-catalog .page-header--catalog .page-title {
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: #f3f0e9;
+}
+
+body.gallery-catalog .gallery-main {
+  width: min(100% - 3rem, 920px);
+  margin-inline: auto;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+body.gallery-catalog .gallery-year-heading {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(243,240,233,0.4);
+  margin: 0 0 1.25rem;
+  max-width: none;
+}
+
+body.gallery-catalog .gallery-year-heading:not(.gallery-year-heading--first) {
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top-color: rgba(243,240,233,0.12);
+}
+
+body.gallery-catalog .gallery-album-grid {
+  max-width: none;
+  gap: 1.25rem;
+}
+
+body.gallery-catalog .album-card {
+  border: none;
+  background: #161615;
+  aspect-ratio: 16 / 10;
+}
+
+body.gallery-catalog .album-card-img {
+  filter: brightness(0.88);
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.5s ease;
+}
+
+body.gallery-catalog .album-card:hover .album-card-img {
+  transform: scale(1.02);
+  filter: brightness(0.72);
+}
+
+body.gallery-catalog .album-card-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 55%);
+  padding: 1.25rem 1.35rem;
+}
+
+body.gallery-catalog .album-card-title {
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+
+body.gallery-catalog .album-card-dateline {
+  color: rgba(255,255,255,0.5);
+}
+
+body.gallery-catalog .album-card-desc {
+  display: none;
+}
+
+body.gallery-catalog .album-card-lock {
+  border-radius: 2px;
+  background: rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.18);
+}
+
+body.gallery-catalog footer {
+  border-top-color: rgba(243,240,233,0.12);
+  color: rgba(243,240,233,0.45);
+}
+
+body.gallery-catalog footer a {
+  color: rgba(243,240,233,0.45);
+}
+
+@media (max-width: 640px) {
+  body.gallery-catalog .page-header--catalog,
+  body.gallery-catalog .gallery-main {
+    width: calc(100% - 2.5rem);
+  }
+
+  body.gallery-catalog .gallery-album-grid {
+    gap: 1rem;
+  }
+}
+
+/* ============================================================
    FOOTER
    ============================================================ */
 footer {
