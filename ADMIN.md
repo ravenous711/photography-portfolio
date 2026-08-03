@@ -478,6 +478,8 @@ once the Vercel build completes (you can monitor it in the Vercel dashboard).
 | `coverImage` | `string` | No | Full R2 URL of the cover image shown in gallery grid. |
 | `photos` | `string[]` | No | Full R2 URLs of all photos in the album (originals). |
 | `curated` | `string[]` | No | Subset of `photos[]` shown publicly. If omitted, all photos are shown (for public) or none (for protected albums). |
+| `portfolio` | `boolean` | No | If `true`, album appears on `/professional-work/` with its `curated[]` as public highlights (no full-album CTA). Client full set stays private R2. |
+| `highlights` | `string[]` | No | Group-only: trip trailer on the group page (e.g. Italy). Separate from city `curated[]`. |
 | `gridFavorites` | `boolean` | No | Enables the heart/favorite feature on the album grid. |
 | `albumKind` | `string` | No | Internal classifier. `'film-roll'` hides from admin photo grid. |
 | `prefix` | `string` | No | R2 key prefix used by some tooling to locate album photos. |
@@ -495,7 +497,8 @@ once the Vercel build completes (you can monitor it in the Vercel dashboard).
 ### How `hidden: true` works
 
 When `hidden: true` is set on an album:
-- The album does **not** appear in the `/gallery/` listings or any public index.
+- The album does **not** appear in the `/personal-work/` listings or the old `/gallery/` index.
+- It can still appear on `/professional-work/` if `portfolio: true` and `curated[]` is set (public teaser only).
 - The album **can** still be accessed directly by URL if the viewer has the correct token/code.
 - The admin panel shows all albums regardless of `hidden`.
 - Family and client albums should always have `hidden: true`.

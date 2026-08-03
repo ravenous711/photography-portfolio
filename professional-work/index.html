@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>Professional work — Raveen Fernando</title>
+  <meta name="description" content="Selected professional photography." />
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+</head>
+<body class="overflow-x-hidden gallery-catalog gallery-year-chapters">
+
+  <!-- ── Navigation ── -->
+  <nav id="main-nav" class="nav-scrolled">
+    <a href="/" class="nav-logo">RF<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Gallery</a></li>
+      <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
+      <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
+    </ul>
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <a href="/">Home</a>
+    <a href="/personal-work/">Personal work</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+    <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Gallery</a>
+    <a href="/about/" id="mobile-about-link">About</a>
+    <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
+    <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
+  </div>
+
+  <!-- ── Page Header ── -->
+  <header class="page-header page-header--catalog fade-in">
+    <h1 class="page-title">Professional work</h1>
+  </header>
+
+  <main class="gallery-main" id="professional-main">
+    <!-- Populated by JS -->
+  </main>
+
+  <footer>
+    <p id="footer-copyright"></p>
+  </footer>
+
+  <style>
+    .client-project {
+      margin-bottom: clamp(3rem, 7vw, 5.5rem);
+    }
+    .client-project:last-child {
+      margin-bottom: 0;
+    }
+    .client-project-header {
+      margin-bottom: 1.25rem;
+    }
+    .client-project-title {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+      font-weight: 300;
+      letter-spacing: -0.015em;
+      color: #f3f0e9;
+    }
+    .client-project-date {
+      margin: 0.4rem 0 0;
+      font-size: 0.65rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(243,240,233,0.4);
+    }
+    .client-cover-only {
+      position: relative;
+      display: block;
+      aspect-ratio: 2.8 / 1;
+      overflow: hidden;
+      background: #161615;
+    }
+    .client-cover-only img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.88);
+    }
+  </style>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/albums/clients.js"></script>
+  <script src="/js/albums/family-2025.js"></script>
+  <script src="/js/albums/family-2026.js"></script>
+  <script src="/js/albums/california-2025.js"></script>
+  <script src="/js/albums/misc-2026.js"></script>
+  <script src="/js/albums/italy-2026.js"></script>
+  <script src="/js/albums.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/justified-layout.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('footer-copyright').textContent =
+      `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+    const main = document.getElementById('professional-main');
+    const projects = ALBUMS.filter(a => a.portfolio === true);
+
+    projects.forEach(album => {
+      const section = document.createElement('section');
+      section.className = 'client-project fade-in';
+
+      const header = document.createElement('div');
+      header.className = 'client-project-header';
+      header.innerHTML = `
+        <h2 class="client-project-title">${album.title}</h2>
+        ${album.date ? `<p class="client-project-date">${album.date}</p>` : ''}
+      `;
+      section.appendChild(header);
+
+      const curated = Array.isArray(album.curated) ? album.curated.filter(Boolean) : [];
+
+      if (curated.length) {
+        const grid = document.createElement('div');
+        section.appendChild(grid);
+        renderJustifiedPhotoGrid(grid, curated, {
+          alt: album.title,
+          eagerCount: 4,
+        });
+      } else {
+        const cover = document.createElement('div');
+        cover.className = 'client-cover-only';
+        const img = document.createElement('img');
+        img.src = albumCoverUrlWide(album);
+        img.alt = album.title;
+        img.loading = 'lazy';
+        img.addEventListener('error', () => { img.src = albumCoverUrl(album); }, { once: true });
+        cover.appendChild(img);
+        section.appendChild(cover);      }
+
+      main.appendChild(section);
+    });
+  </script>
+</body>
+</html>

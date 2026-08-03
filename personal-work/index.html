@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>Personal work — Raveen Fernando</title>
+  <meta name="description" content="Personal photography — travel, landscapes, and film." />
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+</head>
+<body class="overflow-x-hidden gallery-catalog gallery-year-chapters">
+
+  <!-- ── Navigation ── -->
+  <nav id="main-nav" class="nav-scrolled">
+    <a href="/" class="nav-logo">RF<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Gallery</a></li>
+      <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
+      <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
+    </ul>
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <a href="/">Home</a>
+    <a href="/personal-work/">Personal work</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+    <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Gallery</a>
+    <a href="/about/" id="mobile-about-link">About</a>
+    <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
+    <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
+  </div>
+
+  <!-- ── Page Header ── -->
+  <header class="page-header page-header--catalog fade-in">
+    <h1 class="page-title">Personal work</h1>
+  </header>
+
+  <!-- ── Album Grid ── -->
+  <main class="gallery-main" id="gallery-main">
+    <!-- Populated by JS -->
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p id="footer-copyright"></p>
+  </footer>
+
+  <style>
+    .album-card { display: block; text-decoration: none; }
+  </style>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/albums/clients.js"></script>
+  <script src="/js/albums/family-2025.js"></script>
+  <script src="/js/albums/family-2026.js"></script>
+  <script src="/js/albums/california-2025.js"></script>
+  <script src="/js/albums/misc-2026.js"></script>
+  <script src="/js/albums/italy-2026.js"></script>
+  <script src="/js/albums.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('footer-copyright').textContent =
+      `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+    const PERSONAL_IDS = [
+      'italy-2026',
+      'california',
+      'red-rock-canyon-2026',
+      'misc-film-rolls-2026',
+    ];
+
+    const main = document.getElementById('gallery-main');
+    const byId = new Map(ALBUMS.map(a => [a.id, a]));
+    const albums = PERSONAL_IDS.map(id => byId.get(id)).filter(Boolean);
+
+    function renderAlbumCard(album) {
+      const isGroup = album.type === 'group';
+      const card = document.createElement('a');
+      card.href = albumPageUrl(album);
+      card.className = 'album-card fade-in';
+      const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
+      const dateline = albumDateline(album, { withDesc: !isGroup });
+      const desc = albumCardDesc(album);
+      const title = album.id === 'misc-film-rolls-2026' ? 'Film' : album.title;
+      card.innerHTML = `
+        <img class="album-card-img"
+             src="${albumCoverUrlWide(album)}"
+             alt="${title}"
+             loading="lazy"${posStyle} />
+        <div class="album-card-overlay">
+          ${dateline ? `<p class="album-card-dateline">${dateline}</p>` : ''}
+          <h2 class="album-card-title">${title}</h2>
+          ${desc ? `<p class="album-card-desc${isEmptyAlbum(album) ? ' album-card-desc--tbd' : ''}">${desc}</p>` : ''}
+        </div>
+      `;
+      const img = card.querySelector('img');
+      img.addEventListener('error', () => { img.src = albumCoverUrl(album); }, { once: true });
+      return card;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'album-grid gallery-album-grid fade-in';
+    if (albums.length > 0 && albums.length < 3) {
+      grid.classList.add(`gallery-album-grid--count-${albums.length}`);
+    }
+    albums.forEach(album => grid.appendChild(renderAlbumCard(album)));
+    main.appendChild(grid);
+  </script>
+</body>
+</html>

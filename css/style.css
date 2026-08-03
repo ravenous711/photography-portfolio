@@ -2476,6 +2476,14 @@ footer a {
 
 footer a:hover { color: var(--color-gold); }
 
+footer p + p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem 1.5rem;
+  margin-top: 0.85rem;
+}
+
 /* ============================================================
    ABOUT PAGE
    ============================================================ */

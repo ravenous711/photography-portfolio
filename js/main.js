@@ -51,13 +51,13 @@ function initNav() {
     if (mobileUnlock) mobileUnlock.textContent = 'Add Access';
   }
 
-  // Desired order: Home · Gallery · Family · Client(s) · About · Unlock · Sign out
+  // Desired order: Home · Personal work · Professional work · Family · Client album(s) · About · Unlock · Sign out
   injectClientAlbumNavLinks();
   finalizeNavOrder();
 }
 
 // Enforce nav order after revealing/injecting tier links.
-// Home · Gallery · Family Gallery · Client: … · About · Add Access · Sign out
+// Home · Personal work · Professional work · Family Gallery · Client: … · About · Add Access · Sign out
 function finalizeNavOrder() {
   const list = document.querySelector('#main-nav .nav-links');
   if (list) {
@@ -178,12 +178,27 @@ function initMobileMenu() {
 
 // ── Set active nav link based on current page ──
 function setActiveNavLink() {
-  const page = window.location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('[data-nav-link]').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href && (href === page || (page === '' && href === 'index.html'))) {
-      link.classList.add('nav-active');
-    }
+  const path = window.location.pathname.replace(/\/?$/, '/') || '/';
+  let key = '';
+  if (path === '/') key = 'home';
+  else if (path.startsWith('/personal-work/') || path.startsWith('/gallery/')) key = 'gallery';
+  else if (path.startsWith('/professional-work/')) key = 'professional';
+  else if (path.startsWith('/familyalbums/') || path.startsWith('/family/')) key = 'family';
+  else if (path.startsWith('/about/')) key = 'about';
+  else if (path.startsWith('/unlock/')) key = 'unlock';
+  else if (path.startsWith('/album/')) {
+    const id = path.split('/').filter(Boolean)[1];
+    const album = (typeof ALBUMS !== 'undefined') ? ALBUMS.find(a => a.id === id) : null;
+    const isClient = album && (
+      album.portfolio === true ||
+      String(album.audience || '').startsWith('client:')
+    );
+    key = isClient ? 'professional' : 'gallery';
+  }
+
+  if (!key) return;
+  document.querySelectorAll(`[data-nav-link][data-nav="${key}"]`).forEach(link => {
+    link.classList.add('nav-active');
   });
 }
 
@@ -810,6 +825,75 @@ const TierAuth = {
     } catch { return null; }
   },
 };
+
+/**
+ * Flickr-style justified highlight grid (preserves aspect ratios, fills rows).
+ * Requires /js/justified-layout.js loaded before this file.
+ */
+function renderJustifiedPhotoGrid(gridEl, urls, { alt = '', eagerCount = 6 } = {}) {
+  if (!gridEl || !urls?.length) return;
+  if (typeof justifiedLayout !== 'function') {
+    console.warn('[renderJustifiedPhotoGrid] justifiedLayout missing — load /js/justified-layout.js');
+    return;
+  }
+
+  gridEl.classList.add('photo-grid');
+  gridEl.innerHTML = '';
+
+  urls.forEach((url, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.style.cursor = 'default';
+    const img = document.createElement('img');
+    img.src = typeof gridUrl === 'function' ? gridUrl(url) : url;
+    img.alt = alt;
+    img.loading = i < eagerCount ? 'eager' : 'lazy';
+    img.decoding = 'async';
+    img.addEventListener('load', () => {
+      img.classList.add('loaded');
+      runLayout();
+    });
+    thumb.appendChild(img);
+    gridEl.appendChild(thumb);
+  });
+
+  function runLayout() {
+    const items = Array.from(gridEl.querySelectorAll('.photo-thumb'));
+    if (!items.length || !gridEl.offsetWidth) return;
+
+    const aspectRatios = items.map(item => {
+      const img = item.querySelector('img');
+      if (img?.naturalWidth && img.naturalHeight) {
+        return img.naturalWidth / img.naturalHeight;
+      }
+      return 1.5;
+    });
+
+    const layout = justifiedLayout(aspectRatios, {
+      containerWidth: gridEl.offsetWidth,
+      targetRowHeight: window.innerWidth <= 640 ? 175 : window.innerWidth <= 1024 ? 235 : 300,
+      boxSpacing: window.innerWidth <= 640 ? 6 : 10,
+      containerPadding: 0,
+    });
+
+    gridEl.style.height = layout.containerHeight + 'px';
+    items.forEach((item, i) => {
+      const box = layout.boxes[i];
+      if (!box) return;
+      item.style.left = box.left + 'px';
+      item.style.top = box.top + 'px';
+      item.style.width = box.width + 'px';
+      item.style.height = box.height + 'px';
+    });
+  }
+
+  if (!gridEl._highlightLayoutBound) {
+    gridEl._highlightLayoutBound = true;
+    new ResizeObserver(() => runLayout()).observe(gridEl);
+  }
+
+  requestAnimationFrame(runLayout);
+}
 
 // ── Init on DOM ready ──
 document.addEventListener('DOMContentLoaded', () => {

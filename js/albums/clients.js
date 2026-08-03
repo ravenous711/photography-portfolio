@@ -16,8 +16,17 @@ const ALBUMS_CLIENTS = [
     audience: 'client:moksha-yoga',
     hidden: true,
     protected: false,
+    portfolio: true,
     gridFavorites: false,
-    coverImage: `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-01.jpg`,
+    coverImage: `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
+    curated: [
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-10.jpg`,
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-14.jpg`,
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-15.jpg`,
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-16.jpg`,
+      `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-28.jpg`,
+    ],
     photos: [
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-01.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-02.jpg`,

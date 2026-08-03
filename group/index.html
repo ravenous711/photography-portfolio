@@ -16,7 +16,8 @@
     <a href="/" class="nav-logo">RF<span>.</span></a>
     <ul class="nav-links">
       <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
       <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Gallery</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
@@ -31,7 +32,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
-    <a href="/gallery/">Gallery</a>
+    <a href="/personal-work/">Personal work</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
     <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Gallery</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
@@ -40,11 +42,11 @@
 
   <!-- ── Page Header ── -->
   <header class="page-header page-header--catalog group-catalog-header fade-in">
-    <a href="/gallery/" class="back-link" id="back-link">
+    <a href="/personal-work/" class="back-link" id="back-link">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
         <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
       </svg>
-      <span id="back-link-label">Gallery</span>
+      <span id="back-link-label">Personal work</span>
     </a>
     <p class="group-page-dateline" id="group-dateline"></p>
     <h1 class="page-title" id="group-title">–</h1>
@@ -70,12 +72,20 @@
         Unlock
       </button>
     </form>
-    <a href="/gallery/" style="margin-top:2rem;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(240,237,232,0.3);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='rgba(240,237,232,0.6)'" onmouseout="this.style.color='rgba(240,237,232,0.3)'">Back to Gallery</a>
+    <a href="/personal-work/" style="margin-top:2rem;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(240,237,232,0.3);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='rgba(240,237,232,0.6)'" onmouseout="this.style.color='rgba(240,237,232,0.3)'">Back to Personal work</a>
   </div>
 
-  <!-- ── Sub-album Grid ── -->
   <main class="group-catalog-main">
-    <div class="fade-in fade-in-delay-1" id="sub-album-sections">
+    <!-- Highlights mode: trailer + CTA to chapter index -->
+    <section class="group-highlights fade-in" id="group-highlights" hidden>
+      <div class="group-highlights-grid" id="group-highlights-grid"></div>
+      <div class="group-highlights-cta-wrap" id="group-highlights-cta-wrap" hidden>
+        <a class="group-highlights-cta" id="group-highlights-cta" href="#">Browse full albums</a>
+      </div>
+    </section>
+
+    <!-- Chapters index: album cards (header copy removed — title above is enough) -->
+    <div class="fade-in fade-in-delay-1" id="chapters" hidden>
       <!-- Populated by JS -->
     </div>
     <section class="group-film-rolls fade-in fade-in-delay-2" id="film-roll-section" hidden>
@@ -88,9 +98,6 @@
   <!-- ── Footer ── -->
   <footer>
     <p id="footer-copyright"></p>
-    <p class="mt-1">
-      <a href="/">Home</a>
-    </p>
   </footer>
 
   <style>
@@ -107,6 +114,33 @@
     }
     .back-link:hover { color: var(--color-text); }
     .album-card { display: block; text-decoration: none; }
+    .group-highlights {
+      margin: 0 0 clamp(2rem, 4vw, 3rem);
+    }
+    .group-highlights-grid.photo-grid {
+      width: 100%;
+    }
+    .group-highlights-cta-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .group-highlights-cta {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(243,240,233,0.9);
+      border: 1px solid rgba(243,240,233,0.4);
+      padding: 0.8rem 1.5rem;
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .group-highlights-cta:hover {
+      color: #f3f0e9;
+      border-color: rgba(243,240,233,0.85);
+      background: rgba(243,240,233,0.06);
+    }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       20%, 60%  { transform: translateX(-8px); }
@@ -123,6 +157,7 @@
   <script src="/js/albums/italy-2026.js"></script>
   <script src="/js/albums.js"></script>
   <script src="/js/routes.js"></script>
+  <script src="/js/justified-layout.js"></script>
   <script src="/js/main.js"></script>
   <script>
     document.getElementById('footer-copyright').textContent =
@@ -131,8 +166,14 @@
     (function initGroupPage() {
       if (Routes.redirectOldGroupPaths()) return;
 
-      Routes.canonicalize('gallery', ['id']);
-      const groupId = Routes.parseGalleryGroupId(['id']);
+      const pathInfo = Routes.parseGalleryGroupPath();
+      if (!pathInfo) {
+        // Legacy ?id= on /gallery/ or bare group path helpers
+        Routes.canonicalize('gallery', ['id']);
+      }
+
+      const groupId = pathInfo?.groupId || Routes.parseGalleryGroupId(['id']);
+      const isChaptersIndex = !!pathInfo?.isChaptersIndex;
       const group = ALBUMS.find(a => a.id === groupId && a.type === 'group');
 
       if (!group) {
@@ -140,10 +181,19 @@
         return;
       }
 
+      // Chapters path must match this group's configured path (or default albums)
+      if (isChaptersIndex) {
+        const expected = group.chaptersPath || 'albums';
+        if (pathInfo.chaptersSlug !== expected) {
+          // Legacy Italy /cities/ → /albums/
+          window.location.replace(Routes.groupChapters(group));
+          return;
+        }
+      }
+
       document.title = `${group.title} — ${SITE_CONFIG.photographerName}`;
       document.getElementById('modal-group-title').textContent = group.title;
 
-      // Tier-auth gate for family/client group albums (public is always open)
       const groupAudience = group.audience || 'public';
       if (groupAudience !== 'public' && groupAudience !== 'friends') {
         if (!TierAuth.canAccess(groupAudience)) {
@@ -192,10 +242,21 @@
     }
 
     function showGroup() {
+      const highlights = Array.isArray(group.highlights) ? group.highlights.filter(Boolean) : [];
+      const hasHighlights = highlights.length > 0;
+      // With highlights: trip page = trailer only; chapters live on second page.
+      // Without highlights: keep the classic all-in-one group index.
+      const chaptersMode = isChaptersIndex || !hasHighlights;
+
       document.getElementById('group-dateline').textContent = albumDateline(group);
       document.getElementById('group-title').textContent = group.title;
+
       const groupDesc = document.getElementById('group-desc');
-      if (group.description) {
+      if (chaptersMode && hasHighlights) {
+        // Full-albums page: title alone is enough
+        groupDesc.style.display = 'none';
+        groupDesc.textContent = '';
+      } else if (group.description) {
         groupDesc.style.display = '';
         groupDesc.textContent = group.description;
       } else {
@@ -204,16 +265,44 @@
       }
 
       const backLink = document.getElementById('back-link');
-      if (group.parentId) {
+      if (chaptersMode && hasHighlights) {
+        backLink.href = Routes.group(group.id);
+        document.getElementById('back-link-label').textContent = group.title;
+      } else if (group.parentId) {
         const parent = ALBUMS.find(a => a.id === group.parentId);
         backLink.href = Routes.group(group.parentId);
         document.getElementById('back-link-label').textContent = parent ? parent.title : 'Back';
       } else if (groupAudience === 'family' || groupAudience.startsWith('family:')) {
         backLink.href = '/family/';
         document.getElementById('back-link-label').textContent = 'Family Gallery';
+      } else {
+        backLink.href = Routes.personalWork;
+        document.getElementById('back-link-label').textContent = 'Personal work';
       }
 
-      const sectionsRoot = document.getElementById('sub-album-sections');
+      const highlightsSection = document.getElementById('group-highlights');
+      const highlightsGrid = document.getElementById('group-highlights-grid');
+      const ctaWrap = document.getElementById('group-highlights-cta-wrap');
+      const cta = document.getElementById('group-highlights-cta');
+      const sectionsRoot = document.getElementById('chapters');
+
+      if (!chaptersMode && hasHighlights) {
+        highlightsSection.hidden = false;
+        sectionsRoot.hidden = true;
+        ctaWrap.hidden = false;
+        cta.href = Routes.groupChapters(group);
+        cta.textContent = group.highlightsCta || 'Browse full albums';
+        renderJustifiedPhotoGrid(highlightsGrid, highlights, {
+          alt: `${group.title} highlight`,
+          eagerCount: 6,
+        });
+        // Film rolls live on the full-albums page, not under highlights
+        return;
+      }
+
+      // Chapters index (or classic group with no highlights)
+      highlightsSection.hidden = true;
+      sectionsRoot.hidden = false;
 
       function resolveSubAlbums(ids) {
         return (ids || [])
@@ -267,7 +356,8 @@
         renderSection('', resolveSubAlbums(group.subAlbums), { first: true });
       }
 
-      // Catalog groups show every roll as a cover card — skip the text film-roll strip.
+      // On the full-albums page, city/place cards first; film rolls strip at the bottom.
+      // Catalog film groups already show every roll as a cover card — skip the text strip.
       if (!group.includeHiddenSubAlbums) {
         renderFilmRollLinks(group);
       }

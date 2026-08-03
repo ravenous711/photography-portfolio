@@ -21,7 +21,8 @@
     <a href="/" class="nav-logo">RF<span>.</span></a>
     <ul class="nav-links">
       <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/gallery/" data-nav-link data-nav="gallery">Gallery</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
       <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Gallery</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
@@ -36,7 +37,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <a href="/">Home</a>
-    <a href="/gallery/">Gallery</a>
+    <a href="/personal-work/">Personal work</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
     <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Gallery</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
@@ -74,9 +76,9 @@
         </button>
       </form>
 
-      <a href="/gallery/" class="block mt-6 text-xs tracking-widest uppercase"
+      <a href="/personal-work/" class="block mt-6 text-xs tracking-widest uppercase"
          style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
-        ← Back to Gallery
+        ← Back to Personal work
       </a>
     </div>
   </div>
@@ -87,14 +89,14 @@
     <!-- Album header -->
     <header class="album-page-header px-6 md:px-12">
       <div class="album-header-identity">
-        <a id="back-link" href="/gallery/" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
+        <a id="back-link" href="/personal-work/" class="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-4"
            style="color:var(--color-muted);text-decoration:none;transition:color 0.3s"
            onmouseover="this.style.color='var(--color-text)'"
            onmouseout="this.style.color='var(--color-muted)'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label">All Albums</span>
+          <span id="back-label">Personal work</span>
         </a>
         <div class="album-header-title-row" id="album-header-title-row">
           <div class="album-header-title-block">
@@ -109,9 +111,14 @@
       <div class="gold-rule album-header-rule"></div>
     </header>
 
+    <!-- Standalone project trailer (Italy-style highlights → full archive below) -->
+    <section id="album-highlights" class="album-highlights px-6 md:px-12" hidden>
+      <div class="album-highlights-grid photo-grid" id="album-highlights-grid"></div>
+    </section>
+
     <!-- Full/curated toggle + favorites note -->
     <div id="album-view-controls-top" class="album-view-controls px-6 md:px-12" hidden>
-      <p id="album-curated-label" class="album-curated-label">Here are a few favorites from the city. Follow the link to see the full set.</p>
+      <p id="album-curated-label" class="album-curated-label" hidden></p>
       <button type="button" id="album-view-toggle-top" class="album-view-toggle-btn"></button>
       <p id="album-favorites-note" class="album-favorites-note" hidden>
         Select your favorites to let Raveen know which shots you like.
@@ -120,11 +127,11 @@
 
     <div id="album-toolbar-sentinel" aria-hidden="true"></div>
     <div id="album-header-toolbar" class="album-header-toolbar px-6 md:px-12">
-        <a id="back-link-sticky" class="album-toolbar-back" href="/gallery/">
+        <a id="back-link-sticky" class="album-toolbar-back" href="/personal-work/">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label-sticky">All Albums</span>
+          <span id="back-label-sticky">Personal work</span>
         </a>
         <div class="album-toolbar-main">
         <div class="album-toolbar-title-group">
@@ -505,7 +512,7 @@
         document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
-          <a href="/gallery/" class="btn-ghost">Back to Gallery</a>
+          <a href="/personal-work/" class="btn-ghost">Back to Personal work</a>
         </div>`;
       } else {
         allPhotos = getAlbumAllPhotos(album);
@@ -1285,6 +1292,21 @@
       const hasCuratedSet = Array.isArray(album.curated) && album.curated.length > 0;
       // Film-roll pages are always the full roll — curated subset is for city albums only
       hasCurated = hasCuratedSet && !isFilmRollAlbum(album);
+      // Children of a highlights group open on the full archive (trailer lives on the group page)
+      if (album.parentId) {
+        const parent = ALBUMS.find(a => a.id === album.parentId);
+        if (parent?.type === 'group' && Array.isArray(parent.highlights) && parent.highlights.length) {
+          hasCurated = false;
+          fullView = true;
+          return;
+        }
+      }
+      // Standalone albums with highlights[]: trailer on this page, then full set below
+      if (!album.parentId && Array.isArray(album.highlights) && album.highlights.length) {
+        hasCurated = false;
+        fullView = true;
+        return;
+      }
       if (!hasCurated) {
         fullView = true;
         return;
@@ -1320,7 +1342,7 @@
 
       if (topControls) topControls.hidden = !hasCurated;
       if (bottomControls) bottomControls.hidden = !hasCurated;
-      if (curatedLabel) curatedLabel.hidden = showingFull;
+      if (curatedLabel) curatedLabel.hidden = true; // quiet — toggle alone is enough
       if (toggleTop) toggleTop.textContent = label;
       if (toggleBottom) toggleBottom.textContent = label;
       if (note) note.hidden = !showingFull;
@@ -1488,6 +1510,22 @@
       }
 
       determineInitialFullView();
+
+      // Standalone project trailer (highlights → full album below)
+      const albumHighlights = document.getElementById('album-highlights');
+      const albumHighlightsGrid = document.getElementById('album-highlights-grid');
+      const trailer = (!album.parentId && Array.isArray(album.highlights))
+        ? album.highlights.filter(Boolean)
+        : [];
+      if (albumHighlights && albumHighlightsGrid && trailer.length) {
+        albumHighlights.hidden = false;
+        renderJustifiedPhotoGrid(albumHighlightsGrid, trailer, {
+          alt: `${albumDisplayTitle(album)} highlight`,
+          eagerCount: 6,
+        });
+      } else if (albumHighlights) {
+        albumHighlights.hidden = true;
+      }
 
       document.getElementById('album-content').style.display = 'block';
       document.getElementById('album-title').textContent        = albumDisplayTitle(album);
@@ -2695,6 +2733,18 @@
   </script>
 
   <style>
+    /* ── Project highlights trailer (standalone albums) ── */
+    .album-highlights {
+      padding-top: 0.5rem;
+      padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+    }
+    .album-highlights-grid.photo-grid {
+      width: 100%;
+    }
+    #digital-section {
+      scroll-margin-top: 5.5rem;
+    }
+
     /* ── Full-album mode: gold accent treatment ── */
     body.full-album-mode #main-nav {
       border-bottom: 1px solid rgba(201, 169, 110, 0.35);

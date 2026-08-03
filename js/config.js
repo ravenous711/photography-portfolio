@@ -59,20 +59,6 @@ const PASSWORD_TIERS = {
   'c403bc24f61b121c4bb12f2455f4e2f6559d17742df491913bc7e6914014a8fb': ['family'],
 };
 
-// Homepage Selected Work — full-res R2 URLs (curate via admin lightbox → Copy URL)
-SITE_CONFIG.featuredPhotos = [
-  `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg`,
-  `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
-  `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
-  `${R2_BASE_URL}/Italy/Rome/Digital/rome_495.jpg`,
-  `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
-  `${R2_BASE_URL}/California/Yosemite/California-346.jpg`,
-  `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
-  `${R2_BASE_URL}/Italy/Pisa/Digital/pisa_097-Edit.jpg`,
-  `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
-  `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-324.jpg`,
-];
-
 // ============================================================
 // ALBUMS — see js/albums.js (assembled from js/albums/*.js)
 // ============================================================

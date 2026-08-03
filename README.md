@@ -368,9 +368,11 @@ All routing is defined in `vercel.json`. The site uses clean trailing-slash URLs
 
 | URL | Template served | Notes |
 |---|---|---|
-| `/` | `index.html` | Homepage with hero image + featured photos |
-| `/gallery/` | `gallery/index.html` | Album grid; family section shown if unlocked |
-| `/gallery/<group>/` | `group/index.html` | City group page (e.g. Italy 2026) |
+| `/` | `index.html` | Yosemite hero (photo only) + Personal / Professional work banners |
+| `/personal-work/` | `personal-work/index.html` | Personal projects index (Italy, California, Red Rock, Film) |
+| `/professional-work/` | `professional-work/index.html` | Public professional highlights (`portfolio: true` albums) |
+| `/gallery/` | → `/personal-work/` | Redirect alias |
+| `/gallery/<group>/` | `group/index.html` | Trip/group page (e.g. Italy highlights + cities) |
 | `/gallery/<group>/<slug>/` | `album/index.html` | Individual album |
 | `/album/<slug>/` | `album/index.html` | Legacy direct-album URLs (still works) |
 | `/unlock/` | `unlock/index.html` | Access code / password entry; `?next=` redirect |

@@ -241,6 +241,11 @@ Jump here after picking an ID from Open tickets.
 
 ## Changelog
 
+- **Home chapters — Personal / Professional work IA** — Aug 2026 (branch `feat/home-chapters-reggie`).
+  Yosemite photo-only hero + Personal/Client banners; `/personal-work/` + `/professional-work/`;
+  Italy trip `highlights[]` + cities open full; Moksha public curated teaser (full set private R2).
+  Merge pending explicit approval.
+
 - **AUTH-2 — Public curated + full; drop friends unlock** — Aug 2026.
   City albums retagged `public`; removed friends hash from `PASSWORD_TIERS`; docs/skill/runbook cleaned. Anyone can see curated and full album.
 

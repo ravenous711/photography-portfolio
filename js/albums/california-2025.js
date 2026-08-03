@@ -19,6 +19,22 @@ const ALBUMS_CALIFORNIA = [
     protected: false,
     subAlbums: ['california-santa-cruz', 'california-yosemite'],
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
+    highlightsCta: 'Browse full albums',
+    chaptersTitle: 'Albums',
+    chaptersPath: 'places',
+    // Trip trailer — refine anytime; place curated[] is separate.
+    highlights: [
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-026.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-141.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-213.jpg`,
+      `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-324.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-346.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-404.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-426.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-488.jpg`,
+      `${R2_BASE_URL}/California/Yosemite/California-547.jpg`,
+    ],
   },
 
   {

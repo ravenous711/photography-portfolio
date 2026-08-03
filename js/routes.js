@@ -1,7 +1,10 @@
 // Clean URL helpers — used across static pages
 const Routes = {
   home: '/',
-  gallery: '/gallery/',
+  gallery: '/personal-work/',
+  personalWork: '/personal-work/',
+  professionalWork: '/professional-work/',
+
 
   /** Flat album URL — used when no parent slug (legacy / standalone albums) */
   album(id) {
@@ -16,6 +19,43 @@ const Routes = {
   /** Album group (e.g. Italy 2026) — /gallery/:id/, not the /gallery/ index */
   group(id) {
     return `/gallery/${encodeURIComponent(id)}/`;
+  },
+
+  /** Reserved second-page indexes under a group (not real album slugs) */
+  CHAPTER_INDEX_SLUGS: Object.freeze(['cities', 'places', 'rolls', 'albums']),
+
+  isChapterIndexSlug(slug) {
+    return this.CHAPTER_INDEX_SLUGS.includes(slug);
+  },
+
+  /** Group chapter index — /gallery/italy-2026/cities/ */
+  groupChapters(group) {
+    if (!group?.id) return this.gallery;
+    const slug = group.chaptersPath || 'albums';
+    return `/gallery/${encodeURIComponent(group.id)}/${encodeURIComponent(slug)}/`;
+  },
+
+  /** Parse /gallery/:groupId/ or /gallery/:groupId/:chapterIndex/ */
+  parseGalleryGroupPath() {
+    const chapters = window.location.pathname.match(
+      /^\/gallery\/([^/]+)\/(cities|places|rolls|albums)\/?$/
+    );
+    if (chapters) {
+      return {
+        groupId: decodeURIComponent(chapters[1]),
+        chaptersSlug: chapters[2],
+        isChaptersIndex: true,
+      };
+    }
+    const groupOnly = window.location.pathname.match(/^\/gallery\/([^/]+)\/?$/);
+    if (groupOnly) {
+      return {
+        groupId: decodeURIComponent(groupOnly[1]),
+        chaptersSlug: null,
+        isChaptersIndex: false,
+      };
+    }
+    return null;
   },
 
   /** Family album — /familyalbums/:year/:familySlug/ */
@@ -65,12 +105,14 @@ const Routes = {
       return this._albums().find(a => a.familySlug === slug);
     }
 
-    // /gallery/:group/:slug/
+    // /gallery/:group/:slug/ — skip reserved chapter-index slugs (handled by group page)
     const nested = window.location.pathname.match(/^\/gallery\/([^/]+)\/([^/]+)\/?$/);
     if (nested) {
+      const slug = decodeURIComponent(nested[2]);
+      if (this.isChapterIndexSlug(slug)) return null;
       return this.findAlbumByGroupSlug(
         decodeURIComponent(nested[1]),
-        decodeURIComponent(nested[2])
+        slug
       );
     }
 
