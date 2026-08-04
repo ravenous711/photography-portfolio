@@ -41,6 +41,8 @@
 //   filmPhotos  – shorthand: single film section appended after photos
 //   albumKind   – 'film-roll' for hidden full-roll sub-albums
 //   camera / filmStock / rollNumber – for film-roll albums
+//   tripAlbumId – optional: full trip/place album this roll came from (when
+//                 parentId is the film-rolls catalog, not the trip itself)
 //   type        – 'group' for trip index pages (shows sub-album grid)
 //   subAlbums   – array of sub-album ids (for type:'group')
 //   subAlbumSections – optional [{ title, albums }] to section the group card grid

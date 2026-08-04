@@ -18,15 +18,16 @@
 
   <!-- ── Navigation ── -->
   <nav id="main-nav" class="nav-scrolled">
-    <a href="/" class="nav-logo"><span class="nav-logo-full">Raveen Fernando</span><span class="nav-logo-short" aria-hidden="true">RF<span class="nav-logo-dot">.</span></span></a>
+    <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/"   data-nav-link data-nav="home">Home</a></li>
+      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
       <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
       <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
-      <li id="nav-family-gallery-item" style="display:none"><a href="/familyalbums/" data-nav-link data-nav="family">Family Gallery</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
-      <li id="nav-unlock-item"><a href="/unlock/" id="nav-unlock-link" data-nav-link data-nav="unlock">Private Access</a></li>
-      <li id="nav-signout-item" style="display:none"><a href="#" onclick="signOut();return false;" data-nav="signout">Sign out</a></li>
+      <li id="nav-unlock-item" class="nav-dropdown">
+        <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
+        <div id="nav-private-menu" class="nav-dropdown-menu" role="menu" hidden></div>
+      </li>
     </ul>
     <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span>
@@ -39,10 +40,11 @@
     <a href="/">Home</a>
     <a href="/personal-work/">Personal work</a>
     <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
-    <a href="/familyalbums/" id="mobile-family-gallery-link" style="display:none">Family Gallery</a>
     <a href="/about/" id="mobile-about-link">About</a>
-    <a href="/unlock/" id="mobile-unlock-link">Private Access</a>
-    <a href="#" id="mobile-signout-link" onclick="signOut();return false;" style="display:none">Sign out</a>
+    <div id="mobile-private-access" class="mobile-private-access">
+      <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
+      <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
+    </div>
   </div>
 
   <!-- ── Password Modal (shown for protected albums) ── -->
@@ -1292,6 +1294,13 @@
       const hasCuratedSet = Array.isArray(album.curated) && album.curated.length > 0;
       // Film-roll pages are always the full roll — curated subset is for city albums only
       hasCurated = hasCuratedSet && !isFilmRollAlbum(album);
+      // Client galleries always show the full deliverable — curated[] is only for
+      // /professional-work/ teasers (portfolio: true), not a client-facing subset.
+      if ((album.audience || '').startsWith('client:')) {
+        hasCurated = false;
+        fullView = true;
+        return;
+      }
       // Children of a highlights group open on the full archive (trailer lives on the group page)
       if (album.parentId) {
         const parent = ALBUMS.find(a => a.id === album.parentId);
@@ -1345,7 +1354,10 @@
       if (curatedLabel) curatedLabel.hidden = true; // quiet — toggle alone is enough
       if (toggleTop) toggleTop.textContent = label;
       if (toggleBottom) toggleBottom.textContent = label;
-      if (note) note.hidden = !showingFull;
+      // Favorites note only when hearts are enabled (client galleries never offer favorites)
+      const favoritesOff = album.gridFavorites === false
+        || (album.audience || '').startsWith('client:');
+      if (note) note.hidden = !showingFull || favoritesOff;
     }
 
     function setFullView(next) {
@@ -1389,7 +1401,9 @@
       }
 
       document.body.classList.toggle('full-album-mode', showingFull);
-      document.body.classList.toggle('grid-favorites-disabled', album.gridFavorites === false);
+      const favoritesOff = album.gridFavorites === false
+        || (album.audience || '').startsWith('client:');
+      document.body.classList.toggle('grid-favorites-disabled', favoritesOff);
       updateViewControls(showingFull);
 
       const digitalGrid = document.getElementById('photo-grid');
@@ -1560,9 +1574,38 @@
 
     // Visible "More in <trip>" switcher in the page header so a visitor can hop
     // straight to a sibling city without backing out to the group page (UX-8).
+    // Film rolls from trips link to the full trip album instead of the film catalog.
     function renderSiblingNav() {
       const nav = document.getElementById('album-sibling-nav');
       if (!nav) return;
+
+      if (isFilmRollAlbum(album)) {
+        const trip = getFilmRollTripAlbum(album);
+        const parent = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
+        const moreTarget = trip || parent;
+        if (!moreTarget) {
+          nav.hidden = true;
+          nav.innerHTML = '';
+          return;
+        }
+        const href = trip
+          ? albumPageUrl(trip)
+          : (typeof Routes !== 'undefined' ? Routes.group(parent.id) : albumPageUrl(parent));
+        // City chips only when the roll lives under the trip group (e.g. Italy)
+        const siblings = (trip && album.parentId === trip.id) ? getSiblingAlbums(album) : [];
+        nav.hidden = false;
+        nav.innerHTML = `
+          <span class="album-sibling-nav-label">More in</span>
+          <span class="album-sibling-nav-links">
+            <a class="album-sibling-link" href="${href}">${moreTarget.title}</a>
+            ${siblings.length > 1 ? siblings.map(s => s.id === album.id
+              ? `<span class="album-sibling-link is-active" aria-current="page">${s.title}</span>`
+              : `<a class="album-sibling-link" href="${albumPageUrl(s)}">${s.title}</a>`
+            ).join('') : ''}
+          </span>`;
+        return;
+      }
+
       const siblings = getSiblingAlbums(album);
       const parent = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
       if (siblings.length < 2 || !parent) {
@@ -1570,10 +1613,12 @@
         nav.innerHTML = '';
         return;
       }
+      const parentHref = typeof Routes !== 'undefined' ? Routes.group(parent.id) : albumPageUrl(parent);
       nav.hidden = false;
       nav.innerHTML = `
-        <span class="album-sibling-nav-label">More in ${parent.title}</span>
+        <span class="album-sibling-nav-label">More in</span>
         <span class="album-sibling-nav-links">
+          <a class="album-sibling-link" href="${parentHref}">${parent.title}</a>
           ${siblings.map(s => s.id === album.id
             ? `<span class="album-sibling-link is-active" aria-current="page">${s.title}</span>`
             : `<a class="album-sibling-link" href="${albumPageUrl(s)}">${s.title}</a>`
@@ -1962,19 +2007,45 @@
       // Sibling-city switcher inside the menu so it's reachable when the header
       // is stuck on mobile (the visible header row scrolls away) — UX-8.
       const siblingsEl = document.getElementById('album-nav-menu-siblings');
-      const siblings = getSiblingAlbums(album);
-      const parentGroup = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
-      if (siblingsEl && siblings.length > 1 && parentGroup) {
-        siblingsEl.hidden = false;
-        siblingsEl.innerHTML = `
-          <p class="album-nav-menu-label">More in ${parentGroup.title}</p>
-          ${siblings.map(s => s.id === album.id
-            ? `<span class="album-nav-menu-link is-active" aria-current="page">${s.title}</span>`
-            : `<a class="album-nav-menu-link" href="${albumPageUrl(s)}">${s.title}</a>`
-          ).join('')}`;
-      } else if (siblingsEl) {
-        siblingsEl.hidden = true;
-        siblingsEl.innerHTML = '';
+      if (siblingsEl) {
+        if (isFilmRollAlbum(album)) {
+          const trip = getFilmRollTripAlbum(album);
+          const parent = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
+          const moreTarget = trip || parent;
+          if (moreTarget) {
+            const href = trip
+              ? albumPageUrl(trip)
+              : (typeof Routes !== 'undefined' ? Routes.group(parent.id) : albumPageUrl(parent));
+            const siblings = (trip && album.parentId === trip.id) ? getSiblingAlbums(album) : [];
+            siblingsEl.hidden = false;
+            siblingsEl.innerHTML = `
+              <p class="album-nav-menu-label">More in</p>
+              <a class="album-nav-menu-link" href="${href}">${moreTarget.title}</a>
+              ${siblings.filter(s => s.id !== album.id).map(s =>
+                `<a class="album-nav-menu-link" href="${albumPageUrl(s)}">${s.title}</a>`
+              ).join('')}`;
+          } else {
+            siblingsEl.hidden = true;
+            siblingsEl.innerHTML = '';
+          }
+        } else {
+          const siblings = getSiblingAlbums(album);
+          const parentGroup = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
+          if (siblings.length > 1 && parentGroup) {
+            const parentHref = typeof Routes !== 'undefined' ? Routes.group(parentGroup.id) : albumPageUrl(parentGroup);
+            siblingsEl.hidden = false;
+            siblingsEl.innerHTML = `
+              <p class="album-nav-menu-label">More in</p>
+              <a class="album-nav-menu-link" href="${parentHref}">${parentGroup.title}</a>
+              ${siblings.map(s => s.id === album.id
+                ? `<span class="album-nav-menu-link is-active" aria-current="page">${s.title}</span>`
+                : `<a class="album-nav-menu-link" href="${albumPageUrl(s)}">${s.title}</a>`
+              ).join('')}`;
+          } else {
+            siblingsEl.hidden = true;
+            siblingsEl.innerHTML = '';
+          }
+        }
       }
 
       const syncMenuVisibility = () => {
@@ -2626,18 +2697,17 @@
     }
 
     async function initFavorites(albumId, enabled) {
-      favEnabled = enabled;
+      const favoritesOff = album?.gridFavorites === false
+        || (album?.audience || '').startsWith('client:');
+      favEnabled = enabled && !favoritesOff;
       if (!favEnabled) return;
 
       // Enable hearts immediately (synchronously) so they appear as soon as the grid renders.
       // Previously this happened only after the fetch, causing visible delay or missing hearts.
-      if (album?.gridFavorites !== false) {
-        document.querySelectorAll('.photo-grid').forEach(grid => {
-          grid.classList.add('favorites-enabled');
-        });
-      }
+      document.querySelectorAll('.photo-grid').forEach(grid => {
+        grid.classList.add('favorites-enabled');
+      });
 
-      // Show lightbox fav button on all album pages
       const favBtnLb = document.getElementById('lightbox-fav');
       if (favBtnLb) favBtnLb.style.display = '';
 

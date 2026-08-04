@@ -28,71 +28,12 @@ function initNav() {
   window.addEventListener('scroll', updateNav, { passive: true });
   updateNav();
 
-  // Show "Family Gallery" nav link when family tier is unlocked
-  const canSeeAnyFamily = (typeof TierAuth !== 'undefined') && TierAuth.canAccess('family');
-  if (canSeeAnyFamily) {
-    const item = document.getElementById('nav-family-gallery-item');
-    const mobileLink = document.getElementById('mobile-family-gallery-link');
-    if (item) item.style.display = '';
-    if (mobileLink) mobileLink.style.display = '';
-  }
-
-  // Show "Sign out" + rename unlock → "Add Access" whenever any tier is unlocked
-  const hasAnyTier = (typeof TierAuth !== 'undefined') && TierAuth.grantedTiers().size > 0;
-  if (hasAnyTier) {
-    const so  = document.getElementById('nav-signout-item');
-    const mso = document.getElementById('mobile-signout-link');
-    if (so)  so.style.display = '';
-    if (mso) mso.style.display = '';
-
-    const unlockLink = document.getElementById('nav-unlock-link');
-    const mobileUnlock = document.getElementById('mobile-unlock-link');
-    if (unlockLink) unlockLink.textContent = 'Add Access';
-    if (mobileUnlock) mobileUnlock.textContent = 'Add Access';
-  }
-
-  // Desired order: Home · Personal work · Professional work · Family · Client album(s) · About · Unlock · Sign out
-  injectClientAlbumNavLinks();
-  finalizeNavOrder();
+  // Home · Personal work · Professional work · About · Private Access (dropdown)
+  buildPrivateAccessMenu();
+  initPrivateAccessDropdown();
 }
 
-// Enforce nav order after revealing/injecting tier links.
-// Home · Personal work · Professional work · Family Gallery · Client: … · About · Add Access · Sign out
-function finalizeNavOrder() {
-  const list = document.querySelector('#main-nav .nav-links');
-  if (list) {
-    const family = document.getElementById('nav-family-gallery-item');
-    const about = document.getElementById('nav-about-item');
-    const unlock = document.getElementById('nav-unlock-item');
-    const signOut = document.getElementById('nav-signout-item');
-    const clients = [...list.querySelectorAll('[data-client-album]')].map(a => a.parentElement);
-
-    if (family) list.appendChild(family);
-    clients.forEach(li => { if (li) list.appendChild(li); });
-    if (about) list.appendChild(about);
-    if (unlock) list.appendChild(unlock);
-    if (signOut) list.appendChild(signOut);
-  }
-
-  const mobileMenu = document.getElementById('mobile-menu');
-  if (mobileMenu) {
-    const family = document.getElementById('mobile-family-gallery-link');
-    const about = document.getElementById('mobile-about-link');
-    const unlock = document.getElementById('mobile-unlock-link');
-    const signOut = document.getElementById('mobile-signout-link');
-    const clients = [...mobileMenu.querySelectorAll('[data-client-album]')];
-
-    if (family) mobileMenu.appendChild(family);
-    clients.forEach(link => mobileMenu.appendChild(link));
-    if (about) mobileMenu.appendChild(about);
-    if (unlock) mobileMenu.appendChild(unlock);
-    if (signOut) mobileMenu.appendChild(signOut);
-  }
-}
-
-// Client albums are hidden from the public gallery, so once a client navigates
-// away (e.g. to /gallery/) there is no link back. Add a "Client: <title>" nav
-// link for every client tier they have unlocked.
+// Client albums unlocked via access code — used by the Private Access menu.
 function getUnlockedClientAlbums() {
   if (typeof TierAuth === 'undefined' || typeof ALBUMS === 'undefined') return [];
   return [...TierAuth.grantedTiers()]
@@ -101,41 +42,150 @@ function getUnlockedClientAlbums() {
     .filter(Boolean);
 }
 
-function injectClientAlbumNavLinks() {
+function normalizeNavPath(path) {
+  return (path || '/').replace(/\/?$/, '/') || '/';
+}
+
+function appendPrivateAccessItem(container, { href, label, active, onClick, dataset }) {
+  if (!container) return;
+  const el = onClick
+    ? document.createElement('button')
+    : document.createElement('a');
+  el.className = 'nav-dropdown-item' + (active ? ' nav-active' : '');
+  el.textContent = label;
+  if (onClick) {
+    el.type = 'button';
+    el.addEventListener('click', onClick);
+  } else {
+    el.href = href;
+    el.setAttribute('role', 'menuitem');
+  }
+  if (dataset) {
+    Object.entries(dataset).forEach(([k, v]) => { el.dataset[k] = v; });
+  }
+  container.appendChild(el);
+}
+
+/** Fill desktop + mobile Private Access menus from current unlock state. */
+function buildPrivateAccessMenu() {
+  const desktopMenu = document.getElementById('nav-private-menu');
+  const mobileMenu = document.getElementById('mobile-private-menu');
+  if (!desktopMenu && !mobileMenu) return;
+
+  const hasAnyTiers = (typeof TierAuth !== 'undefined') && TierAuth.grantedTiers().size > 0;
   const albums = getUnlockedClientAlbums();
-  if (!albums.length || typeof Routes === 'undefined') return;
+  const canSeeFamily = (typeof TierAuth !== 'undefined') && TierAuth.canAccess('family');
+  const currentPath = normalizeNavPath(window.location.pathname);
 
-  const list = document.querySelector('#main-nav .nav-links');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const aboutItem = document.getElementById('nav-about-item');
-  const mobileAbout = document.getElementById('mobile-about-link');
-  const currentPath = window.location.pathname.replace(/\/?$/, '/');
+  function fill(container) {
+    if (!container) return;
+    container.innerHTML = '';
 
-  albums.forEach(album => {
-    const href = Routes.albumPageUrl(album);
-    const isCurrent = href.replace(/\/?$/, '/') === currentPath;
-    const label = `Client: ${album.title}`;
-
-    if (list && !list.querySelector(`[data-client-album="${album.id}"]`)) {
-      const li = document.createElement('li');
-      const link = document.createElement('a');
-      link.href = href;
-      link.textContent = label;
-      link.dataset.clientAlbum = album.id;
-      if (isCurrent) link.classList.add('nav-active');
-      li.appendChild(link);
-      list.insertBefore(li, aboutItem);
+    if (!hasAnyTiers) {
+      appendPrivateAccessItem(container, {
+        href: '/unlock/',
+        label: 'Enter code',
+        active: currentPath.startsWith('/unlock/'),
+      });
+      return;
     }
 
-    if (mobileMenu && !mobileMenu.querySelector(`[data-client-album="${album.id}"]`)) {
-      const link = document.createElement('a');
-      link.href = href;
-      link.textContent = label;
-      link.dataset.clientAlbum = album.id;
-      if (mobileAbout) mobileMenu.insertBefore(link, mobileAbout);
-      else mobileMenu.appendChild(link);
+    albums.forEach(album => {
+      if (typeof Routes === 'undefined') return;
+      const href = Routes.albumPageUrl(album);
+      appendPrivateAccessItem(container, {
+        href,
+        label: album.title,
+        active: normalizeNavPath(href) === currentPath,
+        dataset: { clientAlbum: album.id },
+      });
+    });
+
+    if (canSeeFamily) {
+      appendPrivateAccessItem(container, {
+        href: '/familyalbums/',
+        label: 'Family Gallery',
+        active: currentPath.startsWith('/familyalbums/') || currentPath.startsWith('/family/'),
+      });
     }
-  });
+
+    appendPrivateAccessItem(container, {
+      href: '/unlock/',
+      label: 'Add code',
+      active: currentPath.startsWith('/unlock/'),
+    });
+
+    appendPrivateAccessItem(container, {
+      label: 'Sign out',
+      onClick: (e) => { e.preventDefault(); signOut(); },
+    });
+  }
+
+  fill(desktopMenu);
+  fill(mobileMenu);
+}
+
+function closePrivateAccessDropdown() {
+  const item = document.getElementById('nav-unlock-item');
+  const trigger = document.getElementById('nav-unlock-trigger');
+  const menu = document.getElementById('nav-private-menu');
+  if (!item || !trigger || !menu) return;
+  item.classList.remove('is-open');
+  trigger.setAttribute('aria-expanded', 'false');
+}
+
+function openPrivateAccessDropdown() {
+  const item = document.getElementById('nav-unlock-item');
+  const trigger = document.getElementById('nav-unlock-trigger');
+  const menu = document.getElementById('nav-private-menu');
+  if (!item || !trigger || !menu) return;
+  menu.hidden = false;
+  item.classList.add('is-open');
+  trigger.setAttribute('aria-expanded', 'true');
+}
+
+function initPrivateAccessDropdown() {
+  const item = document.getElementById('nav-unlock-item');
+  const trigger = document.getElementById('nav-unlock-trigger');
+  const menu = document.getElementById('nav-private-menu');
+  if (item && trigger && menu) {
+    // Prefer class + CSS transition over [hidden]/display:none) so the menu can slide
+    menu.hidden = false;
+
+    const canHover = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (item.classList.contains('is-open')) closePrivateAccessDropdown();
+      else openPrivateAccessDropdown();
+    });
+
+    item.addEventListener('mouseenter', () => {
+      if (canHover()) openPrivateAccessDropdown();
+    });
+    item.addEventListener('mouseleave', () => {
+      if (canHover()) closePrivateAccessDropdown();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!item.contains(e.target)) closePrivateAccessDropdown();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePrivateAccessDropdown();
+    });
+  }
+
+  const mobileTrigger = document.getElementById('mobile-private-trigger');
+  const mobilePanel = document.getElementById('mobile-private-menu');
+  if (mobileTrigger && mobilePanel) {
+    mobileTrigger.addEventListener('click', () => {
+      const isOpen = mobileTrigger.getAttribute('aria-expanded') === 'true';
+      mobileTrigger.setAttribute('aria-expanded', String(!isOpen));
+      mobilePanel.hidden = isOpen;
+      mobileTrigger.classList.toggle('is-open', !isOpen);
+    });
+  }
 }
 
 // ── Sign out: clear all unlocked tiers + cached tokens, return home ──
@@ -183,17 +233,18 @@ function setActiveNavLink() {
   if (path === '/') key = 'home';
   else if (path.startsWith('/personal-work/') || path.startsWith('/gallery/')) key = 'gallery';
   else if (path.startsWith('/professional-work/')) key = 'professional';
-  else if (path.startsWith('/familyalbums/') || path.startsWith('/family/')) key = 'family';
+  else if (path.startsWith('/familyalbums/') || path.startsWith('/family/')) key = 'unlock';
   else if (path.startsWith('/about/')) key = 'about';
   else if (path.startsWith('/unlock/')) key = 'unlock';
   else if (path.startsWith('/album/')) {
     const id = path.split('/').filter(Boolean)[1];
     const album = (typeof ALBUMS !== 'undefined') ? ALBUMS.find(a => a.id === id) : null;
-    const isClient = album && (
-      album.portfolio === true ||
-      String(album.audience || '').startsWith('client:')
-    );
-    key = isClient ? 'professional' : 'gallery';
+    // Client albums live under Private Access — highlight that trigger.
+    if (album && String(album.audience || '').startsWith('client:')) {
+      key = 'unlock';
+    } else {
+      key = (album && album.portfolio === true) ? 'professional' : 'gallery';
+    }
   }
 
   if (!key) return;
@@ -516,6 +567,18 @@ function getFilmRollAlbums(parentId) {
 
 function isFilmRollAlbum(album) {
   return album?.albumKind === 'film-roll';
+}
+
+/** Trip/place album a film roll belongs to (explicit tripAlbumId, or trip parent). */
+function getFilmRollTripAlbum(album) {
+  if (!isFilmRollAlbum(album)) return null;
+  if (album.tripAlbumId) {
+    return ALBUMS.find(a => a.id === album.tripAlbumId) || null;
+  }
+  if (!album.parentId) return null;
+  const parent = ALBUMS.find(a => a.id === album.parentId);
+  if (parent?.type === 'group' && parent.id !== 'misc-film-rolls-2026') return parent;
+  return null;
 }
 
 function filmRollLinkLabel(roll) {
