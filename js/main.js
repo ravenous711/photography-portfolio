@@ -206,22 +206,25 @@ function initMobileMenu() {
   const mobileMenu = document.getElementById('mobile-menu');
   if (!toggle || !mobileMenu) return;
 
-  toggle.addEventListener('click', () => {
-    const isOpen = mobileMenu.classList.contains('open');
-    mobileMenu.classList.toggle('open', !isOpen);
-    toggle.setAttribute('aria-expanded', String(!isOpen));
+  const setOpen = (open) => {
+    mobileMenu.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.querySelectorAll('.bar').forEach(b => b.classList.toggle('active', open));
+  };
 
-    // Toggle hamburger ↔ close icon
-    const bars = toggle.querySelectorAll('.bar');
-    bars.forEach(b => b.classList.toggle('active'));
+  toggle.addEventListener('click', () => {
+    setOpen(!mobileMenu.classList.contains('open'));
+  });
+
+  // Tap the dimmed backdrop (outside the sheet) to dismiss
+  mobileMenu.addEventListener('click', (e) => {
+    if (e.target === mobileMenu) setOpen(false);
   });
 
   // Close on outside click
   document.addEventListener('click', (e) => {
     if (!toggle.contains(e.target) && !mobileMenu.contains(e.target)) {
-      mobileMenu.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.querySelectorAll('.bar').forEach(b => b.classList.remove('active'));
+      setOpen(false);
     }
   });
 }
