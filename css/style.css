@@ -506,18 +506,14 @@ body:has(.hero) #mobile-menu {
   background: rgba(0, 0, 0, 0.55);
 }
 
+/* The sheet is always dark over the hero, so rebind the palette for the whole
+   subtree — descendants like the Private Access submenu would otherwise keep
+   the light-scheme muted colour and vanish against it. */
 body:has(.hero) #mobile-menu .mobile-menu-sheet {
+  --color-text: #f3f0e9;
+  --color-muted: rgba(243, 240, 233, 0.62);
+  --color-border: rgba(243, 240, 233, 0.12);
   background: rgba(12, 12, 11, 0.97);
-  border-color: rgba(243, 240, 233, 0.12);
-}
-
-body:has(.hero) #mobile-menu .mobile-menu-sheet > a,
-body:has(.hero) #mobile-private-trigger {
-  color: #f3f0e9;
-}
-
-body:has(.hero) .mobile-private-access {
-  border-top-color: rgba(243, 240, 233, 0.12);
 }
 
 /* ============================================================
