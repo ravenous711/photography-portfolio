@@ -16,7 +16,7 @@ const ALBUMS_MISC_2026 = [
   {
     id: 'misc-film-rolls-2026',
     title: '2026 Film rolls',
-    description: 'Film from 2026.',
+    description: '',
     date: '2026',
     dateline: false,
     type: 'group',
