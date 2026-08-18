@@ -195,7 +195,6 @@
             Download
           </button>
         </div>
-        <p id="digital-section-placeholder" class="album-section-placeholder" hidden>Coming soon</p>
         <div class="photo-grid" id="photo-grid">
           <!-- Digital photos populated by JS -->
         </div>
@@ -1430,19 +1429,11 @@
         const showRow = isCuratedView ? hasCuratedFilm : showingFull;
         digitalLabelRow.hidden = !showRow;
         if (digitalDlBtn) {
-          digitalDlBtn.hidden = !digitalPhotos.length;
           digitalDlBtn.onclick = () => showDownloadSizePicker(digitalPhotos, (size) => downloadPhotos(digitalPhotos, size));
         }
       } else {
         digitalLabelEl.textContent = '';
         digitalLabelRow.hidden = true;
-      }
-
-      // Digital scans still in progress: keep the section labelled with a short
-      // placeholder instead of an empty grid (album sets digitalComingSoon).
-      const digitalPlaceholder = document.getElementById('digital-section-placeholder');
-      if (digitalPlaceholder) {
-        digitalPlaceholder.hidden = !(album.digitalComingSoon && !digitalPhotos.length && !digitalLabelRow.hidden);
       }
 
       digitalPhotos.forEach((url, i) => {

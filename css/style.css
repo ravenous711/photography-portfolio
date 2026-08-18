@@ -1634,15 +1634,6 @@ a.album-sibling-link:hover {
   margin-bottom: 0;
 }
 
-.album-section-placeholder {
-  margin-bottom: 2rem;
-  font-family: var(--font-serif);
-  font-size: 1rem;
-  font-weight: 300;
-  letter-spacing: 0.02em;
-  color: var(--color-muted);
-}
-
 .album-section-dl-btn {
   display: inline-flex;
   align-items: center;
@@ -2685,10 +2676,6 @@ body.album-dark-quiet .album-header-actions .btn-primary:hover {
 body.album-dark-quiet .album-section-label {
   letter-spacing: 0.2em;
   color: rgba(243,240,233,0.4);
-}
-
-body.album-dark-quiet .album-section-placeholder {
-  color: rgba(243,240,233,0.5);
 }
 
 body.album-dark-quiet .album-film-section {

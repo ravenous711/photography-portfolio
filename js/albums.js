@@ -37,8 +37,6 @@
 //   coverPosition – CSS object-position override (e.g. "50% 30%")
 //   photos      – array of digital photo URLs
 //   digitalLabel– optional heading above digital grid
-//   digitalComingSoon – true = keep the digital section labelled with a
-//                 "Coming soon" placeholder while photos is still empty
 //   filmSections– array of { label, photos, navLabel, camera, filmStock }
 //   filmPhotos  – shorthand: single film section appended after photos
 //   albumKind   – 'film-roll' for hidden full-roll sub-albums
