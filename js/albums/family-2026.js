@@ -454,8 +454,8 @@ const ALBUMS_FAMILY_2026 = [
         ],
       },
       {
-        label: 'Film - Athena Pentax17',
-        navLabel: 'Film - Athena Pentax17',
+        label: "Film - Athena's Pentax 17",
+        navLabel: "Film - Athena's Pentax 17",
         camera: 'Pentax 17',
         filmStock: 'Ultramax 400',
         photos: [
