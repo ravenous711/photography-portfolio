@@ -7,6 +7,8 @@ description: Guides the user through adding a new photo album to the photography
 
 Workflow for adding a new album to Raveen's photography portfolio. Always follow all steps in order.
 
+For cheap R2 verification, resume/missing-key uploads, and stalled-upload triage, see [verify-r2-uploads](../verify-r2-uploads/SKILL.md).
+
 ## Key facts
 - Public R2 bucket: `portfolio-images` — public album originals + their grid thumbnails (`grid/...`)
 - Private R2 bucket: `portfolio-images-private` — family/client album originals **and** their grid thumbnails (`grid/...`)
