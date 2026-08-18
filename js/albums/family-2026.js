@@ -374,7 +374,7 @@ const ALBUMS_FAMILY_2026 = [
     hidden: true,
     protected: false,
     familySlug: 'higgins-lake',
-    digitalLabel: 'Fujifilm X-T5',
+    digitalLabel: 'Fujifilm X-T5 — coming soon',
     coverImage: `${R2_BASE_URL}/Higgins-Lake-2026/Raveen-X700/2026-08-17_raveen_x700_ultramax_400_17.jpg`,
     photos: [],
     filmSections: [
