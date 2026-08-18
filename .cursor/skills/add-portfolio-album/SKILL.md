@@ -31,42 +31,48 @@ Family albums use `audience: 'family'` — password hash is already in `PASSWORD
 City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 2026.)
 
 ## Cloudflare rate limit behaviour
+**Always prefer maximum safe parallelism (fastest total wall-clock).**
+
 - R2 API rate-limits concurrent uploads — always auto-retry (see helper below)
-- **Never interleave orig/grid per file** — run originals and grids as **separate parallel processes**
+- **Never interleave orig/grid/view per file** — run originals, grids, and views as **separate parallel processes**
 - **Check `IMPROVEMENTS.md` → Active album session** for in-flight uploads and the album queue before starting new work
 
 ### Sleep between originals (~26 MB Fujifilm JPGs)
 | Gap | Result |
 |---|---|
-| 8s | Frequent `fetch failed` retries |
-| **10s** | Practical default (1 sequential worker) |
-| 14–15s | Very stable |
-| 2–3s | OK when using **4–6 parallel workers** on the same folder |
+| 8s | Frequent `fetch failed` retries (single sequential worker) |
+| 10s / 14–15s | **Fallback only** when rate limits are severe (1 sequential worker) |
+| **2–3s** | **Default** — OK with **4–6 parallel workers** on the same folder |
 
-### How many parallel workers?
+### How many parallel workers? (default = fastest safe)
 
 | File type | Safe concurrency | Notes |
 |---|---|---|
-| **Grids** (~1–3 MB) | **5–10** concurrent | Rarely rate-limits; default `CONCURRENCY=5` |
-| **Originals, one R2 sub-folder** | **4–6** workers | Split file list evenly; **2–3s sleep** inside each worker |
-| **Originals, multiple sub-folders** | **Up to 10 jobs** | One job per sub-folder (e.g. Digital + each film roll); sequential inside each job |
+| **Grids / views** (~1–3 MB / ~few MB) | **5–10** concurrent | Rarely rate-limits; default `CONCURRENCY=5`–`10` |
+| **Originals, one R2 sub-folder** | **4–6** workers | Split file list evenly; **2–3s sleep** inside each worker + `upload_with_retry` |
+| **Originals, multiple sub-folders** | **All sub-folders in parallel**, each with **4–6 workers** | Maximize wall-clock: N folders × (orig workers + grid job + view job) |
 
-**Rule of thumb:** ~6 concurrent large original PUTs is the sweet spot before retries spike. Ten jobs works when spread across **different R2 paths**, not 10 workers all hitting the same `Digital/` prefix.
+**Rule of thumb:** ~6 concurrent large original PUTs **per R2 prefix** is the sweet spot before retries spike. Spread load across different R2 paths when the album has multiple sub-folders — do **not** run one slow sequential job per folder.
 
-### Recommended upload layout
+### Recommended upload layout (default)
 
-**Single folder** (one R2 path): 2 processes — originals sequential (10s) + grids (5 concurrent).
+**Single folder** (one R2 path): launch **3 process groups in parallel** —
+- Originals: **4–6 parallel workers**, **2–3s sleep** inside each, with `upload_with_retry`
+- Grids: **5–10** concurrent
+- Views: **5–10** concurrent
 
-**Multi-folder album** (Digital + film rolls — e.g. Holland Tulip, Venice): launch **all jobs in parallel**:
-- One originals job per R2 sub-folder (`Digital/`, `Raveen-Ultramax/`, …)
-- One grids job per matching sub-folder
-- Example: 5 sub-folders → **10 parallel jobs** (5 orig + 5 grid)
+**Multi-folder album** (Digital + film rolls — e.g. Holland Tulip, Venice): launch **everything in parallel**:
+- Per R2 sub-folder (`Digital/`, `Raveen-Ultramax/`, …): split originals across **4–6 workers** (not one sequential job)
+- Per matching sub-folder: one grids job + one views job (~5–10 concurrent each)
+- Example: 5 sub-folders → many parallel jobs (5 × orig-worker-pool + 5 grid + 5 view)
 
-**Finishing stragglers:** If a sequential job is slow or has failures, stop it and split the **remaining file list** across **4 parallel workers** (2s sleep, auto-retry). Re-verify manifest and retry any still missing.
+**Fallback (severe rate limits only):** drop to 1 sequential worker with 10–15s sleep. Prefer staying parallel and letting `upload_with_retry` absorb transient failures.
+
+**Finishing stragglers:** If any worker has failures or a leftover list, split the **remaining file list** across **4 parallel workers** (2s sleep, auto-retry). Re-verify manifest and retry any still missing.
 
 ### Parallel multi-folder launcher (template)
 
-Save manifests to `/tmp/<album>-manifest/` (one filename per line, sorted). Then:
+Save manifests to `/tmp/<album>-manifest/` (one filename per line, sorted). Split each manifest across workers, then launch **all** orig/grid/view jobs together:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -75,20 +81,35 @@ PREFIX="<R2-folder-name>"
 BASE="/Volumes/PhotosSSD/Photos/..."
 MANIFEST="/tmp/<album>-manifest"
 LOGDIR="/tmp/<album>-logs"
+WORKERS=5          # 4–6 for originals per sub-folder
+GRID_CONCURRENCY=5 # 5–10 for grid/view
 mkdir -p "$LOGDIR"
 
 # upload_with_retry() — copy from helper below
 
-upload_orig_section() {
-  local key="$1" local_dir="$2" r2_sub="$3" log="$4"
-  { echo "=== START orig $r2_sub $(date) ==="
+# Split a manifest into $WORKERS chunk files: $MANIFEST/$key.w0.txt … 
+split_manifest() {
+  local key="$1" n="$WORKERS" total i
+  total=$(grep -c . "$MANIFEST/$key.txt" 2>/dev/null || echo 0)
+  for ((i=0; i<n; i++)); do : > "$MANIFEST/$key.w$i.txt"; done
+  i=0
+  while IFS= read -r fname; do
+    [[ -z "$fname" ]] && continue
+    echo "$fname" >> "$MANIFEST/$key.w$((i % n)).txt"
+    i=$((i+1))
+  done < "$MANIFEST/$key.txt"
+}
+
+upload_orig_worker() {
+  local key="$1" local_dir="$2" r2_sub="$3" w="$4" log="$5"
+  { echo "=== START orig $r2_sub worker$w $(date) ==="
     fail=0
     while IFS= read -r fname; do
       [[ -z "$fname" ]] && continue
       upload_with_retry "$BUCKET/$PREFIX/$r2_sub/$fname" "$local_dir/$fname" "orig $r2_sub/$fname" || fail=$((fail+1))
-      sleep 10
-    done < "$MANIFEST/$key.txt"
-    echo "=== DONE orig $r2_sub fail=$fail $(date) ==="; exit $fail
+      sleep 2
+    done < "$MANIFEST/$key.w$w.txt"
+    echo "=== DONE orig $r2_sub worker$w fail=$fail $(date) ==="; exit $fail
   } > "$log" 2>&1
 }
 
@@ -98,17 +119,46 @@ upload_grid_section() {
     fail=0
     for f in "/tmp/grid_$PREFIX/$grid_dir"/*; do
       [[ -f "$f" ]] || continue
+      while (( $(jobs -r | wc -l | tr -d ' ') >= GRID_CONCURRENCY )); do sleep 1; done
       fname=$(basename "$f")
-      upload_with_retry "$BUCKET/grid/$PREFIX/$r2_sub/$fname" "$f" "grid $r2_sub/$fname" || fail=$((fail+1))
+      ( upload_with_retry "$BUCKET/grid/$PREFIX/$r2_sub/$fname" "$f" "grid $r2_sub/$fname" || exit 1 ) &
     done
+    wait || fail=1
     echo "=== DONE grid $r2_sub fail=$fail $(date) ==="; exit $fail
   } > "$log" 2>&1
 }
 
-# Launch all jobs in parallel (adjust keys/paths per album)
-upload_orig_section digital "$BASE" Digital "$LOGDIR/01-orig-digital.log" &
-upload_orig_section raveen-film "$BASE/Raveen-Ultramax" Raveen-Ultramax "$LOGDIR/02-orig-raveen.log" &
-# ... one orig + one grid job per sub-folder ...
+upload_view_section() {
+  local view_dir="$1" r2_sub="$2" log="$3"
+  { echo "=== START view $r2_sub $(date) ==="
+    fail=0
+    for f in "/tmp/view_$PREFIX/$view_dir"/*; do
+      [[ -f "$f" ]] || continue
+      while (( $(jobs -r | wc -l | tr -d ' ') >= GRID_CONCURRENCY )); do sleep 1; done
+      fname=$(basename "$f")
+      ( upload_with_retry "$BUCKET/view/$PREFIX/$r2_sub/$fname" "$f" "view $r2_sub/$fname" || exit 1 ) &
+    done
+    wait || fail=1
+    echo "=== DONE view $r2_sub fail=$fail $(date) ==="; exit $fail
+  } > "$log" 2>&1
+}
+
+# Per sub-folder: split → launch all orig workers + grid + view in parallel
+launch_section() {
+  local key="$1" local_dir="$2" r2_sub="$3" grid_dir="$4" view_dir="$5"
+  split_manifest "$key"
+  local w
+  for ((w=0; w<WORKERS; w++)); do
+    upload_orig_worker "$key" "$local_dir" "$r2_sub" "$w" "$LOGDIR/orig-${key}-w$w.log" &
+  done
+  upload_grid_section "$grid_dir" "$r2_sub" "$LOGDIR/grid-${key}.log" &
+  upload_view_section "$view_dir" "$r2_sub" "$LOGDIR/view-${key}.log" &
+}
+
+# Launch ALL sub-folders at once (adjust keys/paths per album)
+launch_section digital "$BASE" Digital Digital Digital &
+launch_section raveen-film "$BASE/Raveen-Ultramax" Raveen-Ultramax Raveen-Ultramax Raveen-Ultramax &
+# ... one launch_section per sub-folder ...
 wait
 ```
 
@@ -226,65 +276,98 @@ If originals are already in R2 (backfill scenario), use `scripts/backfill-image-
 
 ## Step 4 — Upload originals
 
+**Always prefer maximum safe parallelism (fastest total wall-clock).**
+
 - **Public albums** → `portfolio-images/<R2-folder-name>`
 - **Family / client albums** → `portfolio-images-private/<R2-folder-name>`
 
-**Single R2 folder:** run as **process 1** (backgrounded). Sequential, 10s sleep between files.
-**Multiple R2 sub-folders:** use the **parallel multi-folder launcher** above — one background job per sub-folder, all at once.
+**Single R2 folder:** split the file list across **4–6 parallel workers**, **2–3s sleep** inside each, with `upload_with_retry`. (Sequential 10s is a **fallback** only when rate limits are severe.)
+**Multiple R2 sub-folders:** use the **parallel multi-folder launcher** above — all sub-folders at once, each with the 4–6 worker split (not one slow sequential job per folder).
 
-Start **Step 5 grids in parallel** — do not wait for originals to finish.
+Start **Step 5 grids and views in parallel** — never wait for originals to finish first.
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
 setopt nullglob
 FOLDER="<local path>"
 DEST="portfolio-images/<R2-folder-name>"   # or portfolio-images-private/...
-fail=0
+WORKERS=5
+LOGDIR="/tmp/orig-upload-logs"
+mkdir -p "$LOGDIR"
 
 FILES=()
 for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
   [ -f "$f" ] || continue
-  FILES+=("$f")
+  FILES+=("$(basename "$f")")
 done
 IFS=$'\n' FILES=($(printf '%s\n' "${FILES[@]}" | sort)); unset IFS
 
-for f in "${FILES[@]}"; do
-  upload_with_retry "$DEST/$(basename "$f")" "$f" "$(basename "$f")" || fail=$((fail+1))
-  sleep 10
+# Split evenly across workers
+for ((w=0; w<WORKERS; w++)); do : > "$LOGDIR/manifest.w$w.txt"; done
+i=0
+for fname in "${FILES[@]}"; do
+  echo "$fname" >> "$LOGDIR/manifest.w$((i % WORKERS)).txt"
+  i=$((i+1))
 done
-echo "=== Done. Failures: $fail ==="
+
+upload_worker() {
+  local w="$1" fail=0
+  while IFS= read -r fname; do
+    [[ -z "$fname" ]] && continue
+    upload_with_retry "$DEST/$fname" "$FOLDER/$fname" "$fname" || fail=$((fail+1))
+    sleep 2
+  done < "$LOGDIR/manifest.w$w.txt"
+  echo "=== worker$w done fail=$fail ==="
+  exit $fail
+}
+
+for ((w=0; w<WORKERS; w++)); do
+  upload_worker "$w" > "$LOGDIR/worker$w.log" 2>&1 &
+done
+wait
+echo "=== Originals done. Check $LOGDIR for failures ==="
 ```
 
-## Step 5 — Upload grid images
+## Step 5 — Upload grid + view images
 
-Run as **process 2** at the same time as Step 4 (also backgrounded). Match the audience bucket:
-- **Public** → `portfolio-images/grid/<R2-folder-name>/`
-- **Family / client** → `portfolio-images-private/grid/<R2-folder-name>/`
+Run **grid and view uploads in parallel with Step 4** (never wait for originals). Match the audience bucket:
+- **Public** → `portfolio-images/grid/<R2-folder-name>/` and `portfolio-images/view/<R2-folder-name>/`
+- **Family / client** → `portfolio-images-private/grid/...` and `portfolio-images-private/view/...`
 
-Grids are small (~1–3 MB) — upload **5 concurrent** within this process. Originals stay sequential in process 1.
+Use **~5–10 concurrent** within each process (grids and views are small).
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
 setopt nullglob
 GRID_DIR="/tmp/grid_<R2-folder-name>"
-DEST="portfolio-images/grid/<R2-folder-name>"   # or portfolio-images-private/grid/...
+VIEW_DIR="/tmp/view_<R2-folder-name>"
+GRID_DEST="portfolio-images/grid/<R2-folder-name>"   # or portfolio-images-private/grid/...
+VIEW_DEST="portfolio-images/view/<R2-folder-name>"   # or portfolio-images-private/view/...
 CONCURRENCY=5
-gfail=0
 
-for f in "$GRID_DIR"/*.jpg; do
-  [ -f "$f" ] || continue
-  while (( $(jobs | wc -l | tr -d ' ') >= CONCURRENCY )); do sleep 2; done
-  (
-    upload_with_retry "$DEST/$(basename "$f")" "$f" "grid $(basename "$f")" || exit 1
-  ) &
-done
-wait || gfail=1
-echo "=== Grid done. Check output above for failures ==="
+upload_tier() {
+  local src="$1" dest="$2" label="$3"
+  local fail=0
+  for f in "$src"/*.jpg; do
+    [ -f "$f" ] || continue
+    while (( $(jobs -r | wc -l | tr -d ' ') >= CONCURRENCY )); do sleep 1; done
+    (
+      upload_with_retry "$dest/$(basename "$f")" "$f" "$label $(basename "$f")" || exit 1
+    ) &
+  done
+  wait || fail=1
+  echo "=== $label done. Check output above for failures ==="
+  exit $fail
+}
+
+upload_tier "$GRID_DIR" "$GRID_DEST" grid &
+upload_tier "$VIEW_DIR" "$VIEW_DEST" view &
+wait
 ```
 
 ## Step 6 — Verify via manifest
 
-After both upload loops finish, run automatically:
+After all upload loops finish (originals + grid + view), run automatically:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -298,7 +381,15 @@ curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/$B
   -H "Authorization: Bearer $TOKEN" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
-uploaded = sorted(o['key'].split('/')[-1] for o in data['result'])
+if not data.get('success'):
+    errs = data.get('errors') or data
+    print(f'R2 list API error (originals): {errs}', file=sys.stderr)
+    sys.exit(1)
+result = data.get('result')
+if result is None:
+    print('R2 list API returned result: null (originals)', file=sys.stderr)
+    sys.exit(1)
+uploaded = sorted(o['key'].split('/')[-1] for o in result)
 print(f'Found {len(uploaded)} files')
 "
 
@@ -308,7 +399,15 @@ curl -s "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets/$G
   -H "Authorization: Bearer $TOKEN" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
-print(f'Found {len(data[\"result\"])} grid images')
+if not data.get('success'):
+    errs = data.get('errors') or data
+    print(f'R2 list API error (grid): {errs}', file=sys.stderr)
+    sys.exit(1)
+result = data.get('result')
+if result is None:
+    print('R2 list API returned result: null (grid)', file=sys.stderr)
+    sys.exit(1)
+print(f'Found {len(result)} grid images')
 "
 ```
 
