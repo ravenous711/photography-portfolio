@@ -347,7 +347,7 @@ function getAlbumSectionNavItems(album) {
   const digitalPhotos = album.photos || [];
   const filmSections = getAlbumFilmSections(album);
 
-  if (digitalPhotos.length && filmSections.length) {
+  if ((digitalPhotos.length || album.digitalComingSoon) && filmSections.length) {
     items.push({
       id: 'digital-section',
       label: album.digitalNavLabel || 'Digital',
