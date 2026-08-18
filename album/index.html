@@ -540,9 +540,12 @@
               window.location.replace(Routes.group(album.parentId));
             }
           }
-        } else if (album.familySlug) {
+        } else if (album.familySlug || album.audience === 'family' || String(album.audience || '').startsWith('family:')) {
+          // Family albums live under /familyalbums/ — match nav "Family Gallery"
           document.getElementById('back-link').href = '/familyalbums/';
+          document.getElementById('back-label').textContent = 'Family Gallery';
           document.getElementById('back-link-sticky').href = '/familyalbums/';
+          document.getElementById('back-label-sticky').textContent = 'Family Gallery';
         } else if ((album.audience || '').startsWith('client:')) {
           // Client albums are hidden from the public gallery — "All Albums" would
           // strand the client on a page that never links back here.
