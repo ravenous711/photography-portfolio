@@ -259,28 +259,14 @@
         .filter(a => a && (!a.hidden || group.includeHiddenSubAlbums));
     }
 
-    // chaptersPath doubles as the noun for this group's children ('albums', 'rolls', …).
-    function chapterNoun(count) {
-      const noun = group.chaptersPath || 'albums';
-      return count === 1 ? noun.replace(/s$/, '') : noun;
+    function chaptersCtaLabel() {
+      return group.highlightsCta || 'Browse all photos';
     }
 
-    function chaptersCtaLabel(count) {
-      if (group.highlightsCta) return group.highlightsCta;
-      if (!count) return 'Browse full albums';
-      return `Browse all ${count} ${chapterNoun(count)}`;
-    }
-
-    function groupDateline(chaptersMode) {
+    function groupDateline() {
       if (group.dateline === false) return '';
       if (group.dateline) return group.dateline;
-
-      const parts = [];
-      if (group.date) parts.push(group.date);
-      if (!chaptersMode) {
-        parts.push('Selected frames');
-      }
-      return parts.join(' · ');
+      return group.date || '';
     }
 
     function showGroup() {
@@ -289,9 +275,16 @@
       // With highlights: trip page = trailer only; chapters live on second page.
       // Without highlights: keep the classic all-in-one group index.
       const chaptersMode = isChaptersIndex || !hasHighlights;
-      const chapterCount = resolveSubAlbums(group.subAlbums).length;
 
-      document.getElementById('group-dateline').textContent = groupDateline(chaptersMode);
+      const datelineEl = document.getElementById('group-dateline');
+      // Trailer page: title + description + CTA. Date/count live on the albums index.
+      if (!chaptersMode && hasHighlights) {
+        datelineEl.hidden = true;
+        datelineEl.textContent = '';
+      } else {
+        datelineEl.hidden = false;
+        datelineEl.textContent = groupDateline();
+      }
       document.getElementById('group-title').textContent = group.title;
 
       const groupDesc = document.getElementById('group-desc');
@@ -332,7 +325,7 @@
       const sectionsRoot = document.getElementById('chapters');
 
       if (!chaptersMode && hasHighlights) {
-        const ctaLabel = chaptersCtaLabel(chapterCount);
+        const ctaLabel = chaptersCtaLabel();
         const ctaHref = Routes.groupChapters(group);
 
         highlightsSection.hidden = false;
