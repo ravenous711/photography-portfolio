@@ -275,7 +275,10 @@ function initScrollAnimations() {
         }
       });
     },
-    { threshold: 0.1 }
+    // Any sliver on screen counts: a tall section (a whole album grid) would
+    // never reach a 10% threshold while only its heading peeks above the fold,
+    // so the page looked like it ended there.
+    { threshold: 0, rootMargin: '0px 0px 10% 0px' }
   );
 
   observeFadeInElements();
