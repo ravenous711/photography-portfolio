@@ -90,7 +90,19 @@
   <main class="group-catalog-main">
     <!-- Highlights mode: trailer + CTA to chapter index -->
     <section class="group-highlights fade-in" id="group-highlights" hidden>
-      <div class="group-highlights-grid" id="group-highlights-grid"></div>
+      <div class="group-strip">
+        <button type="button" class="group-strip-nav group-strip-nav--prev" id="group-strip-prev" aria-label="Previous photos" hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6"/>
+          </svg>
+        </button>
+        <div class="group-strip-track" id="group-highlights-grid" tabindex="0" role="region" aria-label="Sample shots"></div>
+        <button type="button" class="group-strip-nav group-strip-nav--next" id="group-strip-next" aria-label="More photos" hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"/>
+          </svg>
+        </button>
+      </div>
       <div class="group-highlights-cta-wrap" id="group-highlights-cta-wrap" hidden>
         <a class="group-highlights-cta" id="group-highlights-cta" href="#">Browse full albums</a>
       </div>
@@ -128,9 +140,6 @@
     .album-card { display: block; text-decoration: none; }
     .group-highlights {
       margin: 0 0 clamp(2rem, 4vw, 3rem);
-    }
-    .group-highlights-grid.photo-grid {
-      width: 100%;
     }
     .group-highlights-cta-wrap {
       display: flex;
@@ -345,9 +354,11 @@
         ctaWrap.hidden = false;
         cta.href = ctaHref;
         cta.textContent = ctaLabel;
-        renderJustifiedPhotoGrid(highlightsGrid, highlights, {
-          alt: `${group.title} highlight`,
-          eagerCount: 6,
+        renderPhotoFilmstrip(highlightsGrid, highlights, {
+          alt: `${group.title} sample shot`,
+          eagerCount: 4,
+          prevBtn: document.getElementById('group-strip-prev'),
+          nextBtn: document.getElementById('group-strip-next'),
         });
         // Film rolls live on the full-albums page, not under highlights
         return;

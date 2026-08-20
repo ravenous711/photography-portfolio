@@ -2499,6 +2499,105 @@ body.group-catalog .group-catalog-header .page-title {
   color: rgba(243, 240, 233, 0.6);
 }
 
+/* ── Sample-shots film strip ──────────────────────────────── */
+.group-strip {
+  position: relative;
+}
+
+.group-strip-track {
+  --strip-height: clamp(260px, 44vh, 480px);
+  display: flex;
+  gap: clamp(6px, 0.8vw, 12px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.group-strip-track::-webkit-scrollbar {
+  display: none;
+}
+
+.group-strip-track:focus-visible {
+  outline: 1px solid rgba(243, 240, 233, 0.5);
+  outline-offset: 4px;
+}
+
+.strip-item {
+  flex: 0 0 auto;
+  height: var(--strip-height);
+  max-width: 100%;
+  scroll-snap-align: start;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.strip-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.3s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.strip-item img.loaded {
+  opacity: 1;
+}
+
+/* Arrows overlap the frames so the strip itself stays edge to edge. */
+.group-strip-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(243, 240, 233, 0.25);
+  border-radius: 50%;
+  background: rgba(12, 12, 11, 0.7);
+  color: rgba(243, 240, 233, 0.9);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.group-strip-nav:hover:not(:disabled) {
+  background: rgba(12, 12, 11, 0.9);
+  border-color: rgba(243, 240, 233, 0.6);
+}
+
+.group-strip-nav:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.group-strip-nav[hidden] {
+  display: none;
+}
+
+.group-strip-nav--prev { left: 12px; }
+.group-strip-nav--next { right: 12px; }
+
+@media (hover: none) {
+  /* Touch devices swipe — arrows would just cover photos. */
+  .group-strip-nav { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-strip-track { scroll-behavior: auto; }
+}
+
 body.group-catalog .group-catalog-main {
   padding-bottom: clamp(4rem, 8vw, 7rem);
 }
@@ -2612,6 +2711,15 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
 
   body.group-catalog .group-header-action {
     padding-bottom: 0;
+  }
+
+  body.group-catalog .group-strip-track {
+    --strip-height: clamp(220px, 38vh, 320px);
+  }
+
+  /* Leave a sliver of the next frame showing so the strip reads as swipeable. */
+  body.group-catalog .strip-item {
+    max-width: 86%;
   }
 
   body.group-catalog .group-sub-album-grid .album-card {

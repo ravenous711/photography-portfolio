@@ -888,6 +888,69 @@ const TierAuth = {
 };
 
 /**
+ * Horizontal film-strip carousel — one row of full-height frames the visitor
+ * swipes or arrows through. Uses native overflow scrolling plus scroll-snap so
+ * touch, trackpad, and keyboard all work without a slider library.
+ */
+function renderPhotoFilmstrip(trackEl, urls, { alt = '', eagerCount = 4, prevBtn = null, nextBtn = null } = {}) {
+  if (!trackEl || !urls?.length) return;
+
+  trackEl.innerHTML = '';
+
+  urls.forEach((url, i) => {
+    const item = document.createElement('div');
+    item.className = 'strip-item';
+    // Placeholder ratio keeps the strip from reflowing wildly as frames arrive.
+    item.style.aspectRatio = '3 / 2';
+
+    const img = document.createElement('img');
+    img.src = typeof gridUrl === 'function' ? gridUrl(url) : url;
+    img.alt = alt;
+    img.loading = i < eagerCount ? 'eager' : 'lazy';
+    img.decoding = 'async';
+    img.draggable = false;
+    img.addEventListener('load', () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        item.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+      }
+      img.classList.add('loaded');
+      trackEl._stripSync?.();
+    }, { once: true });
+
+    item.appendChild(img);
+    trackEl.appendChild(item);
+  });
+
+  trackEl._stripSync = () => {
+    const scrollable = trackEl.scrollWidth - trackEl.clientWidth > 4;
+    if (prevBtn) prevBtn.hidden = !scrollable;
+    if (nextBtn) nextBtn.hidden = !scrollable;
+    if (!scrollable) return;
+    const max = trackEl.scrollWidth - trackEl.clientWidth;
+    if (prevBtn) prevBtn.disabled = trackEl.scrollLeft <= 2;
+    if (nextBtn) nextBtn.disabled = trackEl.scrollLeft >= max - 2;
+  };
+
+  if (!trackEl._stripBound) {
+    trackEl._stripBound = true;
+    const sync = () => trackEl._stripSync?.();
+    const page = dir => {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      trackEl.scrollBy({
+        left: dir * trackEl.clientWidth * 0.8,
+        behavior: reduced ? 'auto' : 'smooth',
+      });
+    };
+    trackEl.addEventListener('scroll', sync, { passive: true });
+    new ResizeObserver(sync).observe(trackEl);
+    prevBtn?.addEventListener('click', () => page(-1));
+    nextBtn?.addEventListener('click', () => page(1));
+  }
+
+  requestAnimationFrame(() => trackEl._stripSync?.());
+}
+
+/**
  * Flickr-style justified highlight grid (preserves aspect ratios, fills rows).
  * Requires /js/justified-layout.js loaded before this file.
  */
