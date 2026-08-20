@@ -102,6 +102,11 @@
           </svg>
         </button>
       </div>
+      <div class="group-strip-scrollbar" id="group-strip-scrollbar" hidden>
+        <div class="group-strip-scrollbar-thumb" id="group-strip-thumb" tabindex="0"
+             role="scrollbar" aria-controls="group-highlights-grid" aria-orientation="horizontal"
+             aria-label="Scroll through photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+      </div>
     </section>
 
     <!-- Chapters index: album cards (header copy removed — title above is enough) -->
@@ -335,6 +340,8 @@
           eagerCount: 4,
           prevBtn: document.getElementById('group-strip-prev'),
           nextBtn: document.getElementById('group-strip-next'),
+          railEl: document.getElementById('group-strip-scrollbar'),
+          thumbEl: document.getElementById('group-strip-thumb'),
         });
       }
 

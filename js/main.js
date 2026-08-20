@@ -892,7 +892,14 @@ const TierAuth = {
  * swipes or arrows through. Uses native overflow scrolling plus scroll-snap so
  * touch, trackpad, and keyboard all work without a slider library.
  */
-function renderPhotoFilmstrip(trackEl, urls, { alt = '', eagerCount = 4, prevBtn = null, nextBtn = null } = {}) {
+function renderPhotoFilmstrip(trackEl, urls, {
+  alt = '',
+  eagerCount = 4,
+  prevBtn = null,
+  nextBtn = null,
+  railEl = null,
+  thumbEl = null,
+} = {}) {
   if (!trackEl || !urls?.length) return;
 
   trackEl.innerHTML = '';
@@ -921,30 +928,101 @@ function renderPhotoFilmstrip(trackEl, urls, { alt = '', eagerCount = 4, prevBtn
     trackEl.appendChild(item);
   });
 
+  const MIN_THUMB = 44;
+  const maxScroll = () => trackEl.scrollWidth - trackEl.clientWidth;
+  // How far the thumb itself can travel, which is what pointer deltas map onto.
+  const thumbRange = () => (railEl && thumbEl ? railEl.clientWidth - thumbEl.offsetWidth : 0);
+
   trackEl._stripSync = () => {
-    const scrollable = trackEl.scrollWidth - trackEl.clientWidth > 4;
+    const max = maxScroll();
+    const scrollable = max > 4;
     if (prevBtn) prevBtn.hidden = !scrollable;
     if (nextBtn) nextBtn.hidden = !scrollable;
+    if (railEl) railEl.hidden = !scrollable;
     if (!scrollable) return;
-    const max = trackEl.scrollWidth - trackEl.clientWidth;
     if (prevBtn) prevBtn.disabled = trackEl.scrollLeft <= 2;
     if (nextBtn) nextBtn.disabled = trackEl.scrollLeft >= max - 2;
+    if (!railEl || !thumbEl) return;
+
+    // Thumb width is the share of the strip on screen; its offset is how far in you are.
+    const railWidth = railEl.clientWidth;
+    const shown = trackEl.clientWidth / trackEl.scrollWidth;
+    const thumbWidth = Math.max(Math.round(shown * railWidth), MIN_THUMB);
+    const progress = Math.min(Math.max(trackEl.scrollLeft / max, 0), 1);
+    thumbEl.style.width = `${thumbWidth}px`;
+    thumbEl.style.transform = `translateX(${progress * (railWidth - thumbWidth)}px)`;
+    thumbEl.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+    thumbEl.setAttribute('aria-valuetext', `${Math.round(shown * 100)}% of the photos shown`);
   };
 
   if (!trackEl._stripBound) {
     trackEl._stripBound = true;
     const sync = () => trackEl._stripSync?.();
+    const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const page = dir => {
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       trackEl.scrollBy({
         left: dir * trackEl.clientWidth * 0.8,
-        behavior: reduced ? 'auto' : 'smooth',
+        behavior: reduced() ? 'auto' : 'smooth',
       });
     };
     trackEl.addEventListener('scroll', sync, { passive: true });
     new ResizeObserver(sync).observe(trackEl);
     prevBtn?.addEventListener('click', () => page(-1));
     nextBtn?.addEventListener('click', () => page(1));
+
+    if (railEl && thumbEl) {
+      let dragFrom = null;
+
+      const setScrubbing = on => {
+        // Smooth scrolling and snapping both fight a drag, so they pause mid-scrub.
+        trackEl.classList.toggle('is-scrubbing', on);
+        railEl.classList.toggle('is-scrubbing', on);
+      };
+
+      thumbEl.addEventListener('pointerdown', e => {
+        const range = thumbRange();
+        if (range <= 0) return;
+        dragFrom = { x: e.clientX, scrollLeft: trackEl.scrollLeft, range };
+        thumbEl.setPointerCapture(e.pointerId);
+        setScrubbing(true);
+        e.preventDefault();
+      });
+
+      thumbEl.addEventListener('pointermove', e => {
+        if (!dragFrom) return;
+        const delta = (e.clientX - dragFrom.x) / dragFrom.range;
+        trackEl.scrollLeft = dragFrom.scrollLeft + delta * maxScroll();
+      });
+
+      const endDrag = e => {
+        if (!dragFrom) return;
+        dragFrom = null;
+        if (thumbEl.hasPointerCapture?.(e.pointerId)) thumbEl.releasePointerCapture(e.pointerId);
+        setScrubbing(false);
+      };
+      thumbEl.addEventListener('pointerup', endDrag);
+      thumbEl.addEventListener('pointercancel', endDrag);
+
+      // Clicking the bare rail jumps the thumb's centre to the pointer.
+      railEl.addEventListener('pointerdown', e => {
+        if (dragFrom || e.target === thumbEl) return;
+        const range = thumbRange();
+        if (range <= 0) return;
+        const offset = e.clientX - railEl.getBoundingClientRect().left - thumbEl.offsetWidth / 2;
+        const clamped = Math.min(Math.max(offset, 0), range);
+        trackEl.scrollTo({
+          left: (clamped / range) * maxScroll(),
+          behavior: reduced() ? 'auto' : 'smooth',
+        });
+      });
+
+      thumbEl.addEventListener('keydown', e => {
+        const jump = { ArrowLeft: () => page(-1), ArrowRight: () => page(1) }[e.key];
+        if (!jump) return;
+        jump();
+        e.preventDefault();
+      });
+    }
   }
 
   requestAnimationFrame(() => trackEl._stripSync?.());

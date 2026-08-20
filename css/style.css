@@ -2589,6 +2589,59 @@ body.group-catalog .group-catalog-header .page-title {
   .group-strip-nav { display: none; }
 }
 
+/* Progress rail: the thumb's width is the share of the strip on screen, and it
+   can be dragged to scrub. */
+.group-strip-scrollbar {
+  position: relative;
+  height: 3px;
+  margin-top: clamp(0.9rem, 1.5vw, 1.35rem);
+  background: rgba(243, 240, 233, 0.12);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.group-strip-scrollbar[hidden] {
+  display: none;
+}
+
+.group-strip-scrollbar-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(243, 240, 233, 0.5);
+  cursor: grab;
+  touch-action: none;
+  transition: background 0.2s;
+}
+
+/* The rail is a hairline, so the thumb takes a taller invisible grab target. */
+.group-strip-scrollbar-thumb::after {
+  content: '';
+  position: absolute;
+  inset: -11px 0;
+}
+
+.group-strip-scrollbar:hover .group-strip-scrollbar-thumb,
+.group-strip-scrollbar-thumb:focus-visible {
+  background: rgba(243, 240, 233, 0.8);
+}
+
+.group-strip-scrollbar-thumb:focus-visible {
+  outline: 1px solid rgba(243, 240, 233, 0.6);
+  outline-offset: 5px;
+}
+
+.group-strip-scrollbar.is-scrubbing .group-strip-scrollbar-thumb {
+  background: rgba(243, 240, 233, 0.95);
+  cursor: grabbing;
+}
+
+.group-strip-track.is-scrubbing {
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .group-strip-track { scroll-behavior: auto; }
 }
