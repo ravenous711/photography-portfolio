@@ -40,7 +40,6 @@ const ALBUMS_ITALY_2026 = [
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_338.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_423.jpg`,
       `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E005.jpg`,
-      `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_011.jpg`,
       `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_034.jpg`,
       `${R2_BASE_URL}/Italy/Assisi/Digital/assisi_055.jpg`,
       `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E020.jpg`,
