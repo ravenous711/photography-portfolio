@@ -2641,6 +2641,11 @@ body.group-catalog .group-sub-section-title {
   margin-bottom: 1.1rem;
 }
 
+/* Target for the header CTA now that the covers live on this page. */
+body.group-catalog #chapters {
+  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
+}
+
 body.group-catalog .group-sub-album-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1rem, 2vw, 1.5rem);

@@ -323,26 +323,32 @@
       const headerCta = document.getElementById('group-header-cta');
       const sectionsRoot = document.getElementById('chapters');
 
-      if (!chaptersMode && hasHighlights) {
-        highlightsSection.hidden = false;
-        sectionsRoot.hidden = true;
-        headerAction.hidden = false;
-        headerCta.href = Routes.groupChapters(group);
-        headerCta.textContent = chaptersCtaLabel();
+      // The trailer strip rides above the album covers on the group page itself;
+      // the /albums/ route stays as a plain index for anyone landing there directly.
+      const showStrip = !isChaptersIndex && hasHighlights;
+      highlightsSection.hidden = !showStrip;
+      sectionsRoot.hidden = false;
+
+      if (showStrip) {
         renderPhotoFilmstrip(highlightsGrid, highlights, {
-          alt: `${group.title} sample shot`,
+          alt: `${group.title} photo`,
           eagerCount: 4,
           prevBtn: document.getElementById('group-strip-prev'),
           nextBtn: document.getElementById('group-strip-next'),
         });
-        // Film rolls live on the full-albums page, not under highlights
-        return;
       }
 
-      // Chapters index (or classic group with no highlights)
-      highlightsSection.hidden = true;
-      sectionsRoot.hidden = false;
-      headerAction.hidden = true;
+      // Covers now sit on this page, so the header button jumps to them.
+      headerAction.hidden = !showStrip;
+      if (showStrip) {
+        headerCta.href = '#chapters';
+        headerCta.textContent = chaptersCtaLabel();
+        headerCta.addEventListener('click', e => {
+          e.preventDefault();
+          const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          sectionsRoot.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+        });
+      }
 
       function appendAlbumCard(grid, album) {
         const card = document.createElement('a');
@@ -387,10 +393,11 @@
           renderSection(sec.title, resolveSubAlbums(sec.albums), { first: i === 0 });
         });
       } else {
-        renderSection('', resolveSubAlbums(group.subAlbums), { first: true });
+        // Under a strip the covers need a label to read as a separate band.
+        renderSection(showStrip ? (group.chaptersTitle || 'Albums') : '', resolveSubAlbums(group.subAlbums), { first: true });
       }
 
-      // On the full-albums page, city/place cards first; film rolls strip at the bottom.
+      // Covers first, film rolls ledger at the bottom.
       // Catalog film groups already show every roll as a cover card — skip the text strip.
       if (!group.includeHiddenSubAlbums) {
         renderFilmRollLinks(group);
