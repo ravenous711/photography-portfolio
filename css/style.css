@@ -2627,6 +2627,18 @@ body.group-catalog .group-sub-section + .group-sub-section {
   margin-top: clamp(3rem, 6vw, 5rem);
 }
 
+body.group-catalog .group-chapters-heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: rgba(243,240,233,0.72);
+  margin: 0 0 clamp(1.4rem, 2.8vw, 2rem);
+  padding-top: clamp(1.2rem, 2.4vw, 1.75rem);
+  border-top: 1px solid rgba(243,240,233,0.14);
+}
+
 body.group-catalog .group-sub-section-title {
   font-family: var(--font-serif);
   font-size: clamp(1.25rem, 2.5vw, 1.75rem);

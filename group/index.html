@@ -354,13 +354,21 @@
         sectionsRoot.appendChild(section);
       }
 
+      // Under the strip the covers need a band title so it's clear the full
+      // albums follow the sample frames.
+      if (showStrip) {
+        const bandHeading = document.createElement('h2');
+        bandHeading.className = 'group-chapters-heading';
+        bandHeading.textContent = 'Full albums';
+        sectionsRoot.appendChild(bandHeading);
+      }
+
       if (group.subAlbumSections?.length) {
         group.subAlbumSections.forEach((sec, i) => {
           renderSection(sec.title, resolveSubAlbums(sec.albums), { first: i === 0 });
         });
       } else {
-        // Under a strip the covers need a label to read as a separate band.
-        renderSection(showStrip ? (group.chaptersTitle || 'Albums') : '', resolveSubAlbums(group.subAlbums), { first: true });
+        renderSection('', resolveSubAlbums(group.subAlbums), { first: true });
       }
 
       // Covers first, film rolls ledger at the bottom.
