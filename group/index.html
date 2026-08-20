@@ -56,12 +56,12 @@
       <div class="group-header-copy">
         <p class="group-page-dateline" id="group-dateline"></p>
         <h1 class="page-title" id="group-title">–</h1>
-        <p class="group-page-desc" id="group-desc"></p>
       </div>
       <div class="group-header-action" id="group-header-action" hidden>
         <a class="group-highlights-cta" id="group-header-cta" href="#"></a>
       </div>
     </div>
+    <p class="group-page-desc" id="group-desc"></p>
   </header>
 
   <!-- ── Password Modal (shown for protected groups) ── -->
@@ -102,9 +102,6 @@
           </svg>
         </button>
       </div>
-      <div class="group-highlights-cta-wrap" id="group-highlights-cta-wrap" hidden>
-        <a class="group-highlights-cta" id="group-highlights-cta" href="#">Browse full albums</a>
-      </div>
     </section>
 
     <!-- Chapters index: album cards (header copy removed — title above is enough) -->
@@ -139,11 +136,6 @@
     .album-card { display: block; text-decoration: none; }
     .group-highlights {
       margin: 0 0 clamp(2rem, 4vw, 3rem);
-    }
-    .group-highlights-cta-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 2rem;
     }
     .group-highlights-cta {
       display: inline-block;
@@ -327,24 +319,16 @@
 
       const highlightsSection = document.getElementById('group-highlights');
       const highlightsGrid = document.getElementById('group-highlights-grid');
-      const ctaWrap = document.getElementById('group-highlights-cta-wrap');
-      const cta = document.getElementById('group-highlights-cta');
       const headerAction = document.getElementById('group-header-action');
       const headerCta = document.getElementById('group-header-cta');
       const sectionsRoot = document.getElementById('chapters');
 
       if (!chaptersMode && hasHighlights) {
-        const ctaLabel = chaptersCtaLabel();
-        const ctaHref = Routes.groupChapters(group);
-
         highlightsSection.hidden = false;
         sectionsRoot.hidden = true;
         headerAction.hidden = false;
-        headerCta.href = ctaHref;
-        headerCta.textContent = ctaLabel;
-        ctaWrap.hidden = false;
-        cta.href = ctaHref;
-        cta.textContent = ctaLabel;
+        headerCta.href = Routes.groupChapters(group);
+        headerCta.textContent = chaptersCtaLabel();
         renderPhotoFilmstrip(highlightsGrid, highlights, {
           alt: `${group.title} sample shot`,
           eagerCount: 4,

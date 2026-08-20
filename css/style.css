@@ -2467,24 +2467,31 @@ body.group-catalog .group-catalog-header .page-title {
 
 .group-header-copy {
   min-width: 0;
-  flex: 1 1 22rem;
+  flex: 1 1 18rem;
 }
 
 .group-header-action {
   flex: 0 0 auto;
-  padding-bottom: 0.4rem;
+  /* Nudged so the button's optical centre lands on the title's baseline. */
+  padding-bottom: 0.35rem;
 }
 
 .group-header-action[hidden] {
   display: none;
 }
 
+/* Sits under the whole title/CTA row so the row stays a single clean line
+   whether or not a group has a description. */
 .group-page-desc {
   max-width: 46ch;
-  margin: 1rem 0 0;
+  margin: 0.9rem 0 0;
   font-size: 0.95rem;
   line-height: 1.65;
   color: rgba(243, 240, 233, 0.6);
+}
+
+.group-page-desc:empty {
+  display: none;
 }
 
 /* ── Sample-shots film strip ──────────────────────────────── */
