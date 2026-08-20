@@ -2495,20 +2495,29 @@ body.group-catalog .group-catalog-header .page-title {
 }
 
 /* ── Sample-shots film strip ──────────────────────────────── */
+/* Breaks the 1200px column so frames run off both edges of the screen.
+   --strip-gutter keeps the first frame lined up with the title above it. */
 .group-strip {
+  --strip-gutter: max(1.5rem, calc((100vw - 1200px) / 2));
   position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 .group-strip-track {
-  --strip-height: clamp(260px, 44vh, 480px);
+  --strip-height: clamp(340px, 66vh, 700px);
+  --strip-overscan: 34px;
   display: flex;
-  gap: clamp(6px, 0.8vw, 12px);
+  gap: clamp(8px, 1vw, 16px);
+  padding-inline: var(--strip-gutter);
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
+  scroll-padding-inline-start: var(--strip-gutter);
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
+  cursor: grab;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -2521,22 +2530,36 @@ body.group-catalog .group-catalog-header .page-title {
   outline-offset: 4px;
 }
 
+.group-strip-track.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+.group-strip-track.is-dragging .strip-item img {
+  transition: none;
+}
+
 .strip-item {
   flex: 0 0 auto;
   height: var(--strip-height);
-  max-width: 100%;
   scroll-snap-align: start;
   overflow: hidden;
   background: var(--color-surface);
+  transform: scale(var(--recede, 1));
+  transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* Wider than its frame so it can drift without exposing an edge. */
 .strip-item img {
-  width: 100%;
+  width: calc(100% + var(--strip-overscan) * 2);
   height: 100%;
+  margin-left: calc(var(--strip-overscan) * -1);
   object-fit: cover;
   display: block;
   opacity: 0;
-  transition: opacity 0.3s;
+  transform: translate3d(var(--drift, 0px), 0, 0);
+  transition: opacity 0.5s ease, transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
   -webkit-user-select: none;
   user-select: none;
 }
@@ -2581,8 +2604,8 @@ body.group-catalog .group-catalog-header .page-title {
   display: none;
 }
 
-.group-strip-nav--prev { left: 12px; }
-.group-strip-nav--next { right: 12px; }
+.group-strip-nav--prev { left: clamp(12px, calc(var(--strip-gutter) - 60px), 48px); }
+.group-strip-nav--next { right: clamp(12px, calc(var(--strip-gutter) - 60px), 48px); }
 
 @media (hover: none) {
   /* Touch devices swipe — arrows would just cover photos. */
@@ -2591,6 +2614,12 @@ body.group-catalog .group-catalog-header .page-title {
 
 @media (prefers-reduced-motion: reduce) {
   .group-strip-track { scroll-behavior: auto; }
+
+  .strip-item,
+  .strip-item img {
+    transform: none;
+    transition: opacity 0.3s;
+  }
 }
 
 body.group-catalog .group-catalog-main {
@@ -2708,13 +2737,18 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
     padding-bottom: 0;
   }
 
+  body.group-catalog .group-strip {
+    --strip-gutter: 1.25rem;
+  }
+
   body.group-catalog .group-strip-track {
-    --strip-height: clamp(220px, 38vh, 320px);
+    --strip-height: clamp(280px, 52vh, 440px);
+    --strip-overscan: 20px;
   }
 
   /* Leave a sliver of the next frame showing so the strip reads as swipeable. */
   body.group-catalog .strip-item {
-    max-width: 86%;
+    max-width: 84%;
   }
 
   body.group-catalog .group-sub-album-grid .album-card {

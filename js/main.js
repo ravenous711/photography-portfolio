@@ -921,30 +921,93 @@ function renderPhotoFilmstrip(trackEl, urls, { alt = '', eagerCount = 4, prevBtn
     trackEl.appendChild(item);
   });
 
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Frames drift against the scroll direction and edge frames sit back a little,
+  // so the strip has depth instead of sliding as one flat band.
+  const paint = () => {
+    const view = trackEl.getBoundingClientRect();
+    const mid = view.left + view.width / 2;
+    const reach = view.width / 2 + 200;
+
+    for (const item of trackEl.children) {
+      const box = item.getBoundingClientRect();
+      if (box.right < view.left - 300 || box.left > view.right + 300) continue;
+      const offset = Math.max(-1, Math.min(1, (box.left + box.width / 2 - mid) / reach));
+      item.style.setProperty('--drift', `${(offset * -26).toFixed(2)}px`);
+      item.style.setProperty('--recede', (1 - Math.abs(offset) * 0.05).toFixed(4));
+    }
+  };
+
   trackEl._stripSync = () => {
     const scrollable = trackEl.scrollWidth - trackEl.clientWidth > 4;
     if (prevBtn) prevBtn.hidden = !scrollable;
     if (nextBtn) nextBtn.hidden = !scrollable;
-    if (!scrollable) return;
-    const max = trackEl.scrollWidth - trackEl.clientWidth;
-    if (prevBtn) prevBtn.disabled = trackEl.scrollLeft <= 2;
-    if (nextBtn) nextBtn.disabled = trackEl.scrollLeft >= max - 2;
+    if (scrollable) {
+      const max = trackEl.scrollWidth - trackEl.clientWidth;
+      if (prevBtn) prevBtn.disabled = trackEl.scrollLeft <= 2;
+      if (nextBtn) nextBtn.disabled = trackEl.scrollLeft >= max - 2;
+    }
+    if (!reducedMotion()) paint();
   };
 
   if (!trackEl._stripBound) {
     trackEl._stripBound = true;
-    const sync = () => trackEl._stripSync?.();
-    const page = dir => {
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      trackEl.scrollBy({
-        left: dir * trackEl.clientWidth * 0.8,
-        behavior: reduced ? 'auto' : 'smooth',
+
+    let queued = false;
+    const sync = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        trackEl._stripSync?.();
       });
     };
+
+    const page = dir => trackEl.scrollBy({
+      left: dir * trackEl.clientWidth * 0.8,
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    });
+
     trackEl.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
     new ResizeObserver(sync).observe(trackEl);
     prevBtn?.addEventListener('click', () => page(-1));
     nextBtn?.addEventListener('click', () => page(1));
+
+    // Click-and-drag on pointer devices; touch keeps native momentum scrolling.
+    let dragging = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = 0;
+
+    trackEl.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'touch' || e.button !== 0) return;
+      dragging = true;
+      moved = 0;
+      startX = e.clientX;
+      startScroll = trackEl.scrollLeft;
+      trackEl.classList.add('is-dragging');
+    });
+
+    trackEl.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 3 && !trackEl.hasPointerCapture(e.pointerId)) {
+        trackEl.setPointerCapture(e.pointerId);
+      }
+      moved = Math.max(moved, Math.abs(dx));
+      trackEl.scrollLeft = startScroll - dx;
+    });
+
+    const endDrag = e => {
+      if (!dragging) return;
+      dragging = false;
+      trackEl.classList.remove('is-dragging');
+      if (trackEl.hasPointerCapture(e.pointerId)) trackEl.releasePointerCapture(e.pointerId);
+    };
+    trackEl.addEventListener('pointerup', endDrag);
+    trackEl.addEventListener('pointercancel', endDrag);
   }
 
   requestAnimationFrame(() => trackEl._stripSync?.());
