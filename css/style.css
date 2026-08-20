@@ -2455,33 +2455,6 @@ body.group-catalog .group-catalog-header .page-title {
   font-size: clamp(2rem, 5vw, 3.5rem);
 }
 
-/* Title block and the "browse everything" CTA share a baseline so the opening
-   reads as one line of thought rather than a stack of centred labels. */
-.group-header-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.group-header-copy {
-  min-width: 0;
-  flex: 1 1 18rem;
-}
-
-.group-header-action {
-  flex: 0 0 auto;
-  /* Nudged so the button's optical centre lands on the title's baseline. */
-  padding-bottom: 0.35rem;
-}
-
-.group-header-action[hidden] {
-  display: none;
-}
-
-/* Sits under the whole title/CTA row so the row stays a single clean line
-   whether or not a group has a description. */
 .group-page-desc {
   max-width: 46ch;
   margin: 0.9rem 0 0;
@@ -2665,28 +2638,23 @@ body.group-catalog .group-sub-section-title {
   margin-bottom: 1.1rem;
 }
 
-/* Target for the header CTA now that the covers live on this page. */
-body.group-catalog #chapters {
-  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
-}
-
 body.group-catalog .group-sub-album-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.7rem, 1.4vw, 1rem);
 }
 
 body.group-catalog .group-sub-album-grid .album-card {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 3 / 2;
   width: 100%;
   height: auto;
 }
 
 body.group-catalog .group-sub-album-grid .album-card-overlay {
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: 0.75rem 0.9rem;
 }
 
 body.group-catalog .group-sub-album-grid .album-card-title {
-  font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
 }
 
 body.group-catalog .group-film-rolls {
@@ -2742,6 +2710,12 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
   color: #f3f0e9;
 }
 
+@media (max-width: 900px) {
+  body.group-catalog .group-sub-album-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   body.gallery-catalog .page-header--catalog,
   body.gallery-catalog .gallery-main {
@@ -2762,10 +2736,6 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
     width: calc(100% - 2.5rem);
   }
 
-  body.group-catalog .group-header-action {
-    padding-bottom: 0;
-  }
-
   body.group-catalog .group-strip-track {
     --strip-height: clamp(250px, 44vh, 380px);
   }
@@ -2775,13 +2745,14 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
     max-width: 86%;
   }
 
+  body.group-catalog .group-sub-album-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
   body.group-catalog .group-sub-album-grid .album-card {
     height: auto;
     aspect-ratio: 4 / 3;
-  }
-
-  body.group-catalog .group-sub-album-grid {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   body.group-catalog .group-film-roll-card {

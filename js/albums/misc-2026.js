@@ -34,6 +34,7 @@ const ALBUMS_MISC_2026 = [
       `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_03.jpg`,
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E003.jpg`,
       `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E005.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E020.jpg`,
       `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_02.jpg`,
     ],
     // Flat list kept for nav/siblings; sections drive the group page layout.
@@ -226,7 +227,6 @@ const ALBUMS_MISC_2026 = [
     digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg`,
     // Project trailer on the album page; full set (digital + film) follows below.
-    highlightsCta: 'Browse full album',
     highlights: [
       `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0215.jpg`,
       `${R2_BASE_URL}/Red-Rock-Canyon-2026/20260121-_DSF0362.jpg`,
