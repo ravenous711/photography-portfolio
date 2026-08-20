@@ -52,9 +52,16 @@
       </svg>
       <span id="back-link-label">Personal work</span>
     </a>
-    <p class="group-page-dateline" id="group-dateline"></p>
-    <h1 class="page-title" id="group-title">–</h1>
-    <p class="group-page-desc mt-4 text-sm" id="group-desc" style="color:var(--color-muted);max-width:420px"></p>
+    <div class="group-header-row">
+      <div class="group-header-copy">
+        <p class="group-page-dateline" id="group-dateline"></p>
+        <h1 class="page-title" id="group-title">–</h1>
+        <p class="group-page-desc" id="group-desc"></p>
+      </div>
+      <div class="group-header-action" id="group-header-action" hidden>
+        <a class="group-highlights-cta" id="group-header-cta" href="#"></a>
+      </div>
+    </div>
   </header>
 
   <!-- ── Password Modal (shown for protected groups) ── -->
@@ -246,14 +253,45 @@
       });
     }
 
+    function resolveSubAlbums(ids) {
+      return (ids || [])
+        .map(id => ALBUMS.find(a => a.id === id))
+        .filter(a => a && (!a.hidden || group.includeHiddenSubAlbums));
+    }
+
+    // chaptersPath doubles as the noun for this group's children ('albums', 'rolls', …).
+    function chapterNoun(count) {
+      const noun = group.chaptersPath || 'albums';
+      return count === 1 ? noun.replace(/s$/, '') : noun;
+    }
+
+    function chaptersCtaLabel(count) {
+      if (group.highlightsCta) return group.highlightsCta;
+      if (!count) return 'Browse full albums';
+      return `Browse all ${count} ${chapterNoun(count)}`;
+    }
+
+    function groupDateline(chaptersMode) {
+      if (group.dateline === false) return '';
+      if (group.dateline) return group.dateline;
+
+      const parts = [];
+      if (group.date) parts.push(group.date);
+      if (!chaptersMode) {
+        parts.push('Selected frames');
+      }
+      return parts.join(' · ');
+    }
+
     function showGroup() {
       const highlights = Array.isArray(group.highlights) ? group.highlights.filter(Boolean) : [];
       const hasHighlights = highlights.length > 0;
       // With highlights: trip page = trailer only; chapters live on second page.
       // Without highlights: keep the classic all-in-one group index.
       const chaptersMode = isChaptersIndex || !hasHighlights;
+      const chapterCount = resolveSubAlbums(group.subAlbums).length;
 
-      document.getElementById('group-dateline').textContent = albumDateline(group);
+      document.getElementById('group-dateline').textContent = groupDateline(chaptersMode);
       document.getElementById('group-title').textContent = group.title;
 
       const groupDesc = document.getElementById('group-desc');
@@ -289,14 +327,22 @@
       const highlightsGrid = document.getElementById('group-highlights-grid');
       const ctaWrap = document.getElementById('group-highlights-cta-wrap');
       const cta = document.getElementById('group-highlights-cta');
+      const headerAction = document.getElementById('group-header-action');
+      const headerCta = document.getElementById('group-header-cta');
       const sectionsRoot = document.getElementById('chapters');
 
       if (!chaptersMode && hasHighlights) {
+        const ctaLabel = chaptersCtaLabel(chapterCount);
+        const ctaHref = Routes.groupChapters(group);
+
         highlightsSection.hidden = false;
         sectionsRoot.hidden = true;
+        headerAction.hidden = false;
+        headerCta.href = ctaHref;
+        headerCta.textContent = ctaLabel;
         ctaWrap.hidden = false;
-        cta.href = Routes.groupChapters(group);
-        cta.textContent = group.highlightsCta || 'Browse full albums';
+        cta.href = ctaHref;
+        cta.textContent = ctaLabel;
         renderJustifiedPhotoGrid(highlightsGrid, highlights, {
           alt: `${group.title} highlight`,
           eagerCount: 6,
@@ -308,12 +354,7 @@
       // Chapters index (or classic group with no highlights)
       highlightsSection.hidden = true;
       sectionsRoot.hidden = false;
-
-      function resolveSubAlbums(ids) {
-        return (ids || [])
-          .map(id => ALBUMS.find(a => a.id === id))
-          .filter(a => a && (!a.hidden || group.includeHiddenSubAlbums));
-      }
+      headerAction.hidden = true;
 
       function appendAlbumCard(grid, album) {
         const card = document.createElement('a');

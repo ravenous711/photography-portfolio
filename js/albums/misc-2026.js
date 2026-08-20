@@ -23,7 +23,6 @@ const ALBUMS_MISC_2026 = [
     audience: 'public',
     protected: false,
     includeHiddenSubAlbums: true,
-    highlightsCta: 'Browse full albums',
     chaptersTitle: 'Albums',
     chaptersPath: 'rolls',
     // Collection trailer — a few frames across rolls; full rolls live below.
@@ -34,7 +33,7 @@ const ALBUMS_MISC_2026 = [
       `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_14.jpg`,
       `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_03.jpg`,
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E003.jpg`,
-      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E003.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E005.jpg`,
       `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_02.jpg`,
     ],
     // Flat list kept for nav/siblings; sections drive the group page layout.

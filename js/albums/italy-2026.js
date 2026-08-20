@@ -25,7 +25,6 @@ const ALBUMS_ITALY_2026 = [
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
     subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome'],
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
-    highlightsCta: 'Browse full albums',
     chaptersTitle: 'Albums',
     chaptersPath: 'albums',
     // Trip trailer on the Italy group page (~15 frames). Refine anytime; city curated[] is separate.
@@ -36,6 +35,7 @@ const ALBUMS_ITALY_2026 = [
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_006.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_085.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
+      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E005.jpg`,
       `${R2_BASE_URL}/Italy/Rome/Digital/rome_036.jpg`,
       `${R2_BASE_URL}/Italy/Rome/Digital/rome_132.jpg`,
       `${R2_BASE_URL}/Italy/Rome/Digital/rome_495.jpg`,

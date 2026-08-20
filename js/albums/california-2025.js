@@ -19,7 +19,6 @@ const ALBUMS_CALIFORNIA = [
     protected: false,
     subAlbums: ['california-santa-cruz', 'california-yosemite'],
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
-    highlightsCta: 'Browse full albums',
     chaptersTitle: 'Albums',
     chaptersPath: 'places',
     // Trip trailer — refine anytime; place curated[] is separate.
