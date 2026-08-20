@@ -865,7 +865,7 @@ const ALBUMS_ITALY_2026 = [
     date: 'May–June 2026',
     audience: 'public',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E017.jpg`,
+    coverImage: `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E031.jpg`,
     photos: [
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E001.jpg`,
       `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E003.jpg`,
