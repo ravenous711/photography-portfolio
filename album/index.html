@@ -115,9 +115,27 @@
       <div class="gold-rule album-header-rule"></div>
     </header>
 
-    <!-- Standalone project trailer (Italy-style highlights → full archive below) -->
+    <!-- Standalone project trailer: film strip, then the full archive below -->
     <section id="album-highlights" class="album-highlights px-6 md:px-12" hidden>
-      <div class="album-highlights-grid photo-grid" id="album-highlights-grid"></div>
+      <div class="group-strip">
+        <button type="button" class="group-strip-nav group-strip-nav--prev" id="album-strip-prev" aria-label="Previous photos" hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6"/>
+          </svg>
+        </button>
+        <div class="group-strip-track" id="album-highlights-grid" tabindex="0" role="region" aria-label="Photos from this collection"></div>
+        <button type="button" class="group-strip-nav group-strip-nav--next" id="album-strip-next" aria-label="More photos" hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"/>
+          </svg>
+        </button>
+      </div>
+      <div class="group-strip-scrollbar" id="album-strip-scrollbar" hidden>
+        <div class="group-strip-scrollbar-thumb" id="album-strip-thumb" tabindex="0"
+             role="scrollbar" aria-controls="album-highlights-grid" aria-orientation="horizontal"
+             aria-label="Scroll through photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+      </div>
+      <h2 class="album-archive-heading">Full album</h2>
     </section>
 
     <!-- Full/curated toggle + favorites note -->
@@ -1542,9 +1560,13 @@
         : [];
       if (albumHighlights && albumHighlightsGrid && trailer.length) {
         albumHighlights.hidden = false;
-        renderJustifiedPhotoGrid(albumHighlightsGrid, trailer, {
-          alt: `${albumDisplayTitle(album)} highlight`,
-          eagerCount: 6,
+        renderPhotoFilmstrip(albumHighlightsGrid, trailer, {
+          alt: `${albumDisplayTitle(album)} photo`,
+          eagerCount: 4,
+          prevBtn: document.getElementById('album-strip-prev'),
+          nextBtn: document.getElementById('album-strip-next'),
+          railEl: document.getElementById('album-strip-scrollbar'),
+          thumbEl: document.getElementById('album-strip-thumb'),
         });
       } else if (albumHighlights) {
         albumHighlights.hidden = true;
@@ -2814,11 +2836,19 @@
   <style>
     /* ── Project highlights trailer (standalone albums) ── */
     .album-highlights {
-      padding-top: 0.5rem;
-      padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+      padding-top: 0.35rem;
+      padding-bottom: clamp(2.5rem, 5vw, 4rem);
     }
-    .album-highlights-grid.photo-grid {
-      width: 100%;
+    .album-archive-heading {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.025em;
+      color: rgba(243,240,233,0.72);
+      margin: clamp(3.5rem, 7vw, 6rem) 0 clamp(1.4rem, 2.8vw, 2rem);
+      padding-top: clamp(1.2rem, 2.4vw, 1.75rem);
+      border-top: 1px solid rgba(243,240,233,0.14);
     }
     #digital-section {
       scroll-margin-top: 5.5rem;

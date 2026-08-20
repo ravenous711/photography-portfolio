@@ -2750,12 +2750,14 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
     width: calc(100% - 2.5rem);
   }
 
-  body.group-catalog .group-strip-track {
+  body.group-catalog .group-strip-track,
+  .album-highlights .group-strip-track {
     --strip-height: clamp(250px, 44vh, 380px);
   }
 
   /* Leave a sliver of the next frame showing so the strip reads as swipeable. */
-  body.group-catalog .strip-item {
+  body.group-catalog .strip-item,
+  .album-highlights .strip-item {
     max-width: 86%;
   }
 
