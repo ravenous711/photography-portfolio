@@ -30,6 +30,8 @@ const ALBUMS_ITALY_2026 = [
     // Trip trailer on the Italy group page (~15 frames). Refine anytime; city curated[] is separate.
     highlights: [
       `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_381.jpg`,
+      `${R2_BASE_URL}/Italy/Venice/Digital/venice_457.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_006.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_085.jpg`,
       `${R2_BASE_URL}/Italy/Florence/Digital/florence_400.jpg`,
