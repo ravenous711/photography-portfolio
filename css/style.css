@@ -2447,6 +2447,10 @@ body.group-catalog .group-catalog-header .group-page-dateline {
   margin-bottom: 0.75rem;
 }
 
+body.group-catalog .group-catalog-header .group-page-dateline[hidden] {
+  display: none;
+}
+
 body.group-catalog .group-catalog-header .page-title {
   font-size: clamp(2rem, 5vw, 3.5rem);
 }
