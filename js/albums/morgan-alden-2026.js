@@ -14,7 +14,7 @@ const ALBUMS_MORGAN_ALDEN_2026 = [
     audience: 'public',
     hidden: true,
     protected: false,
-    digitalLabel: 'Fujifilm X-T5',
+    digitalLabel: 'Fujifilm X100VI',
     coverImage: `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-01.jpg`,
     photos: [
       `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-01.jpg`,
