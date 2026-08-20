@@ -2453,18 +2453,6 @@ body.group-catalog .group-catalog-header .group-page-dateline[hidden] {
 
 body.group-catalog .group-catalog-header .page-title {
   font-size: clamp(2rem, 5vw, 3.5rem);
-  margin-bottom: 0;
-}
-
-.group-page-subtitle {
-  margin: 0.45rem 0 0;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  color: rgba(243, 240, 233, 0.55);
-}
-
-.group-page-subtitle[hidden] {
-  display: none;
 }
 
 /* Title block and the "browse everything" CTA share a baseline so the opening
