@@ -1140,7 +1140,7 @@ const ALBUMS_ITALY_2026 = [
         location: 'Italy',
     date: 'June 2026',
     protected: false,
-    coverImage: `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_16.jpg`,
+    coverImage: `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_04.jpg`,
     photos: [
       `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_01.jpg`,
       `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_02.jpg`,
