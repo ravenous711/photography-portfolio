@@ -374,6 +374,7 @@
   <script src="/js/albums/california-2025.js"></script>
   <script src="/js/albums/misc-2026.js"></script>
   <script src="/js/albums/italy-2026.js"></script>
+  <script src="/js/albums/morgan-alden-2026.js"></script>
   <script src="/js/albums.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
@@ -546,9 +547,12 @@
           document.getElementById('back-label').textContent = 'Family Gallery';
           document.getElementById('back-link-sticky').href = '/familyalbums/';
           document.getElementById('back-label-sticky').textContent = 'Family Gallery';
-        } else if ((album.audience || '').startsWith('client:')) {
-          // Client albums are hidden from the public gallery — "All Albums" would
-          // strand the client on a page that never links back here.
+        } else if (
+          (album.audience || '').startsWith('client:')
+          || (album.hidden && !album.parentId && !album.familySlug)
+        ) {
+          // Client and unlisted albums are not in the public gallery — a
+          // "Personal work" back link would strand the recipient there.
           document.getElementById('back-link').hidden = true;
           document.getElementById('back-link-sticky').hidden = true;
         }

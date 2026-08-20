@@ -11,6 +11,7 @@
 //   california-2025.js  — California 2025 trip
 //   misc-2026.js        — standalone 2026 public albums (Film Rolls, Red Rock)
 //   italy-2026.js       — Italy 2026 trip (cities + film rolls)
+//   morgan-alden-2026.js — unlisted public album (Morgan and Alden)
 //
 // ── To add a new trip or album group ──────────────────────────
 //   1. Create js/albums/my-trip-YYYY.js
@@ -59,4 +60,5 @@ const ALBUMS = [
   ...ALBUMS_CALIFORNIA,
   ...ALBUMS_MISC_2026,
   ...ALBUMS_ITALY_2026,
+  ...ALBUMS_MORGAN_ALDEN_2026,
 ];

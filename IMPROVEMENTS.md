@@ -59,7 +59,7 @@ done, move it out of Open, add a Changelog line.
 | State | Album | Notes |
 |-------|-------|-------|
 | Queued | **London 2025** | Empty hidden shell — **ALBUM-1** |
-| In progress | — | |
+| In progress | **Morgan and Alden** | Unlisted public group (digital + film); public R2 |
 | Done recently | Moksha Yoga (+ renumber) | Private R2 + D1 access code |
 
 Album workflow: **add-portfolio-album** skill. Update this table when queueing/shipping.

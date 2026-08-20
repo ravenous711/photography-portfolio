@@ -1208,6 +1208,10 @@ body:has(.hero) #mobile-menu .mobile-menu-sheet {
   margin-bottom: 0.75rem;
 }
 
+.album-page-header #back-link[hidden] {
+  display: none;
+}
+
 /* UX-8: "More in <trip>" sibling-city switcher in the album page header. */
 .album-sibling-nav {
   display: flex;
@@ -1335,6 +1339,11 @@ a.album-sibling-link:hover {
 
 .album-header-toolbar.is-stuck .album-toolbar-back {
   display: inline-flex;
+}
+
+.album-header-toolbar .album-toolbar-back[hidden],
+.album-header-toolbar.is-stuck .album-toolbar-back[hidden] {
+  display: none;
 }
 
 .album-toolbar-title-group {

@@ -355,16 +355,15 @@ function getAlbumSectionNavItems(album) {
   }
 
   filmSections.forEach((section, index) => {
-    // Inside a city album, label film sections by their film stock (section.label,
-    // e.g. "Kodak Portra 160") so the jump-nav is self-explanatory. Trip-wide roll
-    // numbers (navLabel, "Film Roll 3") only make sense on the group film index,
-    // not within a single city. The trailing ISO is dropped to keep the chips
-    // compact ("Kodak Ultramax 400" -> "Kodak Ultramax").
+    // navLabel is the short jump-nav chip; label is the heading above the grid.
+    // If navLabel is omitted, fall back to a condensed film-stock label (trailing
+    // ISO dropped: "Kodak Ultramax 400" -> "Kodak Ultramax").
     items.push({
       id: `album-section-film-${index}`,
-      label: section.label
-        ? condenseFilmStock(section.label)
-        : (section.navLabel || (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film')),
+      label: section.navLabel
+        || (section.label
+          ? condenseFilmStock(section.label)
+          : (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film')),
     });
   });
 
@@ -426,7 +425,7 @@ function compareAlbumsByDate(a, b) {
   return albumSortKey(a) - albumSortKey(b);
 }
 
-// Journal-style dateline: date only (e.g. "May 2026"); groups also show sub-album count.
+// Journal-style dateline: date only (e.g. "May 2026").
 function albumDateline(album, { withDesc = false } = {}) {
   if (album.dateline === false) return '';
   if (album.dateline) return album.dateline;
@@ -439,10 +438,6 @@ function albumDateline(album, { withDesc = false } = {}) {
   // Film-roll cards share stock names across trips — lead with place when set.
   if (album.albumKind === 'film-roll' && album.location) parts.push(album.location);
   if (album.date) parts.push(album.date);
-
-  if (album.type === 'group' && album.subAlbums?.length) {
-    parts.push(`${album.subAlbums.length} albums`);
-  }
 
   return parts.join(' · ');
 }

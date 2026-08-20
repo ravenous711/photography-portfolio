@@ -1,0 +1,93 @@
+// ============================================================
+// morgan-alden-2026.js
+// ============================================================
+// Unlisted public album (hidden from nav/gallery). Share /album/morgan-alden-2026/.
+// Photos live on the public R2 bucket.
+// ============================================================
+
+// eslint-disable-next-line no-unused-vars
+const ALBUMS_MORGAN_ALDEN_2026 = [
+  {
+    id: 'morgan-alden-2026',
+    title: 'Morgan and Alden',
+    date: 'August 2026',
+    audience: 'public',
+    hidden: true,
+    protected: false,
+    digitalLabel: 'Fujifilm X-T5',
+    coverImage: `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-01.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-01.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-02.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-03.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-04.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-05.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-06.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-07.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-08.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-09.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-10.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-11.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-12.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-13.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-14.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-15.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-16.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-17.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-18.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-19.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-20.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-21.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-22.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-23.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-24.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-25.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-26.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-27.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-28.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-29.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-30.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-31.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-32.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-33.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-34.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-35.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-36.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-37.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-38.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-39.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-40.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-41.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-42.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-43.jpg`,
+      `${R2_BASE_URL}/Morgan-Alden-2026/Digital/MorganAlden-44.jpg`
+    ],
+    filmSections: [
+      {
+        label: 'Film · Minolta AF2 + Ultramax 400',
+        navLabel: 'Film',
+        camera: 'Minolta AF2',
+        filmStock: 'Kodak Ultramax 400',
+        photos: [
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_16.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_17.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_18.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_19.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_20.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_21.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_22.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_23.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_24.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_25.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_26.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_27.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_28.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_29.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_30.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_32.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_33.jpg`
+        ],
+      },
+    ],
+  },
+];
