@@ -70,6 +70,7 @@ const ALBUMS_MORGAN_ALDEN_2026 = [
         filmStock: 'Kodak Ultramax 400',
         photos: [
           `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_16.jpg`,
+          `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_16-8.jpg`,
           `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_17.jpg`,
           `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_18.jpg`,
           `${R2_BASE_URL}/Morgan-Alden-2026/Film/2026-08-17_raveen_af2_ultramax_400_19.jpg`,
