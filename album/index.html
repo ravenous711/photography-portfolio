@@ -1698,75 +1698,42 @@
       return { filmStock: section.label };
     }
 
-    function getLightboxCaptionParts(index) {
-      const overall = `${index + 1}/${allPhotos.length}`;
+    function getFilmSectionDetail(section) {
+      const rollMeta = getFilmSectionRollMeta(section);
+      return [rollMeta.camera, rollMeta.filmStock].filter(Boolean).join(' · ');
+    }
 
-      // In curated mode, attribute photos to their film stock section when possible
+    // The title above the photo is only the album-wide counter, so these parts
+    // just supply the kit line under the photo for whichever section the photo
+    // belongs to. In curated mode photos are attributed to their curated section.
+    function getLightboxCaptionParts(index) {
+      const digitalDetail = album.digitalLabel || '';
+
       if (isCuratedView) {
         const { digital: curatedDigital, filmSections: curatedFilmSections } = buildCuratedSections(album);
         const digitalCount = curatedDigital.length;
-        if (index < digitalCount) {
-          if (!curatedFilmSections.length) return { position: overall, detail: '', overall };
-          const nav = album.digitalNavLabel || 'Digital';
-          return {
-            position: `${nav} · ${index + 1}/${digitalCount}`,
-            detail: album.digitalLabel || '',
-            overall,
-          };
-        }
+        if (index < digitalCount) return { detail: digitalDetail };
+
         let offset = digitalCount;
         for (const section of curatedFilmSections) {
           const count = section.photos.length;
-          if (index < offset + count) {
-            const stockLabel = section.label || 'Film';
-            return {
-              position: `${stockLabel} · ${index - offset + 1}/${count}`,
-              detail: '',
-              overall,
-            };
-          }
+          if (index < offset + count) return { detail: getFilmSectionDetail(section) };
           offset += count;
         }
-        return { position: overall, detail: '', overall };
+        return { detail: '' };
       }
 
       const digitalCount = (album.photos || []).length;
-      const filmSections = getAlbumFilmSections(album);
-
-      if (index < digitalCount) {
-        const nav = album.digitalNavLabel || 'Digital';
-        return {
-          position: `${nav} · ${index + 1}/${digitalCount}`,
-          detail: album.digitalLabel || '',
-          overall,
-        };
-      }
+      if (index < digitalCount) return { detail: digitalDetail };
 
       let offset = digitalCount;
-      for (let i = 0; i < filmSections.length; i++) {
-        const section = filmSections[i];
+      for (const section of getAlbumFilmSections(album)) {
         const count = (section.photos || []).length;
-        if (index < offset + count) {
-          // Position chip mirrors the section nav tab (film stock). The detail
-          // line carries the camera; the stock already shows in the position so
-          // we don't repeat it here.
-          const stockLabel = section.label
-            || section.navLabel
-            || (filmSections.length > 1 ? `Film Roll ${i + 1}` : 'Film');
-          const rollMeta = getFilmSectionRollMeta(section);
-          const detail = (rollMeta.filmStock && rollMeta.filmStock !== stockLabel)
-            ? [rollMeta.camera, rollMeta.filmStock].filter(Boolean).join(' · ')
-            : (rollMeta.camera || '');
-          return {
-            position: `${stockLabel} · ${index - offset + 1}/${count}`,
-            detail,
-            overall,
-          };
-        }
+        if (index < offset + count) return { detail: getFilmSectionDetail(section) };
         offset += count;
       }
 
-      return { position: overall, detail: '', overall: '' };
+      return { detail: '' };
     }
 
     function getPhotoScrollTarget(index) {
@@ -2500,15 +2467,11 @@
       const digitalCount = (album.photos || []).length;
       const isDigital = index < digitalCount;
 
-      if (hasMultipleSections && parts) {
-        lightboxPositionPart.textContent = parts.position;
-        lightboxOverallPart.textContent = parts.overall;
-        lightboxOverallPart.hidden = false;
-      } else {
-        lightboxPositionPart.textContent = `${index + 1}/${allPhotos.length}`;
-        lightboxOverallPart.textContent = '';
-        lightboxOverallPart.hidden = true;
-      }
+      // Title is the album-wide counter only — section labels and section-relative
+      // counts live in the grid's section nav, not above the photo.
+      lightboxPositionPart.textContent = `${index + 1}/${allPhotos.length}`;
+      lightboxOverallPart.textContent = '';
+      lightboxOverallPart.hidden = true;
 
       if (isDigital) {
         const url = allPhotos[index];

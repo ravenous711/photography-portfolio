@@ -343,6 +343,17 @@ function condenseFilmStock(label) {
   return (label || '').replace(/\s+\d+\s*$/, '').trim() || label;
 }
 
+// navLabel is the short jump-nav chip; label is the heading above the grid.
+// If navLabel is omitted, fall back to a condensed film-stock label (trailing
+// ISO dropped: "Kodak Ultramax 400" -> "Kodak Ultramax").
+function getFilmSectionShortLabel(section, index, sectionCount) {
+  if (!section) return 'Film';
+  return section.navLabel
+    || (section.label
+      ? condenseFilmStock(section.label)
+      : (sectionCount > 1 ? `Film Roll ${index + 1}` : 'Film'));
+}
+
 function getAlbumSectionNavItems(album) {
   if (!album || album.type === 'group') return [];
 
@@ -358,15 +369,9 @@ function getAlbumSectionNavItems(album) {
   }
 
   filmSections.forEach((section, index) => {
-    // navLabel is the short jump-nav chip; label is the heading above the grid.
-    // If navLabel is omitted, fall back to a condensed film-stock label (trailing
-    // ISO dropped: "Kodak Ultramax 400" -> "Kodak Ultramax").
     items.push({
       id: `album-section-film-${index}`,
-      label: section.navLabel
-        || (section.label
-          ? condenseFilmStock(section.label)
-          : (filmSections.length > 1 ? `Film Roll ${index + 1}` : 'Film')),
+      label: getFilmSectionShortLabel(section, index, filmSections.length),
     });
   });
 
