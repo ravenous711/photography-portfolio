@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Upload album photos to Cloudflare R2 (originals + grid/ + view/ tiers).
+# Upload album photos to Cloudflare R2 (originals + grid/ + view/ + download/ tiers).
 #
 # Tiers (must match backfill-image-tiers.sh / PERF-1):
 #   originals — full resolution
 #   grid/     — 900px q75  (album scroll thumbnails)
 #   view/     — 2048px q80 (lightbox)
+#   download/ — 4000px q88 (Large download, approximately 5 MB)
 #
 # Usage:
 #   ./scripts/upload-album.sh \
@@ -39,11 +40,12 @@
 #   ./scripts/upload-album.sh --folder "..." --r2-prefix "..." --dry-run
 #
 # Phases (default: all):
-#   1. Generate 900px grids + 2048px views locally (/tmp/grid_* , /tmp/view_*)
+#   1. Generate grids, views, and Large downloads locally
 #   2. Upload originals to portfolio-images/<prefix>/
 #   3. Upload grids to portfolio-images/grid/<prefix>/
 #   4. Upload views to portfolio-images/view/<prefix>/
-#   5. Verify manifest + auto-retry missing (unless --no-verify)
+#   5. Upload Large downloads to portfolio-images/download/<prefix>/
+#   6. Verify manifest + auto-retry missing (unless --no-verify)
 
 set -uo pipefail
 
@@ -81,10 +83,11 @@ while [[ $# -gt 0 ]]; do
     --max-frame)   MAX_FRAME="$2"; shift 2 ;;
     --frame-prefix) FRAME_PREFIX="$2"; shift 2 ;;
     --file-list)   FILE_LIST="$2"; shift 2 ;;
-    --fast)        FAST=1; ORIG_SLEEP=0; GRID_SLEEP=0; VIEW_SLEEP=0; shift ;;
+    --fast)        FAST=1; ORIG_SLEEP=0; GRID_SLEEP=0; VIEW_SLEEP=0; DOWNLOAD_SLEEP=0; shift ;;
     --sleep-orig)  ORIG_SLEEP="$2"; shift 2 ;;
     --sleep-grid)  GRID_SLEEP="$2"; shift 2 ;;
     --sleep-view)  VIEW_SLEEP="$2"; shift 2 ;;
+    --sleep-download) DOWNLOAD_SLEEP="$2"; shift 2 ;;
     --originals-only) PHASE="originals"; shift ;;
     --grids-only)     PHASE="grids"; shift ;;  # derived tiers: grid/ + view/
     --no-verify)   VERIFY=0; shift ;;
@@ -124,10 +127,11 @@ if ((${#FILES[@]} == 0)); then
   exit 1
 fi
 
-upload_status "Upload $R2_PREFIX — ${#FILES[@]} photos (sleep orig=${ORIG_SLEEP}s grid=${GRID_SLEEP}s view=${VIEW_SLEEP}s)"
+upload_status "Upload $R2_PREFIX — ${#FILES[@]} photos (sleep orig=${ORIG_SLEEP}s grid=${GRID_SLEEP}s view=${VIEW_SLEEP}s download=${DOWNLOAD_SLEEP}s)"
 
 GRID_DIR="$(grid_dir_for_prefix "$R2_PREFIX")"
 VIEW_DIR="$(view_dir_for_prefix "$R2_PREFIX")"
+DOWNLOAD_DIR="$(download_dir_for_prefix "$R2_PREFIX")"
 TOTAL_FAIL=0
 
 run_originals_phase() {
@@ -137,21 +141,26 @@ run_originals_phase() {
 run_derived_tiers() {
   generate_grids "$FOLDER" "$GRID_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
   generate_views "$FOLDER" "$VIEW_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+  generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
   upload_grids "$GRID_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
   upload_views "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+  upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
 }
 
 case "$PHASE" in
   all)
     generate_grids "$FOLDER" "$GRID_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     generate_views "$FOLDER" "$VIEW_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     run_originals_phase
     upload_grids "$GRID_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     upload_views "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     ;;
   originals)
     generate_grids "$FOLDER" "$GRID_DIR" || true
     generate_views "$FOLDER" "$VIEW_DIR" || true
+    generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || true
     run_originals_phase
     ;;
   grids)
@@ -162,8 +171,12 @@ case "$PHASE" in
     if [[ ! -d "$VIEW_DIR" ]] || [[ -z "$(ls -A "$VIEW_DIR" 2>/dev/null || true)" ]]; then
       generate_views "$FOLDER" "$VIEW_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     fi
+    if [[ ! -d "$DOWNLOAD_DIR" ]] || [[ -z "$(ls -A "$DOWNLOAD_DIR" 2>/dev/null || true)" ]]; then
+      generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    fi
     upload_grids "$GRID_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     upload_views "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     ;;
   *)
     echo "Error: unknown phase $PHASE" >&2
@@ -182,7 +195,7 @@ if [[ "$VERIFY" == "1" && "$DRY_RUN" != "1" ]]; then
       break
     fi
     upload_log "Retry round $round/$RETRY_ROUNDS — $missing missing..."
-    retry_missing "$FOLDER" "$GRID_DIR" "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    retry_missing "$FOLDER" "$GRID_DIR" "$VIEW_DIR" "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
     round=$((round + 1))
   done
   if [[ "$missing" -ne 0 ]]; then
@@ -196,5 +209,5 @@ if [[ "$TOTAL_FAIL" -gt 0 ]]; then
   exit 1
 fi
 
-upload_log "ALL DONE — ${#FILES[@]} photos uploaded to $R2_PREFIX (original + grid/ + view/)"
+upload_log "ALL DONE — ${#FILES[@]} photos uploaded to $R2_PREFIX (original + grid/ + view/ + download/)"
 exit 0

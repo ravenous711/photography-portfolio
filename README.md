@@ -39,11 +39,13 @@ private image proxying, and access-code auth.
 │                        │                               │
 │  grid/<key>  ~95 KB    │                ┌──────────────▼───────────────────────┐
 │  view/<key>  ~1.5 MB   │                │  R2 PRIVATE BUCKET                   │
+│  download/<key> ~5 MB  │                │                                      │
 │  <key>       15–40 MB  │                │  portfolio-images-private             │
 └────────────────────────┘                │  (no public access)                  │
                                           │                                      │
                                           │  grid/<key>  ~95 KB                  │
                                           │  view/<key>  ~1.5 MB                 │
+                                          │  download/<key> ~5 MB                │
                                           │  <key>       15–40 MB                │
                                           └──────────────┬───────────────────────┘
                                                          │
@@ -87,13 +89,13 @@ private image proxying, and access-code auth.
 
 ## R2 Key Structure
 
-Every photo is stored under **three R2 keys** (or two, for private albums where originals
-aren't pre-generated):
+Every fully generated photo is stored under **four R2 keys**:
 
 ```
 <album-prefix>/<filename>.jpg           ← original full-res  (15–40 MB)
 grid/<album-prefix>/<filename>.jpg      ← thumbnail 900px q75 (~95 KB)
 view/<album-prefix>/<filename>.jpg      ← lightbox 2048px q80 (~1.5 MB)
+download/<album-prefix>/<filename>.jpg  ← Large download 4000px q88 (~5 MB)
 ```
 
 **Example — Venice:**
@@ -101,6 +103,7 @@ view/<album-prefix>/<filename>.jpg      ← lightbox 2048px q80 (~1.5 MB)
 Italy/Venice/Digital/venice_098.jpg          ← original
 grid/Italy/Venice/Digital/venice_098.jpg     ← grid thumbnail
 view/Italy/Venice/Digital/venice_098.jpg     ← lightbox target
+download/Italy/Venice/Digital/venice_098.jpg ← Large download
 ```
 
 **Public bucket** (`portfolio-images`): public, friends, and most family-group albums.
@@ -134,11 +137,12 @@ the `tier` in the HMAC token.
   │                                                                  │
   │  [ Low  ~95 KB  ]  ← grid/<key>   (grid thumbnail)             │
   │  [ Med  ~1.5 MB ]  ← view/<key>   (lightbox size)              │
+  │  [ Large ~5 MB  ]  ← download/<key> (high-quality download)    │
   │  [ Full 15–40 MB]  ← <key>        (original)                   │
   └─────────────────────────────────────────────────────────────────┘
 ```
 
-The `grid/` and `view/` keys are derived from originals by
+The `grid/`, `view/`, and `download/` keys are derived from originals by
 `scripts/backfill-image-tiers.sh` (using macOS `sips`). The frontend
 (`album/index.html`, `js/main.js`) computes tier URLs with:
 
@@ -530,24 +534,26 @@ add to `js/config.js`.
 Export your picks as full-resolution JPEGs to a local folder. For starred-only picks you can
 use the `exiftool` command in Step 2b.
 
-### Step 2 — Generate grid/ and view/ tiers locally (optional pre-upload)
+### Step 2 — Generate grid/, view/, and download/ tiers locally (optional pre-upload)
 
 You can generate thumbnails on your Mac before uploading, or use the backfill script
 afterwards (see **Backfill Script** section).
 
-**Generate grid (900px) and view (2048px) for all JPEGs in a folder:**
+**Generate grid (900px), view (2048px), and Large download (4000px) for all JPEGs:**
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
 FOLDER="/path/to/your/photos"
 GRID_DIR="$FOLDER/_grid"
 VIEW_DIR="$FOLDER/_view"
-mkdir -p "$GRID_DIR" "$VIEW_DIR"
+DOWNLOAD_DIR="$FOLDER/_download"
+mkdir -p "$GRID_DIR" "$VIEW_DIR" "$DOWNLOAD_DIR"
 
 for f in "$FOLDER"/*.JPG "$FOLDER"/*.jpg; do
   [ -f "$f" ] || continue
   name="$(basename "$f")"
   sips -Z 900  --setProperty formatOptions 75 "$f" --out "$GRID_DIR/$name" > /dev/null
   sips -Z 2048 --setProperty formatOptions 80 "$f" --out "$VIEW_DIR/$name" > /dev/null
+  sips -Z 4000 --setProperty formatOptions 88 "$f" --out "$DOWNLOAD_DIR/$name" > /dev/null
   echo "✓ $name"
 done
 ```
@@ -571,15 +577,22 @@ for f in "$FOLDER"/*.JPG "$FOLDER"/*.jpg; do
 done
 ```
 
-**Upload grid/ and view/ tiers (run after the above):**
+**Upload grid/, view/, and download/ tiers (run after the above):**
 ```bash
 GRID_DIR="$FOLDER/_grid"
 VIEW_DIR="$FOLDER/_view"
+DOWNLOAD_DIR="$FOLDER/_download"
 
 for f in "$GRID_DIR"/*.JPG "$GRID_DIR"/*.jpg; do
   [ -f "$f" ] || continue
   wrangler r2 object put "portfolio-images/grid/Your-Album-Name/$(basename "$f")" \
     --file "$f" --remote && echo "✓ grid/$(basename "$f")"
+done
+
+for f in "$DOWNLOAD_DIR"/*.JPG "$DOWNLOAD_DIR"/*.jpg; do
+  [ -f "$f" ] || continue
+  wrangler r2 object put "portfolio-images/download/Your-Album-Name/$(basename "$f")" \
+    --file "$f" --remote && echo "✓ download/$(basename "$f")"
 done
 
 for f in "$VIEW_DIR"/*.JPG "$VIEW_DIR"/*.jpg; do
@@ -680,13 +693,14 @@ Vercel auto-deploys within ~30 seconds.
 
 ## Backfill Script
 
-Two scripts live in `scripts/` to regenerate `grid/` and `view/` tiers from originals
+Two scripts live in `scripts/` to regenerate `grid/`, `view/`, and `download/` tiers from originals
 already on R2. Run these in Terminal.app (not Cursor).
 
 ### `scripts/backfill-image-tiers.sh` — single album
 
 Processes one R2 prefix: downloads each original, runs `sips` to resize, uploads
-`grid/<key>` (900px q75) and `view/<key>` (2048px q80). Fully resumable — reruns skip
+`grid/<key>` (900px q75), `view/<key>` (2048px q80), and `download/<key>`
+(4000px q88, approximately 5 MB). Fully resumable — reruns skip
 keys that already exist.
 
 ```bash
@@ -704,6 +718,9 @@ cd /Users/raveenfernando/Documents/photography-portfolio
 
 # Only regenerate view/ (skip grid/)
 ./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --view-only
+
+# Only generate the new Large download tier
+./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --download-only
 
 # Limit to first 5 photos (trial run)
 ./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --limit 5
@@ -815,9 +832,10 @@ GitHub personal access tokens expire. If deletions stop updating `config.js` aut
 - [x] **California 2025** — 111 photos + grid (`California/Santa-Cruz-Big-Sur/`, `California/Yosemite/`)
 - [x] **On Film** — 4 rolls, 150 photos + grid at `Italy/Film/Ultramax/`, `FP4/`, `TMAX/`, `Portra/`
 - [x] **Italy curate hub** — `curate-group.html?group=italy-2026` (password: `italy-curate`)
-- [x] **Image tiers** — three R2 key tiers per photo:
+- [x] **Image tiers** — four R2 key tiers per photo:
   - `grid/<key>` — 900px q75 thumbnails for album scroll (replaces 1200px originals after backfill)
   - `view/<key>` — ~2048px q80 for the lightbox (NEW; derived by `scripts/backfill-image-tiers.sh`)
+  - `download/<key>` — ~4000px q88 Large download (approximately 5 MB)
   - `<key>` — original full-res, pulled only on explicit download
   Album, admin, and curate grids use `grid/`; lightbox targets `view/` with 404 fallback to original.
 - [x] **GitHub token** — admin deletions auto-update `config.js`

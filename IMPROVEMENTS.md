@@ -37,6 +37,7 @@ done, move it out of Open, add a Changelog line.
 | ID | One-liner | Effort | Notes |
 |----|-----------|--------|-------|
 | **FEAT-3** | Re-enable select-to-download with clear UX | L | |
+| **FEAT-4** | Roll out Large (~5 MB) download tier | M | Worker `d5993742…` live; frontend commit/push pending |
 | **UX-HEARTS** | Distinct icons for heart vs select | S | Blocked on FEAT-3 |
 | **ADMIN-1** | Drag-and-drop reorder in `/admin` | M–L | |
 
@@ -145,6 +146,14 @@ Jump here after picking an ID from Open tickets.
 - **Done when:** Heart vs select are obvious on mobile + desktop; both work.
 - **Related:** UX-HEARTS.
 
+### FEAT-4 — Large (~5 MB) download tier
+- **Effort:** M · **Risk:** Med · **Status:** WORKER LIVE / FRONTEND PENDING
+- **Why:** Existing choices jump from Med (~1.5 MB) to Full (15–40 MB).
+- **Implementation:** `download/<key>` at 4000px q88 (4.99 MB on the calibration sample); frontend fourth option; Worker private ACL; upload/backfill/resume support.
+- **Files:** `album/index.html`, `js/main.js`, `scripts/`, `workers/zip-download/`, upload docs/skill.
+- **Remaining:** Commit and publish the frontend, then smoke-test Low/Med/Large/Full on a public and a private album.
+- **Done when:** Low/Med/Large/Full work for single and ZIP downloads on public, family, and client albums.
+
 ### UX-HEARTS — Distinct heart vs selection icons
 - **Effort:** S · **Risk:** Low · **Status:** TODO (blocked on FEAT-3)
 - **Why:** `.fav-badge` and `.photo-thumb-like` are both hearts at bottom-right.
@@ -240,6 +249,14 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **FEAT-4 — Worker deploy for Large download tier** — Aug 2026.
+  `portfolio-zip-download` version `d5993742-7e2f-45a0-8102-35a411bf7d88`.
+  R2 `download/` backfill complete; frontend still uncommitted.
+
+- **FEAT-4 — Large download tier implementation** — Aug 2026.
+  Added a 4000px q88 `download/` derivative (~5 MB), fourth download choice, private Worker ACL,
+  deletion cleanup, and resumable upload/backfill support.
 
 - **Home chapters — Personal / Professional work IA** — Aug 2026 (branch `feat/home-chapters-reggie`).
   Yosemite photo-only hero + Personal/Client banners; `/personal-work/` + `/professional-work/`;

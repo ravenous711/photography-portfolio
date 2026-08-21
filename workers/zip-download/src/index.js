@@ -140,7 +140,7 @@ async function handleImage(request, url, env, cors) {
 
   // Tier access rules:
   // - 'family' or 'family:*' → any key in the private bucket
-  // - 'client:<name>' → keys under '<name>/', 'grid/<name>/' or 'view/<name>/' (case-insensitive)
+  // - 'client:<name>' → original or derived keys under that client's prefix
   // - 'friends' → no private bucket access (friends albums use public R2)
   const { tier } = payload;
   if (tier === 'friends') return err('Forbidden', 403);
@@ -150,7 +150,8 @@ async function handleImage(request, url, env, cors) {
     const allowed =
       keyLower.startsWith(`${clientName}/`) ||
       keyLower.startsWith(`grid/${clientName}/`) ||
-      keyLower.startsWith(`view/${clientName}/`);
+      keyLower.startsWith(`view/${clientName}/`) ||
+      keyLower.startsWith(`download/${clientName}/`);
     if (!allowed) return err('Forbidden', 403);
   }
   // 'family' tier → allow any private bucket key
@@ -489,11 +490,12 @@ export default {
     }
 
     // ── Private bucket access (PERF-1 Phase 6) ─────────────────────────────
-    // Strip a view/ or grid/ tier prefix to get the "base path" of a key.
+    // Strip a derived tier prefix to get the "base path" of a key.
     const basePath = (key) => {
       const k = key.toLowerCase();
       if (k.startsWith('view/')) return k.slice(5);
       if (k.startsWith('grid/')) return k.slice(5);
+      if (k.startsWith('download/')) return k.slice(9);
       return k;
     };
 
@@ -502,7 +504,7 @@ export default {
       zipPayload = await verifyToken(token, env.UNLOCK_SECRET);
     }
 
-    // Select bucket and enforce ACL rules mirroring handleImage (+ view/ tier).
+    // Select bucket and enforce ACL rules mirroring handleImage.
     let bucket = env.BUCKET;
     if (zipPayload) {
       const { tier } = zipPayload;
@@ -517,7 +519,8 @@ export default {
           const allowed =
             base.startsWith(`${clientName}/`) ||
             key.toLowerCase().startsWith(`grid/${clientName}/`) ||
-            key.toLowerCase().startsWith(`view/${clientName}/`);
+            key.toLowerCase().startsWith(`view/${clientName}/`) ||
+            key.toLowerCase().startsWith(`download/${clientName}/`);
           if (!allowed) return new Response('Forbidden', { status: 403, headers: cors });
         }
       }

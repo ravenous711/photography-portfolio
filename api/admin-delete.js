@@ -45,8 +45,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'No valid R2 URLs found' });
   }
 
-  // Also delete grid/ copies; ignore thumbnails/ (deprecated tier)
-  const allKeys = objectKeys.flatMap(key => [key, `grid/${key}`]);
+  // Delete every generated copy alongside the original.
+  const allKeys = objectKeys.flatMap(key => [
+    key,
+    `grid/${key}`,
+    `view/${key}`,
+    `download/${key}`,
+  ]);
 
   // ── 1. Delete from Cloudflare R2 ──────────────────────────────────────────
   const deleteResults = await Promise.allSettled(
@@ -65,7 +70,7 @@ export default async function handler(req, res) {
     deleteResults
       .filter(r => r.status === 'fulfilled' && r.value.ok)
       .map(r => r.value.key)
-      .filter(key => !key.startsWith('grid/'))
+      .filter(key => !/^(grid|view|download)\//.test(key))
   )];
 
   const deleteFailed = deleteResults

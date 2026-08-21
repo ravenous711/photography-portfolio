@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Backfill view/ (2048px q80) and grid/ (900px q75) image tiers from R2 originals.
+# Backfill view/, grid/, and download/ image tiers from R2 originals.
 #
-# Reads originals already in R2 (public or private bucket), derives both tiers
+# Reads originals already in R2 (public or private bucket), derives all tiers
 # in one pass per photo, and uploads them back. Fully resumable: reruns skip
-# keys that already exist. Tracks view/ and grid/ existence independently so a
+# keys that already exist. Tracks each tier independently so a
 # rerun can complete whichever tier is still missing.
 #
 # Usage:
@@ -13,6 +13,7 @@
 #   ./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --limit 5
 #   ./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --view-only
 #   ./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --grid-only
+#   ./scripts/backfill-image-tiers.sh --prefix Italy/Venice/Digital --download-only
 #
 # Flags:
 #   --prefix <path>   R2 key prefix to process (required)
@@ -22,10 +23,11 @@
 #   --limit <n>       Process only the first N originals (for trial runs)
 #   --view-only       Skip grid/ regeneration
 #   --grid-only       Skip view/ generation
+#   --download-only   Generate only download/ (4000px q88, approximately 5 MB)
 #   --sleep <s>       Seconds between uploads (default 5)
 #
 # Output per photo:
-#   [i/total] <key>  view=ok grid=ok   (or skipped / failed per tier)
+#   [i/total] <key>  view=ok grid=ok download=ok
 #
 # Summary at the end:
 #   Done. processed=N skipped=N failed=N
@@ -43,6 +45,7 @@ FAST=0
 LIMIT=0
 VIEW_ONLY=0
 GRID_ONLY=0
+DOWNLOAD_ONLY=0
 FORCE_GRID=0
 SLEEP_BETWEEN=5
 
@@ -60,6 +63,7 @@ while [[ $# -gt 0 ]]; do
     --limit)     LIMIT="$2"; shift 2 ;;
     --view-only)  VIEW_ONLY=1; shift ;;
     --grid-only)  GRID_ONLY=1; shift ;;
+    --download-only) DOWNLOAD_ONLY=1; shift ;;
     --force-grid) FORCE_GRID=1; shift ;;
     --sleep)     SLEEP_BETWEEN="$2"; shift 2 ;;
     -h|--help)   usage 0 ;;
@@ -69,6 +73,11 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if ((VIEW_ONLY + GRID_ONLY + DOWNLOAD_ONLY > 1)); then
+  echo "Error: choose only one of --view-only, --grid-only, or --download-only." >&2
+  exit 1
+fi
 
 if [[ -z "$PREFIX" ]]; then
   echo "Error: --prefix is required." >&2
@@ -126,13 +135,14 @@ fetch_original() {
 
 upload_status "Listing originals under ${BUCKET_NAME}/${PREFIX}/ ..."
 
-# r2_list_objects returns JSON; extract keys, skip grid/ and view/ prefixes
+# r2_list_objects returns JSON; extract keys, skip derived tier prefixes
 ORIG_KEYS=()
 while IFS= read -r key; do
   [[ -n "$key" ]] || continue
   # Skip tier prefixes, directory markers, and non-image entries
   [[ "$key" == grid/* ]] && continue
   [[ "$key" == view/* ]] && continue
+  [[ "$key" == download/* ]] && continue
   [[ "$key" == */ ]] && continue
   [[ "$key" =~ \.(jpg|JPG|jpeg|JPEG|png|PNG|webp|WEBP)$ ]] || continue
   ORIG_KEYS+=("$key")
@@ -175,24 +185,34 @@ for key in "${ORIG_KEYS[@]}"; do
 
   VIEW_KEY="view/${key}"
   GRID_KEY="grid/${key}"
+  DOWNLOAD_KEY="download/${key}"
 
   TMP_ORIG="/tmp/backfill_orig_${SNAME}"
   TMP_VIEW="/tmp/backfill_view_${SNAME}"
   TMP_GRID="/tmp/backfill_grid_${SNAME}"
+  TMP_DOWNLOAD="/tmp/backfill_download_${SNAME}"
 
   # Independently check which tiers are needed
   NEED_VIEW=1
   NEED_GRID=1
+  NEED_DOWNLOAD=1
 
   if [[ "$VIEW_ONLY" == "1" ]]; then
     NEED_GRID=0
+    NEED_DOWNLOAD=0
   fi
   if [[ "$GRID_ONLY" == "1" ]]; then
     NEED_VIEW=0
+    NEED_DOWNLOAD=0
+  fi
+  if [[ "$DOWNLOAD_ONLY" == "1" ]]; then
+    NEED_VIEW=0
+    NEED_GRID=0
   fi
 
   VIEW_STATUS="skipped"
   GRID_STATUS="skipped"
+  DOWNLOAD_STATUS="skipped"
 
   # Skip check: does view/ already exist?
   if [[ "$NEED_VIEW" == "1" ]]; then
@@ -214,22 +234,32 @@ for key in "${ORIG_KEYS[@]}"; do
     fi
   fi
 
-  # If both already exist (or skipped by flag), move on
-  if [[ "$NEED_VIEW" == "0" && "$NEED_GRID" == "0" ]]; then
-    upload_status "[$PROGRESS] $key  view=${VIEW_STATUS} grid=${GRID_STATUS}"
+  # Skip check: does download/ already exist?
+  if [[ "$NEED_DOWNLOAD" == "1" ]]; then
+    if [[ "$DRY_RUN" == "1" ]]; then
+      DOWNLOAD_STATUS="would-create"
+    elif r2_key_exists "$DOWNLOAD_KEY"; then
+      NEED_DOWNLOAD=0
+      DOWNLOAD_STATUS="skipped"
+    fi
+  fi
+
+  # If every requested tier already exists (or was skipped by a flag), move on
+  if [[ "$NEED_VIEW" == "0" && "$NEED_GRID" == "0" && "$NEED_DOWNLOAD" == "0" ]]; then
+    upload_status "[$PROGRESS] $key  view=${VIEW_STATUS} grid=${GRID_STATUS} download=${DOWNLOAD_STATUS}"
     COUNT_SKIPPED=$((COUNT_SKIPPED + 1))
     continue
   fi
 
   if [[ "$DRY_RUN" == "1" ]]; then
-    upload_status "[$PROGRESS] $key  view=${VIEW_STATUS} grid=${GRID_STATUS}"
+    upload_status "[$PROGRESS] $key  view=${VIEW_STATUS} grid=${GRID_STATUS} download=${DOWNLOAD_STATUS}"
     COUNT_PROCESSED=$((COUNT_PROCESSED + 1))
     continue
   fi
 
   # Fetch original once
   if ! fetch_original "$key" "$TMP_ORIG"; then
-    upload_status "[$PROGRESS] $key  view=failed grid=failed (fetch error)"
+    upload_status "[$PROGRESS] $key  view=failed grid=failed download=failed (fetch error)"
     COUNT_FAILED=$((COUNT_FAILED + 1))
     rm -f "$TMP_ORIG"
     continue
@@ -271,9 +301,28 @@ for key in "${ORIG_KEYS[@]}"; do
     if [[ "$SLEEP_BETWEEN" -gt 0 && "$NEED_VIEW" == "1" ]]; then sleep "$SLEEP_BETWEEN"; fi
   fi
 
+  # Generate and upload download/ (4000px q88)
+  if [[ "$NEED_DOWNLOAD" == "1" ]]; then
+    if sips -Z 4000 "$TMP_ORIG" --out "$TMP_DOWNLOAD" --setProperty formatOptions 88 >/dev/null 2>&1; then
+      if upload_with_retry "${BUCKET_NAME}/${DOWNLOAD_KEY}" "$TMP_DOWNLOAD" "$DOWNLOAD_KEY" "$PROGRESS"; then
+        DOWNLOAD_STATUS="ok"
+      else
+        DOWNLOAD_STATUS="failed"
+        KEY_FAIL=$((KEY_FAIL + 1))
+      fi
+    else
+      DOWNLOAD_STATUS="failed(resize)"
+      KEY_FAIL=$((KEY_FAIL + 1))
+    fi
+    rm -f "$TMP_DOWNLOAD"
+    if [[ "$SLEEP_BETWEEN" -gt 0 && ( "$NEED_VIEW" == "1" || "$NEED_GRID" == "1" ) ]]; then
+      sleep "$SLEEP_BETWEEN"
+    fi
+  fi
+
   rm -f "$TMP_ORIG"
 
-  upload_status "[$PROGRESS] $key  view=${VIEW_STATUS} grid=${GRID_STATUS}"
+  upload_status "[$PROGRESS] $key  view=${VIEW_STATUS} grid=${GRID_STATUS} download=${DOWNLOAD_STATUS}"
 
   if [[ "$KEY_FAIL" -gt 0 ]]; then
     COUNT_FAILED=$((COUNT_FAILED + 1))

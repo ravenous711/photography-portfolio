@@ -273,6 +273,11 @@
           <span class="dl-size-opt-desc">Lightbox · ~1.5 MB each</span>
           <span class="dl-size-opt-est" id="dl-est-view"></span>
         </button>
+        <button type="button" class="dl-size-opt" data-size="download">
+          <span class="dl-size-opt-name">Large</span>
+          <span class="dl-size-opt-desc">High quality · ~5 MB each</span>
+          <span class="dl-size-opt-est" id="dl-est-download"></span>
+        </button>
         <button type="button" class="dl-size-opt" data-size="original">
           <span class="dl-size-opt-name">Full</span>
           <span class="dl-size-opt-desc">Original · ~15–40 MB each</span>
@@ -313,6 +318,9 @@
           </button>
           <button class="dl-size-option" id="dl-size-opt-med-lb" data-size="view" role="menuitem">
             <span class="dl-size-name">Med</span><span class="dl-size-hint">~1.5 MB</span>
+          </button>
+          <button class="dl-size-option" data-size="download" role="menuitem">
+            <span class="dl-size-name">Large</span><span class="dl-size-hint">~5 MB</span>
           </button>
           <button class="dl-size-option" data-size="original" role="menuitem">
             <span class="dl-size-name">Full</span><span class="dl-size-hint">~original</span>
@@ -418,7 +426,7 @@
     // Current download size preference — initialised from localStorage by initDlSizePicker
     let _dlSize = 'original';
     let _dlSizeCallback = null;
-    const DL_SIZE_AVG_MB = { grid: 0.095, view: 1.5, original: 20 };
+    const DL_SIZE_AVG_MB = { grid: 0.095, view: 1.5, download: 5, original: 20 };
     // Tracks album prefixes whose view/ tier is not yet backfilled (404 probe result)
     const _viewMissingPrefixes = new Set();
 
@@ -900,6 +908,7 @@
         if (!rawUrl) return;
         const dlUrl = _dlSize === 'grid' ? gridUrl(rawUrl)
                     : _dlSize === 'view' ? viewUrl(rawUrl)
+                    : _dlSize === 'download' ? downloadUrl(rawUrl)
                     : rawUrl;
         downloadLightboxPhoto(dlUrl);
       });
@@ -968,10 +977,11 @@
 
     // Strip any existing tier prefix and re-prefix for the chosen download size.
     function sizedKey(baseKey, size) {
-      const bare = (baseKey || '').replace(/^(grid|view)\//, '');
+      const bare = (baseKey || '').replace(/^(grid|view|download)\//, '');
       if (!bare) return '';
       if (size === 'grid') return `grid/${bare}`;
       if (size === 'view') return `view/${bare}`;
+      if (size === 'download') return `download/${bare}`;
       return bare;
     }
 
@@ -1139,7 +1149,10 @@
       let failed = 0;
       for (let i = 0; i < photos.length; i++) {
         const raw = photos[i];
-        const dlUrl = size === 'grid' ? gridUrl(raw) : size === 'view' ? viewUrl(raw) : raw;
+        const dlUrl = size === 'grid' ? gridUrl(raw)
+                    : size === 'view' ? viewUrl(raw)
+                    : size === 'download' ? downloadUrl(raw)
+                    : raw;
         try {
           const blob = await fetchPhotoBlob(dlUrl);
           saveAs(blob, photoFilename(dlUrl, i));
@@ -2277,7 +2290,7 @@
         const m = url.match(/^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/);
         key = m ? m[1] : '';
       }
-      key = key.replace(/^(grid|view)\//, '');
+      key = key.replace(/^(grid|view|download)\//, '');
       return key.split('/')[0] || '';
     }
 
@@ -2622,7 +2635,7 @@
     // ════════════════════════════════════════════════════════
     // ALBUM DOWNLOAD (ZIP)
     // ════════════════════════════════════════════════════════
-    // ZIP downloads stream from the Worker. Size (grid/view/original) is chosen
+    // ZIP downloads stream from the Worker. Size (grid/view/download/original) is chosen
     // via the size picker; private albums pass an unlock token for PRIVATE_BUCKET.
 
     function downloadPhotos(photos, size = 'original') {
@@ -2639,7 +2652,10 @@
       const isAll = photos === allPhotos;
       const keys = list.map(photoUrlToKey).map((k) => sizedKey(k, size)).filter(Boolean);
       if (!keys.length) return;
-      const sizeLabel = size === 'grid' ? 'web' : size === 'view' ? 'large' : 'original';
+      const sizeLabel = size === 'grid' ? 'web'
+                      : size === 'view' ? 'medium'
+                      : size === 'download' ? 'large'
+                      : 'original';
       const suffix = isAll ? 'photos' : 'selection';
       const filename = `${album.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${suffix}-${sizeLabel}.zip`;
 

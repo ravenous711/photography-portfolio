@@ -10,8 +10,8 @@ Workflow for adding a new album to Raveen's photography portfolio. Always follow
 For cheap R2 verification, resume/missing-key uploads, and stalled-upload triage, see [verify-r2-uploads](../verify-r2-uploads/SKILL.md).
 
 ## Key facts
-- Public R2 bucket: `portfolio-images` — public album originals + their grid thumbnails (`grid/...`)
-- Private R2 bucket: `portfolio-images-private` — family/client album originals **and** their grid thumbnails (`grid/...`)
+- Public R2 bucket: `portfolio-images` — public originals + `grid/`, `view/`, and `download/` derivatives
+- Private R2 bucket: `portfolio-images-private` — family/client originals and all derivatives
 - Family/client grids are never in the public bucket — the Worker serves `grid/<key>` from the private bucket behind a token
 - Cloudflare account ID: `723c27febd4a099c7884fdf00de2329f`
 - R2 base URL: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev`
@@ -36,7 +36,7 @@ City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 
 **Always prefer maximum safe parallelism (fastest total wall-clock).**
 
 - R2 API rate-limits concurrent uploads — always auto-retry (see helper below)
-- **Never interleave orig/grid/view per file** — run originals, grids, and views as **separate parallel processes**
+- **Never interleave orig/grid/view/download per file** — run tiers as **separate parallel processes**
 - **Check `IMPROVEMENTS.md` → Active album session** for in-flight uploads and the album queue before starting new work
 
 ### Sleep between originals (~26 MB Fujifilm JPGs)
@@ -50,7 +50,7 @@ City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 
 
 | File type | Safe concurrency | Notes |
 |---|---|---|
-| **Grids / views** (~1–3 MB / ~few MB) | **5–10** concurrent | Rarely rate-limits; default `CONCURRENCY=5`–`10` |
+| **Derived tiers** (~95 KB–5 MB) | **5–10** concurrent | Rarely rate-limits; default `CONCURRENCY=5`–`10` |
 | **Originals, one R2 sub-folder** | **4–6** workers | Split file list evenly; **2–3s sleep** inside each worker + `upload_with_retry` |
 | **Originals, multiple sub-folders** | **All sub-folders in parallel**, each with **4–6 workers** | Maximize wall-clock: N folders × (orig workers + grid job + view job) |
 
@@ -60,13 +60,11 @@ City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 
 
 **Single folder** (one R2 path): launch **3 process groups in parallel** —
 - Originals: **4–6 parallel workers**, **2–3s sleep** inside each, with `upload_with_retry`
-- Grids: **5–10** concurrent
-- Views: **5–10** concurrent
+- Grid, view, and download tiers: **5–10** concurrent per process
 
 **Multi-folder album** (Digital + film rolls — e.g. Holland Tulip, Venice): launch **everything in parallel**:
 - Per R2 sub-folder (`Digital/`, `Raveen-Ultramax/`, …): split originals across **4–6 workers** (not one sequential job)
-- Per matching sub-folder: one grids job + one views job (~5–10 concurrent each)
-- Example: 5 sub-folders → many parallel jobs (5 × orig-worker-pool + 5 grid + 5 view)
+- Per matching sub-folder: one job per derived tier (~5–10 concurrent each)
 
 **Fallback (severe rate limits only):** drop to 1 sequential worker with 10–15s sleep. Prefer staying parallel and letting `upload_with_retry` absorb transient failures.
 
@@ -74,7 +72,7 @@ City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 
 
 ### Parallel multi-folder launcher (template)
 
-Save manifests to `/tmp/<album>-manifest/` (one filename per line, sorted). Split each manifest across workers, then launch **all** orig/grid/view jobs together:
+Save manifests to `/tmp/<album>-manifest/` (one filename per line, sorted). Split each manifest across workers, then launch **all** tier jobs together:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -84,7 +82,7 @@ BASE="/Volumes/PhotosSSD/Photos/..."
 MANIFEST="/tmp/<album>-manifest"
 LOGDIR="/tmp/<album>-logs"
 WORKERS=5          # 4–6 for originals per sub-folder
-GRID_CONCURRENCY=5 # 5–10 for grid/view
+GRID_CONCURRENCY=5 # 5–10 for derived tiers
 mkdir -p "$LOGDIR"
 
 # upload_with_retry() — copy from helper below
@@ -145,9 +143,24 @@ upload_view_section() {
   } > "$log" 2>&1
 }
 
+upload_download_section() {
+  local download_dir="$1" r2_sub="$2" log="$3"
+  { echo "=== START download $r2_sub $(date) ==="
+    fail=0
+    for f in "/tmp/download_$PREFIX/$download_dir"/*; do
+      [[ -f "$f" ]] || continue
+      while (( $(jobs -r | wc -l | tr -d ' ') >= GRID_CONCURRENCY )); do sleep 1; done
+      fname=$(basename "$f")
+      ( upload_with_retry "$BUCKET/download/$PREFIX/$r2_sub/$fname" "$f" "download $r2_sub/$fname" || exit 1 ) &
+    done
+    wait || fail=1
+    echo "=== DONE download $r2_sub fail=$fail $(date) ==="; exit $fail
+  } > "$log" 2>&1
+}
+
 # Per sub-folder: split → launch all orig workers + grid + view in parallel
 launch_section() {
-  local key="$1" local_dir="$2" r2_sub="$3" grid_dir="$4" view_dir="$5"
+  local key="$1" local_dir="$2" r2_sub="$3" grid_dir="$4" view_dir="$5" download_dir="$6"
   split_manifest "$key"
   local w
   for ((w=0; w<WORKERS; w++)); do
@@ -155,11 +168,12 @@ launch_section() {
   done
   upload_grid_section "$grid_dir" "$r2_sub" "$LOGDIR/grid-${key}.log" &
   upload_view_section "$view_dir" "$r2_sub" "$LOGDIR/view-${key}.log" &
+  upload_download_section "$download_dir" "$r2_sub" "$LOGDIR/download-${key}.log" &
 }
 
 # Launch ALL sub-folders at once (adjust keys/paths per album)
-launch_section digital "$BASE" Digital Digital Digital &
-launch_section raveen-film "$BASE/Raveen-Ultramax" Raveen-Ultramax Raveen-Ultramax Raveen-Ultramax &
+launch_section digital "$BASE" Digital Digital Digital Digital &
+launch_section raveen-film "$BASE/Raveen-Ultramax" Raveen-Ultramax Raveen-Ultramax Raveen-Ultramax Raveen-Ultramax &
 # ... one launch_section per sub-folder ...
 wait
 ```
@@ -170,8 +184,10 @@ Monitor: `grep -c '^✓' $LOGDIR/*.log` and `grep '^✗ FAILED' $LOGDIR/*.log`.
 ```bash
 wrangler r2 object delete portfolio-images-private/<key> --remote
 wrangler r2 object delete portfolio-images-private/grid/<key> --remote
+wrangler r2 object delete portfolio-images-private/view/<key> --remote
+wrangler r2 object delete portfolio-images-private/download/<key> --remote
 ```
-Update `config.js` to point at the new filename, then upload original + grid for the replacement.
+Update the album source, then upload the original and all three derived copies.
 
 ## Path gotchas (macOS + zsh)
 
@@ -230,20 +246,21 @@ FOLDER="<path>"
 exiftool -Rating -filename -T "$FOLDER"/*.JPG 2>/dev/null | awk -F'\t' '$1 > 0 {print $2}' | sort
 ```
 
-## Step 3 — Generate grid and view images locally
+## Step 3 — Generate image tiers locally
 
-New albums should generate **two derived tiers** from the originals:
+New albums should generate **three derived tiers** from the originals:
 
 | Tier | Size | Quality | R2 prefix | Purpose |
 |------|------|---------|-----------|---------|
 | `grid/` | 900px | q75 | `grid/<R2-folder-name>/` | Album scroll thumbnails |
 | `view/` | 2048px | q80 | `view/<R2-folder-name>/` | Lightbox display |
+| `download/` | 4000px | q88 | `download/<R2-folder-name>/` | Large download (~5 MB) |
 
 Upload destination depends on audience:
-- **Public** → `portfolio-images/grid/` and `portfolio-images/view/`
-- **Family / client** → `portfolio-images-private/grid/` and `portfolio-images-private/view/` (served via Worker token)
+- **Public** → `portfolio-images/grid/`, `view/`, and `download/`
+- **Family / client** → the same prefixes in `portfolio-images-private` (served via Worker token)
 
-Generate both tiers locally before uploading (or use `./scripts/upload-album.sh`, which now generates and uploads originals + `grid/` + `view/` in one pass):
+Generate all tiers locally before uploading (or use `./scripts/upload-album.sh`, which handles all four objects):
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -252,7 +269,8 @@ FOLDER="<local path>"
 R2_NAME="<R2-folder-name>"
 GRID_DIR="/tmp/grid_${R2_NAME}"
 VIEW_DIR="/tmp/view_${R2_NAME}"
-mkdir -p "$GRID_DIR" "$VIEW_DIR"
+DOWNLOAD_DIR="/tmp/download_${R2_NAME}"
+mkdir -p "$GRID_DIR" "$VIEW_DIR" "$DOWNLOAD_DIR"
 
 for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
   [ -f "$f" ] || continue
@@ -261,8 +279,10 @@ for f in "$FOLDER"/*.jpg "$FOLDER"/*.JPG; do
     && echo "✓ grid $b" || echo "✗ FAILED grid: $b"
   sips -Z 2048 "$f" --out "$VIEW_DIR/$b" --setProperty formatOptions 80 2>/dev/null \
     && echo "✓ view $b" || echo "✗ FAILED view: $b"
+  sips -Z 4000 "$f" --out "$DOWNLOAD_DIR/$b" --setProperty formatOptions 88 2>/dev/null \
+    && echo "✓ download $b" || echo "✗ FAILED download: $b"
 done
-echo "Done. grid=$(ls "$GRID_DIR" | wc -l | tr -d ' ')  view=$(ls "$VIEW_DIR" | wc -l | tr -d ' ')"
+echo "Done. grid=$(ls "$GRID_DIR" | wc -l | tr -d ' ') view=$(ls "$VIEW_DIR" | wc -l | tr -d ' ') download=$(ls "$DOWNLOAD_DIR" | wc -l | tr -d ' ')"
 ```
 
 Preferred one-liner for public albums:
@@ -286,7 +306,7 @@ If originals are already in R2 (backfill scenario), use `scripts/backfill-image-
 **Single R2 folder:** split the file list across **4–6 parallel workers**, **2–3s sleep** inside each, with `upload_with_retry`. (Sequential 10s is a **fallback** only when rate limits are severe.)
 **Multiple R2 sub-folders:** use the **parallel multi-folder launcher** above — all sub-folders at once, each with the 4–6 worker split (not one slow sequential job per folder).
 
-Start **Step 5 grids and views in parallel** — never wait for originals to finish first.
+Start **Step 5 derived tiers in parallel** — never wait for originals to finish first.
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -330,11 +350,9 @@ wait
 echo "=== Originals done. Check $LOGDIR for failures ==="
 ```
 
-## Step 5 — Upload grid + view images
+## Step 5 — Upload derived images
 
-Run **grid and view uploads in parallel with Step 4** (never wait for originals). Match the audience bucket:
-- **Public** → `portfolio-images/grid/<R2-folder-name>/` and `portfolio-images/view/<R2-folder-name>/`
-- **Family / client** → `portfolio-images-private/grid/...` and `portfolio-images-private/view/...`
+Run all derived uploads in parallel with Step 4. Match the audience bucket and prefix.
 
 Use **~5–10 concurrent** within each process (grids and views are small).
 
@@ -343,8 +361,10 @@ export PATH="/opt/homebrew/bin:$PATH"
 setopt nullglob
 GRID_DIR="/tmp/grid_<R2-folder-name>"
 VIEW_DIR="/tmp/view_<R2-folder-name>"
+DOWNLOAD_DIR="/tmp/download_<R2-folder-name>"
 GRID_DEST="portfolio-images/grid/<R2-folder-name>"   # or portfolio-images-private/grid/...
 VIEW_DEST="portfolio-images/view/<R2-folder-name>"   # or portfolio-images-private/view/...
+DOWNLOAD_DEST="portfolio-images/download/<R2-folder-name>" # or portfolio-images-private/download/...
 CONCURRENCY=5
 
 upload_tier() {
@@ -364,12 +384,13 @@ upload_tier() {
 
 upload_tier "$GRID_DIR" "$GRID_DEST" grid &
 upload_tier "$VIEW_DIR" "$VIEW_DEST" view &
+upload_tier "$DOWNLOAD_DIR" "$DOWNLOAD_DEST" download &
 wait
 ```
 
 ## Step 6 — Verify via manifest
 
-After all upload loops finish (originals + grid + view), run automatically:
+After all upload loops finish (originals + grid + view + download), run automatically:
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"

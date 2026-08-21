@@ -279,22 +279,23 @@ Export settings in Lightroom Classic:
 
 Keep originals for archiving. You'll derive smaller tiers locally before uploading.
 
-### Step 2 — Generate grid/ and view/ tiers locally
+### Step 2 — Generate image tiers locally
 
-The site uses three image tiers:
+The site uses four image tiers:
 
 | Tier | Purpose | Max dimension | Quality |
 |------|---------|---------------|---------|
 | `grid/` | Album thumbnails / grid layout | 900 px (longest edge) | 75 |
 | `view/` | Lightbox display | 2048 px (longest edge) | 80 |
-| *(original)* | Download only | Full resolution | 100 |
+| `download/` | Large download (~5 MB) | 4000 px (longest edge) | 88 |
+| *(original)* | Full download | Full resolution | 100 |
 
-Generate both tiers using `sips` (built into macOS). Run these from the folder containing
+Generate all derived tiers using `sips` (built into macOS). Run these from the folder containing
 your exported originals:
 
 ```bash
 # Create output directories
-mkdir -p grid view
+mkdir -p grid view download
 
 # Generate grid/ thumbnails (900px, quality 75)
 for f in *.jpg; do
@@ -305,6 +306,11 @@ done
 for f in *.jpg; do
   sips -Z 2048 --setProperty formatOptions 80 "$f" --out "view/$f"
 done
+
+# Generate Large downloads (4000px, quality 88)
+for f in *.jpg; do
+  sips -Z 4000 --setProperty formatOptions 88 "$f" --out "download/$f"
+done
 ```
 
 Single file example:
@@ -312,6 +318,7 @@ Single file example:
 ```bash
 sips -Z 900 --setProperty formatOptions 75 photo.jpg --out grid/photo.jpg
 sips -Z 2048 --setProperty formatOptions 80 photo.jpg --out view/photo.jpg
+sips -Z 4000 --setProperty formatOptions 88 photo.jpg --out download/photo.jpg
 ```
 
 Verify the output looks correct before uploading.
@@ -328,6 +335,7 @@ Use `wrangler r2 object put` or the `scripts/upload-album.sh` helper. The R2 key
 <AlbumFolder>/photo-001.jpg          ← original
 grid/<AlbumFolder>/photo-001.jpg     ← grid tier
 view/<AlbumFolder>/photo-001.jpg     ← view tier
+download/<AlbumFolder>/photo-001.jpg ← Large download tier
 ```
 
 Example upload commands for a public album called "Amsterdam 2026":
@@ -344,6 +352,10 @@ wrangler r2 object put portfolio-images/grid/Amsterdam-2026/photo-001.jpg \
 # Upload view tier
 wrangler r2 object put portfolio-images/view/Amsterdam-2026/photo-001.jpg \
   --file ./view/photo-001.jpg
+
+# Upload Large download tier
+wrangler r2 object put portfolio-images/download/Amsterdam-2026/photo-001.jpg \
+  --file ./download/photo-001.jpg
 ```
 
 For batch uploads of many photos, use the `scripts/upload-album.sh` script (see `README.md`

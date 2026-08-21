@@ -286,7 +286,7 @@ function initScrollAnimations() {
 
 // ── R2 image URL helpers ──
 // grid/ = 900px for album grid, admin, and curate previews
-// view/ = ~2048px for lightbox (see viewUrl); originals are download-only
+// view/ = ~2048px for lightbox; download/ = ~4000px for Large downloads
 const R2_URL_RE = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\/(.+)$/;
 
 function gridUrl(fullUrl) {
@@ -323,6 +323,26 @@ function viewUrl(fullUrl) {
   }
   const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
   return m ? `${m[1]}view/${m[2]}` : fullUrl;
+}
+
+function downloadUrl(fullUrl) {
+  if (!fullUrl) return fullUrl;
+  if (fullUrl.includes('/image?') && fullUrl.includes('key=')) {
+    try {
+      const u = new URL(fullUrl);
+      const key = u.searchParams.get('key');
+      if (key) {
+        const bare = key.replace(/^(grid|view|download)\//, '');
+        u.searchParams.set('key', 'download/' + bare);
+        return u.toString();
+      }
+    } catch { /* fall through */ }
+    return fullUrl;
+  }
+  const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+  if (!m) return fullUrl;
+  const bare = m[2].replace(/^(grid|view|download)\//, '');
+  return `${m[1]}download/${bare}`;
 }
 
 // alias kept for admin/curate call sites

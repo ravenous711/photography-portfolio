@@ -10,15 +10,17 @@
 #   ./scripts/run-full-backfill.sh --fast
 #   ./scripts/run-full-backfill.sh --view-only
 #   ./scripts/run-full-backfill.sh --grid-only
+#   ./scripts/run-full-backfill.sh --download-only
 #   ./scripts/run-full-backfill.sh --from Italy/Florence/Digital
 #   ./scripts/run-full-backfill.sh --batch 5 --from Joel-Bday-2025
 #
 # Flags:
-#   --batch <n>         Run only batch number n (1-6); omit to run all batches
+#   --batch <n>         Run only batch number n (1-7); omit to run all batches
 #   --dry-run           Passed through: shows what would happen, no uploads
 #   --fast              Passed through: disables rate-limit sleeps between uploads
 #   --view-only         Passed through: skip grid/ generation
 #   --grid-only         Passed through: skip view/ generation
+#   --download-only     Passed through: generate only the Large download tier
 #   --from <prefix>     Skip all prefixes before this one (resume after a failure)
 #
 # Batches:
@@ -27,17 +29,17 @@
 #   3 — California     (Santa-Cruz-Big-Sur, Yosemite)
 #   4 — Red Rock + misc public  (Red-Rock-Canyon-2026/*, Holland-Tulip-Festival/*)
 #   5 — Events/visits  (Ali, Elena, Elenas-Bday, Joel-Bday[private], Paulina's,
-#                       Thanksgiving, Maryland-2026-*)
+#                       Thanksgiving, Maryland-2026-*, Higgins-Lake-2026[private])
 #   6 — Misc film + clients  (Misc-Film-Rolls-2026/*, Moksha-Yoga[private])
+#   7 — Newer public albums not in the original backfill (Morgan-Alden-2026)
 #
 # Notes:
 #   - Private-bucket prefixes (portfolio-images-private) are passed --private to
 #     the inner script and skipped in the verification step (no public HEAD).
 #   - A non-zero exit from any single prefix is logged and tallied but does NOT
 #     abort the run; failed prefixes are listed in the final summary.
-#   - family-2025.js and family-2026.js were inspected: all photo URLs reference
-#     ${R2_BASE_URL} (public bucket). No additional private R2 prefixes were
-#     found beyond Joel-Bday-2025 and Moksha-Yoga.
+#   - Family/client albums live in portfolio-images-private even though config
+#     URLs use ${R2_BASE_URL}. Always pass --private for those prefixes.
 
 set -uo pipefail
 
@@ -63,6 +65,7 @@ while [[ $# -gt 0 ]]; do
     --fast)      PASSTHROUGH+=(--fast); shift ;;
     --view-only)  PASSTHROUGH+=(--view-only); shift ;;
     --grid-only)  PASSTHROUGH+=(--grid-only); shift ;;
+    --download-only) PASSTHROUGH+=(--download-only); shift ;;
     --force-grid) PASSTHROUGH+=(--force-grid); shift ;;
     --from)      FROM_PREFIX="$2"; shift 2 ;;
     -h|--help)   usage 0 ;;
@@ -306,6 +309,16 @@ run_batch_5() {
   run_prefix "Maryland-2026-Digital" --private
   run_prefix "Maryland-2026-Roll-Fernando7623" --private
   run_prefix "Maryland-2026-Roll-Fernando7624" --private
+  run_prefix "Higgins-Lake-2026/Raveen-AF2" --private
+  run_prefix "Higgins-Lake-2026/Raveen-X700" --private
+  run_prefix "Higgins-Lake-2026/Athena-Pentax17" --private
+  end_batch
+}
+
+run_batch_7() {
+  begin_batch 7 "Newer public albums"
+  run_prefix "Morgan-Alden-2026/Digital"
+  run_prefix "Morgan-Alden-2026/Film"
   end_batch
 }
 
@@ -329,8 +342,9 @@ if [[ -n "$ONLY_BATCH" ]]; then
     4) run_batch_4 ;;
     5) run_batch_5 ;;
     6) run_batch_6 ;;
+    7) run_batch_7 ;;
     *)
-      echo "Error: unknown batch '${ONLY_BATCH}'. Valid values: 1-6." >&2
+      echo "Error: unknown batch '${ONLY_BATCH}'. Valid values: 1-7." >&2
       exit 1
       ;;
   esac
@@ -341,6 +355,7 @@ else
   run_batch_4
   run_batch_5
   run_batch_6
+  run_batch_7
 fi
 
 # ── Final summary ──────────────────────────────────────────────────────────────
