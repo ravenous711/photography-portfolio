@@ -1688,19 +1688,12 @@ a.album-sibling-link:hover {
 
 .photo-thumb img.loaded { opacity: 1; }
 
+/* Expand affordance kept in DOM for select-mode hooks; no hover darken —
+   darkening made photos harder to evaluate on a photography site. */
 .photo-thumb-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.28);
-  opacity: 0;
-  transition: opacity var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
   pointer-events: none;
 }
-
-.photo-thumb:hover .photo-thumb-overlay { opacity: 1; }
 
 /* ============================================================
    LIGHTBOX
