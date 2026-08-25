@@ -2706,6 +2706,17 @@
       } catch { return 'anon'; }
     }
 
+    function heartedUrlMatches(storedUrl, displayUrl) {
+      return photoObjectKey(storedUrl) === photoObjectKey(displayUrl);
+    }
+
+    function heartedSetHas(url) {
+      for (const u of heartedUrls) {
+        if (heartedUrlMatches(u, url)) return true;
+      }
+      return false;
+    }
+
     async function initFavorites(albumId, enabled) {
       const favoritesOff = album?.gridFavorites === false
         || (album?.audience || '').startsWith('client:');
@@ -2735,7 +2746,7 @@
           heartedUrls = new Set(urls || []);
           // Backfill hearted state on any badges already in the DOM
           document.querySelectorAll('.fav-badge').forEach(badge => {
-            badge.classList.toggle('hearted', heartedUrls.has(badge.dataset.favUrl));
+            badge.classList.toggle('hearted', heartedSetHas(badge.dataset.favUrl));
           });
           updateLightboxFavButton();
         }
@@ -2750,38 +2761,54 @@
       const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
       if (!workerBase || !albumId) return;
 
-      const wasHearted = heartedUrls.has(url);
+      const photoUrl = canonicalPhotoUrl(url);
+      const wasHearted = heartedSetHas(url);
       // Optimistic update
-      if (wasHearted) heartedUrls.delete(url); else heartedUrls.add(url);
+      if (wasHearted) {
+        for (const u of [...heartedUrls]) {
+          if (heartedUrlMatches(u, url)) heartedUrls.delete(u);
+        }
+      } else {
+        heartedUrls.add(photoUrl);
+      }
       updateFavUI(url);
 
       try {
         const res = await fetch(`${workerBase}/favorites/toggle`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ albumId, photoUrl: url, sessionId }),
+          body: JSON.stringify({ albumId, photoUrl, sessionId }),
         });
         if (res.ok) {
           const { hearted } = await res.json();
-          if (hearted) heartedUrls.add(url); else heartedUrls.delete(url);
+          for (const u of [...heartedUrls]) {
+            if (heartedUrlMatches(u, url)) heartedUrls.delete(u);
+          }
+          if (hearted) heartedUrls.add(photoUrl);
           updateFavUI(url);
         } else {
           // Revert on failure
-          if (wasHearted) heartedUrls.add(url); else heartedUrls.delete(url);
+          for (const u of [...heartedUrls]) {
+            if (heartedUrlMatches(u, url)) heartedUrls.delete(u);
+          }
+          if (wasHearted) heartedUrls.add(photoUrl);
           updateFavUI(url);
         }
       } catch {
         // Revert on network error
-        if (wasHearted) heartedUrls.add(url); else heartedUrls.delete(url);
+        for (const u of [...heartedUrls]) {
+          if (heartedUrlMatches(u, url)) heartedUrls.delete(u);
+        }
+        if (wasHearted) heartedUrls.add(photoUrl);
         updateFavUI(url);
       }
     }
 
     function updateFavUI(url) {
-      const hearted = heartedUrls.has(url);
-      // Use direct attribute comparison — CSS.escape can mangle URL characters in selectors
+      const hearted = heartedSetHas(url);
+      // Match by object key — private albums use Worker proxy URLs in data-fav-url
       document.querySelectorAll('.fav-badge').forEach(badge => {
-        if (badge.dataset.favUrl !== url) return;
+        if (!heartedUrlMatches(badge.dataset.favUrl, url)) return;
         badge.classList.toggle('hearted', hearted);
         badge.setAttribute('aria-label', hearted ? 'Remove from favorites' : 'Add to favorites');
       });
@@ -2794,7 +2821,7 @@
       if (!favBtn || favBtn.style.display === 'none') return;
       const url = allPhotos[currentIndex];
       if (!url) return;
-      const hearted = heartedUrls.has(url);
+      const hearted = heartedSetHas(url);
       favBtn.classList.toggle('hearted', hearted);
       favBtn.setAttribute('aria-pressed', hearted ? 'true' : 'false');
       favBtn.setAttribute('aria-label', hearted ? 'Remove from favorites' : 'Add to favorites');

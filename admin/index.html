@@ -820,7 +820,7 @@
       container.innerHTML = '';
 
       const allPhotos = getAlbumAllPhotos(album).filter(u => !u.endsWith('.svg'));
-      const heartMap  = new Map(tally.map(({ photoUrl, count }) => [photoUrl, count]));
+      const heartMap  = new Map(tally.map(({ photoUrl, count }) => [photoObjectKey(photoUrl), count]));
       const curatedSet = new Set(Array.isArray(album.curated) ? album.curated : []);
 
       const heartedCount  = tally.length;
@@ -936,7 +936,7 @@
         checkEl.addEventListener('click', (e) => { e.stopPropagation(); toggleThumb(thumb, url); });
 
         // Heart count badge (top-right)
-        const hearts = heartMap.get(url) || 0;
+        const hearts = heartMap.get(photoObjectKey(url)) || 0;
         if (hearts > 0) {
           const hBadge = document.createElement('div');
           hBadge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);color:#e85d6e;font-size:0.65rem;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px;pointer-events:none;z-index:3';

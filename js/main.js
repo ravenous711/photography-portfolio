@@ -348,6 +348,31 @@ function downloadUrl(fullUrl) {
 // alias kept for admin/curate call sites
 function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
 
+/** Stable R2 object path for matching hearts across URL formats (R2 vs Worker proxy). */
+function photoObjectKey(url) {
+  if (!url) return '';
+  if (url.includes('/image?') && url.includes('key=')) {
+    try {
+      const key = new URL(url).searchParams.get('key') || '';
+      return key.replace(/^(grid|view|download)\//, '');
+    } catch { /* fall through */ }
+  }
+  const path = url.replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+/, '');
+  return path.replace(/^(grid|view|download)\//, '');
+}
+
+/** Canonical R2 URL for persisting favorites (strip Worker proxy tokens and size tiers). */
+function canonicalPhotoUrl(url) {
+  const key = photoObjectKey(url);
+  if (!key) return url;
+  if (typeof R2_BASE_URL !== 'undefined' && R2_BASE_URL) {
+    return `${R2_BASE_URL.replace(/\/$/, '')}/${key}`;
+  }
+  const m = url.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
+  if (m) return `${m[1]}${key}`;
+  return url;
+}
+
 function getAlbumFilmSections(album) {
   if (!album) return [];
   if (album.filmSections?.length) return album.filmSections;
