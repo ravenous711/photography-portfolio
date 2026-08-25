@@ -457,11 +457,7 @@
   <script>
     const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
 
-    function gridUrl(fullUrl) {
-      const m = fullUrl.match(/^(https:\/\/pub-[a-f0-9]+\.r2\.dev\/)(.+)$/);
-      return m ? `${m[1]}grid/${m[2]}` : fullUrl;
-    }
-    function thumbUrl(fullUrl) { return gridUrl(fullUrl); }
+    // gridUrl / thumbUrl / toImageUrl / isPrivateAudience — from main.js
 
     // ── Auth (server-side session) ───────────────────────────────────────────
     document.getElementById('auth-site-name').textContent = SITE_CONFIG.photographerName;
@@ -749,6 +745,13 @@
 
     // ── Album detail navigation ───────────────────────────────────────────────
     let currentDetailAlbum = null;
+    let detailPrivateToken = null;
+
+    function adminDisplayUrl(url, tier = 'grid') {
+      if (!url) return url;
+      const proxied = detailPrivateToken ? toImageUrl(url, detailPrivateToken) : url;
+      return tier === 'view' ? viewUrl(proxied) : gridUrl(proxied);
+    }
 
     async function openAlbumDetail(album, pushState = true) {
       currentDetailAlbum = album;
@@ -775,6 +778,13 @@
       document.getElementById('detail-status').textContent = 'Loading…';
       document.getElementById('album-detail-grid-container').innerHTML = '';
 
+      detailPrivateToken = null;
+      const audience = album.audience || 'public';
+      if (isPrivateAudience(audience)) {
+        detailPrivateToken = await getAdminPrivateToken(audience)
+          || await getPrivateToken(audience);
+      }
+
       // Fetch favorites tally async
       let tally = [];
       try {
@@ -789,6 +799,7 @@
 
     function _showListView() {
       currentDetailAlbum = null;
+      detailPrivateToken = null;
       document.getElementById('pane-album-detail').style.display = 'none';
       document.getElementById('pane-albums').style.display       = '';
       document.getElementById('toolbar-tabs').style.display       = '';
@@ -894,8 +905,8 @@
             const src = img.dataset.src;
             delete img.dataset.src;
             img.addEventListener('load',  () => { img.classList.add('loaded'); runJustifiedLayout(grid); }, { once: true });
-            img.addEventListener('error', () => { img.src = src; }, { once: true }); // fallback to full URL
-            img.src = gridUrl(src);
+            img.addEventListener('error', () => { img.src = detailPrivateToken ? toImageUrl(src, detailPrivateToken) : src; }, { once: true });
+            img.src = adminDisplayUrl(src);
           }
           observer.unobserve(entry.target);
         });
@@ -1189,7 +1200,7 @@
       img.classList.remove('loaded');
       img.onload = () => { img.classList.add('loaded'); lb.classList.remove('loading'); };
       img.onerror = () => { lb.classList.remove('loading'); };
-      img.src = url;
+      img.src = adminDisplayUrl(url, 'view');
       if (img.complete && img.naturalWidth) { img.classList.add('loaded'); lb.classList.remove('loading'); }
 
       // Counter
@@ -1205,7 +1216,7 @@
         const i = lbIndex + offset;
         if (i >= 0 && i < lbPhotos.length) {
           const pre = new Image();
-          pre.src = lbPhotos[i];
+          pre.src = adminDisplayUrl(lbPhotos[i], 'view');
         }
       });
 

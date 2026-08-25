@@ -114,6 +114,50 @@ async function handleUnlock(request, env, cors) {
   return json({ token, tier: grantedTier, expiresAt: exp * 1000 });
 }
 
+// ── /admin/image-token — mint image token for authenticated admin sessions ───
+
+/**
+ * POST /admin/image-token
+ * Requires: Authorization: Bearer <ADMIN_SECRET>
+ * Body: { audience: "family" | "family:<name>" | "client:<name>" }
+ * Returns: { token, tier, expiresAt }
+ */
+async function handleAdminImageToken(request, env, cors) {
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
+  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (!env.UNLOCK_SECRET) return json({ error: 'Unlock not configured' }, 503);
+
+  const auth = request.headers.get('Authorization') || '';
+  const adminToken = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!env.ADMIN_SECRET || !adminToken || adminToken !== env.ADMIN_SECRET) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const { audience } = body || {};
+  if (!audience || typeof audience !== 'string') {
+    return json({ error: 'audience required' }, 400);
+  }
+  if (
+    audience !== 'family' &&
+    !audience.startsWith('family:') &&
+    !audience.startsWith('client:')
+  ) {
+    return json({ error: 'Invalid audience' }, 400);
+  }
+
+  const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
+  const token = await createToken({ tier: audience, exp }, env.UNLOCK_SECRET);
+  return json({ token, tier: audience, expiresAt: exp * 1000 });
+}
+
 // ── /image — serve private R2 objects behind token gate ───────────────────────
 
 /**
@@ -463,6 +507,10 @@ export default {
     // Private image unlock
     if (url.pathname === '/unlock') {
       return handleUnlock(request, env, cors);
+    }
+
+    if (url.pathname === '/admin/image-token') {
+      return handleAdminImageToken(request, env, cors);
     }
 
     // Private image serving

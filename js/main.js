@@ -915,6 +915,82 @@ const TierAuth = {
   },
 };
 
+function isPrivateAudience(audience) {
+  return (typeof audience === 'string') && (
+    audience === 'family' ||
+    audience.startsWith('family:') ||
+    audience.startsWith('client:')
+  );
+}
+
+function toImageUrl(url, privateToken) {
+  if (!privateToken || !url) return url;
+  const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+  if (!workerBase) return url;
+  const key = url.replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+/, '');
+  return `${workerBase}/image?key=${encodeURIComponent(key)}&token=${encodeURIComponent(privateToken)}`;
+}
+
+async function getPrivateToken(audience) {
+  const cacheKey = `worker_token_${audience}`;
+  const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+  if (!workerBase) return null;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+    if (cached && cached.workerBase && cached.workerBase !== workerBase) {
+      sessionStorage.removeItem(cacheKey);
+    } else if (cached && cached.expiresAt > Date.now() + 5 * 60 * 1000) {
+      return cached.token;
+    }
+  } catch {}
+
+  const hash = TierAuth.getHash(audience);
+  if (!hash) return null;
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const resp = await fetch(`${workerBase}/unlock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hash }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        sessionStorage.setItem(cacheKey, JSON.stringify({ token: data.token, expiresAt: data.expiresAt, workerBase }));
+        return data.token;
+      }
+    } catch {}
+    if (attempt < 3) await new Promise(r => setTimeout(r, 400 * attempt));
+  }
+  return null;
+}
+
+async function getAdminPrivateToken(audience) {
+  const cacheKey = `admin_worker_token_${audience}`;
+  const workerBase = (typeof WORKER_BASE_URL !== 'undefined') ? WORKER_BASE_URL : '';
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+    if (cached && cached.workerBase && cached.workerBase !== workerBase) {
+      sessionStorage.removeItem(cacheKey);
+    } else if (cached && cached.expiresAt > Date.now() + 5 * 60 * 1000) {
+      return cached.token;
+    }
+  } catch {}
+
+  try {
+    const resp = await fetch(`/api/admin-image-token?audience=${encodeURIComponent(audience)}`, {
+      credentials: 'same-origin',
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!data.token) return null;
+    sessionStorage.setItem(cacheKey, JSON.stringify({ token: data.token, expiresAt: data.expiresAt, workerBase }));
+    return data.token;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Horizontal film-strip carousel — one row of full-height frames the visitor
  * swipes or arrows through. Uses native overflow scrolling plus scroll-snap so
