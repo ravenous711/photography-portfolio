@@ -327,7 +327,6 @@ const ALBUMS_FAMILY_2025 = [
     ],
   },
 
-
   // ── PAULINA'S WEDDING 2025 — Anger-Ali Family ───────────
   {
     id: 'paulinas-wedding-2025',
