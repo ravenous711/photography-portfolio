@@ -18,6 +18,7 @@ const ALBUMS_CLIENTS = [
     protected: false,
     portfolio: true,
     gridFavorites: false,
+    digitalLabel: 'Fujifilm X-T5',
     coverImage: `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
     curated: [
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
@@ -79,6 +80,24 @@ const ALBUMS_CLIENTS = [
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-49.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-50.jpg`,
       `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-51.jpg`,
+    ],
+    filmSections: [
+      {
+        label: 'Film · Minolta AF2 + Ultramax 400',
+        navLabel: 'Film',
+        camera: 'Minolta AF2',
+        filmStock: 'Kodak Ultramax 400',
+        photos: [
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-1.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-2.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-3.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-4.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-5.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-6.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-7.jpg`,
+          `${R2_BASE_URL}/Moksha-Yoga/Film/moksha_film-8.jpg`,
+        ],
+      },
     ],
   },
 
