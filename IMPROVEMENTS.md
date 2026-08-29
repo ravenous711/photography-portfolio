@@ -24,6 +24,7 @@ done, move it out of Open, add a Changelog line.
 | **BUG-3** | Fix athena-manifest `--upload-lists` writing only last batch | S |
 | **A11Y-2** | Better lightbox alt text (`Album — photo N`) | S |
 | **OPS-7** | Delete stale feature branches | S |
+| **STY-4** | Retire the now-unused `/api/exif` endpoint + `exifr` dep | S |
 
 ### 3 — Content & ops
 | ID | One-liner | Effort |
@@ -105,6 +106,13 @@ Jump here after picking an ID from Open tickets.
 - **Why:** Generic `alt="Photo"`.
 - **Files:** `album/index.html`
 - **Done when:** Alt like "Venice — photo 12".
+
+### STY-4 — Retire the unused `/api/exif` endpoint
+- **Effort:** S · **Risk:** Low · **Status:** TODO
+- **Why:** The lightbox EXIF line was removed, so nothing calls `/api/exif` and `exifr` is dead weight in the bundle.
+- **Fix:** Delete `api/exif.js`, drop `exifr` from `package.json`, prune the README/architecture references.
+- **Files:** `api/exif.js`, `package.json`, `README.md`
+- **Done when:** Endpoint and dependency gone; no references left.
 
 ### OPS-7 — Clean up stale feature branches
 - **Effort:** S · **Risk:** Low · **Status:** TODO
@@ -249,6 +257,17 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **Lightbox — full-bleed stage, floating chrome, zoom** — Aug 2026 (branch `feat/lightbox-fullbleed-zoom`).
+  The image box used to be `100svh` minus a fixed top bar, bottom pad and a 2.5rem meta strip,
+  with the arrow buttons taking another ~130px of width out of the flex row; a portrait photo on
+  a phone in landscape rendered 182x273. The stage is now absolutely positioned across the
+  viewport with both layers letterboxing via `object-fit: contain`, so that same photo paints
+  260x390 and desktop gains ~11%. Counter, action buttons, arrows and the new zoom cluster float
+  on top and fade after 3s idle. Zoom runs 1x–4x via buttons, wheel, trackpad pinch, double-click,
+  two-finger pinch and double-tap, with clamped panning and a background upgrade to the `download/`
+  tier (falling back to the original where that tier is not backfilled). The EXIF/kit line under
+  the photo is gone, taking `/api/exif` usage with it — see **STY-4**.
 
 - **Single-photo download filenames** — Aug 2026 (branch `fix/download-filenames`).
   Private/family albums saved every photo as `image` because the Worker URL
