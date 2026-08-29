@@ -683,36 +683,7 @@
       setPhotoSelected(index, !selected.has(index));
     }
 
-    function bindTapWithoutScroll(el, handler) {
-      if (!el) return;
-      let touchStartY = 0;
-      let touchStartX = 0;
-      let touchMoved = false;
-      let lastTouchTap = 0;
-
-      el.addEventListener('touchstart', (e) => {
-        touchMoved = false;
-        touchStartY = e.touches[0]?.clientY ?? 0;
-        touchStartX = e.touches[0]?.clientX ?? 0;
-      }, { passive: true });
-
-      el.addEventListener('touchmove', (e) => {
-        const y = e.touches[0]?.clientY ?? touchStartY;
-        const x = e.touches[0]?.clientX ?? touchStartX;
-        if (Math.abs(y - touchStartY) > 10 || Math.abs(x - touchStartX) > 10) touchMoved = true;
-      }, { passive: true });
-
-      el.addEventListener('touchend', (e) => {
-        if (touchMoved) return;
-        lastTouchTap = Date.now();
-        handler(e);
-      });
-
-      el.addEventListener('click', (e) => {
-        if (Date.now() - lastTouchTap < 500) return;
-        handler(e);
-      });
-    }
+    // bindTapWithoutScroll lives in /js/main.js — shared with the carousels.
 
     let scrollLockY = 0;
     let restoringFromLightbox = false;

@@ -436,6 +436,94 @@ function getAlbumPhotoCount(album) {
   return getAlbumAllPhotos(album).length;
 }
 
+// ── Which album does a photo belong to? ──
+// Carousel frames are copies of album photo URLs, so the owning album is found
+// by R2 key. A film frame can legitimately sit in several albums at once (a
+// city album's film section, the hidden roll, the film catalog), so candidates
+// are ranked: a visible album inside the collection being browsed wins, then
+// any visible album, then rolls, then hidden albums.
+let _photoOwnerIndex = null;
+
+function buildPhotoOwnerIndex() {
+  const index = new Map();
+  if (typeof ALBUMS === 'undefined') return index;
+
+  ALBUMS.forEach(album => {
+    if (album.type === 'group') return;
+    getAlbumAllPhotos(album).forEach(url => {
+      const key = photoObjectKey(url);
+      if (!key) return;
+      const owners = index.get(key);
+      if (owners) owners.push(album);
+      else index.set(key, [album]);
+    });
+  });
+
+  return index;
+}
+
+function photoOwnerRank(album, { preferParentId, preferAlbumId } = {}) {
+  const isRoll = album.albumKind === 'film-roll';
+  if (preferAlbumId && album.id === preferAlbumId) return 0;
+  if (preferParentId && album.parentId === preferParentId && !album.hidden && !isRoll) return 1;
+  if (!album.hidden && !isRoll) return 2;
+  if (!album.hidden) return 3;
+  return 4;
+}
+
+function findAlbumForPhoto(url, prefs = {}) {
+  if (!url) return null;
+  if (!_photoOwnerIndex) _photoOwnerIndex = buildPhotoOwnerIndex();
+
+  const owners = _photoOwnerIndex.get(photoObjectKey(url));
+  if (!owners?.length) return null;
+
+  return owners.reduce((best, album) =>
+    photoOwnerRank(album, prefs) < photoOwnerRank(best, prefs) ? album : best);
+}
+
+/** Can this visitor open the album page, or would it bounce them to a gate? */
+function canOpenAlbum(album) {
+  if (!album) return false;
+  const audience = album.audience || 'public';
+  if (typeof TierAuth !== 'undefined' && !TierAuth.canAccess(audience)) return false;
+  if (album.protected && typeof AlbumAuth !== 'undefined' && !AlbumAuth.isUnlocked(album.id)) return false;
+  return true;
+}
+
+// Tap vs scroll: a touch that drifts is the visitor scrolling past a photo, not
+// choosing it. Shared by the album grid and the carousels.
+function bindTapWithoutScroll(el, handler) {
+  if (!el) return;
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let touchMoved = false;
+  let lastTouchTap = 0;
+
+  el.addEventListener('touchstart', (e) => {
+    touchMoved = false;
+    touchStartY = e.touches[0]?.clientY ?? 0;
+    touchStartX = e.touches[0]?.clientX ?? 0;
+  }, { passive: true });
+
+  el.addEventListener('touchmove', (e) => {
+    const y = e.touches[0]?.clientY ?? touchStartY;
+    const x = e.touches[0]?.clientX ?? touchStartX;
+    if (Math.abs(y - touchStartY) > 10 || Math.abs(x - touchStartX) > 10) touchMoved = true;
+  }, { passive: true });
+
+  el.addEventListener('touchend', (e) => {
+    if (touchMoved) return;
+    lastTouchTap = Date.now();
+    handler(e);
+  });
+
+  el.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchTap < 500) return;
+    handler(e);
+  });
+}
+
 function isEmptyAlbum(album) {
   return album.type !== 'group' && !getAlbumPhotoCount(album);
 }
@@ -1028,6 +1116,7 @@ function renderPhotoFilmstrip(trackEl, urls, {
   nextBtn = null,
   railEl = null,
   thumbEl = null,
+  onActivate = null,
 } = {}) {
   if (!trackEl || !urls?.length) return;
 
@@ -1054,6 +1143,30 @@ function renderPhotoFilmstrip(trackEl, urls, {
     }, { once: true });
 
     item.appendChild(img);
+
+    if (onActivate) {
+      item.classList.add('strip-item--interactive');
+      item.dataset.stripIndex = String(i);
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-label', `Open photo ${i + 1}`);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'strip-item-overlay';
+      overlay.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        </svg>`;
+      item.appendChild(overlay);
+
+      bindTapWithoutScroll(item, () => onActivate(i, url));
+      item.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        onActivate(i, url);
+      });
+    }
+
     trackEl.appendChild(item);
   });
 
@@ -1155,6 +1268,51 @@ function renderPhotoFilmstrip(trackEl, urls, {
   }
 
   requestAnimationFrame(() => trackEl._stripSync?.());
+}
+
+let _filmstripSeq = 0;
+
+/**
+ * Build a filmstrip (track + arrows + scrub rail) inside `containerEl` and
+ * render `urls` into it. Pages that host a single strip can hand-write the
+ * markup; this is for anywhere the count is dynamic, like one strip per
+ * project on /professional-work/.
+ */
+function createFilmstrip(containerEl, urls, { label = 'Photos', ...stripOptions } = {}) {
+  if (!containerEl || !urls?.length) return null;
+
+  const trackId = `filmstrip-track-${++_filmstripSeq}`;
+  containerEl.innerHTML = `
+    <div class="group-strip">
+      <button type="button" class="group-strip-nav group-strip-nav--prev" aria-label="Previous photos" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6"/>
+        </svg>
+      </button>
+      <div class="group-strip-track" id="${trackId}" tabindex="0" role="region" aria-label="${label}"></div>
+      <button type="button" class="group-strip-nav group-strip-nav--next" aria-label="More photos" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6"/>
+        </svg>
+      </button>
+    </div>
+    <div class="group-strip-scrollbar" hidden>
+      <div class="group-strip-scrollbar-thumb" tabindex="0" role="scrollbar"
+           aria-controls="${trackId}" aria-orientation="horizontal"
+           aria-label="Scroll through photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    </div>
+  `;
+
+  const trackEl = containerEl.querySelector('.group-strip-track');
+  renderPhotoFilmstrip(trackEl, urls, {
+    ...stripOptions,
+    prevBtn: containerEl.querySelector('.group-strip-nav--prev'),
+    nextBtn: containerEl.querySelector('.group-strip-nav--next'),
+    railEl: containerEl.querySelector('.group-strip-scrollbar'),
+    thumbEl: containerEl.querySelector('.group-strip-scrollbar-thumb'),
+  });
+
+  return trackEl;
 }
 
 /**

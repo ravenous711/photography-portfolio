@@ -76,6 +76,12 @@ const Routes = {
 
   photoFilename(url) {
     if (!url) return '';
+    // Worker-proxied private URLs (/image?key=…) carry the name in the key, so
+    // the last path segment would just be "image".
+    if (typeof photoObjectKey === 'function') {
+      const key = photoObjectKey(url);
+      if (key) return key.split('/').pop();
+    }
     return url.split('/').pop().split('?')[0];
   },
 
@@ -84,6 +90,13 @@ const Routes = {
     const base = this.albumPageUrl(album);
     const name = this.photoFilename(photoUrl);
     return name ? `${base}?photo=${encodeURIComponent(name)}` : base;
+  },
+
+  /** Album page URL that lands in the grid with a photo centred, not in the lightbox */
+  albumPhotoGridUrl(album, photoUrl) {
+    const base = this.albumPageUrl(album);
+    const name = this.photoFilename(photoUrl);
+    return name ? `${base}?photo=${encodeURIComponent(name)}&grid=1` : base;
   },
 
   _albums() {
