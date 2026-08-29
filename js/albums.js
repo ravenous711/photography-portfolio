@@ -48,6 +48,7 @@
 //   subAlbums   – array of sub-album ids (for type:'group')
 //   subAlbumSections – optional [{ title, albums }] to section the group card grid
 //   includeHiddenSubAlbums – group flag: show hidden sub-albums in the card grid
+//   showFilmRolls – group flag: false hides the film-roll ledger on the group page
 //   parentId    – parent group id (for sub-albums)
 //   slug        – URL slug within parent group (for sub-albums)
 //   familySlug  – slug used in /familyalbums/:year/:slug/ URLs

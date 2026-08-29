@@ -4,7 +4,7 @@
 // This file is loaded by all pages via albums.js.
 // Italy 2026 — public trip (curated highlights + optional full-album toggle).
 // Includes: group index, city sub-albums (Venice, Pisa, Florence, Assisi, Rome),
-// and all individual film roll albums (hidden, linked from group page).
+// and hidden full-roll albums (city film sections; not listed on the group page).
 // ============================================================
 
 // eslint-disable-next-line no-unused-vars
@@ -21,7 +21,7 @@ const ALBUMS_ITALY_2026 = [
     type: 'group',
     audience: 'public',
     protected: false,
-    filmRollsDesc: 'See all the film rolls used during the trip! These are also sprinkled into the respective cities',
+    showFilmRolls: false,
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
     subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome'],
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
@@ -788,7 +788,7 @@ const ALBUMS_ITALY_2026 = [
     ],
   },
 
-  // ── ITALY FILM ROLLS (hidden — linked from Italy group page) ──
+  // ── ITALY FILM ROLLS (hidden — full-roll pages; cities still mix in frames) ──
   {
     id: 'italy-roll-ultramax',
     slug: 'film-ultramax',

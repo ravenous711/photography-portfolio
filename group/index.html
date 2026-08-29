@@ -394,7 +394,7 @@
 
       // Covers first, film rolls ledger at the bottom.
       // Catalog film groups already show every roll as a cover card — skip the text strip.
-      if (!group.includeHiddenSubAlbums) {
+      if (!group.includeHiddenSubAlbums && group.showFilmRolls !== false) {
         renderFilmRollLinks(group);
       }
     }
