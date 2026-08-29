@@ -372,7 +372,6 @@
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
       </button>
-      <button type="button" id="lightbox-zoom-reset" class="lightbox-zoom-level" aria-label="Reset zoom">1&times;</button>
       <button type="button" id="lightbox-zoom-in" class="lightbox-action-btn" aria-label="Zoom in">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -2223,9 +2222,8 @@
     let zoomPanX = 0;
     let zoomPanY = 0;
 
-    const zoomInBtn    = document.getElementById('lightbox-zoom-in');
-    const zoomOutBtn   = document.getElementById('lightbox-zoom-out');
-    const zoomResetBtn = document.getElementById('lightbox-zoom-reset');
+    const zoomInBtn  = document.getElementById('lightbox-zoom-in');
+    const zoomOutBtn = document.getElementById('lightbox-zoom-out');
 
     function isZoomed() {
       return zoomScale > ZOOM_MIN + 0.001;
@@ -2261,11 +2259,8 @@
     }
 
     function updateZoomUI() {
-      const rounded = Math.round(zoomScale * 10) / 10;
-      zoomResetBtn.textContent = `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}\u00d7`;
-      zoomOutBtn.disabled   = !isZoomed();
-      zoomResetBtn.disabled = !isZoomed();
-      zoomInBtn.disabled    = zoomScale >= ZOOM_MAX - 0.001;
+      zoomOutBtn.disabled = !isZoomed();
+      zoomInBtn.disabled  = zoomScale >= ZOOM_MAX - 0.001;
     }
 
     function applyZoomTransform({ animate = false } = {}) {
@@ -2695,7 +2690,6 @@
     // ── Zoom controls ──
     zoomInBtn.addEventListener('click', () => zoomStep(1));
     zoomOutBtn.addEventListener('click', () => zoomStep(-1));
-    zoomResetBtn.addEventListener('click', () => resetZoom({ animate: true }));
     updateZoomUI();
 
     lightbox.addEventListener('wheel', (e) => {

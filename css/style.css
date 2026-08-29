@@ -1779,22 +1779,28 @@ a.album-sibling-link:hover {
   gap: 0.5rem;
 }
 
+/* Controls float over the photo, which may be a bright sky, so they carry a
+   dark scrim instead of the translucent-white fill used elsewhere on the site —
+   white on white was invisible. */
 .lightbox-action-btn {
   width: 44px;
   height: 44px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.22);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   transition: background var(--transition);
   flex-shrink: 0;
 }
 
-.lightbox-action-btn:hover { background: rgba(255,255,255,0.18); }
+.lightbox-action-btn:hover { background: rgba(0,0,0,0.65); }
 .lightbox-action-btn.is-liked {
   background: rgba(201, 169, 110, 0.25);
   border-color: var(--color-gold);
@@ -1844,8 +1850,8 @@ a.album-sibling-link:hover {
   transform: translateY(-50%);
   width: 44px;
   height: 44px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.22);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -1853,6 +1859,9 @@ a.album-sibling-link:hover {
   justify-content: center;
   color: #fff;
   font-size: 1rem;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   transition: background var(--transition);
   z-index: 15;
 }
@@ -1863,7 +1872,7 @@ a.album-sibling-link:hover {
 /* First/last photo — no arrow to offer */
 .lightbox-nav.is-unavailable { visibility: hidden; }
 
-.lightbox-nav:hover { background: rgba(255,255,255,0.18); }
+.lightbox-nav:hover { background: rgba(0,0,0,0.65); }
 
 /* Invisible tap zones — overlay left/right thirds of the stage on mobile.
    Sit below the floating controls (z-index 15/20) so buttons still win. */
@@ -1963,37 +1972,17 @@ a.album-sibling-link:hover {
   gap: 0.5rem;
 }
 
-.lightbox-zoom-level {
-  min-width: 60px;
-  height: 44px;
-  padding: 0 0.85rem;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 999px;
-  cursor: pointer;
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  transition: background var(--transition);
-}
-
-.lightbox-zoom-level:hover { background: rgba(255,255,255,0.18); }
-
-.lightbox-zoom-level:disabled,
+/* Dim the glyph rather than the whole button: fading the scrim too would make
+   the control vanish against a bright photo and hide that zoom exists at all. */
 .lightbox-zoom .lightbox-action-btn:disabled {
-  opacity: 0.35;
+  opacity: 1;
+  color: rgba(255,255,255,0.4);
+  border-color: rgba(255,255,255,0.12);
   cursor: default;
 }
 
 @media (max-width: 640px) {
-  .lightbox-zoom { gap: 0.35rem; }
-
-  .lightbox-zoom-level {
-    min-width: 52px;
-    height: 40px;
-    font-size: 0.66rem;
-  }
+  .lightbox-zoom { gap: 0.5rem; }
 }
 
 /* Idle fade — after a few seconds of no input the photo sits alone on black.
