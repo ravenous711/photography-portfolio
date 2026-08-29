@@ -2298,6 +2298,7 @@
       zoomScale = target;
       clampZoomPan();
       applyZoomTransform({ animate });
+      if (isZoomed()) upgradeZoomQuality();
     }
 
     function zoomStep(dir) {
@@ -2316,6 +2317,44 @@
 
     function toggleZoomAt(anchor) {
       setZoom(isZoomed() ? ZOOM_MIN : ZOOM_DOUBLE_TAP, anchor, { animate: true });
+    }
+
+    // Album prefixes whose download/ tier is not backfilled yet (404 probe result)
+    const _dlMissingPrefixes = new Set();
+    const _zoomUpgraded = new Set();
+
+    // The view/ tier is ~2048px, which goes soft past 2x. On the first zoom of
+    // a photo, pull the ~4000px download/ tier in the background; if that tier
+    // was never backfilled for this album, fall back to the original.
+    function upgradeZoomQuality() {
+      const url = allPhotos[currentIndex];
+      if (!url || _zoomUpgraded.has(url)) return;
+      if (ImagePreload.isSlowConnection()) return;
+
+      _zoomUpgraded.add(url);
+
+      const index = currentIndex;
+      const generation = lightboxNavGeneration;
+      const isCurrent = () =>
+        lightbox.classList.contains('open') &&
+        currentIndex === index &&
+        generation === lightboxNavGeneration;
+
+      const swapIn = (src) => ImagePreload.load(src).then(async () => {
+        if (!isCurrent()) return;
+        await ImagePreload.apply(lightboxLayers[activeLayer], src);
+      });
+
+      const prefix = _viewAlbumPrefix(url);
+      if (_dlMissingPrefixes.has(prefix)) {
+        swapIn(url).catch(() => {});
+        return;
+      }
+
+      swapIn(downloadUrl(url)).catch(() => {
+        if (prefix) _dlMissingPrefixes.add(prefix);
+        swapIn(url).catch(() => {});
+      });
     }
 
     // ── Chrome idle fade ──
