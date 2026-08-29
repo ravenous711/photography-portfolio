@@ -2475,6 +2475,7 @@
 
       lightbox.classList.remove('open');
       hideLightboxChromeNow();
+      resetZoom();
       restoringFromLightbox = true;
       unlockPageScroll(targetY != null ? targetY : scrollLockY);
       syncLightboxPhotoUrl(-1);
@@ -2564,6 +2565,7 @@
     function loadLightboxImage(index, generation = lightboxNavGeneration) {
       const url = allPhotos[index];
 
+      resetZoom();
       updateLightboxMeta(index);
       syncLightboxPhotoUrl(index);
       document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
@@ -2642,6 +2644,9 @@
 
     lightbox.addEventListener('click', (e) => {
       if (e.target.closest(LB_INTERACTIVE)) return;
+      // While zoomed the empty area is part of the canvas being dragged around,
+      // so a stray click there must not dismiss the photo.
+      if (isZoomed()) return;
       if (isPointOnPhoto(e.clientX, e.clientY)) return;
       closeLightbox();
     });
