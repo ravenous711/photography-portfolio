@@ -327,6 +327,12 @@
           </button>
         </div>
       </div>
+      <button type="button" id="lightbox-in-grid" class="lightbox-action-btn" aria-label="Show this photo in the album grid">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </button>
       <button type="button" id="lightbox-close" class="lightbox-action-btn" aria-label="Close lightbox" onclick="closeLightbox()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -410,6 +416,7 @@
   <script src="/js/albums.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/photo-viewer.js"></script>
   <script>
     // ════════════════════════════════════════════════════════
     // ALBUM PAGE LOGIC
@@ -1566,6 +1573,21 @@
           nextBtn: document.getElementById('album-strip-next'),
           railEl: document.getElementById('album-strip-scrollbar'),
           thumbEl: document.getElementById('album-strip-thumb'),
+          // Trailer frames are drawn from the archive below, so they open in
+          // this page's own lightbox at the matching grid position.
+          onActivate: (stripIndex, url) => {
+            const index = indexInAlbum(url);
+            if (index >= 0) {
+              openLightbox(index);
+              return;
+            }
+            PhotoViewer.open({
+              photos: trailer,
+              index: stripIndex,
+              alt: albumDisplayTitle(album),
+              currentAlbumId: album.id,
+            });
+          },
         });
       } else if (albumHighlights) {
         albumHighlights.hidden = true;
@@ -1690,6 +1712,57 @@
       return true;
     }
 
+    const FOCUS_SETTLE_MS = 1400;
+    const FOCUS_RING_MS = 2800;
+    let focusRingTimer = null;
+
+    /**
+     * Centre a photo in the grid and ring it briefly — used when arriving from
+     * a carousel and when leaving the lightbox for the grid.
+     * Thumbnails decode after render and the justified rows reflow each time,
+     * so a single scroll would land short; keep re-centring until the layout
+     * settles or the visitor scrolls for themselves.
+     */
+    function focusPhotoInGrid(index) {
+      const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
+      if (!thumb) return false;
+
+      scrollToPhotoInGrid(index);
+
+      clearTimeout(focusRingTimer);
+      thumb.classList.remove('photo-thumb--focused');
+      void thumb.offsetWidth; // restart the ring if the same photo is revisited
+      thumb.classList.add('photo-thumb--focused');
+      focusRingTimer = setTimeout(() => thumb.classList.remove('photo-thumb--focused'), FOCUS_RING_MS);
+
+      // Programmatic scrolling fires 'scroll' too, so hand-off is detected from
+      // input events instead.
+      const handOffEvents = ['wheel', 'touchstart', 'keydown'];
+      let handedOff = false;
+      const handOff = () => { handedOff = true; };
+      handOffEvents.forEach(type => window.addEventListener(type, handOff, { passive: true }));
+
+      const deadline = Date.now() + FOCUS_SETTLE_MS;
+      const settle = () => {
+        if (handedOff || Date.now() > deadline) {
+          handOffEvents.forEach(type => window.removeEventListener(type, handOff));
+          return;
+        }
+        scrollToPhotoInGrid(index);
+        requestAnimationFrame(settle);
+      };
+      requestAnimationFrame(settle);
+      return true;
+    }
+
+    /** Position of a photo in the current view, matched on R2 key so a trailer
+     *  frame lines up with its proxied counterpart in a private album. */
+    function indexInAlbum(url) {
+      const key = photoObjectKey(url);
+      if (!key) return -1;
+      return allPhotos.findIndex(photo => photoObjectKey(photo) === key);
+    }
+
     function getLinkedPhotoIndex() {
       const name = new URLSearchParams(window.location.search).get('photo');
       if (!name) return -1;
@@ -1704,6 +1777,14 @@
     function scrollToLinkedPhoto() {
       const index = getLinkedPhotoIndex();
       if (index < 0) return;
+
+      // ?grid=1 comes from a carousel's "View in album" link: the visitor asked
+      // for the album, so land in the grid on that photo rather than reopening
+      // the photo full screen.
+      if (new URLSearchParams(window.location.search).get('grid') === '1') {
+        requestAnimationFrame(() => focusPhotoInGrid(index));
+        return;
+      }
 
       // showAlbum() runs before lightbox DOM refs exist — defer until init finishes
       setTimeout(() => openLightbox(index), 0);
@@ -2614,6 +2695,14 @@
 
     const likeBtn = document.getElementById('lightbox-like');
     bindTapWithoutScroll(likeBtn, () => togglePhotoSelected(currentIndex));
+
+    // Leave the photo full screen and pick it out in the grid instead — the
+    // counterpart to the carousels' "View in album".
+    document.getElementById('lightbox-in-grid')?.addEventListener('click', () => {
+      const index = currentIndex;
+      closeLightbox();
+      requestAnimationFrame(() => focusPhotoInGrid(index));
+    });
 
     // Mobile tap zones
     document.getElementById('lightbox-tap-prev')?.addEventListener('click', () => lightboxNav(-1));

@@ -154,6 +154,7 @@
   <script src="/js/routes.js"></script>
   <script src="/js/justified-layout.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/photo-viewer.js"></script>
   <script>
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
@@ -306,6 +307,16 @@
       sectionsRoot.hidden = false;
 
       if (showStrip) {
+        const openHighlight = (index) => PhotoViewer.open({
+          photos: highlights,
+          index,
+          alt: group.title,
+          // Trailer frames are borrowed from the sub-albums, so a click leads
+          // back to the city (or project) the photo actually belongs to.
+          preferParentId: group.id,
+          syncUrl: true,
+        });
+
         renderPhotoFilmstrip(highlightsGrid, highlights, {
           alt: `${group.title} photo`,
           eagerCount: 4,
@@ -313,7 +324,18 @@
           nextBtn: document.getElementById('group-strip-next'),
           railEl: document.getElementById('group-strip-scrollbar'),
           thumbEl: document.getElementById('group-strip-thumb'),
+          onActivate: openHighlight,
         });
+
+        // Shareable ?photo= link back into the trailer
+        const linked = new URLSearchParams(window.location.search).get('photo');
+        if (linked) {
+          const target = decodeURIComponent(linked).toLowerCase();
+          const index = highlights.findIndex(
+            url => Routes.photoFilename(url).toLowerCase() === target
+          );
+          if (index >= 0) openHighlight(index);
+        }
       }
 
       function appendAlbumCard(grid, album) {
