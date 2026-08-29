@@ -1928,44 +1928,11 @@ a.album-sibling-link:hover {
   color: rgba(255, 255, 255, 0.4);
 }
 
-#lightbox-meta-bottom {
-  position: absolute;
-  bottom: var(--lb-chrome-bot);
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 90%;
-  z-index: 20;
-  pointer-events: none;
-}
-
-#lightbox-detail-part {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 1.5rem;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-#lightbox-settings-part {
-  color: rgba(255, 255, 255, 0.3);
-}
-
 @media (max-width: 640px) {
   #lightbox-caption-row {
     gap: 1.25rem;
     font-size: 0.68rem;
     letter-spacing: 0.08em;
-  }
-
-  #lightbox-detail-part {
-    gap: 1rem;
-    font-size: 0.62rem;
   }
 }
 

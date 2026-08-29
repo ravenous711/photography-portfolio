@@ -365,13 +365,6 @@
         <span id="lightbox-overall-part"></span>
       </div>
     </div>
-
-    <div id="lightbox-meta-bottom">
-      <p id="lightbox-detail-part">
-        <span id="lightbox-camera-part"></span>
-        <span id="lightbox-settings-part"></span>
-      </p>
-    </div>
   </div>
 
   <!-- ── Download Progress Toast ── -->
@@ -1271,12 +1264,6 @@
       bindTapWithoutScroll(thumb, handleActivate);
       thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleActivate(); });
 
-      // Prefetch EXIF on hover for digital photos so it's cached before lightbox opens
-      const digitalCount = (album.photos || []).length;
-      if (index < digitalCount) {
-        thumb.addEventListener('mouseenter', () => fetchExifString(allPhotos[index]), { once: true });
-      }
-
       return thumb;
     }
 
@@ -1697,71 +1684,6 @@
         offset += count;
       }
       return 'digital-section';
-    }
-
-    function getFilmSectionRollMeta(section) {
-      if (!section) return {};
-      if (section.camera || section.filmStock) {
-        return {
-          camera: section.camera,
-          filmStock: section.filmStock || section.label,
-        };
-      }
-
-      const photos = section.photos || [];
-      if (!photos.length) return { filmStock: section.label };
-
-      const roll = ALBUMS.find(a =>
-        a.albumKind === 'film-roll' &&
-        Array.isArray(a.photos) &&
-        photos.some(url => a.photos.includes(url))
-      );
-      if (roll) {
-        return {
-          camera: roll.camera,
-          filmStock: roll.filmStock,
-        };
-      }
-
-      return { filmStock: section.label };
-    }
-
-    function getFilmSectionDetail(section) {
-      const rollMeta = getFilmSectionRollMeta(section);
-      return [rollMeta.camera, rollMeta.filmStock].filter(Boolean).join(' · ');
-    }
-
-    // The title above the photo is only the album-wide counter, so these parts
-    // just supply the kit line under the photo for whichever section the photo
-    // belongs to. In curated mode photos are attributed to their curated section.
-    function getLightboxCaptionParts(index) {
-      const digitalDetail = album.digitalLabel || '';
-
-      if (isCuratedView) {
-        const { digital: curatedDigital, filmSections: curatedFilmSections } = buildCuratedSections(album);
-        const digitalCount = curatedDigital.length;
-        if (index < digitalCount) return { detail: digitalDetail };
-
-        let offset = digitalCount;
-        for (const section of curatedFilmSections) {
-          const count = section.photos.length;
-          if (index < offset + count) return { detail: getFilmSectionDetail(section) };
-          offset += count;
-        }
-        return { detail: '' };
-      }
-
-      const digitalCount = (album.photos || []).length;
-      if (index < digitalCount) return { detail: digitalDetail };
-
-      let offset = digitalCount;
-      for (const section of getAlbumFilmSections(album)) {
-        const count = (section.photos || []).length;
-        if (index < offset + count) return { detail: getFilmSectionDetail(section) };
-        offset += count;
-      }
-
-      return { detail: '' };
     }
 
     function getPhotoScrollTarget(index) {
@@ -2241,52 +2163,7 @@
     let activeLayer = 0;
     let lightboxNavGeneration = 0;
     const lightboxPositionPart = document.getElementById('lightbox-position-part');
-    const lightboxDetailPart   = document.getElementById('lightbox-detail-part');
-    const lightboxCameraPart   = document.getElementById('lightbox-camera-part');
-    const lightboxSettingsPart = document.getElementById('lightbox-settings-part');
     const lightboxOverallPart  = document.getElementById('lightbox-overall-part');
-    const lightboxMetaTop      = document.getElementById('lightbox-meta-top');
-    const lightboxMetaBottom   = document.getElementById('lightbox-meta-bottom');
-
-    // ── EXIF cache: url → formatted string (or null if unavailable) ──
-    const exifCache = new Map();
-
-    async function fetchExifString(url) {
-      if (exifCache.has(url)) return exifCache.get(url);
-
-      try {
-        const res = await fetch(`/api/exif/?url=${encodeURIComponent(url)}`);
-        if (res.status === 204) { exifCache.set(url, null); return null; }
-        if (!res.ok) { exifCache.set(url, null); return null; }
-
-        const data = await res.json();
-        if (!data) { exifCache.set(url, null); return null; }
-
-        const parts = [];
-        if (data.ExposureTime != null) {
-          const t = data.ExposureTime;
-          parts.push(t < 1 ? `1/${Math.round(1 / t)}s` : `${t}s`);
-        }
-        if (data.FNumber     != null) parts.push(`f/${data.FNumber}`);
-        if (data.ISO         != null) parts.push(`ISO ${data.ISO}`);
-        if (data.FocalLength != null) parts.push(`${Math.round(data.FocalLength)}mm`);
-
-        const str = parts.length ? parts.join(' · ') : null;
-        exifCache.set(url, str);
-        return str;
-      } catch {
-        exifCache.set(url, null);
-        return null;
-      }
-    }
-
-    function syncLightboxCaptionWidth() {
-      const activeImg = lightboxLayers[activeLayer];
-      const w = activeImg?.offsetWidth;
-      if (!w) return;
-      lightboxMetaTop.style.width = `${w}px`;
-      lightboxMetaBottom.style.width = `${w}px`;
-    }
 
     // On-screen rect of the painted photo. The layers fill the stage and
     // letterbox via object-fit: contain, so the painted area is derived from
@@ -2378,7 +2255,6 @@
       currentImg.classList.remove('active');
       currentImg.src = '';
       activeLayer = nextLayer;
-      requestAnimationFrame(syncLightboxCaptionWidth);
 
       // Upgrade quality in background: grid → view/ (with 404 fallback).
       // If the view/ tier hasn't been backfilled yet (prefix in _viewMissingPrefixes),
@@ -2394,7 +2270,6 @@
           ImagePreload.load(fullResUrl).then(async () => {
             if (!isCurrent()) return;
             await ImagePreload.apply(lightboxLayers[activeLayer], fullResUrl);
-            if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
           }).catch(() => {});
         };
 
@@ -2404,7 +2279,6 @@
           ImagePreload.load(vUrl).then(async () => {
             if (!isCurrent()) return;
             await ImagePreload.apply(lightboxLayers[activeLayer], vUrl);
-            if (isCurrent()) requestAnimationFrame(syncLightboxCaptionWidth);
           }).catch(() => {
             if (prefix) _viewMissingPrefixes.add(prefix);
             upgradeToFull();
@@ -2450,8 +2324,6 @@
         layer.src = '';
       });
       activeLayer = 0;
-      lightboxMetaTop.style.width = '';
-      lightboxMetaBottom.style.width = '';
       updateSelectionUI();
       window.setTimeout(() => { restoringFromLightbox = false; }, 300);
     }
@@ -2522,53 +2394,11 @@
     }
 
     function updateLightboxMeta(index) {
-      const hasMultipleSections = getAlbumSectionNavItems(album).length >= 2;
-      const parts = hasMultipleSections ? getLightboxCaptionParts(index) : null;
-      const digitalCount = (album.photos || []).length;
-      const isDigital = index < digitalCount;
-
-      // Title is the album-wide counter only — section labels and section-relative
-      // counts live in the grid's section nav, not above the photo.
+      // The album-wide counter is the only text over the photo — section labels
+      // and camera/EXIF details live in the grid's section nav, not here.
       lightboxPositionPart.textContent = `${index + 1}/${allPhotos.length}`;
       lightboxOverallPart.textContent = '';
       lightboxOverallPart.hidden = true;
-
-      if (isDigital) {
-        const url = allPhotos[index];
-        const cameraLabel = parts?.detail || album.digitalLabel || '';
-        lightboxCameraPart.textContent = cameraLabel;
-        lightboxSettingsPart.textContent = exifCache.has(url) ? (exifCache.get(url) || '') : '';
-        lightboxDetailPart.hidden = !cameraLabel && !lightboxSettingsPart.textContent;
-        lightboxMetaBottom.hidden = lightboxDetailPart.hidden;
-
-        const applySettings = (str) => {
-          if (currentIndex !== index) return;
-          lightboxSettingsPart.textContent = str || '';
-          lightboxDetailPart.hidden = !lightboxCameraPart.textContent && !str;
-          lightboxMetaBottom.hidden = lightboxDetailPart.hidden;
-        };
-
-        if (exifCache.has(url)) {
-          applySettings(exifCache.get(url));
-        } else {
-          fetchExifString(url).then(applySettings);
-        }
-
-        [-1, 1].forEach(d => {
-          const adj = index + d;
-          if (adj >= 0 && adj < digitalCount) fetchExifString(allPhotos[adj]);
-        });
-      } else if (parts?.detail) {
-        lightboxCameraPart.textContent = parts.detail;
-        lightboxSettingsPart.textContent = '';
-        lightboxDetailPart.hidden = false;
-        lightboxMetaBottom.hidden = false;
-      } else {
-        lightboxCameraPart.textContent = '';
-        lightboxSettingsPart.textContent = '';
-        lightboxDetailPart.hidden = true;
-        lightboxMetaBottom.hidden = true;
-      }
     }
 
     function loadLightboxImage(index, generation = lightboxNavGeneration) {
@@ -2581,7 +2411,6 @@
 
       showLightboxPhoto(url, index, generation);
       preloadLightboxNeighbors(index);
-      requestAnimationFrame(syncLightboxCaptionWidth);
       updateLightboxLikeButton();
     }
 
