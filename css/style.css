@@ -1714,6 +1714,8 @@ a.album-sibling-link:hover {
   z-index: 200;
   background: rgba(0,0,0,0.96);
   box-sizing: border-box;
+  /* The stage grows past the viewport when zoomed. */
+  overflow: hidden;
   /* Pan and pinch are handled in JS — never let the browser scroll, bounce,
      or double-tap-zoom the overlay instead. */
   touch-action: none;
@@ -1937,16 +1939,62 @@ a.album-sibling-link:hover {
   }
 }
 
+.lightbox-zoom {
+  position: absolute;
+  bottom: var(--lb-chrome-bot);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lightbox-zoom-level {
+  min-width: 60px;
+  height: 44px;
+  padding: 0 0.85rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  transition: background var(--transition);
+}
+
+.lightbox-zoom-level:hover { background: rgba(255,255,255,0.18); }
+
+.lightbox-zoom-level:disabled,
+.lightbox-zoom .lightbox-action-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .lightbox-zoom { gap: 0.35rem; }
+
+  .lightbox-zoom-level {
+    min-width: 52px;
+    height: 40px;
+    font-size: 0.66rem;
+  }
+}
+
 /* Idle fade — after a few seconds of no input the photo sits alone on black.
    Any pointer, touch or key event brings the controls back. */
 #lightbox .lightbox-actions,
 #lightbox .lightbox-nav,
+#lightbox .lightbox-zoom,
 #lightbox #lightbox-meta-top {
   transition: opacity 0.25s ease;
 }
 
 #lightbox.chrome-hidden .lightbox-actions,
 #lightbox.chrome-hidden .lightbox-nav,
+#lightbox.chrome-hidden .lightbox-zoom,
 #lightbox.chrome-hidden #lightbox-meta-top {
   opacity: 0;
   pointer-events: none;

@@ -365,6 +365,20 @@
         <span id="lightbox-overall-part"></span>
       </div>
     </div>
+
+    <div class="lightbox-zoom" role="group" aria-label="Zoom">
+      <button type="button" id="lightbox-zoom-out" class="lightbox-action-btn" aria-label="Zoom out">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <button type="button" id="lightbox-zoom-reset" class="lightbox-zoom-level" aria-label="Reset zoom">1&times;</button>
+      <button type="button" id="lightbox-zoom-in" class="lightbox-action-btn" aria-label="Zoom in">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- ── Download Progress Toast ── -->
@@ -2196,6 +2210,114 @@
              clientY >= rect.top  && clientY <= rect.top + rect.height;
     }
 
+    // ── Zoom ──
+    // The whole stage is transformed rather than the image element, so both
+    // double-buffer layers stay aligned and the maths is independent of which
+    // quality tier is currently painted. transform-origin is the stage centre.
+    const ZOOM_STEPS = [1, 1.5, 2, 3, 4];
+    const ZOOM_MIN = ZOOM_STEPS[0];
+    const ZOOM_MAX = ZOOM_STEPS[ZOOM_STEPS.length - 1];
+    const ZOOM_DOUBLE_TAP = 2.5;
+
+    let zoomScale = 1;
+    let zoomPanX = 0;
+    let zoomPanY = 0;
+
+    const zoomInBtn    = document.getElementById('lightbox-zoom-in');
+    const zoomOutBtn   = document.getElementById('lightbox-zoom-out');
+    const zoomResetBtn = document.getElementById('lightbox-zoom-reset');
+
+    function isZoomed() {
+      return zoomScale > ZOOM_MIN + 0.001;
+    }
+
+    // Size of the painted photo inside the untransformed stage.
+    function getContentSize() {
+      const img = lightboxLayers[activeLayer];
+      const stageW = lightboxStage.clientWidth;
+      const stageH = lightboxStage.clientHeight;
+      if (!img?.naturalWidth || !img.naturalHeight || !stageW || !stageH) return null;
+
+      const ar = img.naturalWidth / img.naturalHeight;
+      const wide = stageW / stageH > ar;
+      return {
+        width: wide ? stageH * ar : stageW,
+        height: wide ? stageH : stageW / ar,
+        stageW,
+        stageH,
+      };
+    }
+
+    // Keep every edge of the photo at or outside the stage edge, so panning
+    // can never drag letterbox into view.
+    function clampZoomPan() {
+      const size = getContentSize();
+      if (!size) { zoomPanX = 0; zoomPanY = 0; return; }
+
+      const maxX = Math.max(0, (size.width * zoomScale - size.stageW) / 2);
+      const maxY = Math.max(0, (size.height * zoomScale - size.stageH) / 2);
+      zoomPanX = Math.min(maxX, Math.max(-maxX, zoomPanX));
+      zoomPanY = Math.min(maxY, Math.max(-maxY, zoomPanY));
+    }
+
+    function updateZoomUI() {
+      const rounded = Math.round(zoomScale * 10) / 10;
+      zoomResetBtn.textContent = `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}\u00d7`;
+      zoomOutBtn.disabled   = !isZoomed();
+      zoomResetBtn.disabled = !isZoomed();
+      zoomInBtn.disabled    = zoomScale >= ZOOM_MAX - 0.001;
+    }
+
+    function applyZoomTransform({ animate = false } = {}) {
+      lightboxStage.style.transition = animate ? 'transform 0.2s ease' : 'none';
+      lightboxStage.style.transform = isZoomed() || zoomPanX || zoomPanY
+        ? `translate(${zoomPanX}px, ${zoomPanY}px) scale(${zoomScale})`
+        : '';
+      lightbox.classList.toggle('is-zoomed', isZoomed());
+      updateZoomUI();
+    }
+
+    // Zoom about `anchor` (viewport coords) so the point under the cursor or
+    // pinch midpoint stays put; without an anchor, zoom about the centre.
+    function setZoom(next, anchor, { animate = false } = {}) {
+      const target = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next));
+
+      if (anchor && target !== zoomScale) {
+        const rect = lightboxStage.getBoundingClientRect();
+        // rect is already transformed, so back the pan out to find the centre
+        // the transform is applied around.
+        const centerX = rect.left + rect.width / 2 - zoomPanX;
+        const centerY = rect.top + rect.height / 2 - zoomPanY;
+        const qx = anchor.x - centerX;
+        const qy = anchor.y - centerY;
+        const ratio = target / zoomScale;
+        zoomPanX = qx - (qx - zoomPanX) * ratio;
+        zoomPanY = qy - (qy - zoomPanY) * ratio;
+      }
+
+      zoomScale = target;
+      clampZoomPan();
+      applyZoomTransform({ animate });
+    }
+
+    function zoomStep(dir) {
+      const next = dir > 0
+        ? ZOOM_STEPS.find(s => s > zoomScale + 0.001) ?? ZOOM_MAX
+        : [...ZOOM_STEPS].reverse().find(s => s < zoomScale - 0.001) ?? ZOOM_MIN;
+      setZoom(next, null, { animate: true });
+    }
+
+    function resetZoom({ animate = false } = {}) {
+      zoomScale = ZOOM_MIN;
+      zoomPanX = 0;
+      zoomPanY = 0;
+      applyZoomTransform({ animate });
+    }
+
+    function toggleZoomAt(anchor) {
+      setZoom(isZoomed() ? ZOOM_MIN : ZOOM_DOUBLE_TAP, anchor, { animate: true });
+    }
+
     // ── Chrome idle fade ──
     const CHROME_IDLE_MS = 3000;
     let chromeIdleTimer = null;
@@ -2204,7 +2326,8 @@
     // Never fade out from under an open menu or a drag in progress.
     function chromeIsPinned() {
       const drop = document.getElementById('dl-size-dropdown-lb');
-      return !!drop && !drop.hidden;
+      if (drop && !drop.hidden) return true;
+      return isPanning();
     }
 
     function showLightboxChrome() {
@@ -2515,7 +2638,7 @@
     // Click the empty area around the photo to close. The stage is full-bleed
     // now, so the old `e.target === lightbox` test never matched — hit-test the
     // painted photo instead. Tap zones handle their own clicks.
-    const LB_INTERACTIVE = '.lightbox-action-btn, .lightbox-nav, .lb-dl-wrap, .dl-size-dropdown, .lightbox-tap-prev, .lightbox-tap-next';
+    const LB_INTERACTIVE = '.lightbox-action-btn, .lightbox-nav, .lightbox-zoom, .lb-dl-wrap, .dl-size-dropdown, .lightbox-tap-prev, .lightbox-tap-next';
 
     lightbox.addEventListener('click', (e) => {
       if (e.target.closest(LB_INTERACTIVE)) return;
@@ -2523,33 +2646,182 @@
       closeLightbox();
     });
 
-    // Touch swipe — ignore pinch/multi-touch; require clear horizontal flick
+    // ── Zoom controls ──
+    zoomInBtn.addEventListener('click', () => zoomStep(1));
+    zoomOutBtn.addEventListener('click', () => zoomStep(-1));
+    zoomResetBtn.addEventListener('click', () => resetZoom({ animate: true }));
+    updateZoomUI();
+
+    lightbox.addEventListener('wheel', (e) => {
+      if (!lightbox.classList.contains('open')) return;
+      e.preventDefault();
+      // ctrlKey means a trackpad pinch, which reports much smaller deltas.
+      const factor = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0025));
+      setZoom(zoomScale * factor, { x: e.clientX, y: e.clientY });
+    }, { passive: false });
+
+    lightbox.addEventListener('dblclick', (e) => {
+      if (e.target.closest(LB_INTERACTIVE)) return;
+      if (!isZoomed() && !isPointOnPhoto(e.clientX, e.clientY)) return;
+      toggleZoomAt({ x: e.clientX, y: e.clientY });
+    });
+
+    // ── Mouse panning (touch panning lives in the touch handlers below) ──
+    let panPointerId = null;
+    let panOrigin = null;
+    let panMoved = false;
+    let suppressNextClick = false;
+
+    function isPanning() {
+      return panPointerId !== null || touchPanning;
+    }
+
+    lightbox.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || !isZoomed()) return;
+      if (e.target.closest(LB_INTERACTIVE)) return;
+
+      panPointerId = e.pointerId;
+      panOrigin = { x: e.clientX, y: e.clientY, panX: zoomPanX, panY: zoomPanY };
+      panMoved = false;
+      lightbox.setPointerCapture(e.pointerId);
+      lightbox.classList.add('is-panning');
+      e.preventDefault();
+    });
+
+    lightbox.addEventListener('pointermove', (e) => {
+      if (panPointerId !== e.pointerId) return;
+      const dx = e.clientX - panOrigin.x;
+      const dy = e.clientY - panOrigin.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panMoved = true;
+      zoomPanX = panOrigin.panX + dx;
+      zoomPanY = panOrigin.panY + dy;
+      clampZoomPan();
+      applyZoomTransform();
+    });
+
+    function endMousePan(e) {
+      if (panPointerId !== e.pointerId) return;
+      panPointerId = null;
+      lightbox.classList.remove('is-panning');
+      if (panMoved) suppressNextClick = true;
+      showLightboxChrome();
+    }
+
+    lightbox.addEventListener('pointerup', endMousePan);
+    lightbox.addEventListener('pointercancel', endMousePan);
+
+    // A drag or a double tap must not also register as a click on a tap zone.
+    lightbox.addEventListener('click', (e) => {
+      if (!suppressNextClick) return;
+      suppressNextClick = false;
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
+
+    // ── Touch: swipe to navigate, drag to pan, pinch to zoom ──
     let touchStartX = 0;
     let touchStartY = 0;
     let touchMulti  = false;
+    let touchPanning = false;
+    let touchPanOrigin = null;
+    let pinchStartDist = 0;
+    let pinchStartScale = 1;
+    let pinchLastMid = null;
+    let lastTapAt = 0;
+    let lastTapPos = null;
+
+    const touchDistance = (touches) => Math.hypot(
+      touches[0].clientX - touches[1].clientX,
+      touches[0].clientY - touches[1].clientY,
+    );
+
+    const touchMidpoint = (touches) => ({
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    });
 
     lightbox.addEventListener('touchstart', (e) => {
       if (e.touches.length > 1) {
         touchMulti = true;
+        touchPanning = false;
+        pinchStartDist = touchDistance(e.touches);
+        pinchStartScale = zoomScale;
+        pinchLastMid = touchMidpoint(e.touches);
         return;
       }
+
       touchMulti = false;
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
+      touchPanning = isZoomed();
+      touchPanOrigin = { panX: zoomPanX, panY: zoomPanY };
     }, { passive: true });
 
     lightbox.addEventListener('touchmove', (e) => {
-      if (e.touches.length > 1) touchMulti = true;
+      if (e.touches.length > 1) {
+        touchMulti = true;
+        if (!pinchStartDist) return;
+
+        // Track the midpoint so two fingers can pan while they pinch.
+        const mid = touchMidpoint(e.touches);
+        if (pinchLastMid) {
+          zoomPanX += mid.x - pinchLastMid.x;
+          zoomPanY += mid.y - pinchLastMid.y;
+        }
+        pinchLastMid = mid;
+
+        setZoom(pinchStartScale * (touchDistance(e.touches) / pinchStartDist), mid);
+        return;
+      }
+
+      if (!touchPanning) return;
+      zoomPanX = touchPanOrigin.panX + (e.touches[0].clientX - touchStartX);
+      zoomPanY = touchPanOrigin.panY + (e.touches[0].clientY - touchStartY);
+      clampZoomPan();
+      applyZoomTransform();
     }, { passive: true });
 
     lightbox.addEventListener('touchend', (e) => {
       if (touchMulti || e.touches.length > 0) {
         touchMulti = e.touches.length > 0;
+        pinchStartDist = 0;
+        pinchLastMid = null;
         return;
       }
 
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      const wasPanning = touchPanning;
+      touchPanning = false;
+
+      // Double tap toggles zoom. Tap zones own single taps at 1x, so only
+      // claim the gesture where they aren't listening: the middle band, or
+      // anywhere once zoomed (tap zones are disabled then).
+      const isTap = Math.abs(dx) < 12 && Math.abs(dy) < 12;
+      const overTapZone = !isZoomed() && !!e.target.closest('.lightbox-tap-prev, .lightbox-tap-next');
+      if (isTap && !overTapZone) {
+        const now = Date.now();
+        const near = lastTapPos &&
+          Math.abs(touch.clientX - lastTapPos.x) < 40 &&
+          Math.abs(touch.clientY - lastTapPos.y) < 40;
+
+        if (now - lastTapAt < 320 && near) {
+          lastTapAt = 0;
+          lastTapPos = null;
+          suppressNextClick = true;
+          toggleZoomAt({ x: touch.clientX, y: touch.clientY });
+          return;
+        }
+
+        lastTapAt = now;
+        lastTapPos = { x: touch.clientX, y: touch.clientY };
+      }
+
+      if (wasPanning) {
+        suppressNextClick = true;
+        return;
+      }
 
       // Must be a deliberate horizontal swipe, not pinch drift or scroll
       if (Math.abs(dx) < 60) return;
