@@ -1809,6 +1809,16 @@ a.album-sibling-link:hover {
   cursor: not-allowed;
 }
 
+/* A phone held sideways is above the 768px breakpoint but has no height to
+   spare, so it gives up the inset too. */
+@media (max-height: 500px) {
+  #lightbox {
+    --lb-inset: 0px;
+    --lb-chrome-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+    --lb-chrome-bot: calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (max-width: 768px) {
   #lightbox {
     --lb-inset: 0px;

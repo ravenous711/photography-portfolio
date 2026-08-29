@@ -2705,6 +2705,9 @@
     }, { passive: false });
 
     lightbox.addEventListener('dblclick', (e) => {
+      // A double tap already toggled zoom in the touch handler; the browser
+      // then synthesises a dblclick that would toggle it straight back.
+      if (Date.now() - lastTouchAt < 800) return;
       if (e.target.closest(LB_INTERACTIVE)) return;
       if (!isZoomed() && !isPointOnPhoto(e.clientX, e.clientY)) return;
       toggleZoomAt({ x: e.clientX, y: e.clientY });
@@ -2773,6 +2776,7 @@
     let pinchLastMid = null;
     let lastTapAt = 0;
     let lastTapPos = null;
+    let lastTouchAt = 0;
 
     const touchDistance = (touches) => Math.hypot(
       touches[0].clientX - touches[1].clientX,
@@ -2785,6 +2789,7 @@
     });
 
     lightbox.addEventListener('touchstart', (e) => {
+      lastTouchAt = Date.now();
       if (e.touches.length > 1) {
         touchMulti = true;
         touchPanning = false;
@@ -2826,6 +2831,7 @@
     }, { passive: true });
 
     lightbox.addEventListener('touchend', (e) => {
+      lastTouchAt = Date.now();
       if (touchMulti || e.touches.length > 0) {
         touchMulti = e.touches.length > 0;
         pinchStartDist = 0;
@@ -2834,6 +2840,7 @@
       }
 
       const touch = e.changedTouches[0];
+      if (!touch) return;
       const dx = touch.clientX - touchStartX;
       const dy = touch.clientY - touchStartY;
       const wasPanning = touchPanning;
