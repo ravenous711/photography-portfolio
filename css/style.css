@@ -1896,6 +1896,8 @@ a.album-sibling-link:hover {
   }
 }
 
+/* Counter pill — floats over the photo, so it carries its own scrim rather
+   than relying on the backdrop for contrast. */
 #lightbox-meta-top {
   position: absolute;
   top: var(--lb-chrome-top);
@@ -1907,33 +1909,47 @@ a.album-sibling-link:hover {
 #lightbox-caption-row {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 2rem;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto;
-  font-size: 0.75rem;
+  gap: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-#lightbox-caption-row:has(#lightbox-overall-part[hidden]) {
-  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 #lightbox-overall-part {
   font-size: 0.7rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
+
+#lightbox-overall-part[hidden] { display: none; }
 
 @media (max-width: 640px) {
   #lightbox-caption-row {
-    gap: 1.25rem;
-    font-size: 0.68rem;
+    gap: 0.6rem;
+    font-size: 0.66rem;
     letter-spacing: 0.08em;
   }
+}
+
+/* Idle fade — after a few seconds of no input the photo sits alone on black.
+   Any pointer, touch or key event brings the controls back. */
+#lightbox .lightbox-actions,
+#lightbox .lightbox-nav,
+#lightbox #lightbox-meta-top {
+  transition: opacity 0.25s ease;
+}
+
+#lightbox.chrome-hidden .lightbox-actions,
+#lightbox.chrome-hidden .lightbox-nav,
+#lightbox.chrome-hidden #lightbox-meta-top {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ============================================================

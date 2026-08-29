@@ -2196,6 +2196,41 @@
              clientY >= rect.top  && clientY <= rect.top + rect.height;
     }
 
+    // ── Chrome idle fade ──
+    const CHROME_IDLE_MS = 3000;
+    let chromeIdleTimer = null;
+    let lastChromeWake = 0;
+
+    // Never fade out from under an open menu or a drag in progress.
+    function chromeIsPinned() {
+      const drop = document.getElementById('dl-size-dropdown-lb');
+      return !!drop && !drop.hidden;
+    }
+
+    function showLightboxChrome() {
+      lightbox.classList.remove('chrome-hidden');
+      window.clearTimeout(chromeIdleTimer);
+      chromeIdleTimer = window.setTimeout(() => {
+        if (!lightbox.classList.contains('open')) return;
+        if (chromeIsPinned()) { showLightboxChrome(); return; }
+        lightbox.classList.add('chrome-hidden');
+      }, CHROME_IDLE_MS);
+    }
+
+    function hideLightboxChromeNow() {
+      window.clearTimeout(chromeIdleTimer);
+      lightbox.classList.remove('chrome-hidden');
+    }
+
+    // Pointer moves fire in bursts; only restart the timer a few times a second
+    // unless the chrome is actually hidden and needs waking.
+    function wakeLightboxChrome() {
+      const now = Date.now();
+      if (now - lastChromeWake < 150 && !lightbox.classList.contains('chrome-hidden')) return;
+      lastChromeWake = now;
+      showLightboxChrome();
+    }
+
     function preloadLightboxNeighbors(index) {
       ImagePreload.preloadAdjacent(allPhotos, index, 4);
     }
@@ -2306,6 +2341,7 @@
       lightboxNavGeneration += 1;
       lightbox.classList.add('open');
       lockPageScroll();
+      showLightboxChrome();
       loadLightboxImage(index, lightboxNavGeneration);
     }
 
@@ -2315,6 +2351,7 @@
       const targetY = getPhotoScrollTarget(index);
 
       lightbox.classList.remove('open');
+      hideLightboxChromeNow();
       restoringFromLightbox = true;
       unlockPageScroll(targetY != null ? targetY : scrollLockY);
       syncLightboxPhotoUrl(-1);
@@ -2422,6 +2459,7 @@
         else prefetchLightboxIndex(newIndex - 1);
         currentIndex = newIndex;
         lightboxNavGeneration += 1;
+        showLightboxChrome();
         loadLightboxImage(currentIndex, lightboxNavGeneration);
       }
     }
@@ -2465,8 +2503,14 @@
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
         lightboxNav(e.key === 'ArrowRight' ? 1 : -1);
+        return;
       }
+      wakeLightboxChrome();
     }, true);
+
+    ['pointermove', 'pointerdown', 'touchstart', 'wheel'].forEach(type => {
+      lightbox.addEventListener(type, wakeLightboxChrome, { passive: true });
+    });
 
     // Click the empty area around the photo to close. The stage is full-bleed
     // now, so the old `e.target === lightbox` test never matched — hit-test the
