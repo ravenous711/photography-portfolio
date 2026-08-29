@@ -1695,6 +1695,22 @@ a.album-sibling-link:hover {
   pointer-events: none;
 }
 
+/* Arriving from a carousel's "View in album" link: mark the photo that was
+   being looked at, then let the ring fade so the grid returns to normal. */
+.photo-thumb--focused::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-gold);
+  pointer-events: none;
+  animation: photoFocusRing 2.6s ease-out forwards;
+}
+
+@keyframes photoFocusRing {
+  0%, 55% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ============================================================
    LIGHTBOX
    ============================================================ */
@@ -2011,6 +2027,180 @@ a.album-sibling-link:hover {
   #lightbox.chrome-hidden .lightbox-nav,
   #lightbox.chrome-hidden .lightbox-zoom,
   #lightbox.chrome-hidden #lightbox-meta-top {
+    transition: opacity 0.2s ease-out, visibility 0s linear 0.2s;
+  }
+}
+
+/* ============================================================
+   SHARED PHOTO VIEWER (carousels outside the album page)
+   ============================================================ */
+/* Same full-bleed stage and floating chrome as the album lightbox, minus zoom,
+   downloads and favorites. Button and arrow classes are shared with it. */
+#photo-viewer {
+  --pv-inset: 8px;
+  --pv-chrome-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+  --pv-chrome-l: calc(1.5rem + env(safe-area-inset-left, 0px));
+  --pv-chrome-r: calc(1.5rem + env(safe-area-inset-right, 0px));
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.96);
+  box-sizing: border-box;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+#photo-viewer.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  transition: opacity 0.3s ease, visibility 0s;
+}
+
+.pv-shell {
+  position: absolute;
+  inset: 0;
+}
+
+.pv-stage {
+  position: absolute;
+  inset: var(--pv-inset);
+}
+
+.pv-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  opacity: 0;
+  z-index: 1;
+  /* Clicks land on the shell so the area around the photo can dismiss. */
+  pointer-events: none;
+}
+
+.pv-layer.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+.pv-meta {
+  position: absolute;
+  top: var(--pv-chrome-top);
+  left: var(--pv-chrome-l);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.pv-counter {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.pv-actions {
+  position: absolute;
+  top: var(--pv-chrome-top);
+  right: var(--pv-chrome-r);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pv-album-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--transition);
+}
+
+.pv-album-link:hover { background: rgba(0, 0, 0, 0.65); }
+.pv-album-link[hidden] { display: none; }
+
+#pv-prev { left: var(--pv-chrome-l); }
+#pv-next { right: var(--pv-chrome-r); }
+
+@media (max-width: 768px) {
+  #photo-viewer {
+    --pv-inset: 0px;
+    --pv-chrome-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+    --pv-chrome-l: calc(0.75rem + env(safe-area-inset-left, 0px));
+    --pv-chrome-r: calc(0.75rem + env(safe-area-inset-right, 0px));
+  }
+
+  .pv-actions { gap: 0.35rem; }
+
+  /* A long album title would crowd the close button on a phone, so the link
+     keeps the arrow glyph and drops the words. */
+  .pv-album-link {
+    height: 40px;
+    padding: 0 0.85rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    max-width: 45vw;
+    overflow: hidden;
+  }
+
+  .pv-album-link span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-height: 500px) {
+  #photo-viewer {
+    --pv-inset: 0px;
+    --pv-chrome-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+#photo-viewer .pv-actions,
+#photo-viewer .pv-meta,
+#photo-viewer .lightbox-nav {
+  transition: opacity 0.2s ease-out, visibility 0s;
+}
+
+#photo-viewer.chrome-hidden .pv-actions,
+#photo-viewer.chrome-hidden .pv-meta,
+#photo-viewer.chrome-hidden .lightbox-nav {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.2s ease-in-out, visibility 0s linear 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #photo-viewer.chrome-hidden .pv-actions,
+  #photo-viewer.chrome-hidden .pv-meta,
+  #photo-viewer.chrome-hidden .lightbox-nav {
     transition: opacity 0.2s ease-out, visibility 0s linear 0.2s;
   }
 }
@@ -2496,12 +2686,52 @@ body.group-catalog .group-catalog-header .page-title {
 }
 
 .strip-item {
+  position: relative;
   flex: 0 0 auto;
   height: var(--strip-height);
   max-width: 100%;
   scroll-snap-align: start;
   overflow: hidden;
   background: var(--color-surface);
+}
+
+/* Clickable frames open the viewer. Following the grid's lead, hovering never
+   darkens the photo — the cursor and a corner glyph carry the affordance. */
+.strip-item--interactive {
+  cursor: zoom-in;
+}
+
+.strip-item--interactive:focus-visible {
+  outline: 1px solid rgba(243, 240, 233, 0.7);
+  outline-offset: -3px;
+}
+
+.strip-item-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(12, 12, 11, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.strip-item--interactive:hover .strip-item-overlay,
+.strip-item--interactive:focus-visible .strip-item-overlay {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  /* Touch has no hover state to reveal it, and a tap already opens the photo. */
+  .strip-item-overlay { display: none; }
 }
 
 .strip-item img {
