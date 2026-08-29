@@ -250,6 +250,13 @@ Jump here after picking an ID from Open tickets.
 
 ## Changelog
 
+- **Single-photo download filenames** — Aug 2026 (branch `fix/download-filenames`).
+  Private/family albums saved every photo as `image` because the Worker URL
+  (`/image?key=…`) carries no filename in its path. Lightbox and individual downloads now
+  derive the name from the R2 key and suffix derived tiers (`_low` / `_med` / `_large`), so
+  an original stays `higgins_lake-031.jpg` and a Med copy is `higgins_lake-031_med.jpg`.
+  Frontend only — no Worker redeploy needed.
+
 - **FEAT-4 — Worker deploy for Large download tier** — Aug 2026.
   `portfolio-zip-download` version `d5993742-7e2f-45a0-8102-35a411bf7d88`.
   R2 `download/` backfill complete; frontend still uncommitted.
