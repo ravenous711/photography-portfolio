@@ -258,6 +258,23 @@ Jump here after picking an ID from Open tickets.
 
 ## Changelog
 
+- **Carousels — click to view, and a way through to the album** — Aug 2026 (branch `feat/carousel-lightbox`).
+  Filmstrip frames were inert: the trailer showed a photo but offered no way to see it larger or find
+  it in its album. Frames are now buttons that open a photo full screen, and every viewer carries a
+  "View in \<album\>" link. Group pages and `/professional-work/` use a new lean viewer
+  (`js/photo-viewer.js` — photo, counter, arrows, keyboard, swipe, shareable `?photo=`), while the
+  album-page trailer opens that page's own lightbox at the matching grid position so zoom and
+  downloads still work; the album lightbox gained a matching "view in grid" button. Album links use
+  `?photo=<file>&grid=1`, which lands in the grid with the photo centred and ringed instead of
+  reopening it full screen — the justified rows reflow as thumbnails decode, so it keeps re-centring
+  until the layout settles or the visitor scrolls. A photo that belongs to several albums (film
+  frames sit in a city album, a hidden roll, and the film catalog) resolves to the visible album
+  inside the collection being browsed, and gated client albums show no link at all, so the Moksha
+  teaser can't strand anyone on the unlock screen. `/professional-work/` switched from the justified
+  highlight grid to the same carousel, retiring `renderJustifiedPhotoGrid`.
+  This is not **MNT-3**: the album lightbox stays where it is, and extracting it would let both
+  surfaces share one implementation.
+
 - **Lightbox — full-bleed stage, floating chrome, zoom** — Aug 2026 (branch `feat/lightbox-fullbleed-zoom`).
   The image box used to be `100svh` minus a fixed top bar, bottom pad and a 2.5rem meta strip,
   with the arrow buttons taking another ~130px of width out of the flex row; a portrait photo on
