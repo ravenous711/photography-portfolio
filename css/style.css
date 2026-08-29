@@ -1698,23 +1698,27 @@ a.album-sibling-link:hover {
 /* ============================================================
    LIGHTBOX
    ============================================================ */
-/* --lb-top / --lb-bot: padding consumed above and below the image area.
-   Used to derive the max-height for the image itself.
-   svh = small viewport height (excludes iOS Safari address bar). */
+/* The photo owns the whole viewport. The stage is a full-bleed box and both
+   image layers letterbox inside it with object-fit, so every quality tier
+   scales into the identical box and nothing jumps when a sharper one lands.
+   Chrome floats on top; --lb-chrome-* only positions it, never shrinks the
+   picture. --lb-inset is the sole breathing room, and only on large screens. */
 #lightbox {
-  --lb-top: calc(3.25rem + env(safe-area-inset-top, 0px));
-  --lb-bot: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  --lb-meta: 2.5rem; /* top caption row + bottom EXIF row combined */
-  --lb-avail: calc(100svh - var(--lb-top) - var(--lb-bot) - var(--lb-meta));
+  --lb-inset: 8px;
+  --lb-chrome-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+  --lb-chrome-bot: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  --lb-chrome-l: calc(1.5rem + env(safe-area-inset-left, 0px));
+  --lb-chrome-r: calc(1.5rem + env(safe-area-inset-right, 0px));
   position: fixed;
   inset: 0;
   z-index: 200;
   background: rgba(0,0,0,0.96);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
   box-sizing: border-box;
-  padding: var(--lb-top) 0 var(--lb-bot);
+  /* Pan and pinch are handled in JS — never let the browser scroll, bounce,
+     or double-tap-zoom the overlay instead. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -1729,91 +1733,45 @@ a.album-sibling-link:hover {
 }
 
 .lightbox-shell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  max-width: 100%;
-  padding: 0 0.75rem;
-  box-sizing: border-box;
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  align-self: stretch;
-}
-
-#lightbox-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  flex: 1;
-  min-width: 0;
-  max-width: 100%;
-  z-index: 1;
+  position: absolute;
+  inset: 0;
 }
 
 #lightbox-stage {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  flex: 0 1 auto;
-  min-height: 0;
-  max-height: var(--lb-avail);
-  pointer-events: none;
+  position: absolute;
+  inset: var(--lb-inset);
+  transform-origin: 50% 50%;
 }
+
+#lightbox.is-zoomed #lightbox-stage { cursor: grab; }
+#lightbox.is-panning #lightbox-stage { cursor: grabbing; }
 
 #lightbox-stage .lightbox-layer {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 100%;
-  max-height: var(--lb-avail);
-  width: auto;
-  height: auto;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
-  border: 1px solid rgba(255,255,255,0.05);
   opacity: 0;
   z-index: 1;
   transition: none;
-  pointer-events: auto;
+  /* Pointer input is read off the stage so the letterboxed area around the
+     photo stays clickable (click-outside-to-close) and drags never start an
+     image drag-and-drop. */
+  pointer-events: none;
 }
 
 #lightbox-stage .lightbox-layer.active {
   opacity: 1;
   z-index: 2;
-  position: relative;
-  top: auto;
-  left: auto;
-  transform: none;
-}
-
-/* Wide viewports are height-bound, so an image smaller than the frame would
-   otherwise paint at its intrinsic size and jump when the sharper tier lands.
-   Pinning the height scales every tier into the same box. Phones are
-   width-bound and already fill the frame, so they keep intrinsic sizing. */
-@media (min-width: 769px) {
-  #lightbox-stage .lightbox-layer {
-    height: var(--lb-avail);
-  }
-}
-
-@media (max-width: 768px) {
-  #lightbox-stage .lightbox-layer {
-    touch-action: pinch-zoom;
-  }
 }
 
 .lightbox-actions {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 10;
+  top: var(--lb-chrome-top);
+  right: var(--lb-chrome-r);
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1851,12 +1809,14 @@ a.album-sibling-link:hover {
 
 @media (max-width: 768px) {
   #lightbox {
-    --lb-top: calc(2.75rem + env(safe-area-inset-top, 0px));
+    --lb-inset: 0px;
+    --lb-chrome-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+    --lb-chrome-bot: calc(0.625rem + env(safe-area-inset-bottom, 0px));
+    --lb-chrome-l: calc(0.75rem + env(safe-area-inset-left, 0px));
+    --lb-chrome-r: calc(0.75rem + env(safe-area-inset-right, 0px));
   }
 
   .lightbox-actions {
-    top: 0.625rem;
-    right: 0.75rem;
     gap: 0.35rem;
   }
 
@@ -1867,9 +1827,9 @@ a.album-sibling-link:hover {
 }
 
 .lightbox-nav {
-  position: relative;
-  flex-shrink: 0;
-  align-self: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 44px;
   height: 44px;
   background: rgba(255,255,255,0.08);
@@ -1882,12 +1842,16 @@ a.album-sibling-link:hover {
   color: #fff;
   font-size: 1rem;
   transition: background var(--transition);
-  z-index: 10;
+  z-index: 15;
 }
+
+#lightbox-prev { left: var(--lb-chrome-l); }
+#lightbox-next { right: var(--lb-chrome-r); }
 
 .lightbox-nav:hover { background: rgba(255,255,255,0.18); }
 
-/* Invisible tap zones — overlay left/right halves of the stage on mobile */
+/* Invisible tap zones — overlay left/right thirds of the stage on mobile.
+   Sit below the floating controls (z-index 15/20) so buttons still win. */
 .lightbox-tap-prev,
 .lightbox-tap-next {
   display: none;
@@ -1903,6 +1867,12 @@ a.album-sibling-link:hover {
 .lightbox-tap-prev { left: 0; }
 .lightbox-tap-next { right: 0; }
 
+/* Panning owns the pointer once zoomed — tap-to-advance would fight the drag. */
+#lightbox.is-zoomed .lightbox-tap-prev,
+#lightbox.is-zoomed .lightbox-tap-next {
+  pointer-events: none;
+}
+
 @media (max-width: 768px) {
   .lightbox-nav--desktop {
     display: none;
@@ -1912,19 +1882,9 @@ a.album-sibling-link:hover {
   .lightbox-tap-next {
     display: block;
   }
-
-  .lightbox-shell {
-    gap: 0;
-    padding: 0;
-  }
 }
 
 @media (max-width: 640px) {
-  .lightbox-shell {
-    gap: 0;
-    padding: 0;
-  }
-
   .lightbox-nav {
     width: 36px;
     height: 36px;
@@ -1937,11 +1897,10 @@ a.album-sibling-link:hover {
 }
 
 #lightbox-meta-top {
-  flex-shrink: 0;
-  width: auto;
-  max-width: 100%;
-  margin: 0 auto;
-  padding-bottom: 0.35rem;
+  position: absolute;
+  top: var(--lb-chrome-top);
+  left: var(--lb-chrome-l);
+  z-index: 20;
   pointer-events: none;
 }
 
@@ -1970,11 +1929,12 @@ a.album-sibling-link:hover {
 }
 
 #lightbox-meta-bottom {
-  flex-shrink: 0;
-  width: auto;
-  max-width: 100%;
-  margin: 0 auto;
-  padding-top: 0.35rem;
+  position: absolute;
+  bottom: var(--lb-chrome-bot);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  z-index: 20;
   pointer-events: none;
 }
 

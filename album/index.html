@@ -335,6 +335,16 @@
     </div>
 
     <div class="lightbox-shell">
+      <!-- Full-bleed stage: layers letterbox inside it, zoom transforms it. -->
+      <div id="lightbox-stage">
+        <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
+        <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
+      </div>
+
+      <!-- Mobile tap zones — outside the stage so zoom never transforms them -->
+      <div class="lightbox-tap-prev" id="lightbox-tap-prev" aria-hidden="true"></div>
+      <div class="lightbox-tap-next" id="lightbox-tap-next" aria-hidden="true"></div>
+
       <!-- Desktop-only arrow buttons — hidden on mobile, replaced by tap zones -->
       <button class="lightbox-nav lightbox-nav--desktop" id="lightbox-prev" aria-label="Previous photo" onclick="lightboxNav(-1)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -342,35 +352,25 @@
         </svg>
       </button>
 
-      <div id="lightbox-content">
-        <div id="lightbox-meta-top">
-          <div id="lightbox-caption-row">
-            <span id="lightbox-position-part"></span>
-            <span id="lightbox-overall-part"></span>
-          </div>
-        </div>
-
-        <div id="lightbox-stage">
-          <img id="lightbox-img-a" class="lightbox-layer" alt="Photo" />
-          <img id="lightbox-img-b" class="lightbox-layer" alt="Photo" />
-          <!-- Mobile tap zones -->
-          <div class="lightbox-tap-prev" id="lightbox-tap-prev" aria-hidden="true"></div>
-          <div class="lightbox-tap-next" id="lightbox-tap-next" aria-hidden="true"></div>
-        </div>
-
-        <div id="lightbox-meta-bottom">
-          <p id="lightbox-detail-part">
-            <span id="lightbox-camera-part"></span>
-            <span id="lightbox-settings-part"></span>
-          </p>
-        </div>
-      </div>
-
       <button class="lightbox-nav lightbox-nav--desktop" id="lightbox-next" aria-label="Next photo" onclick="lightboxNav(1)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </button>
+    </div>
+
+    <div id="lightbox-meta-top">
+      <div id="lightbox-caption-row">
+        <span id="lightbox-position-part"></span>
+        <span id="lightbox-overall-part"></span>
+      </div>
+    </div>
+
+    <div id="lightbox-meta-bottom">
+      <p id="lightbox-detail-part">
+        <span id="lightbox-camera-part"></span>
+        <span id="lightbox-settings-part"></span>
+      </p>
     </div>
   </div>
 
@@ -2233,6 +2233,7 @@
     // LIGHTBOX
     // ════════════════════════════════════════════════════════
     const lightbox    = document.getElementById('lightbox');
+    const lightboxStage = document.getElementById('lightbox-stage');
     const lightboxLayers = [
       document.getElementById('lightbox-img-a'),
       document.getElementById('lightbox-img-b'),
@@ -2285,6 +2286,37 @@
       if (!w) return;
       lightboxMetaTop.style.width = `${w}px`;
       lightboxMetaBottom.style.width = `${w}px`;
+    }
+
+    // On-screen rect of the painted photo. The layers fill the stage and
+    // letterbox via object-fit: contain, so the painted area is derived from
+    // the aspect ratio. getBoundingClientRect() already includes the zoom
+    // transform, and the transform is uniform, so this holds at any scale.
+    function getPhotoRect() {
+      const img = lightboxLayers[activeLayer];
+      if (!img?.naturalWidth || !img.naturalHeight) return null;
+
+      const box = lightboxStage.getBoundingClientRect();
+      if (!box.width || !box.height) return null;
+
+      const ar = img.naturalWidth / img.naturalHeight;
+      const wide = box.width / box.height > ar;
+      const width  = wide ? box.height * ar : box.width;
+      const height = wide ? box.height : box.width / ar;
+
+      return {
+        left: box.left + (box.width - width) / 2,
+        top: box.top + (box.height - height) / 2,
+        width,
+        height,
+      };
+    }
+
+    function isPointOnPhoto(clientX, clientY) {
+      const rect = getPhotoRect();
+      if (!rect) return false;
+      return clientX >= rect.left && clientX <= rect.left + rect.width &&
+             clientY >= rect.top  && clientY <= rect.top + rect.height;
     }
 
     function preloadLightboxNeighbors(index) {
@@ -2607,9 +2639,15 @@
       }
     }, true);
 
-    // Click backdrop to close
+    // Click the empty area around the photo to close. The stage is full-bleed
+    // now, so the old `e.target === lightbox` test never matched — hit-test the
+    // painted photo instead. Tap zones handle their own clicks.
+    const LB_INTERACTIVE = '.lightbox-action-btn, .lightbox-nav, .lb-dl-wrap, .dl-size-dropdown, .lightbox-tap-prev, .lightbox-tap-next';
+
     lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) closeLightbox();
+      if (e.target.closest(LB_INTERACTIVE)) return;
+      if (isPointOnPhoto(e.clientX, e.clientY)) return;
+      closeLightbox();
     });
 
     // Touch swipe — ignore pinch/multi-touch; require clear horizontal flick
