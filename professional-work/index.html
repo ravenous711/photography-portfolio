@@ -108,8 +108,8 @@
   <script src="/js/albums/morgan-alden-2026.js"></script>
   <script src="/js/albums.js"></script>
   <script src="/js/routes.js"></script>
-  <script src="/js/justified-layout.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/photo-viewer.js"></script>
   <script>
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
@@ -132,11 +132,20 @@
       const curated = Array.isArray(album.curated) ? album.curated.filter(Boolean) : [];
 
       if (curated.length) {
-        const grid = document.createElement('div');
-        section.appendChild(grid);
-        renderJustifiedPhotoGrid(grid, curated, {
-          alt: album.title,
+        const strip = document.createElement('div');
+        section.appendChild(strip);
+        createFilmstrip(strip, curated, {
+          alt: `${album.title} photo`,
+          label: `Photos from ${album.title}`,
           eagerCount: 4,
+          // Client galleries are gated, so the viewer only offers a way through
+          // to the full album when this visitor already has the code.
+          onActivate: (index) => PhotoViewer.open({
+            photos: curated,
+            index,
+            alt: album.title,
+            preferAlbumId: album.id,
+          }),
         });
       } else {
         const cover = document.createElement('div');
