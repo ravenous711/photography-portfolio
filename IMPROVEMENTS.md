@@ -264,7 +264,7 @@ Jump here after picking an ID from Open tickets.
   a phone in landscape rendered 182x273. The stage is now absolutely positioned across the
   viewport with both layers letterboxing via `object-fit: contain`, so that same photo paints
   260x390 and desktop gains ~11%. Counter, action buttons, arrows and the new zoom cluster float
-  on top and fade after 3s idle. Zoom runs 1x–4x via buttons, wheel, trackpad pinch, double-click,
+  on top and fade after 2s idle. Zoom runs 1x–4x via buttons, wheel, trackpad pinch, double-click,
   two-finger pinch and double-tap, with clamped panning and a background upgrade to the `download/`
   tier (falling back to the original where that tier is not backfilled). The EXIF/kit line under
   the photo is gone, taking `/api/exif` usage with it — see **STY-4**.
