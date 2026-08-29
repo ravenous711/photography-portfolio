@@ -1860,6 +1860,9 @@ a.album-sibling-link:hover {
 #lightbox-prev { left: var(--lb-chrome-l); }
 #lightbox-next { right: var(--lb-chrome-r); }
 
+/* First/last photo — no arrow to offer */
+.lightbox-nav.is-unavailable { visibility: hidden; }
+
 .lightbox-nav:hover { background: rgba(255,255,255,0.18); }
 
 /* Invisible tap zones — overlay left/right thirds of the stage on mobile.
@@ -1994,12 +1997,15 @@ a.album-sibling-link:hover {
 }
 
 /* Idle fade — after a few seconds of no input the photo sits alone on black.
-   Any pointer, touch or key event brings the controls back. */
+   Any pointer, touch or key event brings the controls back, so coming back is
+   quick while leaving is a long, gentle dissolve.
+   visibility rather than pointer-events: it can be delayed until the fade
+   finishes, so a control stays clickable for as long as it is still visible. */
 #lightbox .lightbox-actions,
 #lightbox .lightbox-nav,
 #lightbox .lightbox-zoom,
 #lightbox #lightbox-meta-top {
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease-out, visibility 0s;
 }
 
 #lightbox.chrome-hidden .lightbox-actions,
@@ -2007,7 +2013,17 @@ a.album-sibling-link:hover {
 #lightbox.chrome-hidden .lightbox-zoom,
 #lightbox.chrome-hidden #lightbox-meta-top {
   opacity: 0;
-  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 1.2s ease-in-out, visibility 0s linear 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #lightbox.chrome-hidden .lightbox-actions,
+  #lightbox.chrome-hidden .lightbox-nav,
+  #lightbox.chrome-hidden .lightbox-zoom,
+  #lightbox.chrome-hidden #lightbox-meta-top {
+    transition: opacity 0.2s ease-out, visibility 0s linear 0.2s;
+  }
 }
 
 /* ============================================================

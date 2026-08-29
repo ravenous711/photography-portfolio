@@ -2607,8 +2607,10 @@
       resetZoom();
       updateLightboxMeta(index);
       syncLightboxPhotoUrl(index);
-      document.getElementById('lightbox-prev').style.visibility = index === 0 ? 'hidden' : 'visible';
-      document.getElementById('lightbox-next').style.visibility = index === allPhotos.length - 1 ? 'hidden' : 'visible';
+      // A class, not inline visibility: the idle fade also drives visibility,
+      // and an inline value would override it and leave a dead arrow clickable.
+      document.getElementById('lightbox-prev').classList.toggle('is-unavailable', index === 0);
+      document.getElementById('lightbox-next').classList.toggle('is-unavailable', index === allPhotos.length - 1);
 
       showLightboxPhoto(url, index, generation);
       preloadLightboxNeighbors(index);
