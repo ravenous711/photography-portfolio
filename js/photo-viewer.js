@@ -184,7 +184,10 @@ const PhotoViewer = (() => {
     if (options.resolveTarget) return options.resolveTarget(url);
     if (typeof findAlbumForPhoto !== 'function' || typeof Routes === 'undefined') return null;
 
-    const album = findAlbumForPhoto(url, { preferParentId: options.preferParentId });
+    const album = findAlbumForPhoto(url, {
+      preferParentId: options.preferParentId,
+      preferAlbumId: options.preferAlbumId,
+    });
     if (!album || album.id === options.currentAlbumId) return null;
     if (typeof canOpenAlbum === 'function' && !canOpenAlbum(album)) return null;
 
