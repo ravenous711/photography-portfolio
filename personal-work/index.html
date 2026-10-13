@@ -6,6 +6,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Personal work — Raveen Fernando</title>
   <meta name="description" content="Personal photography — travel, landscapes, and film." />
+  <meta name="robots" content="noindex,follow" />
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
@@ -78,6 +79,12 @@
   <script>
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+    if (window.location.pathname.replace(/\/$/, '') === '/archive') {
+      document.title = `Archive — ${SITE_CONFIG.photographerName}`;
+      const heading = document.querySelector('.page-title');
+      if (heading) heading.textContent = 'Archive';
+    }
 
     const PERSONAL_IDS = [
       'misc-film-rolls-2026',
