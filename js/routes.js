@@ -4,6 +4,16 @@ const Routes = {
   gallery: '/personal-work/',
   personalWork: '/personal-work/',
   professionalWork: '/professional-work/',
+  archive: '/archive/',
+
+  work(category) {
+    return `/work/${encodeURIComponent(category)}/`;
+  },
+
+  parseWorkCategory() {
+    const match = window.location.pathname.match(/^\/work\/([^/]+)\/?$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  },
 
 
   /** Flat album URL — used when no parent slug (legacy / standalone albums) */

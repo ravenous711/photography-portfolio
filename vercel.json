@@ -34,6 +34,8 @@
     { "source": "/familyalbums/", "destination": "/family/index.html" },
     { "source": "/familyalbums/:year/:slug/", "destination": "/album/index.html" },
     { "source": "/familyalbums/:year/:slug", "destination": "/album/index.html" },
+    { "source": "/work/:category/", "destination": "/portfolio/index.html" },
+    { "source": "/work/:category", "destination": "/portfolio/index.html" },
     { "source": "/personal-work/", "destination": "/personal-work/index.html" },
     { "source": "/professional-work/", "destination": "/professional-work/index.html" },
     { "source": "/unlock/", "destination": "/unlock/index.html" },

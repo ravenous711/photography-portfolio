@@ -1,0 +1,115 @@
+/* Public portfolio pages. Uses the site type and palette from style.css. */
+
+.portfolio-page {
+  background: #0c0c0b;
+  color: #f3f0e9;
+}
+
+.portfolio-page .page-header--portfolio {
+  width: min(100% - 3rem, 1100px);
+  margin: 0 auto;
+  padding: calc(var(--nav-height) + 3.25rem) 0 2rem;
+}
+
+.portfolio-kicker {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.portfolio-page .page-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(2.4rem, 6vw, 4.25rem);
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+  color: #f3f0e9;
+}
+
+.portfolio-lede {
+  max-width: 36rem;
+  margin: 1.1rem 0 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(243, 240, 233, 0.72);
+}
+
+.portfolio-edit {
+  width: min(100% - 3rem, 1100px);
+  margin: 0 auto 5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+}
+
+.portfolio-frame {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #161615;
+  cursor: zoom-in;
+  color: inherit;
+}
+
+.portfolio-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.portfolio-frame:focus-visible {
+  outline: 1px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+.portfolio-placeholder {
+  width: min(100% - 3rem, 1100px);
+  margin: 0 auto 5rem;
+  padding: 2.5rem 0;
+  border-top: 1px solid rgba(243, 240, 233, 0.12);
+}
+
+.portfolio-placeholder h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.portfolio-placeholder p {
+  margin: 0;
+  max-width: 34rem;
+  color: rgba(243, 240, 233, 0.72);
+}
+
+.portfolio-page footer {
+  background: #0c0c0b;
+  border-top-color: rgba(243, 240, 233, 0.12);
+  color: rgba(243, 240, 233, 0.45);
+}
+
+@media (min-width: 800px) {
+  .portfolio-edit {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+  }
+
+  .portfolio-frame:nth-child(5n + 1) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .portfolio-page .page-header--portfolio,
+  .portfolio-edit,
+  .portfolio-placeholder {
+    width: min(100% - 2rem, 1100px);
+  }
+}
