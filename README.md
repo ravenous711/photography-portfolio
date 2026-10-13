@@ -372,9 +372,11 @@ All routing is defined in `vercel.json`. The site uses clean trailing-slash URLs
 
 | URL | Template served | Notes |
 |---|---|---|
-| `/` | `index.html` | Yosemite hero (photo only) + Personal / Professional work banners |
-| `/personal-work/` | `personal-work/index.html` | Personal projects index (Italy, California, Red Rock, Film) |
-| `/professional-work/` | `professional-work/index.html` | Public professional highlights (`portfolio: true` albums) |
+| `/` | `index.html` | Curated portfolio: selected work, category previews, inquiry |
+| `/work/travel/`, `/work/life/`, `/work/events/`, `/work/couples/` | `portfolio/index.html` | One ordered edit per category. Couples stays a placeholder until the engagement shoot is tagged |
+| `/archive/` | `personal-work/index.html` | Unlinked full-album catalog. Not in public navigation. `noindex` |
+| `/personal-work/` | `personal-work/index.html` | Same catalog, kept for old bookmarks. `noindex` |
+| `/professional-work/` | `professional-work/index.html` | Previous professional highlights page. `noindex` |
 | `/gallery/` | → `/personal-work/` | Redirect alias |
 | `/gallery/<group>/` | `group/index.html` | Trip/group page (e.g. Italy highlights + cities) |
 | `/gallery/<group>/<slug>/` | `album/index.html` | Individual album |
@@ -677,6 +679,19 @@ templates in the [Album Types & Access Tiers](#album-types--access-tiers) sectio
 > The client enters their code once per browser session. The album page handles silent token
 > refresh — they are never interrupted mid-session.
 
+### Showing one client photo on the public portfolio
+
+Client albums stay in the private bucket. To put a single frame on the public site:
+
+1. In `/admin/` → the album, tag the photo Featured, Events, Couples, or another category. It stays private.
+2. Click **Publish to portfolio** and confirm you have permission to showcase it.
+3. That confirmation copies only the `grid/` and `view/` files to `portfolio-showcase/<album-id>/` on the public bucket and adds those public URLs to the category. The original stays private.
+4. **Unpublish** removes it from the public edit. Deleting the public copy is a separate confirmed action.
+
+On this branch, step 3 is a local preview. It records the destination and does not upload.
+
+`SITE_CONFIG.email` is the placeholder `hello@raveenfernando.com`. That inbox does not exist yet. Create it and update `js/config.js` before switching this branch live (**PORTFOLIO-1**).
+
 ---
 
 ### Step 5 — Commit and push
@@ -781,6 +796,7 @@ Password-protected panel for managing photos, curated sets, and access codes.
 | Tab | What it does |
 |---|---|
 | Albums | Expand an album → click photos to mark for deletion → **Commit Deletions** (deletes from R2 + updates `config.js` via GitHub) |
+| Portfolio | Tag photos Featured, Travel, Life, Events, or Couples, and choose which frames sit in an archive carousel. On localhost, **Save portfolio tags** stores a browser preview only and does not write to GitHub or R2. Private client photos stay off the public pages until you confirm **Publish to portfolio** |
 | Curated | Select photos as the curated highlight set → **Save as curated set** |
 | Favorites tally | Shows heart counts per photo for any album |
 | Access codes | Create / view / revoke D1-backed client access codes |

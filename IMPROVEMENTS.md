@@ -29,6 +29,7 @@ done, move it out of Open, add a Changelog line.
 ### 3 — Content & ops
 | ID | One-liner | Effort |
 |----|-----------|--------|
+| **PORTFOLIO-1** | Before switching the curated site live: create `hello@raveenfernando.com`, upload the engagement shoot, and decide whether unpublished event copies stay as they are | M |
 | **ALBUM-1** | London 2025 shell: upload it or delete the empty entry | M |
 | **OPS-6** | D1 backup/restore for access codes + favorites | M |
 | **OPS-1** | Label or archive stale scripts | S |
@@ -119,6 +120,13 @@ Jump here after picking an ID from Open tickets.
 - **Why:** Old branches (`feat/download-size-picker`, `feat/backfill-image-tiers`, `feat/family-groups`, …) confuse merges.
 - **Fix:** Confirm merged/abandoned → delete local + remote (remote needs approval).
 - **Done when:** Only active branches remain; list in Changelog.
+
+### PORTFOLIO-1 — Switch the curated portfolio live
+- **Effort:** M · **Risk:** Med · **Status:** LOCAL ONLY on `feat/curated-portfolio`
+- **Why:** The public site on this branch is a curated portfolio. `/archive/` holds the full albums and is unlinked. The contact address `hello@raveenfernando.com` does not exist yet, and Couples is a placeholder until the engagement shoot is uploaded.
+- **Fix:** Create the business inbox and replace `SITE_CONFIG.email`. Upload the engagement photographs, tag them Couples, and clear the placeholder in `js/portfolio.js`. Publish any private client frames you want on the public site (admin confirmation copies only `grid/` and `view/` to `portfolio-showcase/`). Then ask to merge.
+- **Files:** `js/config.js`, `js/portfolio.js`, `index.html`, `portfolio/index.html`, `admin/index.html`
+- **Done when:** The inbox exists, Couples shows real photographs or you explicitly keep the placeholder, and you have approved a merge to `main`.
 
 ### ALBUM-1 — London 2025 shell
 - **Effort:** M · **Risk:** Low · **Status:** TODO
@@ -257,6 +265,14 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **Curated public portfolio** — Oct 2026 (branch `feat/curated-portfolio`, not on `main`).
+  The homepage is now a selected edit plus Travel, Life, Events, and Couples. Full albums
+  live at the unlinked `/archive/` URL; `/personal-work/` and album URLs still open, and
+  those pages are `noindex`. Admin can tag Featured, Travel, Life, Events, Couples, and
+  the archive carousel. Private client photos stay staged until **Publish to portfolio**
+  is confirmed. Local saves are a browser preview only. Still open: create the business
+  email, upload the engagement shoot (**PORTFOLIO-1**).
 
 - **Carousels — click to view, and a way through to the album** — Aug 2026 (branch `feat/carousel-lightbox`).
   Filmstrip frames were inert: the trailer showed a photo but offered no way to see it larger or find
