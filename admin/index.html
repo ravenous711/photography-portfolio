@@ -525,12 +525,34 @@
     const portfolioDraft = Object.fromEntries(
       PORTFOLIO_TAG_IDS.map(id => [id, [...(Array.isArray(PORTFOLIO[id]) ? PORTFOLIO[id] : [])]]),
     );
+    const stagedPrivate = new Map();
+    (readPortfolioPreview()?.staged || []).forEach(item => {
+      if (!item?.sourceUrl) return;
+      stagedPrivate.set(item.sourceUrl, {
+        albumId: item.sourceAlbumId,
+        categories: new Set(item.categories || []),
+      });
+    });
     const highlightDraft = {};
     ALBUMS.forEach(album => {
       if (Array.isArray(album.highlights) && album.highlights.length && !album.hidden && (album.audience || 'public') === 'public') {
         highlightDraft[album.id] = [...album.highlights];
       }
     });
+
+    function isPrivatePortfolioAlbum(album) {
+      const audience = album?.audience || 'public';
+      return audience === 'family' || audience.startsWith('client:');
+    }
+
+    function showcasePublicUrl(album, sourceUrl) {
+      const filename = sourceUrl.split('/').pop().split('?')[0];
+      return `${PORTFOLIO_R2_ORIGIN}portfolio-showcase/${album.id}/${filename}`;
+    }
+
+    function publishedShowcase(sourceUrl) {
+      return PORTFOLIO_SHOWCASE.find(item => item.sourceUrl === sourceUrl && item.published && item.publicUrl) || null;
+    }
 
     function carouselHostFor(album) {
       if (!album || album.hidden || (album.audience || 'public') !== 'public') return null;
@@ -547,7 +569,61 @@
         portfolio: Object.fromEntries(PORTFOLIO_TAG_IDS.map(id => [id, [...portfolioDraft[id]]])),
         highlights: Object.fromEntries(Object.entries(highlightDraft).map(([id, urls]) => [id, [...urls]])),
         showcase: Array.isArray(PORTFOLIO_SHOWCASE) ? PORTFOLIO_SHOWCASE.map(item => ({ ...item })) : [],
+        staged: [...stagedPrivate.entries()].map(([sourceUrl, value]) => ({
+          sourceUrl,
+          sourceAlbumId: value.albumId,
+          categories: [...value.categories],
+        })),
       };
+    }
+
+    function publishPrivatePhoto(album, sourceUrl) {
+      const staged = stagedPrivate.get(sourceUrl);
+      if (!staged || !staged.categories.size) return;
+      const allowed = window.confirm(
+        'Publish this photo to the public portfolio? Confirm only if you have permission to showcase it. This preview will record a copy of the grid and view files at portfolio-showcase/. Nothing is uploaded.',
+      );
+      if (!allowed) return;
+      const publicUrl = showcasePublicUrl(album, sourceUrl);
+      const filename = sourceUrl.split('/').pop().split('?')[0];
+      staged.categories.forEach(id => {
+        const list = portfolioDraft[id];
+        const sourceAt = list.indexOf(sourceUrl);
+        if (sourceAt >= 0) list.splice(sourceAt, 1);
+        if (!list.includes(publicUrl)) list.push(publicUrl);
+      });
+      const existing = PORTFOLIO_SHOWCASE.find(item => item.sourceUrl === sourceUrl);
+      const record = {
+        sourceAlbumId: album.id,
+        sourceUrl,
+        publicUrl,
+        published: true,
+        copies: [
+          `grid/portfolio-showcase/${album.id}/${filename}`,
+          `view/portfolio-showcase/${album.id}/${filename}`,
+        ],
+      };
+      if (existing) Object.assign(existing, record);
+      else PORTFOLIO_SHOWCASE.push(record);
+      stagedPrivate.delete(sourceUrl);
+      showToast(`Preview only. Would copy grid and view files to ${publicUrl}`);
+    }
+
+    function unpublishPrivatePhoto(sourceUrl) {
+      const record = publishedShowcase(sourceUrl);
+      if (!record) return;
+      const allowed = window.confirm(
+        'Remove this photo from the public portfolio and mark its public copy for deletion? This preview does not delete anything from R2.',
+      );
+      if (!allowed) return;
+      PORTFOLIO_TAG_IDS.forEach(id => {
+        const list = portfolioDraft[id];
+        const at = list.indexOf(record.publicUrl);
+        if (at >= 0) list.splice(at, 1);
+      });
+      record.published = false;
+      record.pendingDelete = true;
+      showToast('Removed from the local preview. The public copy was not deleted from R2.');
     }
 
     function savePortfolioDraft() {
@@ -591,6 +667,26 @@
         });
         root.appendChild(section);
       });
+
+      if (stagedPrivate.size) {
+        const waiting = document.createElement('section');
+        waiting.style.marginBottom = '2.5rem';
+        const heading = document.createElement('h2');
+        heading.textContent = 'Waiting to publish';
+        heading.style.cssText = 'font-family:var(--font-serif);font-weight:400;font-size:1.7rem;margin:0 0 0.35rem';
+        waiting.appendChild(heading);
+        const note = document.createElement('p');
+        note.textContent = 'These private photos stay off the public site until you confirm Publish to portfolio.';
+        note.style.cssText = 'color:var(--color-muted);font-size:0.85rem';
+        waiting.appendChild(note);
+        stagedPrivate.forEach((value, sourceUrl) => {
+          const row = document.createElement('p');
+          row.textContent = `${sourceUrl.split('/').pop()} · ${[...value.categories].join(', ')} · still private`;
+          row.style.cssText = 'font-size:0.8rem';
+          waiting.appendChild(row);
+        });
+        root.appendChild(waiting);
+      }
 
       const carouselTitle = document.createElement('h2');
       carouselTitle.textContent = 'Archive carousels';
@@ -1149,22 +1245,70 @@
 
         const tagBar = document.createElement('div');
         tagBar.className = 'portfolio-tag-bar';
+        const privateAlbum = isPrivatePortfolioAlbum(album);
+        const tagTarget = (id) => {
+          if (!privateAlbum) return portfolioDraft[id];
+          const published = publishedShowcase(url);
+          if (published) return portfolioDraft[id];
+          return null;
+        };
+        const tagIncludes = (id) => {
+          if (!privateAlbum) return portfolioDraft[id].includes(url);
+          const published = publishedShowcase(url);
+          if (published) return portfolioDraft[id].includes(published.publicUrl);
+          return stagedPrivate.get(url)?.categories.has(id) || false;
+        };
         PORTFOLIO_TAG_IDS.forEach(id => {
           const chip = document.createElement('button');
           chip.type = 'button';
           chip.textContent = PORTFOLIO_TAG_LABELS[id];
-          const sync = () => chip.setAttribute('aria-pressed', String(portfolioDraft[id].includes(url)));
+          const sync = () => chip.setAttribute('aria-pressed', String(tagIncludes(id)));
           sync();
           chip.addEventListener('click', (e) => {
             e.stopPropagation();
-            const list = portfolioDraft[id];
-            const at = list.indexOf(url);
-            if (at >= 0) list.splice(at, 1);
-            else list.push(url);
+            const direct = tagTarget(id);
+            if (direct) {
+              const token = privateAlbum ? publishedShowcase(url).publicUrl : url;
+              const at = direct.indexOf(token);
+              if (at >= 0) direct.splice(at, 1);
+              else direct.push(token);
+            } else {
+              const staged = stagedPrivate.get(url) || { albumId: album.id, categories: new Set() };
+              if (staged.categories.has(id)) staged.categories.delete(id);
+              else staged.categories.add(id);
+              if (staged.categories.size) stagedPrivate.set(url, staged);
+              else stagedPrivate.delete(url);
+              const publishBtn = tagBar.querySelector('[data-publish]');
+              if (publishBtn) publishBtn.hidden = !stagedPrivate.get(url)?.categories.size;
+            }
             sync();
           });
           tagBar.appendChild(chip);
         });
+        if (privateAlbum && !publishedShowcase(url)) {
+          const publishBtn = document.createElement('button');
+          publishBtn.type = 'button';
+          publishBtn.dataset.publish = 'true';
+          publishBtn.textContent = 'Publish to portfolio';
+          publishBtn.hidden = !stagedPrivate.get(url)?.categories.size;
+          publishBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            publishPrivatePhoto(album, url);
+            renderAlbumDetail(album, tally);
+          });
+          tagBar.appendChild(publishBtn);
+        }
+        if (privateAlbum && publishedShowcase(url)) {
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Unpublish';
+          removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            unpublishPrivatePhoto(url);
+            renderAlbumDetail(album, tally);
+          });
+          tagBar.appendChild(removeBtn);
+        }
         const host = carouselHostFor(album);
         if (host) {
           const chip = document.createElement('button');
