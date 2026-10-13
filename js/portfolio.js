@@ -4,9 +4,9 @@
 // Ordered selects for the public site. Archival albums stay in
 // js/albums/*.js. A photo may appear in more than one category.
 //
-// Public pages render `PORTFOLIO[category]` only. `PORTFOLIO_SHOWCASE`
-// is the admin trace for client photos staged or copied to the public
-// portfolio-showcase/ prefix. Empty publicUrl means not yet public.
+// Public pages render `PORTFOLIO[category]` only. The admin source trace
+// for a private photo lives in js/portfolio-admin.js, which public pages
+// do not load.
 //
 // Replacing the Couples placeholder: upload the shoot, then add its
 // public image URLs to `couples` and clear `placeholder`.
@@ -99,15 +99,6 @@ const PORTFOLIO = {
   ],
   couples: [],
 };
-
-const PORTFOLIO_SHOWCASE = [
-  { sourceAlbumId: 'moksha-yoga', sourceUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-05.jpg', publicUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-05.jpg', published: true },
-  { sourceAlbumId: 'moksha-yoga', sourceUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-10.jpg', publicUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-10.jpg', published: true },
-  { sourceAlbumId: 'moksha-yoga', sourceUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-14.jpg', publicUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-14.jpg', published: true },
-  { sourceAlbumId: 'moksha-yoga', sourceUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-15.jpg', publicUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-15.jpg', published: true },
-  { sourceAlbumId: 'moksha-yoga', sourceUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-16.jpg', publicUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-16.jpg', published: true },
-  { sourceAlbumId: 'moksha-yoga', sourceUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-28.jpg', publicUrl: 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-28.jpg', published: true },
-];
 
 function portfolioCategory(id) {
   return PORTFOLIO_CATEGORIES.find(category => category.id === id) || null;

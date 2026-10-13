@@ -508,6 +508,7 @@
   <script src="/js/albums/morgan-alden-2026.js"></script>
   <script src="/js/albums.js"></script>
   <script src="/js/portfolio.js"></script>
+  <script src="/js/portfolio-admin.js"></script>
   <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
@@ -551,7 +552,13 @@
     }
 
     function publishedShowcase(sourceUrl) {
-      return PORTFOLIO_SHOWCASE.find(item => item.sourceUrl === sourceUrl && item.published && item.publicUrl) || null;
+      const record = PORTFOLIO_SHOWCASE.find(item => item.sourceUrl === sourceUrl && item.published && item.publicUrl);
+      if (record) return record;
+      // Seeded frames that are already public URLs, such as the Moksha teasers.
+      if (PORTFOLIO_TAG_IDS.some(id => portfolioDraft[id].includes(sourceUrl))) {
+        return { sourceUrl, publicUrl: sourceUrl, published: true };
+      }
+      return null;
     }
 
     function carouselHostFor(album) {
