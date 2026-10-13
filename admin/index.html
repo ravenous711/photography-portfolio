@@ -34,6 +34,53 @@
       position: relative;
       padding-bottom: 1.25rem;
     }
+    .portfolio-tag-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 4;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 4px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.78));
+    }
+    .portfolio-tag-bar button {
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(0,0,0,0.45);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.58rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      cursor: pointer;
+    }
+    .portfolio-tag-bar button[aria-pressed="true"] {
+      background: var(--color-gold);
+      border-color: var(--color-gold);
+      color: #1a1a1a;
+    }
+    .portfolio-tag-bar button:focus-visible {
+      outline: 1px solid #fff;
+      outline-offset: 1px;
+    }
+    .portfolio-admin-row {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .portfolio-admin-row img {
+      width: 72px;
+      height: 48px;
+      object-fit: cover;
+      display: block;
+      background: var(--color-surface);
+    }
     .photo-thumb {
       position: absolute; cursor: pointer;
       border: 2px solid transparent;
@@ -367,6 +414,7 @@
       <span id="toolbar-site-name" style="font-family:var(--font-serif);font-size:1.1rem;letter-spacing:0.06em;color:var(--color-text)">Admin</span>
       <span id="toolbar-tabs" style="display:flex;align-items:center;gap:0.5rem;flex:1">
         <button class="btn-ghost tab-btn active" id="tab-albums" onclick="switchTab('albums')">Albums</button>
+        <button class="btn-ghost tab-btn" id="tab-portfolio" onclick="switchTab('portfolio')">Portfolio</button>
         <button class="btn-ghost tab-btn" id="tab-codes" onclick="switchTab('codes')">Access codes</button>
       </span>
       <!-- Detail mode: back button + album title -->
@@ -376,6 +424,7 @@
       <span id="selection-count" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-muted)">0 selected</span>
       <button class="btn-ghost" onclick="clearSelection()">Clear</button>
       <button class="btn-ghost" id="save-curated-btn" style="display:none" onclick="savePendingCurated()">Save curated changes</button>
+      <button class="btn-ghost" id="save-portfolio-btn" style="display:none" onclick="savePortfolioDraft()">Save portfolio tags</button>
       <button class="btn-danger" id="commit-btn" disabled onclick="commitDeletions()">Commit Deletions</button>
       <button class="btn-ghost" onclick="signOut()" style="color:var(--color-muted);margin-left:0.5rem">Sign out</button>
     </div>
@@ -392,6 +441,12 @@
         <span id="detail-status"></span>
       </div>
       <div id="album-detail-grid-container"></div>
+    </main>
+
+    <!-- ── Portfolio tab ── -->
+    <main id="pane-portfolio" style="display:none; padding: 2rem 1.5rem 4rem; max-width: 860px">
+      <p style="font-size:0.8rem;color:var(--color-muted);margin:0 0 1.5rem">Tags stay in this browser until you save. On this computer, saving does not upload photos or write to GitHub.</p>
+      <div id="portfolio-pane"></div>
     </main>
 
     <!-- ── Access codes tab ── -->
@@ -452,10 +507,139 @@
   <script src="/js/albums/italy-2026.js"></script>
   <script src="/js/albums/morgan-alden-2026.js"></script>
   <script src="/js/albums.js"></script>
+  <script src="/js/portfolio.js"></script>
+  <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
   <script>
     const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
+    const PORTFOLIO_TAG_IDS = ['featured', 'travel', 'life', 'events', 'couples'];
+    const PORTFOLIO_TAG_LABELS = {
+      featured: 'Featured',
+      travel: 'Travel',
+      life: 'Life',
+      events: 'Events',
+      couples: 'Couples',
+    };
+
+    const portfolioDraft = Object.fromEntries(
+      PORTFOLIO_TAG_IDS.map(id => [id, [...(Array.isArray(PORTFOLIO[id]) ? PORTFOLIO[id] : [])]]),
+    );
+    const highlightDraft = {};
+    ALBUMS.forEach(album => {
+      if (Array.isArray(album.highlights) && album.highlights.length && !album.hidden && (album.audience || 'public') === 'public') {
+        highlightDraft[album.id] = [...album.highlights];
+      }
+    });
+
+    function carouselHostFor(album) {
+      if (!album || album.hidden || (album.audience || 'public') !== 'public') return null;
+      if (album.parentId) {
+        const parent = ALBUMS.find(item => item.id === album.parentId);
+        if (parent?.type === 'group' && Array.isArray(highlightDraft[parent.id])) return parent;
+        return null;
+      }
+      return Array.isArray(highlightDraft[album.id]) ? album : null;
+    }
+
+    function portfolioDraftState() {
+      return {
+        portfolio: Object.fromEntries(PORTFOLIO_TAG_IDS.map(id => [id, [...portfolioDraft[id]]])),
+        highlights: Object.fromEntries(Object.entries(highlightDraft).map(([id, urls]) => [id, [...urls]])),
+        showcase: Array.isArray(PORTFOLIO_SHOWCASE) ? PORTFOLIO_SHOWCASE.map(item => ({ ...item })) : [],
+      };
+    }
+
+    function savePortfolioDraft() {
+      if (typeof writePortfolioPreview !== 'function' || !isPortfolioPreviewHost()) {
+        showToast('Portfolio saves from this admin go to GitHub. Use the local site so this stays a dry run.');
+        return;
+      }
+      writePortfolioPreview(portfolioDraftState());
+      showToast('Saved in this browser only. Nothing was uploaded and nothing was committed.');
+      if (document.getElementById('pane-portfolio').style.display !== 'none') renderPortfolioPane();
+    }
+
+    function moveDraftItem(list, index, direction) {
+      const next = index + direction;
+      if (next < 0 || next >= list.length) return;
+      const [item] = list.splice(index, 1);
+      list.splice(next, 0, item);
+    }
+
+    function renderPortfolioPane() {
+      const root = document.getElementById('portfolio-pane');
+      root.innerHTML = '';
+
+      PORTFOLIO_CATEGORIES.forEach(category => {
+        const photos = portfolioDraft[category.id] || [];
+        const placeholder = !photos.length ? category.placeholder : null;
+        const section = document.createElement('section');
+        section.style.marginBottom = '2.5rem';
+        const heading = document.createElement('h2');
+        heading.textContent = `${category.title} · ${photos.length}`;
+        heading.style.cssText = 'font-family:var(--font-serif);font-weight:400;font-size:1.7rem;margin:0 0 0.35rem';
+        section.appendChild(heading);
+        if (placeholder) {
+          const note = document.createElement('p');
+          note.textContent = `${placeholder.title}. ${placeholder.note}`;
+          note.style.cssText = 'color:var(--color-muted);font-size:0.85rem';
+          section.appendChild(note);
+        }
+        photos.forEach((url, index) => {
+          section.appendChild(portfolioAdminRow(url, index, photos, () => renderPortfolioPane()));
+        });
+        root.appendChild(section);
+      });
+
+      const carouselTitle = document.createElement('h2');
+      carouselTitle.textContent = 'Archive carousels';
+      carouselTitle.style.cssText = 'font-family:var(--font-serif);font-weight:400;font-size:1.7rem;margin:0 0 1rem';
+      root.appendChild(carouselTitle);
+
+      Object.keys(highlightDraft).forEach(id => {
+        const album = ALBUMS.find(item => item.id === id);
+        const photos = highlightDraft[id];
+        const section = document.createElement('section');
+        section.style.marginBottom = '2rem';
+        const heading = document.createElement('h3');
+        heading.textContent = `${album?.title || id} · ${photos.length}`;
+        heading.style.cssText = 'font-family:var(--font-serif);font-weight:400;font-size:1.25rem;margin:0 0 0.35rem';
+        section.appendChild(heading);
+        photos.forEach((url, index) => {
+          section.appendChild(portfolioAdminRow(url, index, photos, () => renderPortfolioPane()));
+        });
+        root.appendChild(section);
+      });
+    }
+
+    function portfolioAdminRow(url, index, list, rerender) {
+      const row = document.createElement('div');
+      row.className = 'portfolio-admin-row';
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = typeof gridUrl === 'function' ? gridUrl(url) : url;
+      const name = document.createElement('span');
+      name.textContent = url.split('/').pop();
+      name.style.cssText = 'font-size:0.75rem;word-break:break-all';
+      const actions = document.createElement('span');
+      actions.style.display = 'flex';
+      actions.style.gap = '0.35rem';
+      [['Earlier', -1], ['Later', 1], ['Remove', 0]].forEach(([label, direction]) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-ghost';
+        button.textContent = label;
+        button.addEventListener('click', () => {
+          if (label === 'Remove') list.splice(index, 1);
+          else moveDraftItem(list, index, direction);
+          rerender();
+        });
+        actions.appendChild(button);
+      });
+      row.append(img, name, actions);
+      return row;
+    }
 
     // gridUrl / thumbUrl / toImageUrl / isPrivateAudience — from main.js
 
@@ -764,7 +948,9 @@
       // Switch panes
       document.getElementById('pane-albums').style.display = 'none';
       document.getElementById('pane-codes').style.display  = 'none';
+      document.getElementById('pane-portfolio').style.display = 'none';
       document.getElementById('pane-album-detail').style.display = '';
+      document.getElementById('save-portfolio-btn').style.display = '';
 
       // Toolbar: show back + title, hide tabs
       document.getElementById('toolbar-tabs').style.display       = 'none';
@@ -801,6 +987,7 @@
       currentDetailAlbum = null;
       detailPrivateToken = null;
       document.getElementById('pane-album-detail').style.display = 'none';
+      document.getElementById('save-portfolio-btn').style.display = 'none';
       document.getElementById('pane-albums').style.display       = '';
       document.getElementById('toolbar-tabs').style.display       = '';
       document.getElementById('toolbar-site-name').style.display  = '';
@@ -959,6 +1146,43 @@
           toggleCurated(thumb, url, album.id, curatedSet);
         });
         thumb.appendChild(addBadge);
+
+        const tagBar = document.createElement('div');
+        tagBar.className = 'portfolio-tag-bar';
+        PORTFOLIO_TAG_IDS.forEach(id => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.textContent = PORTFOLIO_TAG_LABELS[id];
+          const sync = () => chip.setAttribute('aria-pressed', String(portfolioDraft[id].includes(url)));
+          sync();
+          chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const list = portfolioDraft[id];
+            const at = list.indexOf(url);
+            if (at >= 0) list.splice(at, 1);
+            else list.push(url);
+            sync();
+          });
+          tagBar.appendChild(chip);
+        });
+        const host = carouselHostFor(album);
+        if (host) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.textContent = 'Archive carousel';
+          const list = highlightDraft[host.id];
+          const sync = () => chip.setAttribute('aria-pressed', String(list.includes(url)));
+          sync();
+          chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const at = list.indexOf(url);
+            if (at >= 0) list.splice(at, 1);
+            else list.push(url);
+            sync();
+          });
+          tagBar.appendChild(chip);
+        }
+        thumb.appendChild(tagBar);
 
         thumb.appendChild(img);
         thumb.appendChild(overlay);
@@ -1156,9 +1380,14 @@
     function switchTab(tab) {
       document.getElementById('pane-albums').style.display = tab === 'albums' ? '' : 'none';
       document.getElementById('pane-codes').style.display  = tab === 'codes'  ? '' : 'none';
+      document.getElementById('pane-portfolio').style.display = tab === 'portfolio' ? '' : 'none';
+      document.getElementById('pane-album-detail').style.display = 'none';
       document.getElementById('tab-albums').classList.toggle('active', tab === 'albums');
+      document.getElementById('tab-portfolio').classList.toggle('active', tab === 'portfolio');
       document.getElementById('tab-codes').classList.toggle('active', tab === 'codes');
+      document.getElementById('save-portfolio-btn').style.display = tab === 'portfolio' ? '' : 'none';
       if (tab === 'codes') loadCodesList();
+      if (tab === 'portfolio') renderPortfolioPane();
     }
 
     // ── Toast ────────────────────────────────────────────────────────────────
