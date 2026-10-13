@@ -11,7 +11,11 @@ const SITE_CONFIG = {
   heroPositionMobile: '50% 40%',
 
   aboutPhoto: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/about/portrait.jpg`,
-  email: '',
+  // Placeholder inbox. This address does not exist yet — create a business
+  // email and replace this value before switching the live site.
+  email: 'hello@raveenfernando.com',
+  instagram: 'https://www.instagram.com/ravenous711/',
+  instagramHandle: '@ravenous711',
 };
 
 // ============================================================

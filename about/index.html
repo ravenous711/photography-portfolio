@@ -147,10 +147,17 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li id="nav-work-item" class="nav-dropdown">
+        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Work</button>
+        <div id="nav-work-menu" class="nav-dropdown-menu" role="menu" hidden>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/travel/">Travel</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/life/">Life</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/events/">Events</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/couples/">Couples</a>
+        </div>
+      </li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
         <div id="nav-private-menu" class="nav-dropdown-menu" role="menu" hidden></div>
@@ -165,14 +172,19 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/">Home</a>
-    <a href="/personal-work/">Personal work</a>
-    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
-    <a href="/about/" id="mobile-about-link">About</a>
-    <div id="mobile-private-access" class="mobile-private-access">
-      <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
-      <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
-    </div>
+      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Work</button>
+      <div id="mobile-work-menu" class="mobile-work-menu" hidden>
+        <a href="/work/travel/">Travel</a>
+        <a href="/work/life/">Life</a>
+        <a href="/work/events/">Events</a>
+        <a href="/work/couples/">Couples</a>
+      </div>
+      <a href="/about/" id="mobile-about-link">About</a>
+      <a href="/#contact">Contact</a>
+      <div id="mobile-private-access" class="mobile-private-access">
+        <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
+        <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
+      </div>
     </div>
   </div>
 
@@ -202,13 +214,13 @@
             </svg>
             <span id="about-email-text"></span>
           </a>
-          <a href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener" class="about-contact-link">
+          <a id="about-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener" class="about-contact-link">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="2" width="20" height="20" rx="5"/>
               <circle cx="12" cy="12" r="4"/>
               <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
             </svg>
-            @ravenous711
+            <span id="about-instagram-text">@ravenous711</span>
           </a>
         </div>
       </div>
@@ -240,6 +252,12 @@
       document.getElementById('about-email-text').textContent = SITE_CONFIG.email;
     } else {
       emailEl.style.display = 'none';
+    }
+    if (SITE_CONFIG.instagram) {
+      document.getElementById('about-instagram').href = SITE_CONFIG.instagram;
+    }
+    if (SITE_CONFIG.instagramHandle) {
+      document.getElementById('about-instagram-text').textContent = SITE_CONFIG.instagramHandle;
     }
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;

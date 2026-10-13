@@ -4,160 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="preload" as="image" href="/images/hero.jpg" />
-  <title>Raveen Fernando</title>
-  <meta name="description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+  <title>Raveen Fernando — Photography</title>
+  <meta name="description" content="Detroit-based photography of people, places, and gatherings." />
+  <link rel="canonical" href="https://raveenfernando.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://raveenfernando.com/" />
-  <meta property="og:title" content="Raveen Fernando" />
-  <meta property="og:description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+  <meta property="og:title" content="Raveen Fernando — Photography" />
+  <meta property="og:description" content="Detroit-based photography of people, places, and gatherings." />
   <meta property="og:image" content="https://raveenfernando.com/images/hero.jpg" />
-  <meta property="og:image:width" content="1920" />
-  <meta property="og:image:height" content="1280" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Raveen Fernando" />
-  <meta name="twitter:description" content="Photography portfolio of Raveen Fernando — landscapes, street, travel, and beyond." />
+  <meta name="twitter:title" content="Raveen Fernando — Photography" />
+  <meta name="twitter:description" content="Detroit-based photography of people, places, and gatherings." />
   <meta name="twitter:image" content="https://raveenfernando.com/images/hero.jpg" />
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
-
-  <style>
-    body.home-chapters {
-      background: #0c0c0b;
-      color: #f3f0e9;
-    }
-
-    /* Hero: Yosemite photo only — no name, no CTA */
-    .hero.hero--photo-only .hero-content {
-      display: none;
-    }
-    .hero.hero--photo-only .hero-overlay {
-      background: linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.22) 0%,
-        rgba(0,0,0,0.08) 45%,
-        rgba(0,0,0,0.35) 100%
-      );
-    }
-
-    #home-chapters {
-      display: flex;
-      flex-direction: column;
-      background: #0c0c0b;
-    }
-
-    #home-chapters .home-banner {
-      position: relative;
-      display: block;
-      min-height: 72svh;
-      overflow: hidden;
-      color: #fff;
-      text-decoration: none;
-    }
-
-    #home-chapters .home-banner-media {
-      position: absolute;
-      inset: 0;
-      background: #161615;
-    }
-
-    #home-chapters .home-banner-media img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      opacity: 0;
-      transform: scale(1.03);
-      transition: opacity 0.8s ease, transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
-    }
-
-    #home-chapters .home-banner-media img.loaded {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    #home-chapters .home-banner:hover .home-banner-media img.loaded {
-      transform: scale(1.03);
-    }
-
-    #home-chapters .home-banner-shade {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to top,
-        rgba(0,0,0,0.72) 0%,
-        rgba(0,0,0,0.2) 48%,
-        rgba(0,0,0,0.12) 100%
-      );
-      pointer-events: none;
-    }
-
-    #home-chapters .home-banner-copy {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1;
-      text-align: center;
-      padding: 0 1.5rem;
-      width: min(100% - 2rem, 36rem);
-    }
-
-    #home-chapters .home-banner-title {
-      margin: 0 0 1.25rem;
-      font-family: var(--font-sans);
-      font-size: clamp(1.35rem, 3.5vw, 2rem);
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: #fff;
-      text-shadow: 0 2px 24px rgba(0,0,0,0.35);
-    }
-
-    #home-chapters .home-banner-cta {
-      display: inline-block;
-      font-size: 0.7rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.88);
-      border: 1px solid rgba(255,255,255,0.45);
-      padding: 0.7rem 1.35rem;
-      transition: color var(--transition), border-color var(--transition), background var(--transition);
-    }
-
-    #home-chapters .home-banner:hover .home-banner-cta {
-      color: #fff;
-      border-color: rgba(255,255,255,0.85);
-      background: rgba(255,255,255,0.08);
-    }
-
-    body.home-chapters footer {
-      background: #0c0c0b;
-      border-top-color: rgba(243,240,233,0.12);
-      color: rgba(243,240,233,0.45);
-    }
-
-    body.home-chapters footer a {
-      color: rgba(243,240,233,0.45);
-    }
-
-    @media (max-width: 640px) {
-      #home-chapters .home-banner {
-        min-height: 62svh;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/portfolio.css" />
 </head>
-<body class="overflow-x-hidden home-chapters">
+<body class="overflow-x-hidden portfolio-page dark-page">
 
-  <nav id="main-nav">
+  <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li id="nav-work-item" class="nav-dropdown">
+        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Work</button>
+        <div id="nav-work-menu" class="nav-dropdown-menu" role="menu" hidden>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/travel/">Travel</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/life/">Life</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/events/">Events</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/couples/">Couples</a>
+        </div>
+      </li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
         <div id="nav-private-menu" class="nav-dropdown-menu" role="menu" hidden></div>
@@ -172,48 +51,42 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/">Home</a>
-    <a href="/personal-work/">Personal work</a>
-    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
-    <a href="/about/" id="mobile-about-link">About</a>
-    <div id="mobile-private-access" class="mobile-private-access">
-      <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
-      <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
-    </div>
+      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Work</button>
+      <div id="mobile-work-menu" class="mobile-work-menu" hidden>
+        <a href="/work/travel/">Travel</a>
+        <a href="/work/life/">Life</a>
+        <a href="/work/events/">Events</a>
+        <a href="/work/couples/">Couples</a>
+      </div>
+      <a href="/about/" id="mobile-about-link">About</a>
+      <a href="/#contact">Contact</a>
+      <div id="mobile-private-access" class="mobile-private-access">
+        <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
+        <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
+      </div>
     </div>
   </div>
 
-  <!-- Yosemite hero — photo only -->
-  <section class="hero hero--photo-only" aria-label="Featured photograph">
-    <div class="hero-bg" id="hero-bg"></div>
-    <div class="hero-overlay"></div>
-    <div class="hero-content" aria-hidden="true">
-      <h1 class="hero-name" id="hero-name"></h1>
-    </div>
+  <header class="portfolio-intro">
+    <p class="portfolio-kicker" id="home-name">Raveen Fernando</p>
+    <h1 class="portfolio-statement">Detroit-based photography of people, places, and gatherings.</h1>
+    <a class="portfolio-intro-link" href="#contact">Get in touch</a>
+  </header>
+
+  <section class="portfolio-selected" id="selected" aria-label="Selected work">
+    <h2 class="portfolio-section-title">Selected work</h2>
+    <div class="portfolio-selected-edit" id="selected-edit"></div>
   </section>
 
-  <!-- Category banners -->
-  <section id="home-chapters" aria-label="Portfolio">
-    <a class="home-banner" href="/personal-work/">
-      <div class="home-banner-media">
-        <img id="banner-personal-img" alt="" loading="eager" decoding="async" />
-      </div>
-      <div class="home-banner-shade"></div>
-      <div class="home-banner-copy">
-        <p class="home-banner-title">Personal work</p>
-        <span class="home-banner-cta">View albums</span>
-      </div>
-    </a>
-    <a class="home-banner" href="/professional-work/">
-      <div class="home-banner-media">
-        <img id="banner-client-img" alt="" loading="lazy" decoding="async" />
-      </div>
-      <div class="home-banner-shade"></div>
-      <div class="home-banner-copy">
-        <p class="home-banner-title">Professional work</p>
-        <span class="home-banner-cta">View portfolio</span>
-      </div>
-    </a>
+  <section class="portfolio-categories" id="work" aria-label="Categories"></section>
+
+  <section class="portfolio-inquiry" id="contact" aria-label="Contact">
+    <p class="portfolio-kicker">Contact</p>
+    <h2>Tell me what you would like photographed.</h2>
+    <div class="portfolio-inquiry-links">
+      <a id="contact-email" href="mailto:hello@raveenfernando.com">hello@raveenfernando.com</a>
+      <a id="contact-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener">Instagram</a>
+    </div>
   </section>
 
   <footer>
@@ -221,6 +94,7 @@
   </footer>
 
   <script src="/js/config.js"></script>
+  <script src="/js/portfolio.js"></script>
   <script src="/js/albums/clients.js"></script>
   <script src="/js/albums/family-2025.js"></script>
   <script src="/js/albums/family-2026.js"></script>
@@ -231,44 +105,87 @@
   <script src="/js/albums.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/photo-viewer.js"></script>
   <script>
     document.getElementById('footer-name').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
-    document.title = SITE_CONFIG.photographerName;
-    // Keep id for a11y tools; content unused (photo-only hero)
-    document.getElementById('hero-name').textContent = SITE_CONFIG.photographerName;
+    document.getElementById('home-name').textContent = SITE_CONFIG.photographerName;
+    document.title = `${SITE_CONFIG.photographerName} — Photography`;
 
-    const heroBg = document.getElementById('hero-bg');
-    const heroImg = document.createElement('img');
-    heroImg.src = SITE_CONFIG.heroImage;
-    heroImg.alt = '';
-    heroImg.decoding = 'async';
-    heroImg.fetchPriority = 'high';
-    const isMobileHero = window.matchMedia('(max-width: 768px)').matches;
-    const heroPos = isMobileHero && SITE_CONFIG.heroPositionMobile
-      ? SITE_CONFIG.heroPositionMobile
-      : SITE_CONFIG.heroPosition;
-    if (heroPos) heroImg.style.objectPosition = heroPos;
-    heroBg.appendChild(heroImg);
-
-    function setBanner(imgEl, url, position) {
-      if (!url) return;
-      imgEl.addEventListener('load', () => imgEl.classList.add('loaded'));
-      imgEl.addEventListener('error', () => { imgEl.style.opacity = '1'; }, { once: true });
-      if (position) imgEl.style.objectPosition = position;
-      imgEl.src = /^https?:\/\//.test(url) ? (typeof viewUrl === 'function' ? viewUrl(url) : url) : url;
+    const emailLink = document.getElementById('contact-email');
+    if (SITE_CONFIG.email) {
+      emailLink.href = `mailto:${SITE_CONFIG.email}`;
+      emailLink.textContent = SITE_CONFIG.email;
     }
+    const instagram = document.getElementById('contact-instagram');
+    if (SITE_CONFIG.instagram) instagram.href = SITE_CONFIG.instagram;
+    instagram.textContent = SITE_CONFIG.instagramHandle || 'Instagram';
 
-    const italy = ALBUMS.find(a => a.id === 'italy-2026');
-    const moksha = ALBUMS.find(a => a.id === 'moksha-yoga');
-    setBanner(
-      document.getElementById('banner-personal-img'),
-      italy?.coverImage || `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`
-    );
-    setBanner(
-      document.getElementById('banner-client-img'),
-      moksha?.coverImage || `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-01.jpg`
-    );
+    const featured = portfolioPhotos('featured');
+    const selected = document.getElementById('selected-edit');
+    featured.forEach((url, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'portfolio-frame';
+      const alt = `Selected work — photograph ${index + 1}`;
+      button.setAttribute('aria-label', `Open ${alt}`);
+      const img = document.createElement('img');
+      img.alt = alt;
+      img.decoding = 'async';
+      img.loading = index < 2 ? 'eager' : 'lazy';
+      img.src = typeof viewUrl === 'function' ? viewUrl(url) : url;
+      button.appendChild(img);
+      button.addEventListener('click', () => {
+        PhotoViewer.open({
+          photos: featured,
+          index,
+          alt: 'Selected work',
+          resolveTarget: () => null,
+        });
+      });
+      selected.appendChild(button);
+    });
+
+    const categories = document.getElementById('work');
+    PORTFOLIO_CATEGORIES.filter(category => category.id !== 'featured').forEach(category => {
+      const section = document.createElement('section');
+      section.setAttribute('aria-label', category.title);
+      const photos = portfolioPhotos(category.id);
+      const placeholder = portfolioPlaceholder(category.id);
+      const head = document.createElement('div');
+      head.className = 'portfolio-preview-head';
+      head.innerHTML = `<h2></h2><a></a>`;
+      head.querySelector('h2').textContent = category.title;
+      const more = head.querySelector('a');
+      more.href = category.path;
+      more.textContent = placeholder ? 'Note' : `View ${category.title}`;
+      section.appendChild(head);
+
+      if (placeholder) {
+        const note = document.createElement('div');
+        note.className = 'portfolio-placeholder';
+        note.innerHTML = '<h2></h2><p></p>';
+        note.querySelector('h2').textContent = placeholder.title;
+        note.querySelector('p').textContent = placeholder.note;
+        section.appendChild(note);
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'portfolio-preview-grid';
+        photos.slice(0, 4).forEach((url, index) => {
+          const link = document.createElement('a');
+          link.href = category.path;
+          const img = document.createElement('img');
+          img.alt = `${category.title} — photograph ${index + 1}`;
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.src = typeof gridUrl === 'function' ? gridUrl(url) : url;
+          link.appendChild(img);
+          grid.appendChild(link);
+        });
+        section.appendChild(grid);
+      }
+      categories.appendChild(section);
+    });
   </script>
 </body>
 </html>

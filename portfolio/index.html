@@ -20,10 +20,17 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li id="nav-work-item" class="nav-dropdown">
+        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Work</button>
+        <div id="nav-work-menu" class="nav-dropdown-menu" role="menu" hidden>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/travel/">Travel</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/life/">Life</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/events/">Events</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/work/couples/">Couples</a>
+        </div>
+      </li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
         <div id="nav-private-menu" class="nav-dropdown-menu" role="menu" hidden></div>
@@ -38,10 +45,15 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-      <a href="/">Home</a>
-      <a href="/personal-work/">Personal work</a>
-      <a href="/professional-work/">Professional work</a>
+      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Work</button>
+      <div id="mobile-work-menu" class="mobile-work-menu" hidden>
+        <a href="/work/travel/">Travel</a>
+        <a href="/work/life/">Life</a>
+        <a href="/work/events/">Events</a>
+        <a href="/work/couples/">Couples</a>
+      </div>
       <a href="/about/">About</a>
+      <a href="/#contact">Contact</a>
       <div id="mobile-private-access" class="mobile-private-access">
         <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
         <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
@@ -56,6 +68,15 @@
   </header>
 
   <main id="portfolio-main"></main>
+
+  <section class="portfolio-inquiry" id="contact" aria-label="Contact">
+    <p class="portfolio-kicker">Contact</p>
+    <h2>Tell me what you would like photographed.</h2>
+    <div class="portfolio-inquiry-links">
+      <a id="contact-email" href="mailto:hello@raveenfernando.com">hello@raveenfernando.com</a>
+      <a id="contact-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </section>
 
   <footer>
     <p id="footer-copyright"></p>
@@ -77,6 +98,15 @@
   <script>
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+    const emailLink = document.getElementById('contact-email');
+    if (SITE_CONFIG.email) {
+      emailLink.href = `mailto:${SITE_CONFIG.email}`;
+      emailLink.textContent = SITE_CONFIG.email;
+    }
+    const instagram = document.getElementById('contact-instagram');
+    if (SITE_CONFIG.instagram) instagram.href = SITE_CONFIG.instagram;
+    instagram.textContent = SITE_CONFIG.instagramHandle || 'Instagram';
 
     const categoryId = Routes.parseWorkCategory();
     const category = portfolioCategory(categoryId);
