@@ -10,8 +10,12 @@
  *
  * Body: {
  *   portfolio: { featured: string[], travel: string[], life: string[], events: string[], couples: string[] },
- *   highlights?: { [albumId]: string[] }
+ *   highlights?: { [albumId]: string[] },
+ *   showcase?: { sourceAlbumId, sourceUrl, publicUrl, published }[]
  * }
+ *
+ * Category URLs are written to js/portfolio.js. The private source trace is
+ * written to api/_portfolio-showcase.js, which is not loaded by public pages.
  */
 import { requireSession } from './_admin-session.js';
 
@@ -40,6 +44,7 @@ export default async function handler(req, res) {
 
   const portfolio = body?.portfolio;
   const highlights = body?.highlights && typeof body.highlights === 'object' ? body.highlights : {};
+  const showcase = Array.isArray(body?.showcase) ? body.showcase : [];
   if (!portfolio || typeof portfolio !== 'object') {
     return res.status(400).json({ error: 'portfolio object is required' });
   }
@@ -58,6 +63,10 @@ export default async function handler(req, res) {
     if (invalid) {
       return res.status(400).json({ error: `Invalid carousel URLs for ${albumId}`, examples: invalid });
     }
+  }
+  const showcaseError = invalidShowcase(showcase);
+  if (showcaseError) {
+    return res.status(400).json({ error: 'Invalid showcase records', examples: showcaseError });
   }
 
   const [owner, repo] = GITHUB_REPO.split('/');
@@ -91,11 +100,50 @@ export default async function handler(req, res) {
         `Admin: update archive carousel for ${albumId}`,
       );
     }
+
+    await writeGithubFile(
+      owner,
+      repo,
+      'api/_portfolio-showcase.js',
+      ghHeaders,
+      () => renderShowcaseModule(showcase),
+      'Admin: update private portfolio showcase trace',
+    );
   } catch (err) {
     return res.status(502).json({ error: err.message });
   }
 
   return res.status(200).json({ ok: true, message: 'Portfolio saved — Vercel will redeploy' });
+}
+
+function invalidShowcase(list) {
+  const bad = [];
+  for (const item of list) {
+    if (!item || typeof item !== 'object') {
+      bad.push('record must be an object');
+      continue;
+    }
+    if (item.sourceAlbumId && !/^[a-z0-9-]+$/.test(item.sourceAlbumId)) bad.push(item.sourceAlbumId);
+    const urls = invalidUrls([item.sourceUrl, item.publicUrl].filter(Boolean));
+    if (!item.publicUrl || urls) bad.push(item.publicUrl || item.sourceUrl || 'missing url');
+    const showcaseCopy = typeof item.publicUrl === 'string' && item.publicUrl.includes('/portfolio-showcase/');
+    const alreadyPublic = item.publicUrl === item.sourceUrl;
+    if (!showcaseCopy && !alreadyPublic) bad.push(item.publicUrl);
+  }
+  return bad.length ? bad.slice(0, 3) : null;
+}
+
+function renderShowcaseModule(showcase) {
+  const lines = showcase.map(item => {
+    const record = {
+      sourceAlbumId: item.sourceAlbumId || '',
+      sourceUrl: item.sourceUrl || '',
+      publicUrl: item.publicUrl,
+      published: Boolean(item.published),
+    };
+    return `  ${JSON.stringify(record)},`;
+  });
+  return `// Admin source trace. Public pages do not load this file.\nconst PORTFOLIO_SHOWCASE = [\n${lines.join('\n')}\n];\n`;
 }
 
 function invalidUrls(list) {
@@ -113,9 +161,15 @@ function invalidUrls(list) {
 async function writeGithubFile(owner, repo, filePath, ghHeaders, transform, message) {
   const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
   const getRes = await fetch(apiBase, { headers: ghHeaders });
-  if (!getRes.ok) throw new Error(`Failed to read ${filePath}: ${getRes.status}`);
-  const fileData = await getRes.json();
-  const original = Buffer.from(fileData.content, 'base64').toString('utf-8');
+  let sha = null;
+  let original = '';
+  if (getRes.ok) {
+    const fileData = await getRes.json();
+    sha = fileData.sha;
+    original = Buffer.from(fileData.content || '', 'base64').toString('utf-8');
+  } else if (getRes.status !== 404) {
+    throw new Error(`Failed to read ${filePath}: ${getRes.status}`);
+  }
   const updated = transform(original);
   if (updated === original) return;
   const putRes = await fetch(apiBase, {
@@ -124,7 +178,7 @@ async function writeGithubFile(owner, repo, filePath, ghHeaders, transform, mess
     body: JSON.stringify({
       message,
       content: Buffer.from(updated).toString('base64'),
-      sha: fileData.sha,
+      ...(sha ? { sha } : {}),
     }),
   });
   if (!putRes.ok) {

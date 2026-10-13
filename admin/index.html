@@ -633,14 +633,34 @@
       showToast('Removed from the local preview. The public copy was not deleted from R2.');
     }
 
-    function savePortfolioDraft() {
-      if (typeof writePortfolioPreview !== 'function' || !isPortfolioPreviewHost()) {
-        showToast('Portfolio saves from this admin go to GitHub. Use the local site so this stays a dry run.');
+    async function savePortfolioDraft() {
+      const payload = portfolioDraftState();
+      if (typeof isPortfolioPreviewHost === 'function' && isPortfolioPreviewHost()) {
+        writePortfolioPreview(payload);
+        showToast('Saved in this browser only. Nothing was uploaded and nothing was committed.');
+        if (document.getElementById('pane-portfolio').style.display !== 'none') renderPortfolioPane();
         return;
       }
-      writePortfolioPreview(portfolioDraftState());
-      showToast('Saved in this browser only. Nothing was uploaded and nothing was committed.');
-      if (document.getElementById('pane-portfolio').style.display !== 'none') renderPortfolioPane();
+      const button = document.getElementById('save-portfolio-btn');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/admin-portfolio', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.error || 'Portfolio save failed');
+          return;
+        }
+        showToast('Portfolio saved.');
+      } catch (err) {
+        showToast(err.message);
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function moveDraftItem(list, index, direction) {
