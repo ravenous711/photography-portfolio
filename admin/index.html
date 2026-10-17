@@ -514,13 +514,10 @@
   <script src="/js/main.js"></script>
   <script>
     const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
-    const PORTFOLIO_TAG_IDS = ['travel', 'life', 'events', 'couples'];
-    const PORTFOLIO_TAG_LABELS = {
-      travel: 'Travel',
-      life: 'Life',
-      events: 'Events',
-      couples: 'Couples',
-    };
+    const PORTFOLIO_TAG_IDS = PORTFOLIO_CATEGORIES.map(category => category.id);
+    const PORTFOLIO_TAG_LABELS = Object.fromEntries(
+      PORTFOLIO_CATEGORIES.map(category => [category.id, category.title]),
+    );
 
     const portfolioDraft = Object.fromEntries(
       PORTFOLIO_TAG_IDS.map(id => [id, [...(Array.isArray(PORTFOLIO[id]) ? PORTFOLIO[id] : [])]]),
@@ -715,7 +712,7 @@
       }
 
       const carouselTitle = document.createElement('h2');
-      carouselTitle.textContent = 'Archive carousels';
+      carouselTitle.textContent = 'Trip favorites';
       carouselTitle.style.cssText = 'font-family:var(--font-serif);font-weight:400;font-size:1.7rem;margin:0 0 1rem';
       root.appendChild(carouselTitle);
 
@@ -769,7 +766,7 @@
       const actions = document.createElement('span');
       actions.style.display = 'flex';
       actions.style.gap = '0.35rem';
-      [['Earlier', -1], ['Later', 1], ['Remove', 0]].forEach(([label, direction]) => {
+      [['Move up', -1], ['Move down', 1], ['Remove', 0]].forEach(([label, direction]) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'btn-ghost';
@@ -1361,7 +1358,7 @@
         if (host) {
           const chip = document.createElement('button');
           chip.type = 'button';
-          chip.textContent = 'Archive carousel';
+          chip.textContent = 'Trip favorite';
           const list = highlightDraft[host.id];
           const sync = () => chip.setAttribute('aria-pressed', String(list.includes(url)));
           sync();
