@@ -1318,16 +1318,7 @@
         fullView = true;
         return;
       }
-      // Children of a highlights group open on the full archive (trailer lives on the group page)
-      if (album.parentId) {
-        const parent = ALBUMS.find(a => a.id === album.parentId);
-        if (parent?.type === 'group' && Array.isArray(parent.highlights) && parent.highlights.length) {
-          hasCurated = false;
-          fullView = true;
-          return;
-        }
-      }
-      // Standalone albums with highlights[]: trailer on this page, then full set below
+      // Standalone albums with highlights[]: favorites grid, then the rest behind View all photos.
       if (!album.parentId && Array.isArray(album.highlights) && album.highlights.length) {
         hasCurated = false;
         fullView = true;
@@ -1562,15 +1553,21 @@
             });
           },
         });
-        const rest = document.querySelector('#album-content main');
+        const rest = [
+          document.querySelector('#album-content main'),
+          document.getElementById('album-header-toolbar'),
+          document.getElementById('album-toolbar-sentinel'),
+          document.getElementById('album-view-controls-top'),
+          document.getElementById('album-view-controls-bottom'),
+        ].filter(Boolean);
         const reveal = document.getElementById('album-view-all');
-        if (rest && reveal) {
-          rest.hidden = true;
+        if (rest.length && reveal) {
+          rest.forEach(el => { el.hidden = true; });
           reveal.hidden = false;
           reveal.addEventListener('click', () => {
-            rest.hidden = false;
+            rest.forEach(el => { el.hidden = false; });
             reveal.hidden = true;
-            rest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            rest[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
           });
         }
       } else if (albumHighlights) {
