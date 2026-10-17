@@ -9,7 +9,7 @@
  * browser-only preview on localhost instead.
  *
  * Body: {
- *   portfolio: { travel: string[], life: string[], events: string[], couples: string[] },
+ *   portfolio: { events: string[], engagements: string[], portraits: string[] },
  *   highlights?: { [albumId]: string[] },
  *   showcase?: { sourceAlbumId, sourceUrl, publicUrl, published }[]
  * }
@@ -20,7 +20,7 @@
 import { requireSession } from './_admin-session.js';
 
 const R2_ORIGIN = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/';
-const CATEGORIES = ['travel', 'life', 'events', 'couples'];
+const CATEGORIES = ['events', 'engagements', 'portraits'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

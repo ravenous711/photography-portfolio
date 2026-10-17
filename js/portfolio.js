@@ -8,8 +8,8 @@
 // for a private photo lives in js/portfolio-admin.js, which public pages
 // do not load.
 //
-// Replacing the Couples placeholder: upload the shoot, then add its
-// public image URLs to `couples` and clear `placeholder`.
+// Replacing an Engagements or Portraits placeholder: upload the shoot,
+// tag the photographs in admin, then the page fills in on its own.
 // ============================================================
 
 const PORTFOLIO_R2_ORIGIN = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/';
@@ -17,63 +17,34 @@ const PORTFOLIO_SHOWCASE_PREFIX = 'portfolio-showcase/';
 
 const PORTFOLIO_CATEGORIES = [
   {
-    id: 'travel',
-    title: 'Travel',
-    path: '/photos/travel/',
-    lede: 'Places, from Italy, California, and Red Rock Canyon.',
-  },
-  {
-    id: 'life',
-    title: 'Life',
-    path: '/photos/life/',
-    lede: 'Film photographs that are not part of a trip.',
-  },
-  {
     id: 'events',
     title: 'Events',
     path: '/photos/events/',
     lede: 'Gatherings and celebrations, starting with Moksha Yoga.',
   },
   {
-    id: 'couples',
-    title: 'Couples',
-    path: '/photos/couples/',
-    lede: 'Engagements and portraits of two people.',
+    id: 'engagements',
+    title: 'Engagements',
+    path: '/photos/engagements/',
+    lede: 'Engagement photographs.',
     placeholder: {
-      title: 'Engagement photos to add',
-      note: 'An engagement shoot is ready to upload. This page fills in once those photographs are selected.',
+      title: 'Coming soon',
+      note: 'An engagement shoot is ready to upload. This page fills in once those photographs are tagged.',
+    },
+  },
+  {
+    id: 'portraits',
+    title: 'Portraits',
+    path: '/photos/portraits/',
+    lede: 'Senior portraits and other individual sittings.',
+    placeholder: {
+      title: 'Coming soon',
+      note: 'Portrait sittings fill in here once those photographs are tagged.',
     },
   },
 ];
 
 const PORTFOLIO = {
-  // Chronological by trip, then by that trip's album order.
-  // California July–September 2025, Red Rock January 2026, Italy May–June 2026.
-  travel: [
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-026.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-118.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Santa-Cruz-Big-Sur/California-200.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-404.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/California/Yosemite/California-455.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Red-Rock-Canyon-2026/20260121-_DSF0215.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Red-Rock-Canyon-2026/20260122-_DSF0461-Edit.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Red-Rock-Canyon-2026/20260125-_DSF0972.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_042.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_284.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Venice/Digital/venice_485.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Pisa/Digital/pisa_042.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Florence/Digital/florence_006.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Florence/Digital/florence_180.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Assisi/Digital/assisi_031.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_208.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Italy/Rome/Digital/rome_266.jpg',
-  ],
-  // Non-trip film only. Trip rolls (Italy, Red Rock) stay in Travel.
-  life: [
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg',
-    'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Misc-Film-Rolls-2026/Tmax-0726/tmax_400_0726_14.jpg',
-  ],
-  // Approved Moksha teaser frames. These objects already exist on the public bucket.
   events: [
     'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-05.jpg',
     'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-10.jpg',
@@ -82,7 +53,8 @@ const PORTFOLIO = {
     'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-16.jpg',
     'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/Moksha-Yoga/Moksha-Yoga-28.jpg',
   ],
-  couples: [],
+  engagements: [],
+  portraits: [],
 };
 
 function portfolioCategory(id) {

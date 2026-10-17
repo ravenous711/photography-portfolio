@@ -31,7 +31,13 @@
     { "source": "/work/:category/", "destination": "/photos/:category/", "permanent": false },
     { "source": "/work/:category", "destination": "/photos/:category/", "permanent": false },
     { "source": "/archive/", "destination": "/personal-work/", "permanent": false },
-    { "source": "/archive", "destination": "/personal-work/", "permanent": false }
+    { "source": "/archive", "destination": "/personal-work/", "permanent": false },
+    { "source": "/photos/travel/", "destination": "/personal-work/", "permanent": false },
+    { "source": "/photos/travel", "destination": "/personal-work/", "permanent": false },
+    { "source": "/photos/life/", "destination": "/gallery/misc-film-rolls-2026/", "permanent": false },
+    { "source": "/photos/life", "destination": "/gallery/misc-film-rolls-2026/", "permanent": false },
+    { "source": "/photos/couples/", "destination": "/photos/engagements/", "permanent": false },
+    { "source": "/photos/couples", "destination": "/photos/engagements/", "permanent": false }
   ],
   "rewrites": [
     { "source": "/family/", "destination": "/family/index.html" },
