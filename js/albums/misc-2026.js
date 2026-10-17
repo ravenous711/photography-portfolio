@@ -25,17 +25,12 @@ const ALBUMS_MISC_2026 = [
     includeHiddenSubAlbums: true,
     chaptersTitle: 'Albums',
     chaptersPath: 'rolls',
-    // Collection trailer — a few frames across rolls; full rolls live below.
+    // Favorite misc frames. Trip rolls stay on their trip pages.
     highlights: [
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_22.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_24.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_28.jpg`,
       `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0726/tmax_400_0726_14.jpg`,
-      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Lomography400/Raveen_lomo400_09.jpg`,
-      `${R2_BASE_URL}/Red-Rock-Canyon-2026/Film/Ektar100/Raveen_ektar100_14.jpg`,
-      `${R2_BASE_URL}/Italy/Film/Ultramax/ultramax_03.jpg`,
-      `${R2_BASE_URL}/Italy/Film/FP4/Fernando000799-R1-E003.jpg`,
-      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E005.jpg`,
-      `${R2_BASE_URL}/Italy/Film/TMAX/Fernando000800-R1-E020.jpg`,
-      `${R2_BASE_URL}/Italy/Film/Portra/Raveen_portra_02.jpg`,
     ],
     // Flat list kept for nav/siblings; sections drive the group page layout.
     subAlbums: [
