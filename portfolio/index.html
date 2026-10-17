@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>Photos — Raveen Fernando</title>
+  <meta name="description" content="Photography by Raveen Fernando." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Photos — Raveen Fernando" />
+  <meta property="og:description" content="Photography by Raveen Fernando." />
+  <link rel="canonical" href="https://raveenfernando.com/photos/travel/" />
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/portfolio.css" />
+</head>
+<body class="overflow-x-hidden portfolio-page dark-page">
+
+  <nav id="main-nav" class="nav-scrolled">
+    <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
+    <ul class="nav-links">
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
+      <li id="nav-unlock-item" class="nav-dropdown">
+        <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
+        <div id="nav-private-menu" class="nav-dropdown-menu" role="menu" hidden></div>
+      </li>
+    </ul>
+    <button id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </nav>
+
+  <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <div class="mobile-menu-sheet">
+      <a href="/personal-work/">Personal</a>
+      <a href="/about/" id="mobile-about-link">About</a>
+      <a href="/#contact">Contact</a>
+      <div id="mobile-private-access" class="mobile-private-access">
+        <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
+        <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <header class="page-header page-header--portfolio">
+    <p class="portfolio-kicker" id="portfolio-kicker">Photos</p>
+    <h1 class="page-title" id="portfolio-title">Photos</h1>
+  </header>
+
+  <main id="portfolio-main"></main>
+
+  <section class="portfolio-inquiry" id="contact" aria-label="Reach out">
+    <h2>Reach out</h2>
+    <div class="portfolio-inquiry-links">
+      <a id="contact-email" href="mailto:hello@raveenfernando.com">hello@raveenfernando.com</a>
+      <a id="contact-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </section>
+
+  <footer>
+    <p id="footer-copyright"></p>
+  </footer>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/portfolio.js"></script>
+  <script src="/js/albums/clients.js"></script>
+  <script src="/js/albums/family-2025.js"></script>
+  <script src="/js/albums/family-2026.js"></script>
+  <script src="/js/albums/california-2025.js"></script>
+  <script src="/js/albums/misc-2026.js"></script>
+  <script src="/js/albums/italy-2026.js"></script>
+  <script src="/js/albums/morgan-alden-2026.js"></script>
+  <script src="/js/albums.js"></script>
+  <script src="/js/portfolio-preview.js"></script>
+  <script src="/js/routes.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/photo-viewer.js"></script>
+  <script>
+    document.getElementById('footer-copyright').textContent =
+      `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
+
+    const emailLink = document.getElementById('contact-email');
+    if (SITE_CONFIG.email) {
+      emailLink.href = `mailto:${SITE_CONFIG.email}`;
+      emailLink.textContent = SITE_CONFIG.email;
+    }
+    const instagram = document.getElementById('contact-instagram');
+    if (SITE_CONFIG.instagram) instagram.href = SITE_CONFIG.instagram;
+    instagram.textContent = SITE_CONFIG.instagramHandle || 'Instagram';
+
+    const categoryId = Routes.parseWorkCategory();
+    const category = portfolioCategory(categoryId);
+    const main = document.getElementById('portfolio-main');
+
+    if (!category) {
+      document.title = `Photos — ${SITE_CONFIG.photographerName}`;
+      document.getElementById('portfolio-title').textContent = 'This page is not available';
+    } else {
+      const photos = portfolioPhotos(category.id);
+      const placeholder = portfolioPlaceholder(category.id);
+      const pageTitle = `${category.title} — ${SITE_CONFIG.photographerName}`;
+      const description = category.lede;
+      const canonical = `https://raveenfernando.com${category.path}`;
+
+      document.title = pageTitle;
+      document.querySelector('meta[name="description"]').setAttribute('content', description);
+      document.querySelector('meta[property="og:title"]').setAttribute('content', pageTitle);
+      document.querySelector('meta[property="og:description"]').setAttribute('content', description);
+      document.querySelector('link[rel="canonical"]').setAttribute('href', canonical);
+      document.getElementById('portfolio-title').textContent = category.title;
+      document.getElementById('portfolio-kicker').textContent = 'People';
+      if (placeholder) {
+        const note = document.createElement('section');
+        note.className = 'portfolio-placeholder';
+        note.innerHTML = `<h2></h2><p></p>`;
+        note.querySelector('h2').textContent = placeholder.title;
+        note.querySelector('p').textContent = placeholder.note;
+        main.appendChild(note);
+      } else {
+        const edit = document.createElement('div');
+        edit.className = 'portfolio-edit';
+        photos.forEach((url, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'portfolio-frame';
+          const alt = `${category.title} — photograph ${index + 1}`;
+          button.setAttribute('aria-label', `Open ${alt}`);
+          const img = document.createElement('img');
+          img.alt = alt;
+          img.decoding = 'async';
+          img.loading = index < 2 ? 'eager' : 'lazy';
+          img.src = typeof viewUrl === 'function' ? viewUrl(url) : url;
+          button.appendChild(img);
+          button.addEventListener('click', () => {
+            PhotoViewer.open({
+              photos,
+              index,
+              alt: category.title,
+              syncUrl: true,
+              resolveTarget: () => null,
+            });
+          });
+          edit.appendChild(button);
+        });
+        main.appendChild(edit);
+
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get('photo');
+        if (requested) {
+          const start = photos.findIndex(url => Routes.photoFilename(url) === requested);
+          if (start >= 0) {
+            PhotoViewer.open({
+              photos,
+              index: start,
+              alt: category.title,
+              syncUrl: true,
+              resolveTarget: () => null,
+            });
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

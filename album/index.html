@@ -20,10 +20,9 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/" data-nav-link data-nav="home">Home</a></li>
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
+      <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
         <div id="nav-private-menu" class="nav-dropdown-menu" role="menu" hidden></div>
@@ -38,10 +37,9 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/">Home</a>
-    <a href="/personal-work/">Personal work</a>
-    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+    <a href="/personal-work/">Personal</a>
     <a href="/about/" id="mobile-about-link">About</a>
+    <a href="/#contact">Contact</a>
     <div id="mobile-private-access" class="mobile-private-access">
       <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
       <div id="mobile-private-menu" class="mobile-private-menu" hidden></div>
@@ -82,7 +80,7 @@
 
       <a href="/personal-work/" class="block mt-6 text-xs tracking-widest uppercase"
          style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
-        ← Back to Personal work
+        ← Back to Personal
       </a>
     </div>
   </div>
@@ -100,7 +98,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label">Personal work</span>
+          <span id="back-label">Personal</span>
         </a>
         <div class="album-header-title-row" id="album-header-title-row">
           <div class="album-header-title-block">
@@ -117,25 +115,8 @@
 
     <!-- Standalone project trailer: film strip, then the full archive below -->
     <section id="album-highlights" class="album-highlights px-6 md:px-12" hidden>
-      <div class="group-strip">
-        <button type="button" class="group-strip-nav group-strip-nav--prev" id="album-strip-prev" aria-label="Previous photos" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-            <path d="M15 6l-6 6 6 6"/>
-          </svg>
-        </button>
-        <div class="group-strip-track" id="album-highlights-grid" tabindex="0" role="region" aria-label="Photos from this collection"></div>
-        <button type="button" class="group-strip-nav group-strip-nav--next" id="album-strip-next" aria-label="More photos" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-            <path d="M9 6l6 6-6 6"/>
-          </svg>
-        </button>
-      </div>
-      <div class="group-strip-scrollbar" id="album-strip-scrollbar" hidden>
-        <div class="group-strip-scrollbar-thumb" id="album-strip-thumb" tabindex="0"
-             role="scrollbar" aria-controls="album-highlights-grid" aria-orientation="horizontal"
-             aria-label="Scroll through photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-      </div>
-      <h2 class="album-archive-heading">Full album</h2>
+      <div id="album-highlights-grid" aria-label="Favorite photographs"></div>
+      <button type="button" class="favorites-more" id="album-view-all" hidden>View all photos</button>
     </section>
 
     <!-- Full/curated toggle + favorites note -->
@@ -153,7 +134,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label-sticky">Personal work</span>
+          <span id="back-label-sticky">Personal</span>
         </a>
         <div class="album-toolbar-main">
         <div class="album-toolbar-title-group">
@@ -414,6 +395,7 @@
   <script src="/js/albums/italy-2026.js"></script>
   <script src="/js/albums/morgan-alden-2026.js"></script>
   <script src="/js/albums.js"></script>
+  <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
   <script src="/js/photo-viewer.js"></script>
@@ -556,7 +538,7 @@
         document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
-          <a href="/personal-work/" class="btn-ghost">Back to Personal work</a>
+          <a href="/personal-work/" class="btn-ghost">Back to Personal</a>
         </div>`;
       } else {
         allPhotos = getAlbumAllPhotos(album);
@@ -591,7 +573,7 @@
           || (album.hidden && !album.parentId && !album.familySlug)
         ) {
           // Client and unlisted albums are not in the public gallery — a
-          // "Personal work" back link would strand the recipient there.
+          // A Personal back link would strand the recipient there.
           document.getElementById('back-link').hidden = true;
           document.getElementById('back-link-sticky').hidden = true;
         }
@@ -1334,16 +1316,7 @@
         fullView = true;
         return;
       }
-      // Children of a highlights group open on the full archive (trailer lives on the group page)
-      if (album.parentId) {
-        const parent = ALBUMS.find(a => a.id === album.parentId);
-        if (parent?.type === 'group' && Array.isArray(parent.highlights) && parent.highlights.length) {
-          hasCurated = false;
-          fullView = true;
-          return;
-        }
-      }
-      // Standalone albums with highlights[]: trailer on this page, then full set below
+      // Standalone albums with highlights[]: favorites grid, then the rest behind View all photos.
       if (!album.parentId && Array.isArray(album.highlights) && album.highlights.length) {
         hasCurated = false;
         fullView = true;
@@ -1380,7 +1353,7 @@
       const note = document.getElementById('album-favorites-note');
       const toggleTop = document.getElementById('album-view-toggle-top');
       const toggleBottom = document.getElementById('album-view-toggle-bottom');
-      const label = showingFull ? 'See favorites' : 'See full album';
+      const label = showingFull ? 'Back to favorites' : 'View all photos';
 
       if (topControls) topControls.hidden = !hasCurated;
       if (bottomControls) bottomControls.hidden = !hasCurated;
@@ -1566,21 +1539,10 @@
         : [];
       if (albumHighlights && albumHighlightsGrid && trailer.length) {
         albumHighlights.hidden = false;
-        renderPhotoFilmstrip(albumHighlightsGrid, trailer, {
-          alt: `${albumDisplayTitle(album)} photo`,
-          eagerCount: 4,
-          prevBtn: document.getElementById('album-strip-prev'),
-          nextBtn: document.getElementById('album-strip-next'),
-          railEl: document.getElementById('album-strip-scrollbar'),
-          thumbEl: document.getElementById('album-strip-thumb'),
-          // Trailer frames are drawn from the archive below, so they open in
-          // this page's own lightbox at the matching grid position.
+        renderFavoritesGrid(albumHighlightsGrid, trailer, {
+          alt: albumDisplayTitle(album),
+          eagerCount: 2,
           onActivate: (stripIndex, url) => {
-            const index = indexInAlbum(url);
-            if (index >= 0) {
-              openLightbox(index);
-              return;
-            }
             PhotoViewer.open({
               photos: trailer,
               index: stripIndex,
@@ -1589,6 +1551,23 @@
             });
           },
         });
+        const rest = [
+          document.querySelector('#album-content main'),
+          document.getElementById('album-header-toolbar'),
+          document.getElementById('album-toolbar-sentinel'),
+          document.getElementById('album-view-controls-top'),
+          document.getElementById('album-view-controls-bottom'),
+        ].filter(Boolean);
+        const reveal = document.getElementById('album-view-all');
+        if (rest.length && reveal) {
+          rest.forEach(el => { el.hidden = true; });
+          reveal.hidden = false;
+          reveal.addEventListener('click', () => {
+            rest.forEach(el => { el.hidden = false; });
+            reveal.hidden = true;
+            rest[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
       } else if (albumHighlights) {
         albumHighlights.hidden = true;
       }

@@ -29,6 +29,7 @@ done, move it out of Open, add a Changelog line.
 ### 3 — Content & ops
 | ID | One-liner | Effort |
 |----|-----------|--------|
+| **PORTFOLIO-1** | Before switching the curated site live: create `hello@raveenfernando.com`, upload the engagement shoot, and decide whether unpublished event copies stay as they are | M |
 | **ALBUM-1** | London 2025 shell: upload it or delete the empty entry | M |
 | **OPS-6** | D1 backup/restore for access codes + favorites | M |
 | **OPS-1** | Label or archive stale scripts | S |
@@ -119,6 +120,13 @@ Jump here after picking an ID from Open tickets.
 - **Why:** Old branches (`feat/download-size-picker`, `feat/backfill-image-tiers`, `feat/family-groups`, …) confuse merges.
 - **Fix:** Confirm merged/abandoned → delete local + remote (remote needs approval).
 - **Done when:** Only active branches remain; list in Changelog.
+
+### PORTFOLIO-1 — Switch the curated portfolio live
+- **Effort:** M · **Risk:** Med · **Status:** LOCAL ONLY on `feat/curated-portfolio`
+- **Why:** The public site on this branch is Personal and People. Personal albums are linked from the homepage. Engagements and Portraits stay empty until those shoots are tagged. The contact address `hello@raveenfernando.com` does not exist yet.
+- **Fix:** Create the business inbox and replace `SITE_CONFIG.email`. Upload the engagement photographs and tag them Engagements. Tag senior and individual sittings as Portraits. Publish any private client frames you want on the public site (admin confirmation copies only `grid/` and `view/` to `portfolio-showcase/`). Then ask to merge.
+- **Files:** `js/config.js`, `js/portfolio.js`, `index.html`, `professional-work/index.html`, `admin/index.html`
+- **Done when:** The inbox exists, Engagements and Portraits show real photographs or you explicitly keep the placeholders, and you have approved a merge to `main`.
 
 ### ALBUM-1 — London 2025 shell
 - **Effort:** M · **Risk:** Low · **Status:** TODO
@@ -257,6 +265,20 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **Personal and professional split** — Oct 2026 (branch `feat/curated-portfolio`, not on `main`).
+  The homepage is the Yosemite photograph, then Personal and People.
+  Personal is public again: a trip opens on a grid of favorites, then its places,
+  and each city opens on starred photos with View all photos. Film opens on favorite
+  misc frames, with View all rolls for the full rolls. People is Events,
+  Engagements, and Portraits. Engagements and Portraits read Coming soon until those
+  photographs are tagged. Admin chips are Events, Engagements, Portraits, and Trip
+  favorite. `/archive/` redirects to `/personal-work/`. Still open: create the business
+  email, upload the engagement shoot (**PORTFOLIO-1**).
+
+- **Curated public portfolio** — Oct 2026 (branch `feat/curated-portfolio`, not on `main`).
+  First pass on this branch: category pages and a local admin preview. Superseded by the
+  personal and professional split above.
 
 - **Carousels — click to view, and a way through to the album** — Aug 2026 (branch `feat/carousel-lightbox`).
   Filmstrip frames were inert: the trailer showed a photo but offered no way to see it larger or find
