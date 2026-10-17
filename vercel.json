@@ -29,7 +29,9 @@
     { "source": "/client-work/", "destination": "/professional-work/", "permanent": true },
     { "source": "/client-work", "destination": "/professional-work/", "permanent": true },
     { "source": "/work/:category/", "destination": "/photos/:category/", "permanent": false },
-    { "source": "/work/:category", "destination": "/photos/:category/", "permanent": false }
+    { "source": "/work/:category", "destination": "/photos/:category/", "permanent": false },
+    { "source": "/archive/", "destination": "/personal-work/", "permanent": false },
+    { "source": "/archive", "destination": "/personal-work/", "permanent": false }
   ],
   "rewrites": [
     { "source": "/family/", "destination": "/family/index.html" },
@@ -38,8 +40,6 @@
     { "source": "/familyalbums/:year/:slug", "destination": "/album/index.html" },
     { "source": "/photos/:category/", "destination": "/portfolio/index.html" },
     { "source": "/photos/:category", "destination": "/portfolio/index.html" },
-    { "source": "/archive/", "destination": "/personal-work/index.html" },
-    { "source": "/archive", "destination": "/personal-work/index.html" },
     { "source": "/personal-work/", "destination": "/personal-work/index.html" },
     { "source": "/professional-work/", "destination": "/professional-work/index.html" },
     { "source": "/unlock/", "destination": "/unlock/index.html" },
