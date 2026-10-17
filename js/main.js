@@ -30,7 +30,6 @@ function initNav() {
 
   buildPrivateAccessMenu();
   initPrivateAccessDropdown();
-  initWorkDropdown();
 }
 
 // Client albums unlocked via access code — used by the Private Access menu.
@@ -123,49 +122,6 @@ function buildPrivateAccessMenu() {
 
   fill(desktopMenu);
   fill(mobileMenu);
-}
-
-function initWorkDropdown() {
-  const item = document.getElementById('nav-work-item');
-  const trigger = document.getElementById('nav-work-trigger');
-  const menu = document.getElementById('nav-work-menu');
-  if (item && trigger && menu) {
-    menu.hidden = false;
-    const canHover = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const close = () => {
-      item.classList.remove('is-open');
-      trigger.setAttribute('aria-expanded', 'false');
-    };
-    const open = () => {
-      item.classList.add('is-open');
-      trigger.setAttribute('aria-expanded', 'true');
-    };
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (item.classList.contains('is-open')) close();
-      else open();
-    });
-    item.addEventListener('mouseenter', () => { if (canHover()) open(); });
-    item.addEventListener('mouseleave', () => { if (canHover()) close(); });
-    document.addEventListener('click', (e) => {
-      if (!item.contains(e.target)) close();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
-    });
-  }
-
-  const mobileTrigger = document.getElementById('mobile-work-trigger');
-  const mobilePanel = document.getElementById('mobile-work-menu');
-  if (mobileTrigger && mobilePanel) {
-    mobileTrigger.addEventListener('click', () => {
-      const isOpen = mobileTrigger.getAttribute('aria-expanded') === 'true';
-      mobileTrigger.setAttribute('aria-expanded', String(!isOpen));
-      mobilePanel.hidden = isOpen;
-      mobileTrigger.classList.toggle('is-open', !isOpen);
-    });
-  }
 }
 
 function closePrivateAccessDropdown() {
@@ -276,10 +232,13 @@ function initMobileMenu() {
 function setActiveNavLink() {
   const path = window.location.pathname.replace(/\/?$/, '/') || '/';
   let key = '';
-  if (path === '/') key = 'work';
-  else if (path.startsWith('/photos/')) key = 'work';
-  else if (path.startsWith('/personal-work/') || path.startsWith('/gallery/') || path.startsWith('/archive/')) key = 'gallery';
-  else if (path.startsWith('/professional-work/')) key = 'professional';
+  if (path.startsWith('/personal-work/') || path.startsWith('/gallery/') || path.startsWith('/archive/')) key = 'gallery';
+  else if (
+    path.startsWith('/professional-work/')
+    || path.startsWith('/photos/events/')
+    || path.startsWith('/photos/engagements/')
+    || path.startsWith('/photos/portraits/')
+  ) key = 'professional';
   else if (path.startsWith('/familyalbums/') || path.startsWith('/family/')) key = 'unlock';
   else if (path.startsWith('/about/')) key = 'about';
   else if (path.startsWith('/unlock/')) key = 'unlock';
@@ -298,12 +257,6 @@ function setActiveNavLink() {
   document.querySelectorAll(`[data-nav-link][data-nav="${key}"]`).forEach(link => {
     link.classList.add('nav-active');
   });
-  if (path.startsWith('/photos/')) {
-    const slug = path.split('/').filter(Boolean)[1];
-    document.querySelectorAll(`a[href="/photos/${slug}/"]`).forEach(link => {
-      link.classList.add('nav-active');
-    });
-  }
 }
 
 // ── Intersection observer for fade-in animations ──
