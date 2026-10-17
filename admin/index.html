@@ -514,9 +514,8 @@
   <script src="/js/main.js"></script>
   <script>
     const R2_BASE_PATTERN = /^https:\/\/pub-[a-f0-9]+\.r2\.dev\//;
-    const PORTFOLIO_TAG_IDS = ['featured', 'travel', 'life', 'events', 'couples'];
+    const PORTFOLIO_TAG_IDS = ['travel', 'life', 'events', 'couples'];
     const PORTFOLIO_TAG_LABELS = {
-      featured: 'Featured',
       travel: 'Travel',
       life: 'Life',
       events: 'Events',
@@ -736,15 +735,37 @@
       });
     }
 
+    function albumForPortfolioUrl(url) {
+      const inPhotos = ALBUMS.find(album => Array.isArray(album.photos) && album.photos.includes(url));
+      if (inPhotos) return inPhotos;
+      return ALBUMS.find(album =>
+        album.coverImage === url
+        || (Array.isArray(album.curated) && album.curated.includes(url))
+        || (Array.isArray(album.highlights) && album.highlights.includes(url))
+      ) || null;
+    }
+
+    function portfolioAlbumLabel(url) {
+      const album = albumForPortfolioUrl(url);
+      if (!album) return '';
+      const parent = album.parentId ? ALBUMS.find(item => item.id === album.parentId) : null;
+      return parent ? `${parent.title} · ${album.title}` : album.title;
+    }
+
     function portfolioAdminRow(url, index, list, rerender) {
       const row = document.createElement('div');
       row.className = 'portfolio-admin-row';
       const img = document.createElement('img');
       img.alt = '';
       img.src = typeof gridUrl === 'function' ? gridUrl(url) : url;
-      const name = document.createElement('span');
-      name.textContent = url.split('/').pop();
-      name.style.cssText = 'font-size:0.75rem;word-break:break-all';
+      const label = document.createElement('span');
+      const albumName = document.createElement('span');
+      albumName.textContent = portfolioAlbumLabel(url) || 'Album not found';
+      albumName.style.cssText = 'display:block;font-size:0.85rem';
+      const fileName = document.createElement('span');
+      fileName.textContent = url.split('/').pop();
+      fileName.style.cssText = 'display:block;margin-top:0.2rem;font-size:0.72rem;color:var(--color-muted);word-break:break-all';
+      label.append(albumName, fileName);
       const actions = document.createElement('span');
       actions.style.display = 'flex';
       actions.style.gap = '0.35rem';
@@ -760,7 +781,7 @@
         });
         actions.appendChild(button);
       });
-      row.append(img, name, actions);
+      row.append(img, label, actions);
       return row;
     }
 

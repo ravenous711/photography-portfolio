@@ -373,7 +373,7 @@ All routing is defined in `vercel.json`. The site uses clean trailing-slash URLs
 | URL | Template served | Notes |
 |---|---|---|
 | `/` | `index.html` | Curated portfolio: selected work, category previews, inquiry |
-| `/work/travel/`, `/work/life/`, `/work/events/`, `/work/couples/` | `portfolio/index.html` | One ordered edit per category. Couples stays a placeholder until the engagement shoot is tagged |
+| `/photos/travel/`, `/photos/life/`, `/photos/events/`, `/photos/couples/` | `portfolio/index.html` | One ordered edit per category. Couples stays a placeholder until the engagement shoot is tagged |
 | `/archive/` | `personal-work/index.html` | Unlinked full-album catalog. Not in public navigation. `noindex` |
 | `/personal-work/` | `personal-work/index.html` | Same catalog, kept for old bookmarks. `noindex` |
 | `/professional-work/` | `professional-work/index.html` | Previous professional highlights page. `noindex` |
@@ -683,7 +683,7 @@ templates in the [Album Types & Access Tiers](#album-types--access-tiers) sectio
 
 Client albums stay in the private bucket. To put a single frame on the public site:
 
-1. In `/admin/` → the album, tag the photo Featured, Events, Couples, or another category. It stays private.
+1. In `/admin/` → the album, tag the photo Travel, Life, Events, Couples, or another category. It stays private.
 2. Click **Publish to portfolio** and confirm you have permission to showcase it.
 3. That confirmation copies only the `grid/` and `view/` files to `portfolio-showcase/<album-id>/` on the public bucket and adds those public URLs to the category. The original stays private.
 4. **Unpublish** removes it from the public edit. Deleting the public copy is a separate confirmed action.
@@ -796,7 +796,7 @@ Password-protected panel for managing photos, curated sets, and access codes.
 | Tab | What it does |
 |---|---|
 | Albums | Expand an album → click photos to mark for deletion → **Commit Deletions** (deletes from R2 + updates `config.js` via GitHub) |
-| Portfolio | Tag photos Featured, Travel, Life, Events, or Couples, and choose which frames sit in an archive carousel. On localhost, **Save portfolio tags** stores a browser preview only and does not write to GitHub or R2. Private client photos stay off the public pages until you confirm **Publish to portfolio** |
+| Portfolio | Tag photos Travel, Life, Events, or Couples, and choose which frames sit in an archive carousel. On localhost, **Save portfolio tags** stores a browser preview only and does not write to GitHub or R2. Private client photos stay off the public pages until you confirm **Publish to portfolio** |
 | Curated | Select photos as the curated highlight set → **Save as curated set** |
 | Favorites tally | Shows heart counts per photo for any album |
 | Access codes | Create / view / revoke D1-backed client access codes |

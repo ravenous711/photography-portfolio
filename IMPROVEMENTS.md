@@ -269,7 +269,7 @@ Jump here after picking an ID from Open tickets.
 - **Curated public portfolio** — Oct 2026 (branch `feat/curated-portfolio`, not on `main`).
   The homepage is now a selected edit plus Travel, Life, Events, and Couples. Full albums
   live at the unlinked `/archive/` URL; `/personal-work/` and album URLs still open, and
-  those pages are `noindex`. Admin can tag Featured, Travel, Life, Events, Couples, and
+  those pages are `noindex`. Admin can tag Travel, Life, Events, Couples, and
   the archive carousel. Private client photos stay staged until **Publish to portfolio**
   is confirmed. Local saves are a browser preview only. Still open: create the business
   email, upload the engagement shoot (**PORTFOLIO-1**).

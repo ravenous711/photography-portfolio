@@ -277,7 +277,7 @@ function setActiveNavLink() {
   const path = window.location.pathname.replace(/\/?$/, '/') || '/';
   let key = '';
   if (path === '/') key = 'work';
-  else if (path.startsWith('/work/')) key = 'work';
+  else if (path.startsWith('/photos/')) key = 'work';
   else if (path.startsWith('/personal-work/') || path.startsWith('/gallery/') || path.startsWith('/archive/')) key = 'gallery';
   else if (path.startsWith('/professional-work/')) key = 'professional';
   else if (path.startsWith('/familyalbums/') || path.startsWith('/family/')) key = 'unlock';
@@ -298,9 +298,9 @@ function setActiveNavLink() {
   document.querySelectorAll(`[data-nav-link][data-nav="${key}"]`).forEach(link => {
     link.classList.add('nav-active');
   });
-  if (path.startsWith('/work/')) {
+  if (path.startsWith('/photos/')) {
     const slug = path.split('/').filter(Boolean)[1];
-    document.querySelectorAll(`a[href="/work/${slug}/"]`).forEach(link => {
+    document.querySelectorAll(`a[href="/photos/${slug}/"]`).forEach(link => {
       link.classList.add('nav-active');
     });
   }

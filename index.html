@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <title>Raveen Fernando — Photography</title>
-  <meta name="description" content="Detroit-based photography of people, places, and gatherings." />
+  <meta name="description" content="Photography by Raveen Fernando." />
   <link rel="canonical" href="https://raveenfernando.com/" />
+  <link rel="preload" as="image" href="/images/hero.jpg" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://raveenfernando.com/" />
   <meta property="og:title" content="Raveen Fernando — Photography" />
-  <meta property="og:description" content="Detroit-based photography of people, places, and gatherings." />
+  <meta property="og:description" content="Photography by Raveen Fernando." />
   <meta property="og:image" content="https://raveenfernando.com/images/hero.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Raveen Fernando — Photography" />
-  <meta name="twitter:description" content="Detroit-based photography of people, places, and gatherings." />
+  <meta name="twitter:description" content="Photography by Raveen Fernando." />
   <meta name="twitter:image" content="https://raveenfernando.com/images/hero.jpg" />
 
   <link rel="stylesheet" href="/css/style.css" />
@@ -23,16 +24,16 @@
 </head>
 <body class="overflow-x-hidden portfolio-page dark-page">
 
-  <nav id="main-nav" class="nav-scrolled">
+  <nav id="main-nav">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
       <li id="nav-work-item" class="nav-dropdown">
-        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Work</button>
+        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Photos</button>
         <div id="nav-work-menu" class="nav-dropdown-menu" role="menu" hidden>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/travel/">Travel</a>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/life/">Life</a>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/events/">Events</a>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/couples/">Couples</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/travel/">Travel</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/life/">Life</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/events/">Events</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/couples/">Couples</a>
         </div>
       </li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
@@ -51,12 +52,12 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Work</button>
+      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Photos</button>
       <div id="mobile-work-menu" class="mobile-work-menu" hidden>
-        <a href="/work/travel/">Travel</a>
-        <a href="/work/life/">Life</a>
-        <a href="/work/events/">Events</a>
-        <a href="/work/couples/">Couples</a>
+        <a href="/photos/travel/">Travel</a>
+        <a href="/photos/life/">Life</a>
+        <a href="/photos/events/">Events</a>
+        <a href="/photos/couples/">Couples</a>
       </div>
       <a href="/about/" id="mobile-about-link">About</a>
       <a href="/#contact">Contact</a>
@@ -67,22 +68,15 @@
     </div>
   </div>
 
-  <header class="portfolio-intro">
-    <p class="portfolio-kicker" id="home-name">Raveen Fernando</p>
-    <h1 class="portfolio-statement">Detroit-based photography of people, places, and gatherings.</h1>
-    <a class="portfolio-intro-link" href="#contact">Get in touch</a>
-  </header>
-
-  <section class="portfolio-selected" id="selected" aria-label="Selected work">
-    <h2 class="portfolio-section-title">Selected work</h2>
-    <div class="portfolio-selected-edit" id="selected-edit"></div>
+  <section class="hero hero--photo-only" aria-label="Yosemite">
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-overlay"></div>
   </section>
 
-  <section class="portfolio-categories" id="work" aria-label="Categories"></section>
+  <section id="home-chapters" aria-label="Photos"></section>
 
-  <section class="portfolio-inquiry" id="contact" aria-label="Contact">
-    <p class="portfolio-kicker">Contact</p>
-    <h2>Tell me what you would like photographed.</h2>
+  <section class="portfolio-inquiry" id="contact" aria-label="Reach out">
+    <h2>Reach out</h2>
     <div class="portfolio-inquiry-links">
       <a id="contact-email" href="mailto:hello@raveenfernando.com">hello@raveenfernando.com</a>
       <a id="contact-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener">Instagram</a>
@@ -106,12 +100,23 @@
   <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
-  <script src="/js/photo-viewer.js"></script>
   <script>
     document.getElementById('footer-name').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
-    document.getElementById('home-name').textContent = SITE_CONFIG.photographerName;
     document.title = `${SITE_CONFIG.photographerName} — Photography`;
+
+    const heroBg = document.getElementById('hero-bg');
+    const heroImg = document.createElement('img');
+    heroImg.src = SITE_CONFIG.heroImage;
+    heroImg.alt = 'Yosemite';
+    heroImg.decoding = 'async';
+    heroImg.fetchPriority = 'high';
+    const isMobileHero = window.matchMedia('(max-width: 768px)').matches;
+    const heroPos = isMobileHero && SITE_CONFIG.heroPositionMobile
+      ? SITE_CONFIG.heroPositionMobile
+      : SITE_CONFIG.heroPosition;
+    if (heroPos) heroImg.style.objectPosition = heroPos;
+    heroBg.appendChild(heroImg);
 
     const emailLink = document.getElementById('contact-email');
     if (SITE_CONFIG.email) {
@@ -122,70 +127,47 @@
     if (SITE_CONFIG.instagram) instagram.href = SITE_CONFIG.instagram;
     instagram.textContent = SITE_CONFIG.instagramHandle || 'Instagram';
 
-    const featured = portfolioPhotos('featured');
-    const selected = document.getElementById('selected-edit');
-    featured.forEach((url, index) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'portfolio-frame';
-      const alt = `Selected work — photograph ${index + 1}`;
-      button.setAttribute('aria-label', `Open ${alt}`);
-      const img = document.createElement('img');
-      img.alt = alt;
-      img.decoding = 'async';
-      img.loading = index < 2 ? 'eager' : 'lazy';
-      img.src = typeof viewUrl === 'function' ? viewUrl(url) : url;
-      button.appendChild(img);
-      button.addEventListener('click', () => {
-        PhotoViewer.open({
-          photos: featured,
-          index,
-          alt: 'Selected work',
-          resolveTarget: () => null,
-        });
-      });
-      selected.appendChild(button);
-    });
+    const italy = ALBUMS.find(album => album.id === 'italy-2026');
+    const bannerImages = {
+      travel: italy?.coverImage || `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
+      life: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_24.jpg`,
+    };
 
-    const categories = document.getElementById('work');
-    PORTFOLIO_CATEGORIES.filter(category => category.id !== 'featured').forEach(category => {
-      const section = document.createElement('section');
-      section.setAttribute('aria-label', category.title);
+    const chapters = document.getElementById('home-chapters');
+    PORTFOLIO_CATEGORIES.forEach((category, index) => {
       const photos = portfolioPhotos(category.id);
       const placeholder = portfolioPlaceholder(category.id);
-      const head = document.createElement('div');
-      head.className = 'portfolio-preview-head';
-      head.innerHTML = `<h2></h2><a></a>`;
-      head.querySelector('h2').textContent = category.title;
-      const more = head.querySelector('a');
-      more.href = category.path;
-      more.textContent = placeholder ? 'Note' : `View ${category.title}`;
-      section.appendChild(head);
+      const cover = bannerImages[category.id] || photos[0];
+      const link = document.createElement('a');
+      link.className = 'home-banner';
+      link.href = category.path;
 
-      if (placeholder) {
-        const note = document.createElement('div');
-        note.className = 'portfolio-placeholder';
-        note.innerHTML = '<h2></h2><p></p>';
-        note.querySelector('h2').textContent = placeholder.title;
-        note.querySelector('p').textContent = placeholder.note;
-        section.appendChild(note);
-      } else {
-        const grid = document.createElement('div');
-        grid.className = 'portfolio-preview-grid';
-        photos.slice(0, 4).forEach((url, index) => {
-          const link = document.createElement('a');
-          link.href = category.path;
-          const img = document.createElement('img');
-          img.alt = `${category.title} — photograph ${index + 1}`;
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          img.src = typeof gridUrl === 'function' ? gridUrl(url) : url;
-          link.appendChild(img);
-          grid.appendChild(link);
-        });
-        section.appendChild(grid);
+      const media = document.createElement('div');
+      media.className = 'home-banner-media';
+      if (cover) {
+        const img = document.createElement('img');
+        img.alt = '';
+        img.decoding = 'async';
+        img.loading = index === 0 ? 'eager' : 'lazy';
+        img.addEventListener('load', () => img.classList.add('loaded'));
+        img.src = typeof viewUrl === 'function' ? viewUrl(cover) : cover;
+        media.appendChild(img);
       }
-      categories.appendChild(section);
+
+      const copy = document.createElement('div');
+      copy.className = 'home-banner-copy';
+      const title = document.createElement('p');
+      title.className = 'home-banner-title';
+      title.textContent = category.title;
+      const cta = document.createElement('span');
+      cta.className = 'home-banner-cta';
+      cta.textContent = placeholder ? 'Coming soon' : 'View';
+      copy.append(title, cta);
+
+      const shade = document.createElement('div');
+      shade.className = 'home-banner-shade';
+      link.append(media, shade, copy);
+      chapters.appendChild(link);
     });
   </script>
 </body>

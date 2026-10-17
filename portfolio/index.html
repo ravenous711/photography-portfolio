@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Work — Raveen Fernando</title>
-  <meta name="description" content="Detroit-based photography of people, places, and gatherings." />
+  <title>Photos — Raveen Fernando</title>
+  <meta name="description" content="Photography by Raveen Fernando." />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Work — Raveen Fernando" />
-  <meta property="og:description" content="Detroit-based photography of people, places, and gatherings." />
-  <link rel="canonical" href="https://raveenfernando.com/work/travel/" />
+  <meta property="og:title" content="Photos — Raveen Fernando" />
+  <meta property="og:description" content="Photography by Raveen Fernando." />
+  <link rel="canonical" href="https://raveenfernando.com/photos/travel/" />
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
@@ -21,12 +21,12 @@
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
       <li id="nav-work-item" class="nav-dropdown">
-        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Work</button>
+        <button type="button" id="nav-work-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="work" aria-expanded="false" aria-haspopup="true" aria-controls="nav-work-menu">Photos</button>
         <div id="nav-work-menu" class="nav-dropdown-menu" role="menu" hidden>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/travel/">Travel</a>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/life/">Life</a>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/events/">Events</a>
-          <a class="nav-dropdown-item" role="menuitem" href="/work/couples/">Couples</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/travel/">Travel</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/life/">Life</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/events/">Events</a>
+          <a class="nav-dropdown-item" role="menuitem" href="/photos/couples/">Couples</a>
         </div>
       </li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
@@ -45,12 +45,12 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Work</button>
+      <button type="button" id="mobile-work-trigger" aria-expanded="false" aria-controls="mobile-work-menu">Photos</button>
       <div id="mobile-work-menu" class="mobile-work-menu" hidden>
-        <a href="/work/travel/">Travel</a>
-        <a href="/work/life/">Life</a>
-        <a href="/work/events/">Events</a>
-        <a href="/work/couples/">Couples</a>
+        <a href="/photos/travel/">Travel</a>
+        <a href="/photos/life/">Life</a>
+        <a href="/photos/events/">Events</a>
+        <a href="/photos/couples/">Couples</a>
       </div>
       <a href="/about/">About</a>
       <a href="/#contact">Contact</a>
@@ -62,16 +62,15 @@
   </div>
 
   <header class="page-header page-header--portfolio">
-    <p class="portfolio-kicker" id="portfolio-kicker">Work</p>
-    <h1 class="page-title" id="portfolio-title">Work</h1>
+    <p class="portfolio-kicker" id="portfolio-kicker">Photos</p>
+    <h1 class="page-title" id="portfolio-title">Photos</h1>
     <p class="portfolio-lede" id="portfolio-lede"></p>
   </header>
 
   <main id="portfolio-main"></main>
 
-  <section class="portfolio-inquiry" id="contact" aria-label="Contact">
-    <p class="portfolio-kicker">Contact</p>
-    <h2>Tell me what you would like photographed.</h2>
+  <section class="portfolio-inquiry" id="contact" aria-label="Reach out">
+    <h2>Reach out</h2>
     <div class="portfolio-inquiry-links">
       <a id="contact-email" href="mailto:hello@raveenfernando.com">hello@raveenfernando.com</a>
       <a id="contact-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener">Instagram</a>
@@ -113,8 +112,8 @@
     const category = portfolioCategory(categoryId);
     const main = document.getElementById('portfolio-main');
 
-    if (!category || category.id === 'featured') {
-      document.title = `Work — ${SITE_CONFIG.photographerName}`;
+    if (!category) {
+      document.title = `Photos — ${SITE_CONFIG.photographerName}`;
       document.getElementById('portfolio-title').textContent = 'This page is not available';
       document.getElementById('portfolio-lede').textContent = 'Choose Travel, Life, Events, or Couples from the homepage.';
     } else {

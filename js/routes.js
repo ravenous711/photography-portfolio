@@ -7,11 +7,11 @@ const Routes = {
   archive: '/archive/',
 
   work(category) {
-    return `/work/${encodeURIComponent(category)}/`;
+    return `/photos/${encodeURIComponent(category)}/`;
   },
 
   parseWorkCategory() {
-    const match = window.location.pathname.match(/^\/work\/([^/]+)\/?$/);
+    const match = window.location.pathname.match(/^\/photos\/([^/]+)\/?$/);
     return match ? decodeURIComponent(match[1]) : null;
   },
 

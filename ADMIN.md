@@ -73,7 +73,7 @@ The admin UI has two tabs:
 - **Heart badge** (top-right, red) = number of times friends hearted this photo.
 - The **lightbox** opens on photo click. Keyboard shortcuts: `←`/`→` navigate, `D` marks for
   deletion, `Esc` closes. The **Copy URL** button in the lightbox footer copies the full R2 URL
-  — useful for adding a photo to the homepage featured set.
+  — useful for adding a photo to a portfolio category.
 
 #### Access codes tab
 

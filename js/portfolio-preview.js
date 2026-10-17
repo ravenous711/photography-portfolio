@@ -32,7 +32,7 @@ function applyPortfolioPreview() {
   if (!preview) return;
 
   if (preview.portfolio && typeof PORTFOLIO !== 'undefined') {
-    for (const id of ['featured', 'travel', 'life', 'events', 'couples']) {
+    for (const id of ['travel', 'life', 'events', 'couples']) {
       if (Array.isArray(preview.portfolio[id])) PORTFOLIO[id] = preview.portfolio[id].filter(Boolean);
     }
   }
