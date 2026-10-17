@@ -124,16 +124,15 @@
 }
 
 #home-chapters {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2px;
+  display: flex;
+  flex-direction: column;
   background: #0c0c0b;
 }
 
 #home-chapters .home-banner {
   position: relative;
   display: block;
-  height: clamp(280px, 42svh, 400px);
+  min-height: 72svh;
   overflow: hidden;
   color: #fff;
   text-decoration: none;
@@ -220,13 +219,9 @@
   outline-offset: -3px;
 }
 
-@media (min-width: 800px) {
-  #home-chapters {
-    grid-template-columns: 1fr 1fr;
-  }
-
+@media (max-width: 640px) {
   #home-chapters .home-banner {
-    height: clamp(360px, 48svh, 540px);
+    min-height: 62svh;
   }
 }
 

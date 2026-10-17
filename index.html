@@ -128,46 +128,53 @@
     instagram.textContent = SITE_CONFIG.instagramHandle || 'Instagram';
 
     const italy = ALBUMS.find(album => album.id === 'italy-2026');
-    const bannerImages = {
-      travel: italy?.coverImage || `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
-      life: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_24.jpg`,
-    };
+    const moksha = ALBUMS.find(album => album.id === 'moksha-yoga');
+    const chapters = [
+      {
+        title: 'Personal work',
+        href: '/personal-work/',
+        cta: 'View albums',
+        image: italy?.coverImage || `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
+      },
+      {
+        title: 'Professional work',
+        href: '/professional-work/',
+        cta: 'View work',
+        image: moksha?.coverImage || `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
+      },
+    ];
 
-    const chapters = document.getElementById('home-chapters');
-    PORTFOLIO_CATEGORIES.forEach((category, index) => {
-      const photos = portfolioPhotos(category.id);
-      const placeholder = portfolioPlaceholder(category.id);
-      const cover = bannerImages[category.id] || photos[0];
+    const homeChapters = document.getElementById('home-chapters');
+    homeChapters.setAttribute('aria-label', 'Personal and professional work');
+    chapters.forEach((chapter, index) => {
       const link = document.createElement('a');
       link.className = 'home-banner';
-      link.href = category.path;
+      link.href = chapter.href;
 
       const media = document.createElement('div');
       media.className = 'home-banner-media';
-      if (cover) {
-        const img = document.createElement('img');
-        img.alt = '';
-        img.decoding = 'async';
-        img.loading = index === 0 ? 'eager' : 'lazy';
-        img.addEventListener('load', () => img.classList.add('loaded'));
-        img.src = typeof viewUrl === 'function' ? viewUrl(cover) : cover;
-        media.appendChild(img);
-      }
+      const img = document.createElement('img');
+      img.alt = '';
+      img.decoding = 'async';
+      img.loading = index === 0 ? 'eager' : 'lazy';
+      img.addEventListener('load', () => img.classList.add('loaded'));
+      img.src = typeof viewUrl === 'function' ? viewUrl(chapter.image) : chapter.image;
+      media.appendChild(img);
 
       const copy = document.createElement('div');
       copy.className = 'home-banner-copy';
       const title = document.createElement('p');
       title.className = 'home-banner-title';
-      title.textContent = category.title;
+      title.textContent = chapter.title;
       const cta = document.createElement('span');
       cta.className = 'home-banner-cta';
-      cta.textContent = placeholder ? 'Coming soon' : 'View';
+      cta.textContent = chapter.cta;
       copy.append(title, cta);
 
       const shade = document.createElement('div');
       shade.className = 'home-banner-shade';
       link.append(media, shade, copy);
-      chapters.appendChild(link);
+      homeChapters.appendChild(link);
     });
   </script>
 </body>
