@@ -123,7 +123,7 @@ Jump here after picking an ID from Open tickets.
 
 ### PORTFOLIO-1 — Switch the curated portfolio live
 - **Effort:** M · **Risk:** Med · **Status:** LOCAL ONLY on `feat/curated-portfolio`
-- **Why:** The public site on this branch is Personal work and Professional work. Personal albums are linked from the homepage. Engagements and Portraits stay empty until those shoots are tagged. The contact address `hello@raveenfernando.com` does not exist yet.
+- **Why:** The public site on this branch is Personal and People. Personal albums are linked from the homepage. Engagements and Portraits stay empty until those shoots are tagged. The contact address `hello@raveenfernando.com` does not exist yet.
 - **Fix:** Create the business inbox and replace `SITE_CONFIG.email`. Upload the engagement photographs and tag them Engagements. Tag senior and individual sittings as Portraits. Publish any private client frames you want on the public site (admin confirmation copies only `grid/` and `view/` to `portfolio-showcase/`). Then ask to merge.
 - **Files:** `js/config.js`, `js/portfolio.js`, `index.html`, `professional-work/index.html`, `admin/index.html`
 - **Done when:** The inbox exists, Engagements and Portraits show real photographs or you explicitly keep the placeholders, and you have approved a merge to `main`.
@@ -267,10 +267,10 @@ Jump here after picking an ID from Open tickets.
 ## Changelog
 
 - **Personal and professional split** — Oct 2026 (branch `feat/curated-portfolio`, not on `main`).
-  The homepage is the Yosemite photograph, then Personal work and Professional work.
-  Personal work is public again: a trip opens on a grid of favorites, then its places,
+  The homepage is the Yosemite photograph, then Personal and People.
+  Personal is public again: a trip opens on a grid of favorites, then its places,
   and each city opens on starred photos with View all photos. Film opens on favorite
-  misc frames, with View all rolls for the full rolls. Professional work is Events,
+  misc frames, with View all rolls for the full rolls. People is Events,
   Engagements, and Portraits. Engagements and Portraits read Coming soon until those
   photographs are tagged. Admin chips are Events, Engagements, Portraits, and Trip
   favorite. `/archive/` redirects to `/personal-work/`. Still open: create the business

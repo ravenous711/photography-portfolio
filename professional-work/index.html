@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Professional work — Raveen Fernando</title>
-  <meta name="description" content="Selected professional photography." />
+  <title>People — Raveen Fernando</title>
+  <meta name="description" content="Events, engagements, and portraits." />
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/base.css" />
@@ -17,8 +17,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
@@ -35,8 +35,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/personal-work/">Personal work</a>
-    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+    <a href="/personal-work/">Personal</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">People</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <a href="/#contact">Contact</a>
     <div id="mobile-private-access" class="mobile-private-access">
@@ -74,18 +74,18 @@
       {
         title: 'Events',
         href: '/photos/events/',
-        cta: 'View work',
+        cta: 'View photos',
         image: moksha?.coverImage || `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
       },
       {
         title: 'Engagements',
         href: '/photos/engagements/',
-        cta: portfolioPhotos('engagements').length ? 'View work' : 'Coming soon',
+        cta: portfolioPhotos('engagements').length ? 'View photos' : 'Coming soon',
       },
       {
         title: 'Portraits',
         href: '/photos/portraits/',
-        cta: portfolioPhotos('portraits').length ? 'View work' : 'Coming soon',
+        cta: portfolioPhotos('portraits').length ? 'View photos' : 'Coming soon',
       },
     ];
 

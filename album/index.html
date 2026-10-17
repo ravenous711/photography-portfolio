@@ -20,8 +20,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
@@ -38,8 +38,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/personal-work/">Personal work</a>
-    <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+    <a href="/personal-work/">Personal</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">People</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <a href="/#contact">Contact</a>
     <div id="mobile-private-access" class="mobile-private-access">
@@ -82,7 +82,7 @@
 
       <a href="/personal-work/" class="block mt-6 text-xs tracking-widest uppercase"
          style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
-        ← Back to Personal work
+        ← Back to Personal
       </a>
     </div>
   </div>
@@ -100,7 +100,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label">Personal work</span>
+          <span id="back-label">Personal</span>
         </a>
         <div class="album-header-title-row" id="album-header-title-row">
           <div class="album-header-title-block">
@@ -136,7 +136,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label-sticky">Personal work</span>
+          <span id="back-label-sticky">Personal</span>
         </a>
         <div class="album-toolbar-main">
         <div class="album-toolbar-title-group">
@@ -540,7 +540,7 @@
         document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
-          <a href="/personal-work/" class="btn-ghost">Back to Personal work</a>
+          <a href="/personal-work/" class="btn-ghost">Back to Personal</a>
         </div>`;
       } else {
         allPhotos = getAlbumAllPhotos(album);
@@ -575,7 +575,7 @@
           || (album.hidden && !album.parentId && !album.familySlug)
         ) {
           // Client and unlisted albums are not in the public gallery — a
-          // "Personal work" back link would strand the recipient there.
+          // A Personal back link would strand the recipient there.
           document.getElementById('back-link').hidden = true;
           document.getElementById('back-link-sticky').hidden = true;
         }

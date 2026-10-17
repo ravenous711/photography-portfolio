@@ -31,14 +31,6 @@
   color: #f3f0e9;
 }
 
-.portfolio-lede {
-  max-width: 36rem;
-  margin: 1.1rem 0 0;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: rgba(243, 240, 233, 0.72);
-}
-
 .portfolio-edit {
   width: min(100% - 3rem, 1100px);
   margin: 0 auto 5rem;

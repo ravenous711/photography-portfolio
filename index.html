@@ -27,8 +27,8 @@
   <nav id="main-nav">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
@@ -45,8 +45,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-      <a href="/personal-work/">Personal work</a>
-      <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+      <a href="/personal-work/">Personal</a>
+      <a href="/professional-work/" id="mobile-professional-work-link">People</a>
       <a href="/about/" id="mobile-about-link">About</a>
       <a href="/#contact">Contact</a>
       <div id="mobile-private-access" class="mobile-private-access">
@@ -119,21 +119,21 @@
     const moksha = ALBUMS.find(album => album.id === 'moksha-yoga');
     const chapters = [
       {
-        title: 'Personal work',
+        title: 'Personal',
         href: '/personal-work/',
         cta: 'View albums',
         image: italy?.coverImage || `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,
       },
       {
-        title: 'Professional work',
+        title: 'People',
         href: '/professional-work/',
-        cta: 'View work',
+        cta: 'View photos',
         image: moksha?.coverImage || `${R2_BASE_URL}/Moksha-Yoga/Moksha-Yoga-05.jpg`,
       },
     ];
 
     const homeChapters = document.getElementById('home-chapters');
-    homeChapters.setAttribute('aria-label', 'Personal and professional work');
+    homeChapters.setAttribute('aria-label', 'Personal and people');
     chapters.forEach((chapter, index) => {
       const link = document.createElement('a');
       link.className = 'home-banner';

@@ -20,8 +20,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal work</a></li>
-      <li><a href="/professional-work/" data-nav-link data-nav="professional">Professional work</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li><a href="/#contact" data-nav-link data-nav="contact">Contact</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
@@ -38,8 +38,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-      <a href="/personal-work/">Personal work</a>
-      <a href="/professional-work/" id="mobile-professional-work-link">Professional work</a>
+      <a href="/personal-work/">Personal</a>
+      <a href="/professional-work/" id="mobile-professional-work-link">People</a>
       <a href="/about/" id="mobile-about-link">About</a>
       <a href="/#contact">Contact</a>
       <div id="mobile-private-access" class="mobile-private-access">
@@ -52,7 +52,6 @@
   <header class="page-header page-header--portfolio">
     <p class="portfolio-kicker" id="portfolio-kicker">Photos</p>
     <h1 class="page-title" id="portfolio-title">Photos</h1>
-    <p class="portfolio-lede" id="portfolio-lede"></p>
   </header>
 
   <main id="portfolio-main"></main>
@@ -103,7 +102,6 @@
     if (!category) {
       document.title = `Photos — ${SITE_CONFIG.photographerName}`;
       document.getElementById('portfolio-title').textContent = 'This page is not available';
-      document.getElementById('portfolio-lede').textContent = 'Choose Events, Engagements, or Portraits from Professional work.';
     } else {
       const photos = portfolioPhotos(category.id);
       const placeholder = portfolioPlaceholder(category.id);
@@ -117,9 +115,7 @@
       document.querySelector('meta[property="og:description"]').setAttribute('content', description);
       document.querySelector('link[rel="canonical"]').setAttribute('href', canonical);
       document.getElementById('portfolio-title').textContent = category.title;
-      document.getElementById('portfolio-kicker').textContent = 'Professional work';
-      document.getElementById('portfolio-lede').textContent = description;
-
+      document.getElementById('portfolio-kicker').textContent = 'People';
       if (placeholder) {
         const note = document.createElement('section');
         note.className = 'portfolio-placeholder';

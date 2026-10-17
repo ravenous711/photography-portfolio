@@ -372,7 +372,7 @@ All routing is defined in `vercel.json`. The site uses clean trailing-slash URLs
 
 | URL | Template served | Notes |
 |---|---|---|
-| `/` | `index.html` | Yosemite photograph, Personal work, Professional work, and Reach out |
+| `/` | `index.html` | Yosemite photograph, Personal, People, and Reach out |
 | `/personal-work/` | `personal-work/index.html` | Personal albums: Italy, California, Red Rock, and Film |
 | `/professional-work/` | `professional-work/index.html` | Events, Engagements, and Portraits |
 | `/photos/events/`, `/photos/engagements/`, `/photos/portraits/` | `portfolio/index.html` | One ordered edit per booking type. Engagements and Portraits stay empty until those photographs are tagged |
