@@ -1275,6 +1275,27 @@ function renderPhotoFilmstrip(trackEl, urls, {
 
 let _filmstripSeq = 0;
 
+function renderFavoritesGrid(container, photos, { alt = 'Photograph', onActivate, eagerCount = 2 } = {}) {
+  if (!container) return;
+  container.classList.add('favorites-grid');
+  container.replaceChildren();
+  photos.forEach((url, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'favorites-frame';
+    const label = `${alt} — photograph ${index + 1}`;
+    button.setAttribute('aria-label', `Open ${label}`);
+    const img = document.createElement('img');
+    img.alt = label;
+    img.decoding = 'async';
+    img.loading = index < eagerCount ? 'eager' : 'lazy';
+    img.src = typeof viewUrl === 'function' ? viewUrl(url) : url;
+    button.appendChild(img);
+    button.addEventListener('click', () => onActivate(index, url));
+    container.appendChild(button);
+  });
+}
+
 /**
  * Build a filmstrip (track + arrows + scrub rail) inside `containerEl` and
  * render `urls` into it. Pages that host a single strip can hand-write the

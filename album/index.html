@@ -117,25 +117,8 @@
 
     <!-- Standalone project trailer: film strip, then the full archive below -->
     <section id="album-highlights" class="album-highlights px-6 md:px-12" hidden>
-      <div class="group-strip">
-        <button type="button" class="group-strip-nav group-strip-nav--prev" id="album-strip-prev" aria-label="Previous photos" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-            <path d="M15 6l-6 6 6 6"/>
-          </svg>
-        </button>
-        <div class="group-strip-track" id="album-highlights-grid" tabindex="0" role="region" aria-label="Photos from this collection"></div>
-        <button type="button" class="group-strip-nav group-strip-nav--next" id="album-strip-next" aria-label="More photos" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-            <path d="M9 6l6 6-6 6"/>
-          </svg>
-        </button>
-      </div>
-      <div class="group-strip-scrollbar" id="album-strip-scrollbar" hidden>
-        <div class="group-strip-scrollbar-thumb" id="album-strip-thumb" tabindex="0"
-             role="scrollbar" aria-controls="album-highlights-grid" aria-orientation="horizontal"
-             aria-label="Scroll through photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-      </div>
-      <h2 class="album-archive-heading">Full album</h2>
+      <div id="album-highlights-grid" aria-label="Favorite photographs"></div>
+      <button type="button" class="favorites-more" id="album-view-all" hidden>View all photos</button>
     </section>
 
     <!-- Full/curated toggle + favorites note -->
@@ -1567,21 +1550,10 @@
         : [];
       if (albumHighlights && albumHighlightsGrid && trailer.length) {
         albumHighlights.hidden = false;
-        renderPhotoFilmstrip(albumHighlightsGrid, trailer, {
-          alt: `${albumDisplayTitle(album)} photo`,
-          eagerCount: 4,
-          prevBtn: document.getElementById('album-strip-prev'),
-          nextBtn: document.getElementById('album-strip-next'),
-          railEl: document.getElementById('album-strip-scrollbar'),
-          thumbEl: document.getElementById('album-strip-thumb'),
-          // Trailer frames are drawn from the archive below, so they open in
-          // this page's own lightbox at the matching grid position.
+        renderFavoritesGrid(albumHighlightsGrid, trailer, {
+          alt: albumDisplayTitle(album),
+          eagerCount: 2,
           onActivate: (stripIndex, url) => {
-            const index = indexInAlbum(url);
-            if (index >= 0) {
-              openLightbox(index);
-              return;
-            }
             PhotoViewer.open({
               photos: trailer,
               index: stripIndex,
@@ -1590,6 +1562,17 @@
             });
           },
         });
+        const rest = document.querySelector('#album-content main');
+        const reveal = document.getElementById('album-view-all');
+        if (rest && reveal) {
+          rest.hidden = true;
+          reveal.hidden = false;
+          reveal.addEventListener('click', () => {
+            rest.hidden = false;
+            reveal.hidden = true;
+            rest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
       } else if (albumHighlights) {
         albumHighlights.hidden = true;
       }

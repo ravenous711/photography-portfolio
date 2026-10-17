@@ -82,24 +82,7 @@
   <main class="group-catalog-main">
     <!-- Highlights mode: trailer + CTA to chapter index -->
     <section class="group-highlights fade-in" id="group-highlights" hidden>
-      <div class="group-strip">
-        <button type="button" class="group-strip-nav group-strip-nav--prev" id="group-strip-prev" aria-label="Previous photos" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-            <path d="M15 6l-6 6 6 6"/>
-          </svg>
-        </button>
-        <div class="group-strip-track" id="group-highlights-grid" tabindex="0" role="region" aria-label="Photos from this collection"></div>
-        <button type="button" class="group-strip-nav group-strip-nav--next" id="group-strip-next" aria-label="More photos" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-            <path d="M9 6l6 6-6 6"/>
-          </svg>
-        </button>
-      </div>
-      <div class="group-strip-scrollbar" id="group-strip-scrollbar" hidden>
-        <div class="group-strip-scrollbar-thumb" id="group-strip-thumb" tabindex="0"
-             role="scrollbar" aria-controls="group-highlights-grid" aria-orientation="horizontal"
-             aria-label="Scroll through photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-      </div>
+      <div id="group-highlights-grid" aria-label="Favorite photographs"></div>
     </section>
 
     <!-- Chapters index: album cards (header copy removed — title above is enough) -->
@@ -311,23 +294,16 @@
           photos: highlights,
           index,
           alt: group.title,
-          // Trailer frames are borrowed from the sub-albums, so a click leads
-          // back to the city (or project) the photo actually belongs to.
           preferParentId: group.id,
           syncUrl: true,
         });
 
-        renderPhotoFilmstrip(highlightsGrid, highlights, {
-          alt: `${group.title} photo`,
-          eagerCount: 4,
-          prevBtn: document.getElementById('group-strip-prev'),
-          nextBtn: document.getElementById('group-strip-next'),
-          railEl: document.getElementById('group-strip-scrollbar'),
-          thumbEl: document.getElementById('group-strip-thumb'),
+        renderFavoritesGrid(highlightsGrid, highlights, {
+          alt: group.title,
+          eagerCount: 2,
           onActivate: openHighlight,
         });
 
-        // Shareable ?photo= link back into the trailer
         const linked = new URLSearchParams(window.location.search).get('photo');
         if (linked) {
           const target = decodeURIComponent(linked).toLowerCase();
@@ -337,6 +313,8 @@
           if (index >= 0) openHighlight(index);
         }
       }
+
+      const filmFavoritesOnly = showStrip && group.id === 'misc-film-rolls-2026';
 
       function appendAlbumCard(grid, album) {
         const card = document.createElement('a');
@@ -376,27 +354,31 @@
         sectionsRoot.appendChild(section);
       }
 
-      // Under the strip the covers need a band title so it's clear the full
-      // albums follow the sample frames.
-      if (showStrip) {
-        const bandHeading = document.createElement('h2');
-        bandHeading.className = 'group-chapters-heading';
-        bandHeading.textContent = 'Full albums';
-        sectionsRoot.appendChild(bandHeading);
-      }
-
-      if (group.subAlbumSections?.length) {
-        group.subAlbumSections.forEach((sec, i) => {
-          renderSection(sec.title, resolveSubAlbums(sec.albums), { first: i === 0 });
-        });
+      if (filmFavoritesOnly) {
+        const more = document.createElement('a');
+        more.className = 'favorites-more';
+        more.href = Routes.groupChapters(group);
+        more.textContent = 'View all rolls';
+        sectionsRoot.appendChild(more);
       } else {
-        renderSection('', resolveSubAlbums(group.subAlbums), { first: true });
-      }
+        if (showStrip) {
+          const bandHeading = document.createElement('h2');
+          bandHeading.className = 'group-chapters-heading';
+          bandHeading.textContent = 'Places';
+          sectionsRoot.appendChild(bandHeading);
+        }
 
-      // Covers first, film rolls ledger at the bottom.
-      // Catalog film groups already show every roll as a cover card — skip the text strip.
-      if (!group.includeHiddenSubAlbums && group.showFilmRolls !== false) {
-        renderFilmRollLinks(group);
+        if (group.subAlbumSections?.length) {
+          group.subAlbumSections.forEach((sec, i) => {
+            renderSection(sec.title, resolveSubAlbums(sec.albums), { first: i === 0 });
+          });
+        } else {
+          renderSection('', resolveSubAlbums(group.subAlbums), { first: true });
+        }
+
+        if (!group.includeHiddenSubAlbums && group.showFilmRolls !== false) {
+          renderFilmRollLinks(group);
+        }
       }
     }
     })();
