@@ -427,6 +427,8 @@
     let _gridResizeBound = false; // hoisted — TDZ: showAlbum() runs sync for public albums
     let heartedUrls = new Set(); // hoisted — TDZ: initFavorites() called sync from showAlbum
     let favEnabled = false;      // hoisted — TDZ: same
+    // Hearts and the "select your favorites" note are paused site-wide.
+    const heartsPaused = true;
     const selected   = new Set();
     let refreshAlbumNavMenu = null;
     // Current download size preference — initialised from localStorage by initDlSizePicker
@@ -1409,7 +1411,8 @@
       if (curatedLabel) curatedLabel.hidden = true;
       if (toggleBottom) toggleBottom.textContent = label;
       // Favorites note only when hearts are enabled (client galleries never offer favorites)
-      const favoritesOff = album.gridFavorites === false
+      const favoritesOff = heartsPaused
+        || album.gridFavorites === false
         || (album.audience || '').startsWith('client:');
       const showNote = showingFull && !favoritesOff;
       if (note) note.hidden = !showNote;
@@ -1457,7 +1460,8 @@
       }
 
       document.body.classList.toggle('full-album-mode', showingFull);
-      const favoritesOff = album.gridFavorites === false
+      const favoritesOff = heartsPaused
+        || album.gridFavorites === false
         || (album.audience || '').startsWith('client:');
       document.body.classList.toggle('grid-favorites-disabled', favoritesOff);
       updateViewControls(showingFull);
@@ -3047,7 +3051,8 @@
     }
 
     async function initFavorites(albumId, enabled) {
-      const favoritesOff = album?.gridFavorites === false
+      const favoritesOff = heartsPaused
+        || album?.gridFavorites === false
         || (album?.audience || '').startsWith('client:');
       favEnabled = enabled && !favoritesOff;
       if (!favEnabled) return;
