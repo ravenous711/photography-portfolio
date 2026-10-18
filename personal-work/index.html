@@ -95,7 +95,7 @@
       const posStyle = album.coverPosition ? ` style="object-position:${album.coverPosition}"` : '';
       const dateline = albumDateline(album, { withDesc: !isGroup });
       const desc = albumCardDesc(album);
-      const title = album.id === 'misc-film-rolls-2026' ? 'Film' : album.title;
+      const title = album.title;
       card.innerHTML = `
         <img class="album-card-img"
              src="${albumCoverUrlWide(album)}"
