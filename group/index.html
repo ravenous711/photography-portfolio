@@ -15,7 +15,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Albums</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
@@ -31,7 +32,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/personal-work/">Albums</a>
+    <a href="/personal-work/">Personal</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">People</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <div id="mobile-private-access" class="mobile-private-access">
       <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
@@ -46,11 +48,11 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
         <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
       </svg>
-      <span id="back-link-label">Albums</span>
+      <span id="back-link-label">Personal</span>
     </a>
     <p class="group-page-dateline" id="group-dateline"></p>
     <h1 class="page-title" id="group-title">–</h1>
-    <p class="group-page-desc" id="group-desc"></p>
+    <nav id="group-sibling-nav" class="album-sibling-nav" aria-label="Albums in this trip" hidden></nav>
   </header>
 
   <!-- ── Password Modal (shown for protected groups) ── -->
@@ -72,7 +74,7 @@
         Unlock
       </button>
     </form>
-    <a href="/personal-work/" style="margin-top:2rem;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(240,237,232,0.3);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='rgba(240,237,232,0.6)'" onmouseout="this.style.color='rgba(240,237,232,0.3)'">Back to Albums</a>
+    <a href="/personal-work/" style="margin-top:2rem;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(240,237,232,0.3);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='rgba(240,237,232,0.6)'" onmouseout="this.style.color='rgba(240,237,232,0.3)'">Back to Personal</a>
   </div>
 
   <main class="group-catalog-main">
@@ -81,7 +83,15 @@
       <div id="group-highlights-grid" aria-label="Favorite photographs"></div>
     </section>
 
-    <a class="favorites-more film-view-switch" id="film-view-switch" href="#" hidden></a>
+    <div class="film-library-toolbar" id="film-library-toolbar" hidden>
+      <a class="favorites-more film-view-switch" id="film-view-switch" href="#" hidden></a>
+      <label class="film-frame-toggle" id="film-frame-toggle" hidden>
+        <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
+        <input type="checkbox" id="film-frame-input" role="switch" aria-label="Original aspect ratio">
+        <span class="film-frame-switch" aria-hidden="true"></span>
+        <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
+      </label>
+    </div>
 
     <section class="film-library fade-in" id="film-library" hidden aria-label="Life on Film, newest first">
       <p class="film-library-month" id="film-library-month" aria-live="polite"></p>
@@ -140,6 +150,7 @@
   <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/justified-layout.js"></script>
   <script src="/js/photo-viewer.js"></script>
   <script>
     document.getElementById('footer-copyright').textContent =
@@ -236,35 +247,45 @@
     }
 
     function filmLibraryPhotos() {
-      const standalone = group.subAlbumSections?.find(sec => sec.title === 'Standalone');
-      const rolls = resolveSubAlbums(standalone?.albums || [])
-        .map((album, order) => ({ album, order }))
-        .sort((a, b) => albumSortKey(b.album) - albumSortKey(a.album) || a.order - b.order)
+      const sectionIds = (group.subAlbumSections || []).flatMap(sec => sec.albums || []);
+      const fromTrips = new Set(
+        (group.subAlbumSections || []).find(sec => sec.title === 'From trips')?.albums || []
+      );
+      const rolls = resolveSubAlbums(sectionIds.length ? sectionIds : group.subAlbums)
+        .map((album, order) => ({ album, order, trip: fromTrips.has(album.id) ? 0 : 1 }))
+        .sort((a, b) =>
+          albumSortKey(b.album) - albumSortKey(a.album)
+          || a.trip - b.trip
+          || a.order - b.order
+        )
         .map(({ album }) => album);
       return rolls.flatMap(album =>
-        (album.photos || []).filter(Boolean).map(url => ({ url, month: album.date || '' }))
+        (album.photos || []).filter(Boolean).map(url => ({ url, month: albumDateline(album) || '' }))
       );
     }
 
     function showFilmLibrary() {
       document.getElementById('group-dateline').hidden = true;
       document.getElementById('group-title').textContent = group.title;
-      document.getElementById('group-desc').style.display = 'none';
       const backLink = document.getElementById('back-link');
       backLink.href = Routes.personalWork;
-      document.getElementById('back-link-label').textContent = 'Albums';
+      document.getElementById('back-link-label').textContent = 'Personal';
 
       const switchLink = document.getElementById('film-view-switch');
+      const frameToggle = document.getElementById('film-frame-toggle');
+      document.getElementById('film-library-toolbar').hidden = false;
       switchLink.hidden = false;
 
       if (isChaptersIndex) {
         switchLink.href = Routes.group(group.id);
         switchLink.textContent = 'See all';
+        frameToggle.hidden = true;
         return false;
       }
 
       switchLink.href = Routes.groupChapters(group);
-      switchLink.textContent = 'See in albums';
+      switchLink.textContent = 'Organize by film rolls';
+      frameToggle.hidden = false;
 
       const frames = filmLibraryPhotos();
       const photos = frames.map(frame => frame.url);
@@ -278,6 +299,7 @@
         index,
         alt: group.title,
         preferParentId: group.id,
+        linkOutsideParentOnly: true,
         syncUrl: true,
       });
 
@@ -296,6 +318,68 @@
         button.addEventListener('click', () => openAt(index));
         grid.appendChild(button);
       });
+
+      const frameInput = document.getElementById('film-frame-input');
+      const layoutFilmFrames = () => {
+        const full = frameInput.checked;
+        grid.classList.toggle('is-full-frame', full);
+        if (!full) {
+          grid.style.height = '';
+          [...grid.children].forEach(button => {
+            button.style.left = '';
+            button.style.top = '';
+            button.style.width = '';
+            button.style.height = '';
+          });
+          return;
+        }
+        const width = grid.clientWidth;
+        if (!width || typeof justifiedLayout !== 'function') return;
+        const ratios = [...grid.children].map(button => {
+          const img = button.querySelector('img');
+          if (img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
+          return 3 / 2;
+        });
+        const layout = justifiedLayout(ratios, {
+          containerWidth: width,
+          targetRowHeight: window.innerWidth <= 640 ? 160 : 280,
+          boxSpacing: 4,
+          containerPadding: 0,
+        });
+        grid.style.height = `${layout.containerHeight}px`;
+        [...grid.children].forEach((button, i) => {
+          const box = layout.boxes[i];
+          button.style.left = `${box.left}px`;
+          button.style.top = `${box.top}px`;
+          button.style.width = `${box.width}px`;
+          button.style.height = `${box.height}px`;
+        });
+      };
+      try {
+        frameInput.checked = localStorage.getItem('film-library-full-frame') === '1';
+      } catch { /* private mode */ }
+      frameInput.addEventListener('change', () => {
+        try {
+          localStorage.setItem('film-library-full-frame', frameInput.checked ? '1' : '0');
+        } catch { /* private mode */ }
+        layoutFilmFrames();
+        syncMonth();
+      });
+      grid.querySelectorAll('img').forEach(img => {
+        if (img.complete) return;
+        img.addEventListener('load', () => {
+          if (frameInput.checked) {
+            layoutFilmFrames();
+            syncMonth();
+          }
+        }, { once: true });
+      });
+      if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(() => {
+          if (frameInput.checked) layoutFilmFrames();
+        }).observe(grid);
+      }
+      layoutFilmFrames();
 
       const monthStarts = [...grid.children].filter((el, i, all) =>
         i === 0 || el.dataset.month !== all[i - 1].dataset.month
@@ -329,6 +413,28 @@
       return true;
     }
 
+    function renderGroupSiblingNav() {
+      const nav = document.getElementById('group-sibling-nav');
+      if (!nav) return;
+      const cities = (group.subAlbums || [])
+        .map(id => ALBUMS.find(a => a.id === id))
+        .filter(a => a && !a.hidden && a.type !== 'group'
+          && a.albumKind !== 'film-roll' && getAlbumPhotoCount(a) > 0);
+      if (cities.length < 2) {
+        nav.hidden = true;
+        nav.innerHTML = '';
+        return;
+      }
+      nav.hidden = false;
+      nav.innerHTML = `
+        <span class="album-sibling-nav-links">
+          <span class="album-sibling-link is-active" aria-current="page">${group.title}</span>
+          ${cities.map(city =>
+            `<a class="album-sibling-link" href="${albumPageUrl(city)}">${city.title}</a>`
+          ).join('')}
+        </span>`;
+    }
+
     function showGroup() {
       if (group.id === 'misc-film-rolls-2026' && showFilmLibrary()) return;
 
@@ -348,19 +454,7 @@
         datelineEl.textContent = groupDateline();
       }
       document.getElementById('group-title').textContent = group.title;
-
-      const groupDesc = document.getElementById('group-desc');
-      if (chaptersMode && hasHighlights) {
-        // Full-albums page: title alone is enough
-        groupDesc.style.display = 'none';
-        groupDesc.textContent = '';
-      } else if (group.description) {
-        groupDesc.style.display = '';
-        groupDesc.textContent = group.description;
-      } else {
-        groupDesc.style.display = 'none';
-        groupDesc.textContent = '';
-      }
+      renderGroupSiblingNav();
 
       const backLink = document.getElementById('back-link');
       if (chaptersMode && hasHighlights && group.id !== 'misc-film-rolls-2026') {
@@ -375,7 +469,7 @@
         document.getElementById('back-link-label').textContent = 'Family Gallery';
       } else {
         backLink.href = Routes.personalWork;
-        document.getElementById('back-link-label').textContent = 'Albums';
+        document.getElementById('back-link-label').textContent = 'Personal';
       }
 
       const highlightsSection = document.getElementById('group-highlights');

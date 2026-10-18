@@ -171,12 +171,19 @@ const PhotoViewer = (() => {
   }
 
   function unlockScroll() {
+    const y = scrollLockY;
+    const html = document.documentElement;
+    const previous = html.style.scrollBehavior;
+    // html { scroll-behavior: smooth } would animate this restore from the top
+    // of the page back to the photo that was open.
+    html.style.scrollBehavior = 'auto';
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.left = '';
     document.body.style.right = '';
     document.body.style.width = '';
-    window.scrollTo(0, scrollLockY);
+    window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+    html.style.scrollBehavior = previous;
   }
 
   /** Where the current photo lives, and whether this visitor may follow it. */
@@ -189,12 +196,19 @@ const PhotoViewer = (() => {
       preferAlbumId: options.preferAlbumId,
     });
     if (!album || album.id === options.currentAlbumId) return null;
+    if (options.linkOutsideParentOnly && album.parentId === options.preferParentId) return null;
     if (typeof canOpenAlbum === 'function' && !canOpenAlbum(album)) return null;
 
     const title = (typeof albumDisplayTitle === 'function') ? albumDisplayTitle(album) : album.title;
+    const trip = (album.parentId && typeof ALBUMS !== 'undefined')
+      ? ALBUMS.find(a => a.id === album.parentId && a.type === 'group')
+      : null;
+    const place = (trip?.title && title && trip.title !== title)
+      ? `${trip.title}: ${title}`
+      : title;
     return {
       href: Routes.albumPhotoGridUrl(album, url),
-      label: title ? `View in ${title}` : 'View in album',
+      label: place ? `View in ${place}` : 'View in album',
     };
   }
 

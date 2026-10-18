@@ -115,7 +115,7 @@ const ALBUMS_MISC_2026 = [
     slug: 'ultramax-0314',
     parentId: 'misc-film-rolls-2026',
     title: 'Kodak Ultramax 400',
-    date: 'March 2026',
+    date: 'January 2026',
     audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_28.jpg`,

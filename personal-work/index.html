@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Albums — Raveen Fernando</title>
+  <title>Personal — Raveen Fernando</title>
   <meta name="description" content="Photography albums — travel, film, and events." />
 
   <link rel="stylesheet" href="/css/style.css" />
@@ -16,7 +16,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Albums</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
@@ -32,7 +33,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/personal-work/">Albums</a>
+    <a href="/personal-work/">Personal</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">People</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <div id="mobile-private-access" class="mobile-private-access">
       <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
@@ -43,7 +45,7 @@
 
   <!-- ── Page Header ── -->
   <header class="page-header page-header--catalog fade-in">
-    <h1 class="page-title">Albums</h1>
+    <h1 class="page-title">Personal</h1>
   </header>
 
   <!-- ── Album Grid ── -->
@@ -80,7 +82,6 @@
       'italy-2026',
       'red-rock-canyon-2026',
       'california',
-      'moksha-yoga',
     ];
 
     const main = document.getElementById('gallery-main');
