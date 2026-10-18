@@ -20,7 +20,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Albums</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
@@ -36,7 +37,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-    <a href="/personal-work/">Albums</a>
+    <a href="/personal-work/">Personal</a>
+    <a href="/professional-work/" id="mobile-professional-work-link">People</a>
     <a href="/about/" id="mobile-about-link">About</a>
     <div id="mobile-private-access" class="mobile-private-access">
       <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
@@ -78,7 +80,7 @@
 
       <a href="/personal-work/" class="block mt-6 text-xs tracking-widest uppercase"
          style="color:var(--color-muted);text-decoration:none;transition:color 0.3s">
-        ← Back to Albums
+        ← Back to Personal
       </a>
     </div>
   </div>
@@ -96,7 +98,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label">Albums</span>
+          <span id="back-label">Personal</span>
         </a>
         <div class="album-header-title-row" id="album-header-title-row">
           <div class="album-header-title-block">
@@ -120,7 +122,6 @@
     <!-- Full/curated toggle + favorites note -->
     <div id="album-view-controls-top" class="album-view-controls px-6 md:px-12" hidden>
       <p id="album-curated-label" class="album-curated-label" hidden></p>
-      <button type="button" id="album-view-toggle-top" class="album-view-toggle-btn"></button>
       <p id="album-favorites-note" class="album-favorites-note" hidden>
         Select your favorites to let Raveen know which shots you like.
       </p>
@@ -132,7 +133,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          <span id="back-label-sticky">Albums</span>
+          <span id="back-label-sticky">Personal</span>
         </a>
         <div class="album-toolbar-main">
         <div class="album-toolbar-title-group">
@@ -140,6 +141,12 @@
           <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
         </div>
         <div class="album-header-actions">
+          <label class="film-frame-toggle album-aspect-toggle">
+            <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
+            <input type="checkbox" class="album-aspect-input" role="switch" aria-label="Original aspect ratio" checked>
+            <span class="film-frame-switch" aria-hidden="true"></span>
+            <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
+          </label>
           <button type="button" id="select-btn" class="btn-ghost" aria-label="Select photos">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -174,6 +181,12 @@
           <div id="album-nav-menu-sections" class="album-nav-menu-group" hidden></div>
           <div id="album-nav-menu-siblings" class="album-nav-menu-group" hidden></div>
           <div class="album-nav-menu-actions">
+            <label class="film-frame-toggle album-aspect-toggle album-aspect-toggle--menu">
+              <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
+              <input type="checkbox" class="album-aspect-input" role="switch" aria-label="Original aspect ratio" checked>
+              <span class="film-frame-switch" aria-hidden="true"></span>
+              <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
+            </label>
             <button type="button" id="album-nav-select-btn" class="album-nav-menu-action">Select photos</button>
             <button type="button" id="album-nav-clear-btn" class="album-nav-menu-action" hidden>Clear selection</button>
             <button type="button" id="album-nav-liked-btn" class="album-nav-menu-action" hidden>Download selected</button>
@@ -536,7 +549,7 @@
         document.body.innerHTML = `
         <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem">
           <p class="font-serif text-3xl font-light">Album not found</p>
-          <a href="/personal-work/" class="btn-ghost">Back to Albums</a>
+          <a href="/personal-work/" class="btn-ghost">Back to Personal</a>
         </div>`;
       } else {
         allPhotos = getAlbumAllPhotos(album);
@@ -1248,6 +1261,22 @@
       const containerWidth = grid.offsetWidth;
       if (!containerWidth) return;
 
+      if (squareGrid) {
+        const spacing = window.innerWidth <= 640 ? 6 : 12;
+        const target = window.innerWidth <= 640 ? 120 : window.innerWidth <= 1024 ? 200 : 260;
+        const cols = Math.max(3, Math.round(containerWidth / target));
+        const size = (containerWidth - spacing * (cols - 1)) / cols;
+        items.forEach((item, i) => {
+          item.style.left   = (i % cols) * (size + spacing) + 'px';
+          item.style.top    = Math.floor(i / cols) * (size + spacing) + 'px';
+          item.style.width  = size + 'px';
+          item.style.height = size + 'px';
+        });
+        const rows = Math.ceil(items.length / cols);
+        grid.style.height = rows * size + (rows - 1) * spacing + 'px';
+        return;
+      }
+
       const aspectRatios = items.map(item => {
         const img = item.querySelector('img');
         if (img.naturalWidth && img.naturalHeight) {
@@ -1273,6 +1302,24 @@
         item.style.height = box.height + 'px';
       });
     }
+
+    let squareGrid = localStorage.getItem('album-grid-square') === '1';
+
+    function syncAspectInputs() {
+      document.querySelectorAll('.album-aspect-input').forEach(input => {
+        input.checked = !squareGrid;
+      });
+    }
+
+    document.querySelectorAll('.album-aspect-input').forEach(input => {
+      input.addEventListener('change', () => {
+        squareGrid = !input.checked;
+        localStorage.setItem('album-grid-square', squareGrid ? '1' : '0');
+        syncAspectInputs();
+        document.querySelectorAll('.photo-grid').forEach(runJustifiedLayout);
+      });
+    });
+    syncAspectInputs();
 
     function bindGridLayout(grid) {
       if (!grid._layoutBound) {
@@ -1354,20 +1401,19 @@
       const bottomControls = document.getElementById('album-view-controls-bottom');
       const curatedLabel = document.getElementById('album-curated-label');
       const note = document.getElementById('album-favorites-note');
-      const toggleTop = document.getElementById('album-view-toggle-top');
       const toggleBottom = document.getElementById('album-view-toggle-bottom');
       const label = showingFull ? 'Back to favorites' : 'View all photos';
       const showToggle = hasCurated && !album.curatedOnly;
 
-      if (topControls) topControls.hidden = !showToggle;
       if (bottomControls) bottomControls.hidden = !showToggle;
-      if (curatedLabel) curatedLabel.hidden = true; // quiet — toggle alone is enough
-      if (toggleTop) toggleTop.textContent = label;
+      if (curatedLabel) curatedLabel.hidden = true;
       if (toggleBottom) toggleBottom.textContent = label;
       // Favorites note only when hearts are enabled (client galleries never offer favorites)
       const favoritesOff = album.gridFavorites === false
         || (album.audience || '').startsWith('client:');
-      if (note) note.hidden = !showingFull || favoritesOff;
+      const showNote = showingFull && !favoritesOff;
+      if (note) note.hidden = !showNote;
+      if (topControls) topControls.hidden = !showNote;
     }
 
     function setFullView(next) {
@@ -1375,7 +1421,7 @@
       fullView = next;
       syncFullViewUrl();
       renderPhotoSections();
-      const anchor = document.getElementById('album-view-controls-top');
+      const anchor = document.getElementById('digital-section') || document.querySelector('#album-content main');
       if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1600,9 +1646,6 @@
       scrollToLinkedPhoto();
     }
 
-    document.getElementById('album-view-toggle-top')?.addEventListener('click', () => {
-      setFullView(!fullView);
-    });
     document.getElementById('album-view-toggle-bottom')?.addEventListener('click', () => {
       setFullView(!fullView);
     });
@@ -1630,7 +1673,6 @@
         const siblings = (trip && album.parentId === trip.id) ? getSiblingAlbums(album) : [];
         nav.hidden = false;
         nav.innerHTML = `
-          <span class="album-sibling-nav-label">More in</span>
           <span class="album-sibling-nav-links">
             <a class="album-sibling-link" href="${href}">${moreTarget.title}</a>
             ${siblings.length > 1 ? siblings.map(s => s.id === album.id
@@ -1651,7 +1693,6 @@
       const parentHref = typeof Routes !== 'undefined' ? Routes.group(parent.id) : albumPageUrl(parent);
       nav.hidden = false;
       nav.innerHTML = `
-        <span class="album-sibling-nav-label">More in</span>
         <span class="album-sibling-nav-links">
           <a class="album-sibling-link" href="${parentHref}">${parent.title}</a>
           ${siblings.map(s => s.id === album.id

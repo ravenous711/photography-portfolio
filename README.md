@@ -691,7 +691,7 @@ Client albums stay in the private bucket. To put a single frame on the public si
 
 On this branch, step 3 is a local preview. It records the destination and does not upload.
 
-`SITE_CONFIG.email` is the placeholder `hello@raveenfernando.com`. That inbox does not exist yet. Create it and update `js/config.js` before switching this branch live (**PORTFOLIO-1**).
+The public contact address is `raveenfernando.photo@gmail.com` in `SITE_CONFIG.email`.
 
 ---
 

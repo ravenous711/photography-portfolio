@@ -147,7 +147,8 @@
   <nav id="main-nav" class="nav-scrolled">
     <a href="/" class="nav-logo" aria-label="Raveen Fernando">RF<span class="nav-logo-dot">.</span></a>
     <ul class="nav-links">
-      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Albums</a></li>
+      <li><a href="/personal-work/" data-nav-link data-nav="gallery">Personal</a></li>
+      <li><a href="/professional-work/" data-nav-link data-nav="professional">People</a></li>
       <li id="nav-about-item"><a href="/about/" data-nav-link data-nav="about">About</a></li>
       <li id="nav-unlock-item" class="nav-dropdown">
         <button type="button" id="nav-unlock-trigger" class="nav-dropdown-trigger" data-nav-link data-nav="unlock" aria-expanded="false" aria-haspopup="true" aria-controls="nav-private-menu">Private Access</button>
@@ -163,7 +164,8 @@
 
   <div id="mobile-menu" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-sheet">
-      <a href="/personal-work/">Albums</a>
+      <a href="/personal-work/">Personal</a>
+      <a href="/professional-work/" id="mobile-professional-work-link">People</a>
       <a href="/about/" id="mobile-about-link">About</a>
       <div id="mobile-private-access" class="mobile-private-access">
         <button type="button" id="mobile-private-trigger" aria-expanded="false" aria-controls="mobile-private-menu">Private Access</button>
@@ -193,6 +195,12 @@
         </div>
 
         <div class="about-contact">
+          <a id="about-email" href="#" class="about-contact-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/>
+            </svg>
+            <span id="about-email-text"></span>
+          </a>
           <a id="about-instagram" href="https://www.instagram.com/ravenous711/" target="_blank" rel="noopener" class="about-contact-link">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="2" width="20" height="20" rx="5"/>
@@ -225,6 +233,13 @@
   <script>
     document.getElementById('about-photo').src = SITE_CONFIG.aboutPhoto;
     document.getElementById('about-name').textContent = SITE_CONFIG.photographerName;
+    const emailEl = document.getElementById('about-email');
+    if (SITE_CONFIG.email) {
+      emailEl.href = `mailto:${SITE_CONFIG.email}`;
+      document.getElementById('about-email-text').textContent = SITE_CONFIG.email;
+    } else {
+      emailEl.style.display = 'none';
+    }
     if (SITE_CONFIG.instagram) {
       document.getElementById('about-instagram').href = SITE_CONFIG.instagram;
     }

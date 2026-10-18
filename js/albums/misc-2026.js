@@ -15,7 +15,7 @@ const ALBUMS_MISC_2026 = [
   // dual-listed here so the catalog shows every public 2026 roll.
   {
     id: 'misc-film-rolls-2026',
-    title: '2026 Film rolls',
+    title: 'Life on Film',
     description: '',
     date: '2026',
     dateline: false,
@@ -34,8 +34,10 @@ const ALBUMS_MISC_2026 = [
     ],
     // Flat list kept for nav/siblings; sections drive the group page layout.
     subAlbums: [
-      'misc-ultramax-0314',
+      'misc-portra-0914',
+      'misc-tmax-0914',
       'misc-tmax-0726',
+      'misc-ultramax-0314',
       'red-rock-roll-lomo',
       'red-rock-roll-ektar',
       'italy-roll-ultramax',
@@ -46,7 +48,7 @@ const ALBUMS_MISC_2026 = [
     subAlbumSections: [
       {
         title: 'Standalone',
-        albums: ['misc-ultramax-0314', 'misc-tmax-0726'],
+        albums: ['misc-portra-0914', 'misc-tmax-0914', 'misc-tmax-0726', 'misc-ultramax-0314'],
       },
       {
         title: 'From trips',
@@ -64,11 +66,56 @@ const ALBUMS_MISC_2026 = [
   },
 
   {
+    id: 'misc-portra-0914',
+    slug: 'portra-0914',
+    parentId: 'misc-film-rolls-2026',
+    title: 'Kodak Portra 400',
+    date: 'September 2026',
+    audience: 'public',
+    protected: false,
+    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-01.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-01.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-02.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-03.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-04.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-05.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-06.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-07.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Portra-0914/Sept-2026-drop-08.jpg`,
+    ],
+  },
+
+  {
+    id: 'misc-tmax-0914',
+    slug: 'tmax-0914',
+    parentId: 'misc-film-rolls-2026',
+    title: 'Kodak T-Max 400',
+    date: 'September 2026',
+    audience: 'public',
+    protected: false,
+    coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-09.jpg`,
+    photos: [
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-09.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-10.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-11.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-12.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-13.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-14.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-15.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-16.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-17.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-18.jpg`,
+      `${R2_BASE_URL}/Misc-Film-Rolls-2026/Tmax-0914/Sept-2026-drop-19.jpg`,
+    ],
+  },
+
+  {
     id: 'misc-ultramax-0314',
     slug: 'ultramax-0314',
     parentId: 'misc-film-rolls-2026',
     title: 'Kodak Ultramax 400',
-    date: 'March 2026',
+    date: 'January 2026',
     audience: 'public',
     protected: false,
     coverImage: `${R2_BASE_URL}/Misc-Film-Rolls-2026/Ultramax-0314/ultramax_0314_28.jpg`,

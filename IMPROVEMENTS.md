@@ -29,7 +29,7 @@ done, move it out of Open, add a Changelog line.
 ### 3 — Content & ops
 | ID | One-liner | Effort |
 |----|-----------|--------|
-| **PORTFOLIO-1** | Before switching the curated site live: create `hello@raveenfernando.com`, upload the engagement shoot, and decide whether unpublished event copies stay as they are | M |
+| **PORTFOLIO-1** | Before switching the curated site live: upload the engagement shoot, and decide whether unpublished event copies stay as they are | M |
 | **ALBUM-1** | London 2025 shell: upload it or delete the empty entry | M |
 | **OPS-6** | D1 backup/restore for access codes + favorites | M |
 | **OPS-1** | Label or archive stale scripts | S |
@@ -123,8 +123,8 @@ Jump here after picking an ID from Open tickets.
 
 ### PORTFOLIO-1 — Switch the curated portfolio live
 - **Effort:** M · **Risk:** Med · **Status:** LOCAL ONLY on `feat/curated-portfolio`
-- **Why:** The public site on this branch is Personal and People. Personal albums are linked from the homepage. Engagements and Portraits stay empty until those shoots are tagged. The contact address `hello@raveenfernando.com` does not exist yet.
-- **Fix:** Create the business inbox and replace `SITE_CONFIG.email`. Upload the engagement photographs and tag them Engagements. Tag senior and individual sittings as Portraits. Publish any private client frames you want on the public site (admin confirmation copies only `grid/` and `view/` to `portfolio-showcase/`). Then ask to merge.
+- **Why:** The public site on this branch is Personal and People. Personal albums are linked from the homepage. Engagements and Portraits stay empty until those shoots are tagged. The public contact address is `raveenfernando.photo@gmail.com`.
+- **Fix:** Upload the engagement photographs and tag them Engagements. Tag senior and individual sittings as Portraits. Publish any private client frames you want on the public site (admin confirmation copies only `grid/` and `view/` to `portfolio-showcase/`). Then ask to merge.
 - **Files:** `js/config.js`, `js/portfolio.js`, `index.html`, `professional-work/index.html`, `admin/index.html`
 - **Done when:** The inbox exists, Engagements and Portraits show real photographs or you explicitly keep the placeholders, and you have approved a merge to `main`.
 

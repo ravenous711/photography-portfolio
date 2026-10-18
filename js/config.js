@@ -11,8 +11,7 @@ const SITE_CONFIG = {
   heroPositionMobile: '50% 40%',
 
   aboutPhoto: `https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/about/portrait.jpg`,
-  // Public contact email is hidden for now. Set this to show it again.
-  email: '',
+  email: 'raveenfernando.photo@gmail.com',
   instagram: 'https://www.instagram.com/ravenous711/',
   instagramHandle: '@ravenous711',
 };
