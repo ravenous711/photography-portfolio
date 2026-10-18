@@ -81,6 +81,13 @@
       <div id="group-highlights-grid" aria-label="Favorite photographs"></div>
     </section>
 
+    <a class="favorites-more film-view-switch" id="film-view-switch" href="#" hidden></a>
+
+    <section class="film-library fade-in" id="film-library" hidden aria-label="Life on Film, newest first">
+      <p class="film-library-month" id="film-library-month" aria-live="polite"></p>
+      <div class="film-library-grid" id="film-library-grid"></div>
+    </section>
+
     <!-- Chapters index: album cards (header copy removed — title above is enough) -->
     <div class="fade-in fade-in-delay-1" id="chapters" hidden>
       <!-- Populated by JS -->
@@ -228,7 +235,103 @@
       return group.date || '';
     }
 
+    function filmLibraryPhotos() {
+      const standalone = group.subAlbumSections?.find(sec => sec.title === 'Standalone');
+      const rolls = resolveSubAlbums(standalone?.albums || [])
+        .map((album, order) => ({ album, order }))
+        .sort((a, b) => albumSortKey(b.album) - albumSortKey(a.album) || a.order - b.order)
+        .map(({ album }) => album);
+      return rolls.flatMap(album =>
+        (album.photos || []).filter(Boolean).map(url => ({ url, month: album.date || '' }))
+      );
+    }
+
+    function showFilmLibrary() {
+      document.getElementById('group-dateline').hidden = true;
+      document.getElementById('group-title').textContent = group.title;
+      document.getElementById('group-desc').style.display = 'none';
+      const backLink = document.getElementById('back-link');
+      backLink.href = Routes.personalWork;
+      document.getElementById('back-link-label').textContent = 'Albums';
+
+      const switchLink = document.getElementById('film-view-switch');
+      switchLink.hidden = false;
+
+      if (isChaptersIndex) {
+        switchLink.href = Routes.group(group.id);
+        switchLink.textContent = 'See all';
+        return false;
+      }
+
+      switchLink.href = Routes.groupChapters(group);
+      switchLink.textContent = 'See in albums';
+
+      const frames = filmLibraryPhotos();
+      const photos = frames.map(frame => frame.url);
+      const section = document.getElementById('film-library');
+      const grid = document.getElementById('film-library-grid');
+      const tag = document.getElementById('film-library-month');
+      section.hidden = false;
+
+      const openAt = (index) => PhotoViewer.open({
+        photos,
+        index,
+        alt: group.title,
+        preferParentId: group.id,
+        syncUrl: true,
+      });
+
+      frames.forEach((frame, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'film-library-frame';
+        button.dataset.month = frame.month;
+        button.setAttribute('aria-label', `Open photograph ${index + 1}, ${frame.month}`);
+        const img = document.createElement('img');
+        img.alt = '';
+        img.decoding = 'async';
+        img.loading = index < 15 ? 'eager' : 'lazy';
+        img.src = gridUrl(frame.url);
+        button.appendChild(img);
+        button.addEventListener('click', () => openAt(index));
+        grid.appendChild(button);
+      });
+
+      const monthStarts = [...grid.children].filter((el, i, all) =>
+        i === 0 || el.dataset.month !== all[i - 1].dataset.month
+      );
+      let ticking = false;
+      const syncMonth = () => {
+        ticking = false;
+        const line = tag.getBoundingClientRect().top + 8;
+        let current = monthStarts[0];
+        for (const start of monthStarts) {
+          if (start.getBoundingClientRect().top <= line) current = start;
+        }
+        const label = current?.dataset.month || '';
+        if (tag.textContent !== label) tag.textContent = label;
+      };
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(syncMonth);
+        }
+      }, { passive: true });
+      window.addEventListener('resize', syncMonth);
+      syncMonth();
+
+      const linked = new URLSearchParams(window.location.search).get('photo');
+      if (linked) {
+        const target = decodeURIComponent(linked).toLowerCase();
+        const index = photos.findIndex(url => Routes.photoFilename(url).toLowerCase() === target);
+        if (index >= 0) openAt(index);
+      }
+      return true;
+    }
+
     function showGroup() {
+      if (group.id === 'misc-film-rolls-2026' && showFilmLibrary()) return;
+
       const highlights = Array.isArray(group.highlights) ? group.highlights.filter(Boolean) : [];
       const hasHighlights = highlights.length > 0;
       // With highlights: trip page = trailer only; chapters live on second page.
@@ -260,7 +363,7 @@
       }
 
       const backLink = document.getElementById('back-link');
-      if (chaptersMode && hasHighlights) {
+      if (chaptersMode && hasHighlights && group.id !== 'misc-film-rolls-2026') {
         backLink.href = Routes.group(group.id);
         document.getElementById('back-link-label').textContent = group.title;
       } else if (group.parentId) {
