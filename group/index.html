@@ -78,12 +78,8 @@
   </div>
 
   <main class="group-catalog-main">
-    <!-- Highlights mode: trailer + CTA to chapter index -->
-    <section class="group-highlights fade-in" id="group-highlights" hidden>
-      <div id="group-highlights-grid" aria-label="Favorite photographs"></div>
-    </section>
-
     <div class="film-library-toolbar" id="film-library-toolbar" hidden>
+      <h2 class="group-chapters-heading group-highlights-heading" id="group-highlights-heading" hidden>Highlights</h2>
       <a class="favorites-more film-view-switch" id="film-view-switch" href="#" hidden></a>
       <label class="film-frame-toggle" id="film-frame-toggle" hidden>
         <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
@@ -92,6 +88,11 @@
         <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
       </label>
     </div>
+
+    <!-- Highlights mode: trailer above the city albums -->
+    <section class="group-highlights fade-in" id="group-highlights" hidden>
+      <div id="group-highlights-grid" aria-label="Favorite photographs"></div>
+    </section>
 
     <section class="film-library fade-in" id="film-library" hidden aria-label="Life on Film, newest first">
       <p class="film-library-month" id="film-library-month" aria-live="polite"></p>
@@ -129,7 +130,7 @@
     .back-link:hover { color: var(--color-text); }
     .album-card { display: block; text-decoration: none; }
     .group-highlights {
-      margin: 0 0 clamp(3.5rem, 7vw, 6rem);
+      margin: 0 0 clamp(1.75rem, 4vw, 2.75rem);
     }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -497,6 +498,74 @@
           onActivate: openHighlight,
         });
 
+        const toolbar = document.getElementById('film-library-toolbar');
+        const frameToggle = document.getElementById('film-frame-toggle');
+        const switchLink = document.getElementById('film-view-switch');
+        const frameInput = document.getElementById('film-frame-input');
+        toolbar.hidden = false;
+        switchLink.hidden = true;
+        frameToggle.hidden = false;
+        document.getElementById('group-highlights-heading').hidden = false;
+
+        const layoutHighlights = () => {
+          const full = frameInput.checked;
+          highlightsGrid.classList.toggle('is-full-frame', full);
+          highlightsGrid.classList.toggle('is-square', !full);
+          if (!full) {
+            highlightsGrid.style.height = '';
+            [...highlightsGrid.children].forEach(button => {
+              button.style.left = '';
+              button.style.top = '';
+              button.style.width = '';
+              button.style.height = '';
+            });
+            return;
+          }
+          const width = highlightsGrid.clientWidth;
+          if (!width || typeof justifiedLayout !== 'function') return;
+          const ratios = [...highlightsGrid.children].map(button => {
+            const img = button.querySelector('img');
+            if (img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
+            return 1.5;
+          });
+          const layout = justifiedLayout(ratios, {
+            containerWidth: width,
+            targetRowHeight: window.innerWidth <= 640 ? 140 : 200,
+            boxSpacing: 4,
+            containerPadding: 0,
+          });
+          highlightsGrid.style.height = `${layout.containerHeight}px`;
+          [...highlightsGrid.children].forEach((button, i) => {
+            const box = layout.boxes[i];
+            button.style.left = `${box.left}px`;
+            button.style.top = `${box.top}px`;
+            button.style.width = `${box.width}px`;
+            button.style.height = `${box.height}px`;
+          });
+        };
+
+        try {
+          frameInput.checked = localStorage.getItem('trip-highlights-full-frame') === '1';
+        } catch { /* private mode */ }
+        frameInput.addEventListener('change', () => {
+          try {
+            localStorage.setItem('trip-highlights-full-frame', frameInput.checked ? '1' : '0');
+          } catch { /* private mode */ }
+          layoutHighlights();
+        });
+        highlightsGrid.querySelectorAll('img').forEach(img => {
+          if (img.complete && img.naturalWidth) return;
+          img.addEventListener('load', () => {
+            if (frameInput.checked) layoutHighlights();
+          });
+        });
+        if (typeof ResizeObserver === 'function') {
+          new ResizeObserver(() => {
+            if (frameInput.checked) layoutHighlights();
+          }).observe(highlightsGrid);
+        }
+        layoutHighlights();
+
         const linked = new URLSearchParams(window.location.search).get('photo');
         if (linked) {
           const target = decodeURIComponent(linked).toLowerCase();
@@ -557,7 +626,7 @@
         if (showStrip) {
           const bandHeading = document.createElement('h2');
           bandHeading.className = 'group-chapters-heading';
-          bandHeading.textContent = 'Places';
+          bandHeading.textContent = 'View all photos from each city';
           sectionsRoot.appendChild(bandHeading);
         }
 

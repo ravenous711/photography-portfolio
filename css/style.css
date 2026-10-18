@@ -2696,11 +2696,13 @@ body.group-catalog .group-catalog-header .page-title {
 
 body.group-catalog .album-sibling-nav {
   margin-top: 1.15rem;
+  gap: 0.6rem 1.35rem;
 }
 
 body.group-catalog .album-sibling-link {
   border: none;
-  padding: 0.2rem 0;
+  padding: 0.3rem 0;
+  font-size: clamp(0.78rem, 1.2vw, 0.9rem);
   letter-spacing: 0.14em;
   color: rgba(243, 240, 233, 0.5);
 }
@@ -2714,7 +2716,7 @@ body.group-catalog .album-sibling-link.is-active {
   background: transparent;
   border: none;
   color: #f3f0e9;
-  box-shadow: inset 0 -1px 0 rgba(243, 240, 233, 0.55);
+  box-shadow: inset 0 -1px 0 var(--color-gold);
 }
 
 
@@ -2930,6 +2932,12 @@ body.group-catalog .group-chapters-heading {
   border-top: 1px solid rgba(243,240,233,0.14);
 }
 
+body.group-catalog .group-highlights-heading {
+  margin: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
 body.group-catalog .group-sub-section-title {
   font-family: var(--font-serif);
   font-size: clamp(1.25rem, 2.5vw, 1.75rem);
@@ -2942,22 +2950,44 @@ body.group-catalog .group-sub-section-title {
 }
 
 body.group-catalog .group-sub-album-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(0.7rem, 1.4vw, 1rem);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.5rem);
 }
 
 body.group-catalog .group-sub-album-grid .album-card {
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 2.8 / 1;
   width: 100%;
   height: auto;
 }
 
 body.group-catalog .group-sub-album-grid .album-card-overlay {
-  padding: 0.75rem 0.9rem;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 8%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.28) 40%,
+    rgba(0, 0, 0, 0.28) 60%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
 }
 
 body.group-catalog .group-sub-album-grid .album-card-title {
-  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  font-family: var(--font-sans);
+  font-size: clamp(1.15rem, 2.8vw, 2rem);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  margin: 0;
+}
+
+body.group-catalog .group-sub-album-grid .album-card-dateline {
+  margin: 0 0 0.7rem;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 body.group-catalog .group-film-rolls {
@@ -3013,11 +3043,6 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
   color: #f3f0e9;
 }
 
-@media (max-width: 900px) {
-  body.group-catalog .group-sub-album-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 
 @media (max-width: 640px) {
   body.gallery-catalog .page-header--catalog,
@@ -3046,11 +3071,6 @@ body.group-catalog .group-film-roll-card:hover .group-film-roll-name {
   /* Leave a sliver of the next frame showing so the strip reads as swipeable. */
   .strip-item {
     max-width: 86%;
-  }
-
-  body.group-catalog .group-sub-album-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem;
   }
 
   body.group-catalog .group-sub-album-grid .album-card {
@@ -3101,9 +3121,14 @@ body.album-dark-quiet .album-page-subtitle {
   color: rgba(243,240,233,0.45);
 }
 
+body.album-dark-quiet .album-sibling-nav {
+  gap: 0.6rem 1.35rem;
+}
+
 body.album-dark-quiet .album-sibling-link {
   border: none;
-  padding: 0.2rem 0;
+  padding: 0.3rem 0;
+  font-size: clamp(0.78rem, 1.2vw, 0.9rem);
   letter-spacing: 0.14em;
   color: rgba(243,240,233,0.5);
 }
@@ -3117,7 +3142,7 @@ body.album-dark-quiet .album-sibling-link.is-active {
   background: transparent;
   border: none;
   color: #f3f0e9;
-  box-shadow: inset 0 -1px 0 rgba(243,240,233,0.55);
+  box-shadow: inset 0 -1px 0 var(--color-gold);
 }
 
 body.album-dark-quiet .album-section-nav-btn {
@@ -3288,6 +3313,53 @@ footer p + p {
   gap: 0.7rem;
   width: min(100% - 3rem, 1100px);
   margin: 0 auto;
+}
+
+body.group-catalog .group-highlights .favorites-grid {
+  width: 100%;
+  margin: 0;
+  gap: 4px;
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-square {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-square .favorites-frame {
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-square .favorites-frame:nth-child(5n + 1) {
+  grid-column: auto;
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-square .favorites-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-full-frame {
+  display: block;
+  position: relative;
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-full-frame .favorites-frame {
+  position: absolute;
+  overflow: hidden;
+}
+
+body.group-catalog .group-highlights .favorites-grid.is-full-frame .favorites-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 900px) {
+  body.group-catalog .group-highlights .favorites-grid.is-square {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 .favorites-frame {
