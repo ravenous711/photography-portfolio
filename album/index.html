@@ -1746,7 +1746,9 @@
 
     /**
      * Centre a photo in the grid and ring it briefly — used when arriving from
-     * a carousel and when leaving the lightbox for the grid.
+     * a carousel (?photo=&grid=1) and from the lightbox "show in grid" control.
+     * Dismissing the lightbox does not come through here; it puts the page back
+     * where it was when the photo opened.
      * Thumbnails decode after render and the justified rows reflow each time,
      * so a single scroll would land short; keep re-centring until the layout
      * settles or the visitor scrolls for themselves.
@@ -2584,14 +2586,15 @@
 
     function closeLightbox() {
       lightboxNavGeneration += 1;
-      const index = currentIndex;
-      const targetY = getPhotoScrollTarget(index);
-
+      // Dismissal returns to the position captured in lockPageScroll. Centering
+      // the current thumbnail is only for "show in grid" and ?grid=1 deep links.
+      // Set the restore flag first so the sticky toolbar doesn't compensate
+      // while the overlay is coming down.
+      restoringFromLightbox = true;
       lightbox.classList.remove('open');
       hideLightboxChromeNow();
       resetZoom();
-      restoringFromLightbox = true;
-      unlockPageScroll(targetY != null ? targetY : scrollLockY);
+      unlockPageScroll();
       syncLightboxPhotoUrl(-1);
       if (albumPageTitle) document.title = albumPageTitle;
       lightboxLayers.forEach(layer => {
