@@ -143,50 +143,72 @@ GRID_DIR="$(grid_dir_for_prefix "$R2_PREFIX")"
 VIEW_DIR="$(view_dir_for_prefix "$R2_PREFIX")"
 DOWNLOAD_DIR="$(download_dir_for_prefix "$R2_PREFIX")"
 TOTAL_FAIL=0
+BG_PIDS=()
 
-run_originals_phase() {
-  upload_originals "$FOLDER" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+# Stop every background worker if the run is interrupted.
+trap 'trap - INT TERM; kill 0' INT TERM
+
+# Run a command in its own background subshell; wait_bg collects its failures.
+run_bg() {
+  ( "$@" ) &
+  BG_PIDS+=("$!")
 }
 
-run_derived_tiers() {
-  generate_grids "$FOLDER" "$GRID_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-  generate_views "$FOLDER" "$VIEW_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-  generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-  upload_grids "$GRID_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-  upload_views "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-  upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+wait_bg() {
+  local pid
+  for pid in "${BG_PIDS[@]}"; do
+    wait "$pid" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+  done
+  BG_PIDS=()
+}
+
+tier_dir_empty() {
+  [[ ! -d "$1" ]] || [[ -z "$(ls -A "$1" 2>/dev/null || true)" ]]
+}
+
+generate_tiers() {
+  run_bg generate_grids "$FOLDER" "$GRID_DIR"
+  run_bg generate_views "$FOLDER" "$VIEW_DIR"
+  run_bg generate_downloads "$FOLDER" "$DOWNLOAD_DIR"
+  wait_bg
+}
+
+start_tier_uploads() {
+  run_bg upload_grids "$GRID_DIR" "$R2_PREFIX"
+  run_bg upload_views "$VIEW_DIR" "$R2_PREFIX"
+  run_bg upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX"
 }
 
 case "$PHASE" in
   all)
-    generate_grids "$FOLDER" "$GRID_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    generate_views "$FOLDER" "$VIEW_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    run_originals_phase
-    upload_grids "$GRID_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    upload_views "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    # Originals start immediately; derived tiers follow as soon as they are generated.
+    run_bg upload_originals "$FOLDER" "$R2_PREFIX"
+    ORIG_PIDS=("${BG_PIDS[@]}")
+    BG_PIDS=()
+    generate_tiers
+    start_tier_uploads
+    BG_PIDS+=("${ORIG_PIDS[@]}")
+    wait_bg
     ;;
   originals)
-    generate_grids "$FOLDER" "$GRID_DIR" || true
-    generate_views "$FOLDER" "$VIEW_DIR" || true
-    generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || true
-    run_originals_phase
+    run_bg upload_originals "$FOLDER" "$R2_PREFIX"
+    ORIG_PIDS=("${BG_PIDS[@]}")
+    BG_PIDS=()
+    # Local tiers are still generated so a later --grids-only run can reuse them.
+    SAVED_FAIL=$TOTAL_FAIL
+    generate_tiers
+    TOTAL_FAIL=$SAVED_FAIL
+    BG_PIDS+=("${ORIG_PIDS[@]}")
+    wait_bg
     ;;
   grids)
-    # --grids-only regenerates + uploads both derived tiers
-    if [[ ! -d "$GRID_DIR" ]] || [[ -z "$(ls -A "$GRID_DIR" 2>/dev/null || true)" ]]; then
-      generate_grids "$FOLDER" "$GRID_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    fi
-    if [[ ! -d "$VIEW_DIR" ]] || [[ -z "$(ls -A "$VIEW_DIR" 2>/dev/null || true)" ]]; then
-      generate_views "$FOLDER" "$VIEW_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    fi
-    if [[ ! -d "$DOWNLOAD_DIR" ]] || [[ -z "$(ls -A "$DOWNLOAD_DIR" 2>/dev/null || true)" ]]; then
-      generate_downloads "$FOLDER" "$DOWNLOAD_DIR" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    fi
-    upload_grids "$GRID_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    upload_views "$VIEW_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
-    upload_downloads "$DOWNLOAD_DIR" "$R2_PREFIX" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
+    # --grids-only regenerates (if needed) + uploads grid/, view/, and download/
+    tier_dir_empty "$GRID_DIR" && run_bg generate_grids "$FOLDER" "$GRID_DIR"
+    tier_dir_empty "$VIEW_DIR" && run_bg generate_views "$FOLDER" "$VIEW_DIR"
+    tier_dir_empty "$DOWNLOAD_DIR" && run_bg generate_downloads "$FOLDER" "$DOWNLOAD_DIR"
+    wait_bg
+    start_tier_uploads
+    wait_bg
     ;;
   *)
     echo "Error: unknown phase $PHASE" >&2
