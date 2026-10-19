@@ -437,92 +437,32 @@ upload_originals() {
 }
 
 upload_grids() {
-  local grid_dir="$1"
-  local r2_prefix="$2"
-  local fname fail=0 skipped=0
-  local grid_prefix="grid/$r2_prefix"
-  local total=${#FILES[@]} i=0 progress=""
-
-  upload_log "grids -> $R2_BUCKET/$grid_prefix/"
-  if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
-    r2_fetch_index "$grid_prefix/" || true
-  fi
-
-  for fname in "${FILES[@]}"; do
-    i=$((i + 1))
-    progress="$i/$total"
-    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${grid_prefix}/${fname}"; then
-      upload_status "[$progress] $fname  ok (exists)"
-      skipped=$((skipped + 1))
-      continue
-    fi
-    upload_with_retry "$R2_BUCKET/$grid_prefix/$fname" "$grid_dir/$fname" "$fname" "$progress" || fail=$((fail + 1))
-    if [[ "$GRID_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
-      sleep "$GRID_SLEEP"
-    fi
-  done
-
-  upload_log "grids done (uploaded $((${#FILES[@]} - skipped - fail)), skipped $skipped, failed $fail)"
-  return "$fail"
+  upload_tier grid "$1" "$2" "$GRID_SLEEP"
 }
 
 upload_views() {
-  local view_dir="$1"
-  local r2_prefix="$2"
-  local fname fail=0 skipped=0
-  local view_prefix="view/$r2_prefix"
-  local total=${#FILES[@]} i=0 progress=""
-
-  upload_log "views -> $R2_BUCKET/$view_prefix/"
-  if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
-    r2_fetch_index "$view_prefix/" || true
-  fi
-
-  for fname in "${FILES[@]}"; do
-    i=$((i + 1))
-    progress="$i/$total"
-    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${view_prefix}/${fname}"; then
-      upload_status "[$progress] $fname  ok (exists)"
-      skipped=$((skipped + 1))
-      continue
-    fi
-    upload_with_retry "$R2_BUCKET/$view_prefix/$fname" "$view_dir/$fname" "$fname" "$progress" || fail=$((fail + 1))
-    if [[ "$VIEW_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
-      sleep "$VIEW_SLEEP"
-    fi
-  done
-
-  upload_log "views done (uploaded $((${#FILES[@]} - skipped - fail)), skipped $skipped, failed $fail)"
-  return "$fail"
+  upload_tier view "$1" "$2" "$VIEW_SLEEP"
 }
 
 upload_downloads() {
-  local download_dir="$1"
-  local r2_prefix="$2"
-  local fname fail=0 skipped=0
-  local download_prefix="download/$r2_prefix"
-  local total=${#FILES[@]} i=0 progress=""
+  upload_tier download "$1" "$2" "$DOWNLOAD_SLEEP"
+}
 
-  upload_log "downloads -> $R2_BUCKET/$download_prefix/"
-  if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
-    r2_fetch_index "$download_prefix/" || true
-  fi
+# Upload one derived tier (grid / view / download) with TIER_CONCURRENCY workers.
+upload_tier() {
+  local kind="$1"
+  local src_dir="$2"
+  local r2_prefix="$3"
+  local pause="$4"
+  local key_prefix="$kind/$r2_prefix"
+  local fail=0
 
-  for fname in "${FILES[@]}"; do
-    i=$((i + 1))
-    progress="$i/$total"
-    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${download_prefix}/${fname}"; then
-      upload_status "[$progress] $fname  ok (exists)"
-      skipped=$((skipped + 1))
-      continue
-    fi
-    upload_with_retry "$R2_BUCKET/$download_prefix/$fname" "$download_dir/$fname" "$fname" "$progress" || fail=$((fail + 1))
-    if [[ "$DOWNLOAD_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
-      sleep "$DOWNLOAD_SLEEP"
-    fi
-  done
+  upload_log "$kind -> $R2_BUCKET/$key_prefix/ ($TIER_CONCURRENCY concurrent)"
+  queue_missing "$key_prefix"
+  [[ "$QUEUE_SKIPPED" -gt 0 ]] && upload_status "$kind  $QUEUE_SKIPPED already in R2"
+  run_upload_pool "$TIER_CONCURRENCY" "$src_dir" "$key_prefix" "$kind" "$pause" || fail=$?
 
-  upload_log "downloads done (uploaded $((${#FILES[@]} - skipped - fail)), skipped $skipped, failed $fail)"
+  upload_log "$kind done (uploaded $((${#QUEUE[@]} - fail)), skipped $QUEUE_SKIPPED, failed $fail)"
   return "$fail"
 }
 
