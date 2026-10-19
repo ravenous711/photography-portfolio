@@ -177,7 +177,10 @@ r2_public_exists() {
 r2_object_exists() {
   local key="$1"
   local fname="${key##*/}"
-  r2_has_object "$fname" || r2_public_exists "$key"
+  r2_has_object "$fname" && return 0
+  # The public URL only serves portfolio-images; a private key never resolves there.
+  [[ "$R2_BUCKET" == "portfolio-images-private" ]] && return 1
+  r2_public_exists "$key"
 }
 
 r2_list_objects() {

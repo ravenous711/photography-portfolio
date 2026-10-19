@@ -83,6 +83,7 @@ while [[ $# -gt 0 ]]; do
     --max-frame)   MAX_FRAME="$2"; shift 2 ;;
     --frame-prefix) FRAME_PREFIX="$2"; shift 2 ;;
     --file-list)   FILE_LIST="$2"; shift 2 ;;
+    --private)     R2_BUCKET="portfolio-images-private"; shift ;;
     --fast)        FAST=1; ORIG_SLEEP=0; GRID_SLEEP=0; VIEW_SLEEP=0; DOWNLOAD_SLEEP=0; shift ;;
     --sleep-orig)  ORIG_SLEEP="$2"; shift 2 ;;
     --sleep-grid)  GRID_SLEEP="$2"; shift 2 ;;
@@ -127,7 +128,7 @@ if ((${#FILES[@]} == 0)); then
   exit 1
 fi
 
-upload_status "Upload $R2_PREFIX — ${#FILES[@]} photos (sleep orig=${ORIG_SLEEP}s grid=${GRID_SLEEP}s view=${VIEW_SLEEP}s download=${DOWNLOAD_SLEEP}s)"
+upload_status "Upload $R2_BUCKET/$R2_PREFIX — ${#FILES[@]} photos (sleep orig=${ORIG_SLEEP}s grid=${GRID_SLEEP}s view=${VIEW_SLEEP}s download=${DOWNLOAD_SLEEP}s)"
 
 GRID_DIR="$(grid_dir_for_prefix "$R2_PREFIX")"
 VIEW_DIR="$(view_dir_for_prefix "$R2_PREFIX")"
