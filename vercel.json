@@ -39,29 +39,34 @@
     { "source": "/photos/couples/", "destination": "/photos/engagements/", "permanent": false },
     { "source": "/photos/couples", "destination": "/photos/engagements/", "permanent": false }
   ],
+  "functions": {
+    "api/gallery-shell.js": {
+      "includeFiles": "{album/index.html,group/index.html,js/albums/*.js}"
+    }
+  },
   "rewrites": [
     { "source": "/family/", "destination": "/family/index.html" },
     { "source": "/familyalbums/", "destination": "/family/index.html" },
-    { "source": "/familyalbums/:year/:slug/", "destination": "/album/index.html" },
-    { "source": "/familyalbums/:year/:slug", "destination": "/album/index.html" },
+    { "source": "/familyalbums/:year/:slug/", "destination": "/api/gallery-shell?page=album&year=:year&slug=:slug" },
+    { "source": "/familyalbums/:year/:slug", "destination": "/api/gallery-shell?page=album&year=:year&slug=:slug" },
     { "source": "/photos/:category/", "destination": "/portfolio/index.html" },
     { "source": "/photos/:category", "destination": "/portfolio/index.html" },
     { "source": "/personal-work/", "destination": "/personal-work/index.html" },
     { "source": "/professional-work/", "destination": "/professional-work/index.html" },
     { "source": "/unlock/", "destination": "/unlock/index.html" },
-    { "source": "/gallery/:id/cities/", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/cities", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/places/", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/places", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/rolls/", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/rolls", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/albums/", "destination": "/group/index.html" },
-    { "source": "/gallery/:id/albums", "destination": "/group/index.html" },
-    { "source": "/gallery/:groupId/:slug/", "destination": "/album/index.html" },
-    { "source": "/gallery/:groupId/:slug", "destination": "/album/index.html" },
-    { "source": "/gallery/:id/", "destination": "/group/index.html" },
-    { "source": "/gallery/:id", "destination": "/group/index.html" },
-    { "source": "/album/:id/", "destination": "/album/index.html" },
-    { "source": "/album/:id", "destination": "/album/index.html" }
+    { "source": "/gallery/:id/cities/", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/cities", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/places/", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/places", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/rolls/", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/rolls", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/albums/", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id/albums", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:groupId/:slug/", "destination": "/api/gallery-shell?page=album&group=:groupId&slug=:slug" },
+    { "source": "/gallery/:groupId/:slug", "destination": "/api/gallery-shell?page=album&group=:groupId&slug=:slug" },
+    { "source": "/gallery/:id/", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/gallery/:id", "destination": "/api/gallery-shell?page=group&id=:id" },
+    { "source": "/album/:id/", "destination": "/api/gallery-shell?page=album&id=:id" },
+    { "source": "/album/:id", "destination": "/api/gallery-shell?page=album&id=:id" }
   ]
 }
