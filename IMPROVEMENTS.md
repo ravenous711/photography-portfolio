@@ -268,7 +268,7 @@ Jump here after picking an ID from Open tickets.
 ## Changelog
 
 - **Remington Homecoming + parallel `upload-album.sh`** — Oct 2026 (branch `album/remington-homecoming`, not on `main`).
-  11 photos in `portfolio-images-private/Remington-Homecoming/` (all four tiers), shown as a
+  11 photos in `portfolio-images-private/Brown-Family/Remington-Homecoming/` (all four tiers), shown as a
   wide title card on the private Brown Family group page. `upload-album.sh` now matches the album
   skill: `--private`, 5 originals workers + concurrent derived tiers running together, per-prefix
   verification, parallel retries. Group pages now load private covers through the Worker.

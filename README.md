@@ -651,7 +651,9 @@ templates in the [Album Types & Access Tiers](#album-types--access-tiers) sectio
    ```bash
    export PATH="/opt/homebrew/bin:$PATH"
    FOLDER="/path/to/exported/photos"
-   DEST="portfolio-images-private/Client-JohnDoe-2026"
+   # Key prefix must be the audience name: the Worker only serves a client:john-doe
+   # token keys under john-doe/ (case-insensitive), plus their grid/, view/, download/ copies.
+   DEST="portfolio-images-private/John-Doe/Session-2026"
 
    for f in "$FOLDER"/*.JPG; do
      [ -f "$f" ] || continue

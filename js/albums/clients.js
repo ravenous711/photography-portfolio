@@ -11,6 +11,8 @@ const ALBUMS_CLIENTS = [
   // Brown Family — one access code (audience client:brown-family) unlocks every
   // album in this group. The group must stay first: the unlock page and the
   // Private Access menu land on the first album matching the audience.
+  // R2 keys must sit under Brown-Family/: the Worker only serves a client:<name>
+  // token keys prefixed with <name>/ (plus grid/, view/, download/ variants).
   {
     id: 'brown-family',
     title: 'Brown Family',
@@ -21,7 +23,7 @@ const ALBUMS_CLIENTS = [
     includeHiddenSubAlbums: true,
     showFilmRolls: false,
     subAlbums: ['remington-homecoming'],
-    coverImage: `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-01.jpg`,
+    coverImage: `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-01.jpg`,
     coverPosition: '50% 15%',
   },
 
@@ -33,20 +35,20 @@ const ALBUMS_CLIENTS = [
     audience: 'client:brown-family',
     hidden: true,
     protected: false,
-    coverImage: `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-01.jpg`,
+    coverImage: `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-01.jpg`,
     coverPosition: '50% 15%',
     photos: [
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-01.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-02.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-03.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-04.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-05.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-06.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-07.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-08.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-09.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-10.jpg`,
-      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-11.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-01.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-02.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-03.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-04.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-05.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-06.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-07.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-08.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-09.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-10.jpg`,
+      `${R2_BASE_URL}/Brown-Family/Remington-Homecoming/Remington_homecoming-11.jpg`,
     ],
   },
 

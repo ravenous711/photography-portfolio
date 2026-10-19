@@ -29,6 +29,7 @@ For cheap R2 verification, resume/missing-key uploads, and stalled-upload triage
 | `client:<name>` | Client access code | private | private (`grid/...`) | album URL only |
 
 **Always set `hidden: true` for family and client albums.**
+Client R2 prefixes must start with the audience name (`client:brown-family` → `Brown-Family/<Album>/`, case-insensitive) — the Worker refuses any other key for that token.
 Family albums use `audience: 'family'` — password hash is already in `PASSWORD_TIERS`.
 City/travel albums use `audience: 'public'`. (Legacy `friends` tier removed Aug 2026.)
 
