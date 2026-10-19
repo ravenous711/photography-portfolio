@@ -257,23 +257,19 @@
       <div class="dl-size-picker-options" role="group" aria-label="Download size">
         <button type="button" class="dl-size-opt" data-size="grid">
           <span class="dl-size-opt-name">Low</span>
-          <span class="dl-size-opt-desc">Web · ~95 KB each</span>
-          <span class="dl-size-opt-est" id="dl-est-grid"></span>
+          <span class="dl-size-opt-desc">Web<span class="dl-size-opt-cap">up to 900px</span></span>
         </button>
         <button type="button" class="dl-size-opt" data-size="view" id="dl-size-opt-med">
           <span class="dl-size-opt-name">Med</span>
-          <span class="dl-size-opt-desc">Lightbox · ~1.5 MB each</span>
-          <span class="dl-size-opt-est" id="dl-est-view"></span>
+          <span class="dl-size-opt-desc">Lightbox<span class="dl-size-opt-cap">up to 2048px</span></span>
         </button>
         <button type="button" class="dl-size-opt" data-size="download">
           <span class="dl-size-opt-name">Large</span>
-          <span class="dl-size-opt-desc">High quality · ~5 MB each</span>
-          <span class="dl-size-opt-est" id="dl-est-download"></span>
+          <span class="dl-size-opt-desc">High quality<span class="dl-size-opt-cap">up to 4000px</span></span>
         </button>
         <button type="button" class="dl-size-opt" data-size="original">
           <span class="dl-size-opt-name">Full</span>
-          <span class="dl-size-opt-desc">Original · ~15–40 MB each</span>
-          <span class="dl-size-opt-est" id="dl-est-original"></span>
+          <span class="dl-size-opt-desc">Original</span>
         </button>
       </div>
       <div class="liked-download-confirm-actions">
@@ -306,16 +302,16 @@
         </button>
         <div id="dl-size-dropdown-lb" class="dl-size-dropdown dl-size-dropdown--lb" hidden role="menu">
           <button class="dl-size-option" data-size="grid" role="menuitem">
-            <span class="dl-size-name">Low</span><span class="dl-size-hint">~95 KB</span>
+            <span class="dl-size-name">Low</span><span class="dl-size-hint">up to 900px</span>
           </button>
           <button class="dl-size-option" id="dl-size-opt-med-lb" data-size="view" role="menuitem">
-            <span class="dl-size-name">Med</span><span class="dl-size-hint">~1.5 MB</span>
+            <span class="dl-size-name">Med</span><span class="dl-size-hint">up to 2048px</span>
           </button>
           <button class="dl-size-option" data-size="download" role="menuitem">
-            <span class="dl-size-name">Large</span><span class="dl-size-hint">~5 MB</span>
+            <span class="dl-size-name">Large</span><span class="dl-size-hint">up to 4000px</span>
           </button>
           <button class="dl-size-option" data-size="original" role="menuitem">
-            <span class="dl-size-name">Full</span><span class="dl-size-hint">~original</span>
+            <span class="dl-size-name">Full</span><span class="dl-size-hint">original</span>
           </button>
         </div>
       </div>
@@ -434,7 +430,6 @@
     // Current download size preference — initialised from localStorage by initDlSizePicker
     let _dlSize = 'original';
     let _dlSizeCallback = null;
-    const DL_SIZE_AVG_MB = { grid: 0.095, view: 1.5, download: 5, original: 20 };
     // Tracks album prefixes whose view/ tier is not yet backfilled (404 probe result)
     const _viewMissingPrefixes = new Set();
 
@@ -964,12 +959,6 @@
       return bare;
     }
 
-    function _formatDlSize(mb) {
-      if (mb < 1) return `~${Math.round(mb * 1000)} KB`;
-      if (mb >= 1000) return `~${(mb / 1000).toFixed(1)} GB`;
-      return `~${mb >= 10 ? Math.round(mb) : mb.toFixed(1)} MB`;
-    }
-
     function showDownloadSizePicker(photos, callback) {
       const list = (photos || []).filter(Boolean);
       const count = list.length;
@@ -983,15 +972,6 @@
       if (medOpt) medOpt.hidden = Boolean(prefix && _viewMissingPrefixes.has(prefix));
 
       subtitle.textContent = count === 1 ? '1 photo' : `${count} photos`;
-      for (const [size, avgMB] of Object.entries(DL_SIZE_AVG_MB)) {
-        const est = document.getElementById(`dl-est-${size}`);
-        if (est) {
-          const total = avgMB * count;
-          est.textContent = count > 1
-            ? `≈ ${_formatDlSize(total)} total`
-            : _formatDlSize(avgMB);
-        }
-      }
       for (const opt of modal.querySelectorAll('.dl-size-opt')) {
         if (opt.hidden) continue;
         opt.classList.toggle('is-selected', opt.dataset.size === saved);
@@ -3512,9 +3492,9 @@
     }
     .dl-size-opt {
       display: grid;
-      grid-template-columns: 3.5rem 1fr auto;
+      grid-template-columns: 4.5rem 1fr;
       gap: 0.5rem 0.75rem;
-      align-items: baseline;
+      align-items: center;
       width: 100%;
       padding: 0.75rem 0.9rem;
       border: 1px solid var(--color-border);
@@ -3531,8 +3511,14 @@
     }
     .dl-size-opt[hidden] { display: none; }
     .dl-size-opt-name { font-weight: 600; font-size: 0.9rem; }
-    .dl-size-opt-desc { font-size: 0.78rem; color: var(--color-muted, #888); }
-    .dl-size-opt-est { font-size: 0.78rem; color: var(--color-muted, #888); white-space: nowrap; }
+    .dl-size-opt-desc {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      font-size: 0.78rem;
+      color: var(--color-muted, #888);
+    }
+    .dl-size-opt-cap { color: inherit; }
 
     /* ── Select button active state ── */
     #select-btn.active {
@@ -3567,7 +3553,7 @@
       position: absolute;
       top: calc(100% + 6px);
       right: 0;
-      min-width: 164px;
+      min-width: 210px;
       background: #fff;
       border-radius: 6px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08);
