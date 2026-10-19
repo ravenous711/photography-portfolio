@@ -228,11 +228,30 @@ function initMobileMenu() {
   });
 }
 
+// A /gallery/ address is a client gallery when the group or the nested album is.
+function galleryPathIsClient() {
+  if (typeof ALBUMS === 'undefined') return false;
+  const isClient = (album) => String(album?.audience || '').startsWith('client:');
+  if (typeof Routes !== 'undefined' && Routes.parseGalleryGroupPath) {
+    const info = Routes.parseGalleryGroupPath();
+    if (info?.groupId && isClient(ALBUMS.find(a => a.id === info.groupId))) return true;
+  }
+  if (typeof Routes !== 'undefined' && Routes.resolveAlbumFromPath) {
+    if (isClient(Routes.resolveAlbumFromPath())) return true;
+  }
+  return false;
+}
+
 // ── Set active nav link based on current page ──
 function setActiveNavLink() {
   const path = window.location.pathname.replace(/\/?$/, '/') || '/';
   let key = '';
-  if (path.startsWith('/personal-work/') || path.startsWith('/gallery/') || path.startsWith('/archive/')) key = 'gallery';
+  if (path.startsWith('/personal-work/') || path.startsWith('/archive/')) key = 'gallery';
+  else if (path.startsWith('/gallery/')) {
+    // Public trips live here too. A client gallery is private, so it belongs
+    // under Private Access rather than Personal.
+    key = galleryPathIsClient() ? 'unlock' : 'gallery';
+  }
   else if (
     path.startsWith('/professional-work/')
     || path.startsWith('/photos/events/')

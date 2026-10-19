@@ -468,6 +468,9 @@
       } else if (groupAudience === 'family' || groupAudience.startsWith('family:')) {
         backLink.href = '/family/';
         document.getElementById('back-link-label').textContent = 'Family Gallery';
+      } else if (groupAudience.startsWith('client:')) {
+        // A private client gallery is not part of Personal or People.
+        backLink.hidden = true;
       } else {
         backLink.href = Routes.personalWork;
         document.getElementById('back-link-label').textContent = 'Personal';
