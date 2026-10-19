@@ -577,6 +577,8 @@
       }
 
       const filmFavoritesOnly = showStrip && group.id === 'misc-film-rolls-2026';
+      // Private covers live in the private bucket, so the public URL 404s; load them via the Worker.
+      const coverToken = isPrivateAudience(groupAudience) ? getPrivateToken(groupAudience) : null;
 
       function appendAlbumCard(grid, album) {
         const card = document.createElement('a');
@@ -595,7 +597,18 @@
           </div>
         `;
         const cardImg = card.querySelector('img');
-        cardImg.addEventListener('error', () => { cardImg.src = albumCoverUrl(album); }, { once: true });
+        if (coverToken) {
+          cardImg.removeAttribute('src');
+          coverToken.then(token => {
+            if (!token) return;
+            cardImg.addEventListener('error', () => {
+              cardImg.src = toImageUrl(gridUrl(album.coverImage), token);
+            }, { once: true });
+            cardImg.src = toImageUrl(viewUrl(album.coverImage), token);
+          });
+        } else {
+          cardImg.addEventListener('error', () => { cardImg.src = albumCoverUrl(album); }, { once: true });
+        }
         grid.appendChild(card);
       }
 
