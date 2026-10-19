@@ -61,6 +61,7 @@ done, move it out of Open, add a Changelog line.
 
 | State | Album | Notes |
 |-------|-------|-------|
+| Done recently | **Remington Homecoming** | Private R2; first album in the hidden **Brown Family** client group (`/gallery/brown-family/`). One D1 code for `client:brown-family` covers future albums — add them to the group's `subAlbums` |
 | Queued | **London 2025** | Empty hidden shell — **ALBUM-1** |
 | In progress | **Morgan and Alden** | Unlisted public group (digital + film); public R2 |
 | Done recently | Moksha Yoga (+ renumber) | Private R2 + D1 access code |
@@ -265,6 +266,12 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **Remington Homecoming + parallel `upload-album.sh`** — Oct 2026 (branch `album/remington-homecoming`, not on `main`).
+  11 photos in `portfolio-images-private/Remington-Homecoming/` (all four tiers), shown as a
+  wide title card on the private Brown Family group page. `upload-album.sh` now matches the album
+  skill: `--private`, 5 originals workers + concurrent derived tiers running together, per-prefix
+  verification, parallel retries. Group pages now load private covers through the Worker.
 
 - **Personal and professional split** — Oct 2026 (branch `feat/curated-portfolio`, not on `main`).
   The homepage is the Yosemite photograph, then Personal and People.

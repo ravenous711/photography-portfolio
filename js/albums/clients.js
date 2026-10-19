@@ -8,6 +8,48 @@
 
 // eslint-disable-next-line no-unused-vars
 const ALBUMS_CLIENTS = [
+  // Brown Family — one access code (audience client:brown-family) unlocks every
+  // album in this group. The group must stay first: the unlock page and the
+  // Private Access menu land on the first album matching the audience.
+  {
+    id: 'brown-family',
+    title: 'Brown Family',
+    type: 'group',
+    audience: 'client:brown-family',
+    hidden: true,
+    protected: false,
+    includeHiddenSubAlbums: true,
+    showFilmRolls: false,
+    subAlbums: ['remington-homecoming'],
+    coverImage: `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-01.jpg`,
+    coverPosition: '50% 15%',
+  },
+
+  {
+    id: 'remington-homecoming',
+    slug: 'remington-homecoming',
+    parentId: 'brown-family',
+    title: 'Remington Homecoming',
+    audience: 'client:brown-family',
+    hidden: true,
+    protected: false,
+    coverImage: `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-01.jpg`,
+    coverPosition: '50% 15%',
+    photos: [
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-01.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-02.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-03.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-04.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-05.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-06.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-07.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-08.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-09.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-10.jpg`,
+      `${R2_BASE_URL}/Remington-Homecoming/Remington_homecoming-11.jpg`,
+    ],
+  },
+
   {
     id: 'moksha-yoga',
     title: 'Moksha Yoga',
