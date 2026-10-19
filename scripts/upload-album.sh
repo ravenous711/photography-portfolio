@@ -156,7 +156,8 @@ run_bg() {
 
 wait_bg() {
   local pid
-  for pid in "${BG_PIDS[@]}"; do
+  # bash 3.2 treats an empty "${arr[@]}" as unbound under set -u.
+  for pid in ${BG_PIDS[@]+"${BG_PIDS[@]}"}; do
     wait "$pid" || TOTAL_FAIL=$((TOTAL_FAIL + $?))
   done
   BG_PIDS=()

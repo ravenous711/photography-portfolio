@@ -486,6 +486,11 @@ verify_uploads() {
 
     local missing_list=()
     local fname
+    if ! r2_fetch_index "$key_prefix"; then
+      upload_status "verify $kind: could not list ${R2_BUCKET}/${key_prefix}"
+      missing=$((missing + ${#FILES[@]}))
+      continue
+    fi
     for fname in "${FILES[@]}"; do
       if r2_object_exists "${key_prefix}${fname}"; then
         continue
@@ -520,7 +525,20 @@ verify_uploads() {
     fi
   done
 
+  [[ "$missing" -gt 255 ]] && missing=255
   return "$missing"
+}
+
+# Re-upload one missing list across RETRY_WORKERS workers.
+retry_missing_list() {
+  local list="$1" src_dir="$2" dest_prefix="$3" label="$4"
+  local fname
+  QUEUE=()
+  while IFS= read -r fname; do
+    [[ -n "$fname" ]] && QUEUE+=("$fname")
+  done < "$list"
+  upload_log "retrying ${#QUEUE[@]} missing $label..."
+  run_upload_pool "$RETRY_WORKERS" "$src_dir" "$dest_prefix" "retry $label" 2
 }
 
 retry_missing() {
@@ -529,46 +547,29 @@ retry_missing() {
   local view_dir="$3"
   local download_dir="$4"
   local r2_prefix="$5"
-  local orig_missing="/tmp/missing_orig_${r2_prefix//\//_}.txt"
-  local grid_missing="/tmp/missing_grid_${r2_prefix//\//_}.txt"
-  local view_missing="/tmp/missing_view_${r2_prefix//\//_}.txt"
-  local download_missing="/tmp/missing_download_${r2_prefix//\//_}.txt"
-  local fname fail=0
+  local tag="${r2_prefix//\//_}"
+  local pids=() pid fail=0
 
-  SKIP_EXISTING=0
-
-  if [[ -f "$orig_missing" ]]; then
-    upload_log "retrying missing originals..."
-    while IFS= read -r fname; do
-      [[ -n "$fname" ]] || continue
-      upload_with_retry "$R2_BUCKET/$r2_prefix/$fname" "$folder/$fname" "$fname" || fail=$((fail + 1))
-    done < "$orig_missing"
+  if [[ -f "/tmp/missing_orig_${tag}.txt" ]]; then
+    ( retry_missing_list "/tmp/missing_orig_${tag}.txt" "$folder" "$r2_prefix" orig ) &
+    pids+=("$!")
+  fi
+  if [[ -f "/tmp/missing_grid_${tag}.txt" ]]; then
+    ( retry_missing_list "/tmp/missing_grid_${tag}.txt" "$grid_dir" "grid/$r2_prefix" grid ) &
+    pids+=("$!")
+  fi
+  if [[ -f "/tmp/missing_view_${tag}.txt" ]]; then
+    ( retry_missing_list "/tmp/missing_view_${tag}.txt" "$view_dir" "view/$r2_prefix" view ) &
+    pids+=("$!")
+  fi
+  if [[ -f "/tmp/missing_download_${tag}.txt" ]]; then
+    ( retry_missing_list "/tmp/missing_download_${tag}.txt" "$download_dir" "download/$r2_prefix" download ) &
+    pids+=("$!")
   fi
 
-  if [[ -f "$grid_missing" ]]; then
-    upload_log "retrying missing grids..."
-    while IFS= read -r fname; do
-      [[ -n "$fname" ]] || continue
-      upload_with_retry "$R2_BUCKET/grid/$r2_prefix/$fname" "$grid_dir/$fname" "$fname" || fail=$((fail + 1))
-    done < "$grid_missing"
-  fi
-
-  if [[ -f "$view_missing" ]]; then
-    upload_log "retrying missing views..."
-    while IFS= read -r fname; do
-      [[ -n "$fname" ]] || continue
-      upload_with_retry "$R2_BUCKET/view/$r2_prefix/$fname" "$view_dir/$fname" "$fname" || fail=$((fail + 1))
-    done < "$view_missing"
-  fi
-
-  if [[ -f "$download_missing" ]]; then
-    upload_log "retrying missing downloads..."
-    while IFS= read -r fname; do
-      [[ -n "$fname" ]] || continue
-      upload_with_retry "$R2_BUCKET/download/$r2_prefix/$fname" "$download_dir/$fname" "$fname" || fail=$((fail + 1))
-    done < "$download_missing"
-  fi
-
-  SKIP_EXISTING=1
+  for pid in ${pids[@]+"${pids[@]}"}; do
+    wait "$pid" || fail=$((fail + $?))
+  done
+  [[ "$fail" -gt 255 ]] && fail=255
   return "$fail"
 }
