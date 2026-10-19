@@ -4,10 +4,14 @@
 
 : "${R2_BUCKET:=portfolio-images}"
 : "${CF_ACCOUNT_ID:=723c27febd4a099c7884fdf00de2329f}"
-: "${ORIG_SLEEP:=15}"
-: "${GRID_SLEEP:=10}"
-: "${VIEW_SLEEP:=10}"
-: "${DOWNLOAD_SLEEP:=10}"
+: "${ORIG_SLEEP:=2}"
+: "${GRID_SLEEP:=0}"
+: "${VIEW_SLEEP:=0}"
+: "${DOWNLOAD_SLEEP:=0}"
+# About 6 concurrent large PUTs per R2 prefix is where retries start to spike.
+: "${ORIG_WORKERS:=5}"
+: "${TIER_CONCURRENCY:=5}"
+: "${RETRY_WORKERS:=4}"
 : "${DRY_RUN:=0}"
 : "${LOG_FILE:=}"
 : "${VERBOSE:=0}"

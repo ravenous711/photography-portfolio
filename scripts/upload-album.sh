@@ -84,6 +84,8 @@ while [[ $# -gt 0 ]]; do
     --frame-prefix) FRAME_PREFIX="$2"; shift 2 ;;
     --file-list)   FILE_LIST="$2"; shift 2 ;;
     --private)     R2_BUCKET="portfolio-images-private"; shift ;;
+    --workers)     ORIG_WORKERS="$2"; shift 2 ;;
+    --concurrency) TIER_CONCURRENCY="$2"; shift 2 ;;
     --fast)        FAST=1; ORIG_SLEEP=0; GRID_SLEEP=0; VIEW_SLEEP=0; DOWNLOAD_SLEEP=0; shift ;;
     --sleep-orig)  ORIG_SLEEP="$2"; shift 2 ;;
     --sleep-grid)  GRID_SLEEP="$2"; shift 2 ;;
@@ -111,6 +113,13 @@ if [[ -z "$FOLDER" || -z "$R2_PREFIX" ]]; then
   usage 1
 fi
 
+for n in "$ORIG_WORKERS" "$TIER_CONCURRENCY"; do
+  if ! [[ "$n" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Error: --workers and --concurrency must be positive integers." >&2
+    exit 1
+  fi
+done
+
 # Trim trailing slashes from prefix
 R2_PREFIX="${R2_PREFIX#/}"
 R2_PREFIX="${R2_PREFIX%/}"
@@ -128,7 +137,7 @@ if ((${#FILES[@]} == 0)); then
   exit 1
 fi
 
-upload_status "Upload $R2_BUCKET/$R2_PREFIX — ${#FILES[@]} photos (sleep orig=${ORIG_SLEEP}s grid=${GRID_SLEEP}s view=${VIEW_SLEEP}s download=${DOWNLOAD_SLEEP}s)"
+upload_status "Upload $R2_BUCKET/$R2_PREFIX — ${#FILES[@]} photos (orig workers=${ORIG_WORKERS} sleep=${ORIG_SLEEP}s, tier concurrency=${TIER_CONCURRENCY})"
 
 GRID_DIR="$(grid_dir_for_prefix "$R2_PREFIX")"
 VIEW_DIR="$(view_dir_for_prefix "$R2_PREFIX")"
