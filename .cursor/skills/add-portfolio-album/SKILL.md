@@ -260,7 +260,7 @@ Upload destination depends on audience:
 - **Public** → `portfolio-images/grid/`, `view/`, and `download/`
 - **Family / client** → the same prefixes in `portfolio-images-private` (served via Worker token)
 
-Generate all tiers locally before uploading (or use `./scripts/upload-album.sh`, which handles all four objects):
+Generate all tiers locally before uploading (or use `./scripts/upload-album.sh`, which handles all four objects with the parallel layout above: 5 originals workers with a 2s sleep, 5 concurrent per derived tier, all running together, skip-existing, then verify + parallel retry):
 
 ```bash
 export PATH="/opt/homebrew/bin:$PATH"
@@ -285,10 +285,12 @@ done
 echo "Done. grid=$(ls "$GRID_DIR" | wc -l | tr -d ' ') view=$(ls "$VIEW_DIR" | wc -l | tr -d ' ') download=$(ls "$DOWNLOAD_DIR" | wc -l | tr -d ' ')"
 ```
 
-Preferred one-liner for public albums:
+Preferred one-liner for a single-folder album (detach with `nohup … &` for long runs):
 ```bash
-./scripts/upload-album.sh --folder "<local path>" --r2-prefix "<R2-folder-name>"
+./scripts/upload-album.sh --folder "<local path>" --r2-prefix "<R2-folder-name>"            # public
+./scripts/upload-album.sh --folder "<local path>" --r2-prefix "<R2-folder-name>" --private  # family / client
 ```
+Tune with `--workers N` (originals, 4–6) and `--concurrency N` (derived tiers, 5–10). Multi-folder albums: run one invocation per sub-folder prefix in parallel.
 
 If originals are already in R2 (backfill scenario), use `scripts/backfill-image-tiers.sh` instead:
 ```bash
