@@ -521,7 +521,9 @@ teaches the Cursor agent the full album workflow (two-phase upload, rate limits,
 generation, config update).
 
 It loads automatically when you open this project in Cursor — no copy step needed if you
-clone from GitHub. The agent also uses `scripts/upload-album.sh` for the retry helper.
+clone from GitHub. The agent uploads with `scripts/upload-album.sh`, which follows the skill's
+parallel layout (originals workers + derived tiers at the same time) and takes `--private` for
+family/client albums.
 
 To ask the agent: **"upload Rome"**, **"add London album"**, etc.
 

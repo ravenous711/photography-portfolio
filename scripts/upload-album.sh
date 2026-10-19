@@ -30,7 +30,13 @@
 #   # Explicit file list
 #   ./scripts/upload-album.sh --folder "..." --r2-prefix "..." --file-list /tmp/files.txt
 #
-#   # Faster uploads after a cooldown (no sleep between files)
+#   # Family / client album (private bucket, served via Worker tokens)
+#   ./scripts/upload-album.sh --folder "..." --r2-prefix "..." --private
+#
+#   # Tune parallelism (defaults: 5 originals workers, 5 concurrent per derived tier)
+#   ./scripts/upload-album.sh --folder "..." --r2-prefix "..." --workers 6 --concurrency 8
+#
+#   # No sleep between originals (after a cooldown)
 #   ./scripts/upload-album.sh --folder "..." --r2-prefix "..." --fast
 #
 #   # Regenerate + upload derived tiers only (originals already on R2)
@@ -39,13 +45,14 @@
 #   # Dry run
 #   ./scripts/upload-album.sh --folder "..." --r2-prefix "..." --dry-run
 #
-# Phases (default: all):
-#   1. Generate grids, views, and Large downloads locally
-#   2. Upload originals to portfolio-images/<prefix>/
-#   3. Upload grids to portfolio-images/grid/<prefix>/
-#   4. Upload views to portfolio-images/view/<prefix>/
-#   5. Upload Large downloads to portfolio-images/download/<prefix>/
-#   6. Verify manifest + auto-retry missing (unless --no-verify)
+# Bucket: portfolio-images, or portfolio-images-private with --private.
+#
+# Phases (default: all), matching the add-portfolio-album skill:
+#   1. Originals start right away: split across --workers workers, 2s sleep in each
+#   2. Meanwhile, grid/, view/, and download/ copies are generated locally
+#   3. The three derived tiers upload in parallel, --concurrency at a time each
+#   4. Keys already in R2 are skipped, so a rerun only sends what is missing
+#   5. Verify every prefix against R2 + retry missing across 4 workers (unless --no-verify)
 
 set -uo pipefail
 
@@ -70,7 +77,7 @@ FILE_LIST=""
 FRAME_PREFIX=""
 
 usage() {
-  sed -n '2,45p' "$0" | sed 's/^# \?//'
+  sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
