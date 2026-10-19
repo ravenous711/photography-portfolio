@@ -229,7 +229,7 @@ upload_with_retry() {
     if wrangler r2 object put "$dest" --file "$file" --remote >/dev/null 2>&1; then
       upload_status "${prefix}${label}  ok"
       # Update local index so later files in the same run see it
-      [[ -n "$R2_INDEX_FILE" ]] && echo "$label" >> "$R2_INDEX_FILE"
+      [[ -n "$R2_INDEX_FILE" ]] && echo "${dest##*/}" >> "$R2_INDEX_FILE"
       return 0
     fi
     if [[ "$attempt" -lt 4 ]]; then
@@ -367,32 +367,72 @@ generate_downloads() {
   return "$fail"
 }
 
+# Fill QUEUE with the FILES not yet under <key_prefix>/ in R2; QUEUE_SKIPPED counts the rest.
+queue_missing() {
+  local key_prefix="$1"
+  local fname
+  QUEUE=()
+  QUEUE_SKIPPED=0
+  R2_INDEX_FILE=""
+  if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
+    r2_fetch_index "$key_prefix/" || true
+  fi
+  for fname in "${FILES[@]}"; do
+    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${key_prefix}/${fname}"; then
+      QUEUE_SKIPPED=$((QUEUE_SKIPPED + 1))
+      continue
+    fi
+    QUEUE+=("$fname")
+  done
+}
+
+# Upload every QUEUE file from <src_dir> to <dest_prefix>/ with <slots> workers,
+# each taking every Nth file and pausing <pause>s between its uploads.
+# Run it inside its own subshell: the trailing `wait` waits for every child job.
+# Returns the failure count (capped at 255 by the shell).
+run_upload_pool() {
+  local slots="$1" src_dir="$2" dest_prefix="$3" label="$4" pause="$5"
+  local total=${#QUEUE[@]} w f sum=0 fail_dir
+
+  [[ "$total" -eq 0 ]] && return 0
+  [[ "$slots" -gt "$total" ]] && slots="$total"
+  fail_dir="$(mktemp -d "/tmp/r2-pool.XXXXXX")"
+
+  for ((w = 0; w < slots; w++)); do
+    (
+      fail=0
+      for ((i = w; i < total; i += slots)); do
+        fname="${QUEUE[$i]}"
+        upload_with_retry "$R2_BUCKET/$dest_prefix/$fname" "$src_dir/$fname" \
+          "$label $fname" "$((i + 1))/$total" || fail=$((fail + 1))
+        if [[ "$pause" -gt 0 && "$DRY_RUN" != "1" ]]; then
+          sleep "$pause"
+        fi
+      done
+      echo "$fail" > "$fail_dir/w$w"
+    ) &
+  done
+  wait
+
+  for f in "$fail_dir"/w*; do
+    sum=$((sum + $(cat "$f")))
+  done
+  rm -rf "$fail_dir"
+  [[ "$sum" -gt 255 ]] && sum=255
+  return "$sum"
+}
+
 upload_originals() {
   local folder="$1"
   local r2_prefix="$2"
-  local fname fail=0 skipped=0
-  local total=${#FILES[@]} i=0 progress=""
+  local fail=0
 
-  upload_log "originals -> $R2_BUCKET/$r2_prefix/"
-  if [[ "$SKIP_EXISTING" == "1" && "$DRY_RUN" != "1" ]]; then
-    r2_fetch_index "$r2_prefix/" || true
-  fi
+  upload_log "originals -> $R2_BUCKET/$r2_prefix/ ($ORIG_WORKERS workers)"
+  queue_missing "$r2_prefix"
+  [[ "$QUEUE_SKIPPED" -gt 0 ]] && upload_status "orig  $QUEUE_SKIPPED already in R2"
+  run_upload_pool "$ORIG_WORKERS" "$folder" "$r2_prefix" orig "$ORIG_SLEEP" || fail=$?
 
-  for fname in "${FILES[@]}"; do
-    i=$((i + 1))
-    progress="$i/$total"
-    if [[ "$SKIP_EXISTING" == "1" ]] && r2_object_exists "${r2_prefix}/${fname}"; then
-      upload_status "[$progress] $fname  ok (exists)"
-      skipped=$((skipped + 1))
-      continue
-    fi
-    upload_with_retry "$R2_BUCKET/$r2_prefix/$fname" "$folder/$fname" "$fname" "$progress" || fail=$((fail + 1))
-    if [[ "$ORIG_SLEEP" -gt 0 && "$DRY_RUN" != "1" ]]; then
-      sleep "$ORIG_SLEEP"
-    fi
-  done
-
-  upload_log "originals done (uploaded $((${#FILES[@]} - skipped - fail)), skipped $skipped, failed $fail)"
+  upload_log "originals done (uploaded $((${#QUEUE[@]} - fail)), skipped $QUEUE_SKIPPED, failed $fail)"
   return "$fail"
 }
 
