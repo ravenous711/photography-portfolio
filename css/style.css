@@ -1259,7 +1259,7 @@ body:has(.hero) #mobile-menu .mobile-menu-sheet {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem 0.5rem;
+  gap: 0.4rem 0.9375rem;
 }
 
 /* Outlined chips so the cities clearly read as tappable; the current city is

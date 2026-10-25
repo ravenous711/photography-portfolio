@@ -127,6 +127,7 @@
       text-decoration: none;
       transition: color 0.2s;
     }
+    .back-link[hidden] { display: none; }
     .back-link:hover { color: var(--color-text); }
     .album-card { display: block; text-decoration: none; }
     .group-highlights {
@@ -147,6 +148,7 @@
   <script src="/js/albums/misc-2026.js"></script>
   <script src="/js/albums/italy-2026.js"></script>
   <script src="/js/albums/morgan-alden-2026.js"></script>
+  <script src="/js/albums/greece-2026-all.js"></script>
   <script src="/js/albums.js"></script>
   <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
@@ -470,6 +472,10 @@
         document.getElementById('back-link-label').textContent = 'Family Gallery';
       } else if (groupAudience.startsWith('client:')) {
         // A private client gallery is not part of Personal or People.
+        backLink.hidden = true;
+      } else if (group.hidden) {
+        // Unlisted groups are shared by link. A Personal back link would
+        // strand the recipient in the public gallery.
         backLink.hidden = true;
       } else {
         backLink.href = Routes.personalWork;

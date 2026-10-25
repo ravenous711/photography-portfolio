@@ -147,28 +147,25 @@
             <span class="film-frame-switch" aria-hidden="true"></span>
             <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
           </label>
-          <button type="button" id="select-btn" class="btn-ghost" aria-label="Select photos">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>
-            Select
-          </button>
-          <button type="button" id="liked-count-btn" class="btn-ghost liked-count-btn" hidden aria-label="Download selected photos">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-            <span id="liked-count-label">0</span>
-          </button>
-          <button type="button" id="clear-selection-btn" class="btn-ghost clear-selection-btn" hidden aria-label="Clear selected photos">Clear</button>
-          <button type="button" id="download-btn" class="btn-primary" aria-label="Download all photos">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Download All
-          </button>
+          <div class="album-dl-wrap">
+            <button type="button" id="album-dl-menu-btn" class="btn-primary" aria-haspopup="menu" aria-expanded="false" aria-controls="album-dl-menu">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download
+              <svg class="album-dl-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <div id="album-dl-menu" class="album-dl-menu" hidden role="menu" aria-labelledby="album-dl-menu-btn">
+              <button type="button" id="download-btn" class="album-dl-menu-item" role="menuitem">Download all</button>
+              <button type="button" id="select-btn" class="album-dl-menu-item" role="menuitem" aria-pressed="false">Select</button>
+              <button type="button" id="album-dl-selected-btn" class="album-dl-menu-item" role="menuitem" hidden>Download selected</button>
+              <button type="button" id="clear-selection-btn" class="album-dl-menu-item" role="menuitem" hidden>Clear selection</button>
+            </div>
+          </div>
         </div>
       </div>
         <button type="button" id="album-nav-menu-btn" class="album-nav-menu-btn" aria-expanded="false" aria-controls="album-nav-menu" hidden>
@@ -187,10 +184,10 @@
               <span class="film-frame-switch" aria-hidden="true"></span>
               <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
             </label>
-            <button type="button" id="album-nav-select-btn" class="album-nav-menu-action">Select photos</button>
-            <button type="button" id="album-nav-clear-btn" class="album-nav-menu-action" hidden>Clear selection</button>
-            <button type="button" id="album-nav-liked-btn" class="album-nav-menu-action" hidden>Download selected</button>
             <button type="button" id="album-nav-download-btn" class="album-nav-menu-action album-nav-menu-action--primary">Download all</button>
+            <button type="button" id="album-nav-select-btn" class="album-nav-menu-action" aria-pressed="false">Select</button>
+            <button type="button" id="album-nav-liked-btn" class="album-nav-menu-action" hidden>Download selected</button>
+            <button type="button" id="album-nav-clear-btn" class="album-nav-menu-action" hidden>Clear selection</button>
           </div>
         </div>
     </div>
@@ -225,14 +222,14 @@
     <span id="selection-count">0 selected</span>
     <div class="flex items-center gap-3">
       <button type="button" id="select-all-btn">Select all</button>
-      <button type="button" id="clear-selected-btn" hidden>Clear all</button>
+      <button type="button" id="clear-selected-btn" hidden>Clear selection</button>
       <button type="button" id="download-selected-btn" class="btn-primary" disabled>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        Download Selected
+        Download selected
       </button>
       <button type="button" id="cancel-select-btn">Cancel</button>
     </div>
@@ -288,8 +285,9 @@
         </svg>
       </button>
       <button type="button" id="lightbox-like" class="lightbox-action-btn" aria-label="Select photo" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="1.5"/>
+          <path class="lb-select-tick" d="M7.5 12.2 10.6 15.3 16.5 8.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       <div class="lb-dl-wrap">
@@ -401,6 +399,7 @@
   <script src="/js/albums/misc-2026.js"></script>
   <script src="/js/albums/italy-2026.js"></script>
   <script src="/js/albums/morgan-alden-2026.js"></script>
+  <script src="/js/albums/greece-2026-all.js"></script>
   <script src="/js/albums.js"></script>
   <script src="/js/portfolio-preview.js"></script>
   <script src="/js/routes.js"></script>
@@ -665,7 +664,13 @@
 
     function syncThumbSelectedState(index, isSelected) {
       const thumb = document.querySelector(`.photo-thumb[data-photo-index="${index}"]`);
-      if (thumb) thumb.classList.toggle('selected', isSelected);
+      if (!thumb) return;
+      thumb.classList.toggle('selected', isSelected);
+      const check = thumb.querySelector('.photo-select-check');
+      if (!check) return;
+      check.classList.toggle('is-checked', isSelected);
+      check.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+      check.setAttribute('aria-label', isSelected ? `Deselect photo ${index + 1}` : `Select photo ${index + 1}`);
     }
 
     function setPhotoSelected(index, isSelected) {
@@ -729,13 +734,47 @@
     }
 
     function setupSelectModeControls() {
-      bindTapWithoutScroll(document.getElementById('select-btn'), () => toggleSelectMode());
+      const menuBtn = document.getElementById('album-dl-menu-btn');
+      const menu = document.getElementById('album-dl-menu');
+
+      function closeDownloadMenu(opts) {
+        if (!menu || menu.hidden) return;
+        menu.hidden = true;
+        menuBtn?.setAttribute('aria-expanded', 'false');
+        if (opts && opts.focusTrigger) menuBtn?.focus();
+      }
+
+      function toggleDownloadMenu() {
+        if (!menu) return;
+        if (menu.hidden) {
+          menu.hidden = false;
+          menuBtn?.setAttribute('aria-expanded', 'true');
+        } else {
+          closeDownloadMenu();
+        }
+      }
+
+      bindTapWithoutScroll(menuBtn, (e) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        toggleDownloadMenu();
+      });
+      bindTapWithoutScroll(document.getElementById('select-btn'), () => {
+        closeDownloadMenu();
+        toggleSelectMode();
+      });
       bindTapWithoutScroll(document.getElementById('cancel-select-btn'), () => toggleSelectMode());
       bindTapWithoutScroll(document.getElementById('download-btn'), () => {
-        showDownloadSizePicker(allPhotos, (size) => downloadPhotos(allPhotos, size));
+        closeDownloadMenu();
+        downloadAllPhotos();
       });
-      bindTapWithoutScroll(document.getElementById('liked-count-btn'), () => showLikedDownloadConfirm());
-      bindTapWithoutScroll(document.getElementById('clear-selection-btn'), () => clearSelection());
+      bindTapWithoutScroll(document.getElementById('album-dl-selected-btn'), () => {
+        closeDownloadMenu();
+        downloadSelected();
+      });
+      bindTapWithoutScroll(document.getElementById('clear-selection-btn'), () => {
+        closeDownloadMenu();
+        clearSelection();
+      });
       document.getElementById('select-all-btn').addEventListener('click', () => toggleSelectAll());
       document.getElementById('clear-selected-btn').addEventListener('click', () => clearSelection());
       document.getElementById('download-selected-btn').addEventListener('click', () => downloadSelected());
@@ -747,19 +786,36 @@
       document.getElementById('liked-download-confirm').addEventListener('click', (e) => {
         if (e.target.id === 'liked-download-confirm') hideLikedDownloadConfirm();
       });
-    }
 
-    function toggleThumb(index, thumb) {
-      togglePhotoSelected(index);
+      // Capture so a checkbox click (which stops bubbling) still counts as outside.
+      document.addEventListener('click', (e) => {
+        if (!menu || menu.hidden) return;
+        if (e.target.closest('#album-dl-menu, #album-dl-menu-btn')) return;
+        closeDownloadMenu();
+      }, true);
+
+      // Close only this menu. Lightbox, the size picker, and the liked confirm
+      // own Escape when they are open — their handlers run in this same capture
+      // phase or on bubble, and must not be stopped.
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !menu || menu.hidden) return;
+        const lightboxOpen = document.getElementById('lightbox')?.classList.contains('open');
+        const sizeOpen = document.getElementById('dl-size-picker')?.hidden === false;
+        const likedOpen = document.getElementById('liked-download-confirm')?.hidden === false;
+        if (lightboxOpen || sizeOpen || likedOpen) return;
+        closeDownloadMenu({ focusTrigger: true });
+        e.stopPropagation();
+      }, true);
     }
 
     function toggleSelectAll() {
-      const thumbs = Array.from(document.querySelectorAll('.photo-thumb'));
       if (selected.size === allPhotos.length) {
         clearSelection();
       } else {
-        allPhotos.forEach((_, i) => selected.add(i));
-        thumbs.forEach(t => t.classList.add('selected'));
+        allPhotos.forEach((_, i) => {
+          selected.add(i);
+          syncThumbSelectedState(i, true);
+        });
         saveSelectedToStorage();
         updateSelectionUI();
       }
@@ -767,8 +823,9 @@
 
     function clearSelection() {
       if (selected.size === 0) return;
+      const indexes = [...selected];
       selected.clear();
-      document.querySelectorAll('.photo-thumb.selected').forEach(t => t.classList.remove('selected'));
+      indexes.forEach(i => syncThumbSelectedState(i, false));
       saveSelectedToStorage();
       updateSelectionUI();
     }
@@ -784,19 +841,20 @@
       document.getElementById('select-all-btn').textContent =
         count === total ? 'Deselect all' : 'Select all';
 
-      const lightboxOpen = document.getElementById('lightbox')?.classList.contains('open');
       const clearToolbarBtn = document.getElementById('clear-selection-btn');
       const clearBarBtn = document.getElementById('clear-selected-btn');
-      const showClear = count > 0 && !lightboxOpen;
-      if (clearToolbarBtn) clearToolbarBtn.hidden = !showClear;
+      const selectedMenuBtn = document.getElementById('album-dl-selected-btn');
+      if (clearToolbarBtn) clearToolbarBtn.hidden = count === 0;
       if (clearBarBtn) clearBarBtn.hidden = count === 0;
+      if (selectedMenuBtn) {
+        selectedMenuBtn.hidden = count === 0;
+        selectedMenuBtn.disabled = count === 0;
+      }
 
-      const likedBtn = document.getElementById('liked-count-btn');
-      const likedLabel = document.getElementById('liked-count-label');
-      if (likedBtn && likedLabel) {
-        likedBtn.hidden = count === 0 || lightboxOpen;
-        likedLabel.textContent = String(count);
-        likedBtn.setAttribute('aria-label', count === 1 ? 'Download 1 selected photo' : `Download ${count} selected photos`);
+      const selectBtn = document.getElementById('select-btn');
+      if (selectBtn) {
+        selectBtn.classList.toggle('active', selectMode);
+        selectBtn.setAttribute('aria-pressed', selectMode ? 'true' : 'false');
       }
 
       updateLightboxLikeButton();
@@ -1093,6 +1151,10 @@
       throw lastErr;
     }
 
+    function downloadAllPhotos() {
+      showDownloadSizePicker(allPhotos, (size) => downloadPhotos(allPhotos, size));
+    }
+
     function downloadSelected() {
       const urls = Array.from(selected)
         .sort((a, b) => a - b)
@@ -1183,13 +1245,20 @@
           <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
         </svg>`;
 
-      const likeBadge = document.createElement('div');
-      likeBadge.className = 'photo-thumb-like';
-      likeBadge.setAttribute('aria-hidden', 'true');
-      likeBadge.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      const isChecked = selected.has(index);
+      const selectCheck = document.createElement('button');
+      selectCheck.type = 'button';
+      selectCheck.className = 'photo-select-check';
+      selectCheck.setAttribute('aria-pressed', isChecked ? 'true' : 'false');
+      selectCheck.setAttribute('aria-label', isChecked ? `Deselect photo ${index + 1}` : `Select photo ${index + 1}`);
+      selectCheck.innerHTML = `
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 8.2 6.4 11.2 12.5 4.8"/>
         </svg>`;
+      selectCheck.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePhotoSelected(index);
+      });
 
       // Favorites heart badge (visible only when .favorites-enabled is on the grid)
       const favBadge = document.createElement('div');
@@ -1210,25 +1279,27 @@
 
       thumb.appendChild(img);
       thumb.appendChild(expandOverlay);
-      thumb.appendChild(likeBadge);
+      thumb.appendChild(selectCheck);
       thumb.appendChild(favBadge);
 
-      if (selected.has(index)) {
+      if (isChecked) {
         thumb.classList.add('selected');
+        selectCheck.classList.add('is-checked');
       }
 
       const handleActivate = (e) => {
-        // Fav-badge sits inside the thumb; its own delegated handler manages it.
-        // Without this guard the lightbox also opens when tapping a heart.
-        if (e && e.target && e.target.closest('.fav-badge')) return;
-        if (selectMode) {
-          toggleThumb(index, thumb);
-        } else {
-          openLightbox(index);
-        }
+        // The checkbox and favorite badge handle themselves. Any other tap opens
+        // the photo — select mode does not turn the thumbnail into a toggle.
+        if (e && e.target && e.target.closest('.fav-badge, .photo-select-check')) return;
+        openLightbox(index);
       };
       bindTapWithoutScroll(thumb, handleActivate);
-      thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleActivate(); });
+      thumb.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target.closest('.fav-badge, .photo-select-check')) return;
+        e.preventDefault();
+        handleActivate(e);
+      });
 
       return thumb;
     }
@@ -2081,9 +2152,16 @@
 
       const updateLikedMenuLabel = () => {
         const count = selected.size;
-        likedBtn.hidden = count === 0;
-        likedBtn.textContent = count === 1 ? 'Download 1 selected' : `Download ${count} selected`;
+        if (likedBtn) {
+          likedBtn.hidden = count === 0;
+          likedBtn.disabled = count === 0;
+          likedBtn.textContent = 'Download selected';
+        }
         if (clearBtn) clearBtn.hidden = count === 0;
+        if (selectBtn) {
+          selectBtn.setAttribute('aria-pressed', selectMode ? 'true' : 'false');
+          selectBtn.classList.toggle('is-active', selectMode);
+        }
       };
 
       function openAlbumNavMenu() {
@@ -2115,13 +2193,13 @@
       });
 
       selectBtn?.addEventListener('click', () => {
-        if (!selectMode) setSelectMode(true);
+        toggleSelectMode();
         closeAlbumNavMenu();
       });
 
       likedBtn?.addEventListener('click', () => {
         closeAlbumNavMenu();
-        showLikedDownloadConfirm();
+        downloadSelected();
       });
 
       clearBtn?.addEventListener('click', () => {
@@ -2131,7 +2209,7 @@
 
       downloadBtn?.addEventListener('click', () => {
         closeAlbumNavMenu();
-        showDownloadSizePicker(allPhotos, (size) => downloadPhotos(allPhotos, size));
+        downloadAllPhotos();
       });
 
       document.addEventListener('click', (e) => {
@@ -2991,13 +3069,7 @@
         resetDownloadProgressUI();
         if (dlBtn) {
           dlBtn.disabled = false;
-          dlBtn.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Download All`;
+          dlBtn.textContent = 'Download all';
         }
         if (selDlBtn) { selDlBtn.disabled = selected.size === 0; }
       }, 15000);
@@ -3520,31 +3592,111 @@
     }
     .dl-size-opt-cap { color: inherit; }
 
-    /* ── Select button active state ── */
-    #select-btn.active {
-      border-color: var(--color-gold);
+    /* ── Download menu (header). Quiet panel, same tone as the Navigate menu. ── */
+    .album-dl-wrap { position: relative; }
+    .album-dl-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 13.5rem;
+      z-index: 40;
+      background: var(--nav-scrolled-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--color-border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
+      padding: 0.3rem 0;
+    }
+    .album-dl-menu[hidden] { display: none; }
+    .album-dl-menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: var(--color-text);
+      font-family: var(--font-sans);
+      font-size: 0.6875rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+    }
+    .album-dl-menu-item:hover,
+    .album-dl-menu-item:focus-visible {
+      color: var(--color-gold);
+      background: rgba(243, 240, 233, 0.06);
+      outline: none;
+    }
+    .album-dl-menu-item[hidden] { display: none; }
+    .album-dl-menu-item:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    #select-btn.active,
+    .album-nav-menu-action.is-active {
       color: var(--color-gold);
     }
+    .album-nav-menu-action.is-active {
+      border-color: var(--color-gold);
+    }
+    #album-dl-menu-btn .album-dl-chevron { transition: transform 0.2s ease; }
+    #album-dl-menu-btn[aria-expanded="true"] .album-dl-chevron { transform: rotate(180deg); }
+
+    /* Checkbox on each thumb — only while select mode is on. */
+    .photo-select-check {
+      display: none;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 5;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border-radius: 2px;
+      border: 1.5px solid rgba(255,255,255,0.92);
+      background: rgba(0,0,0,0.5);
+      color: #1a1a1a;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .photo-select-check svg { opacity: 0; display: block; }
+    .select-mode .photo-select-check,
+    body.album-select-mode .photo-select-check { display: flex; }
+    .photo-thumb.selected .photo-select-check,
+    .photo-select-check.is-checked {
+      background: var(--color-gold);
+      border-color: var(--color-gold);
+    }
+    .photo-thumb.selected .photo-select-check svg,
+    .photo-select-check.is-checked svg { opacity: 1; }
+    .photo-select-check:focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: 2px;
+    }
+
+    /* Lightbox select control is a checkbox, and only during select mode. */
+    #lightbox-like { display: none; }
+    body.album-select-mode #lightbox-like { display: flex; }
+    #lightbox-like .lb-select-tick { opacity: 0; }
+    #lightbox-like.is-liked .lb-select-tick { opacity: 1; }
+    #lightbox-like.is-liked svg { fill: none; stroke: var(--color-gold); }
 
     /* Add room for selection bar (main already has pb-24; extend, don't double) */
     body.album-select-mode main {
       padding-bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px));
     }
 
-    /* ── Selection/download feature temporarily disabled (see FEAT-3 in IMPROVEMENTS.md) ──
-       Hearts for favorites and select-to-download were visually identical, causing confusion.
-       The selection UI is hidden but the JS logic is preserved for the future rebuild. */
-    #select-btn,
+    /* Hearts stay hidden. Select-to-download uses checkboxes (FEAT-3).
+       The old "download N selected?" confirm stays hidden — size picker only. */
     #liked-count-btn,
-    #clear-selection-btn,
-    #album-nav-select-btn,
-    #album-nav-clear-btn,
-    #album-nav-liked-btn,
-    #selection-bar,
-    #selection-bar.show,
-    #liked-download-confirm,
-    #lightbox-like,
-    .photo-thumb-like {
+    #lightbox-fav,
+    .photo-thumb-like,
+    .fav-badge,
+    #liked-download-confirm {
       display: none !important;
     }
     /* ── Download size dropdown (lightbox) ── */

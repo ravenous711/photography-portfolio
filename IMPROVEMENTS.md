@@ -38,9 +38,7 @@ done, move it out of Open, add a Changelog line.
 ### 4 — Product
 | ID | One-liner | Effort | Notes |
 |----|-----------|--------|-------|
-| **FEAT-3** | Re-enable select-to-download with clear UX | L | |
 | **FEAT-4** | Roll out Large (~5 MB) download tier | M | Worker `d5993742…` live; frontend commit/push pending |
-| **UX-HEARTS** | Distinct icons for heart vs select | S | Blocked on FEAT-3 |
 | **ADMIN-1** | Drag-and-drop reorder in `/admin` | M–L | |
 
 ### 5 — Code health (when touching album code)
@@ -61,6 +59,7 @@ done, move it out of Open, add a Changelog line.
 
 | State | Album | Notes |
 |-------|-------|-------|
+| In progress | **Greece 2026** | Full set, unlisted (`/gallery/greece-2026-all/`). Kalymnos is one continuous album (299 frames). Uploaded and verified on public R2 `Greece/Kalymnos/` (originals, grid, view, download). Naxos is one continuous album (280 frames, rolls 11–19 rated ≥ 1; 37 use `Naxos/Edited` exports; roll 10 skipped because it is already on Kalymnos). Uploaded and verified on public R2 `Greece/Naxos/<NN-Stock>/` (originals, grid, view, download; 1,120 objects). Source scans and Edited exports were unchanged. Athens is one continuous album (100 frames, rolls 20–23 rated ≥ 1; 3 use `Athens/edited` exports), uploaded and verified on public R2 `Greece/Athens/<NN-Stock>/` (originals, grid, view, download). Lightroom-only rotations were not exported, so those frames show as the JPEG on disk. Athena is one continuous album (388 frames, rolls 1–5, every JPEG; no Edited folder). Uploaded and verified on public R2 `Greece/Athena/<NN-Stock>/` (originals, grid, view, download; 1,552 objects). Source bytes unchanged. On main; still unlisted |
 | Done recently | **Remington Homecoming** | Private R2; first album in the hidden **Brown Family** client group (`/gallery/brown-family/`). One D1 code for `client:brown-family` covers future albums — add them to the group's `subAlbums` |
 | Queued | **London 2025** | Empty hidden shell — **ALBUM-1** |
 | In progress | **Morgan and Alden** | Unlisted public group (digital + film); public R2 |
@@ -155,14 +154,6 @@ Jump here after picking an ID from Open tickets.
 - **Files:** `scripts/lib/athena-manifest.py`, `scripts/athena-manifest.sh`
 - **Done when:** CLI arg / env var; current path as default.
 
-### FEAT-3 — Select & download workflow
-- **Effort:** L · **Risk:** Med · **Status:** TODO
-- **Why:** Select-to-ZIP hidden because selection hearts looked like favorite hearts.
-- **Fix:** Distinct select vs heart UX; re-enable CSS-hidden select mode (search `FEAT-3` in `album/index.html`). Size picker already exists.
-- **Files:** `album/index.html`
-- **Done when:** Heart vs select are obvious on mobile + desktop; both work.
-- **Related:** UX-HEARTS.
-
 ### FEAT-4 — Large (~5 MB) download tier
 - **Effort:** M · **Risk:** Med · **Status:** WORKER LIVE / FRONTEND PENDING
 - **Why:** Existing choices jump from Med (~1.5 MB) to Full (15–40 MB).
@@ -170,11 +161,6 @@ Jump here after picking an ID from Open tickets.
 - **Files:** `album/index.html`, `js/main.js`, `scripts/`, `workers/zip-download/`, upload docs/skill.
 - **Remaining:** Commit and publish the frontend, then smoke-test Low/Med/Large/Full on a public and a private album.
 - **Done when:** Low/Med/Large/Full work for single and ZIP downloads on public, family, and client albums.
-
-### UX-HEARTS — Distinct heart vs selection icons
-- **Effort:** S · **Risk:** Low · **Status:** TODO (blocked on FEAT-3)
-- **Why:** `.fav-badge` and `.photo-thumb-like` are both hearts at bottom-right.
-- **Fix:** Part of FEAT-3 design.
 
 ### ADMIN-1 — Drag-and-drop reorder in `/admin`
 - **Effort:** M–L · **Risk:** Med · **Status:** TODO
@@ -238,6 +224,8 @@ Jump here after picking an ID from Open tickets.
 
 | ID | Status | Note |
 |----|--------|------|
+| FEAT-3 | ✅ DONE | Select-to-download dropdown + checkboxes (`album/index.html`). Hearts stay paused |
+| UX-HEARTS | ✅ DONE | Select mark is a checkbox; favorite hearts stay hidden while `heartsPaused` |
 | AUTH-2 | ✅ DONE | Public curated + full; friends unlock removed Aug 2026 |
 | PERF-1 | ✅ DONE | view/ + download size picker + private ZIP code on `main` (`7535d57`); prod verify → OPS-5 |
 | UX-NAV | ✅ DONE | Nav order/labels (`0d59b08`) |
@@ -266,6 +254,17 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **FEAT-3 select-to-download** — Oct 2026.
+  Album Download control is a menu: Download all, Select, and — once anything is checked —
+  Download selected and Clear selection. Thumbnails and the lightbox use a checkbox, not a heart.
+  Favorite hearts stay hidden. Same actions live in the mobile Navigate menu and the bottom bar.
+
+- **Greece 2026 — Athens** — Oct 2026 (on main, still unlisted).
+  100 frames rated ≥ 1 from rolls 20–23 (20-Portra160: 20, 21-Portra400: 30, 22-Portra400: 27,
+  23-Portra400: 23) in public R2 `Greece/Athens/` (all four tiers). Three frames use the
+  `Athens/edited` export. One continuous scroll on the unlisted `/gallery/greece-2026-all/athens/`;
+  cover is the 2-star `22-Portra400/000007220009`. Lightroom-only rotations were not applied.
 
 - **Remington Homecoming + parallel `upload-album.sh`** — Oct 2026 (branch `album/remington-homecoming`, not on `main`).
   11 photos in `portfolio-images-private/Brown-Family/Remington-Homecoming/` (all four tiers), shown as a
