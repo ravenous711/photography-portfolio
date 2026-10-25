@@ -58,6 +58,9 @@ const ALBUMS_CLIENTS = [
     description: 'Moksha Yoga — July 2026.',
     date: 'July 2026',
     audience: 'public',
+    // Public visitors see curated[] only. The client code unlocks the full
+    // deliverable, which lives on private R2 under Moksha-Yoga/.
+    privateAudience: 'client:moksha-yoga',
     hidden: false,
     protected: false,
     portfolio: true,

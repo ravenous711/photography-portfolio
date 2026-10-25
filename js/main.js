@@ -264,8 +264,12 @@ function setActiveNavLink() {
   else if (path.startsWith('/album/')) {
     const id = path.split('/').filter(Boolean)[1];
     const album = (typeof ALBUMS !== 'undefined') ? ALBUMS.find(a => a.id === id) : null;
-    // Client albums live under Private Access — highlight that trigger.
-    if (album && String(album.audience || '').startsWith('client:')) {
+    // Client albums, including a public teaser opened with its client code,
+    // live under Private Access — highlight that trigger.
+    if (album && (
+      String(album.audience || '').startsWith('client:')
+      || unlockedPrivateAudience(album)
+    )) {
       key = 'unlock';
     } else {
       key = (album && album.portfolio === true) ? 'professional' : 'gallery';
@@ -1056,6 +1060,15 @@ function isPrivateAudience(audience) {
     audience.startsWith('family:') ||
     audience.startsWith('client:')
   );
+}
+
+// A public teaser can keep its full set on private R2. privateAudience is the
+// client tier that unlocks that set. Locked or unset → the public teaser.
+function unlockedPrivateAudience(album) {
+  const audience = album?.privateAudience;
+  if (typeof audience !== 'string' || !audience) return null;
+  if (typeof TierAuth === 'undefined' || !TierAuth.canAccess(audience)) return null;
+  return audience;
 }
 
 function toImageUrl(url, privateToken) {

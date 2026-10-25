@@ -577,6 +577,7 @@
           document.getElementById('back-label-sticky').textContent = 'Family Gallery';
         } else if (
           (album.audience || '').startsWith('client:')
+          || unlockedPrivateAudience(album)
           || (album.hidden && !album.parentId && !album.familySlug)
         ) {
           // Client and unlisted albums are not in the public gallery — a
@@ -1407,8 +1408,14 @@
       const hasCuratedSet = Array.isArray(album.curated) && album.curated.length > 0;
       // Film-roll pages are always the full roll — curated subset is for city albums only
       hasCurated = hasCuratedSet && !isFilmRollAlbum(album);
-      // Public teasers (Moksha Yoga) show only curated[]. The rest stays hidden.
+      // Public teasers (Moksha Yoga) show only curated[]. The matching client
+      // code opens the full private deliverable instead.
       if (album.curatedOnly && hasCurated) {
+        if (unlockedPrivateAudience(album)) {
+          hasCurated = false;
+          fullView = true;
+          return;
+        }
         fullView = false;
         return;
       }
@@ -1464,7 +1471,7 @@
       // Favorites note only when hearts are enabled (client galleries never offer favorites)
       const favoritesOff = heartsPaused
         || album.gridFavorites === false
-        || (album.audience || '').startsWith('client:');
+        || viewingClientDeliverable();
       const showNote = showingFull && !favoritesOff;
       if (note) note.hidden = !showNote;
       if (topControls) topControls.hidden = !showNote;
@@ -1513,7 +1520,7 @@
       document.body.classList.toggle('full-album-mode', showingFull);
       const favoritesOff = heartsPaused
         || album.gridFavorites === false
-        || (album.audience || '').startsWith('client:');
+        || viewingClientDeliverable();
       document.body.classList.toggle('grid-favorites-disabled', favoritesOff);
       updateViewControls(showingFull);
 
@@ -1622,7 +1629,8 @@
     async function showAlbum() {
       loadSelectedFromStorage();
 
-      const albumAudienceForToken = album.audience || 'public';
+      const privateAudience = unlockedPrivateAudience(album);
+      const albumAudienceForToken = privateAudience || album.audience || 'public';
       if (isPrivateAudience(albumAudienceForToken)) {
         _privateToken = await getPrivateToken(albumAudienceForToken);
         if (!_privateToken) {
@@ -3105,10 +3113,14 @@
       return false;
     }
 
+    function viewingClientDeliverable() {
+      return (album?.audience || '').startsWith('client:') || Boolean(unlockedPrivateAudience(album));
+    }
+
     async function initFavorites(albumId, enabled) {
       const favoritesOff = heartsPaused
         || album?.gridFavorites === false
-        || (album?.audience || '').startsWith('client:');
+        || viewingClientDeliverable();
       favEnabled = enabled && !favoritesOff;
       if (!favEnabled) return;
 
