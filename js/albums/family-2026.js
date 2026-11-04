@@ -374,7 +374,13 @@ const ALBUMS_FAMILY_2026 = [
     protected: false,
     familySlug: 'elenas-2nd-birthday',
     coverImage: `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650019.jpg`,
-    photos: [
+    photos: [],
+    filmSections: [
+      {
+        label: 'Tmax 3200',
+        navLabel: 'Tmax 3200',
+        filmStock: 'Tmax 3200',
+        photos: [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650001.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650002.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650003.jpg`,
@@ -412,11 +418,12 @@ const ALBUMS_FAMILY_2026 = [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650035.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650036.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650037.jpg`,
-    ],
-    filmSections: [
+        ],
+      },
       {
-        label: 'Roll 2067',
-        navLabel: 'Roll 2067',
+        label: 'Portra 400',
+        navLabel: 'Portra 400',
+        filmStock: 'Portra 400',
         photos: [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670001.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670002.jpg`,
