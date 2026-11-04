@@ -412,12 +412,6 @@ const ALBUMS_FAMILY_2026 = [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650035.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650036.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650037.jpg`,
-    ],
-    filmSections: [
-      {
-        label: 'Roll 2067',
-        navLabel: 'Roll 2067',
-        photos: [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670001.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670002.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670003.jpg`,
@@ -438,8 +432,6 @@ const ALBUMS_FAMILY_2026 = [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670018.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670019.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando2067/000020670020.jpg`,
-        ],
-      },
     ],
   },
 
