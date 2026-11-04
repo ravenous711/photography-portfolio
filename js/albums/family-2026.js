@@ -373,7 +373,7 @@ const ALBUMS_FAMILY_2026 = [
     hidden: true,
     protected: false,
     familySlug: 'elenas-2nd-birthday',
-    coverImage: `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650002.jpg`,
+    coverImage: `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650019.jpg`,
     photos: [
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650001.jpg`,
       `${R2_BASE_URL}/Elena-2nd-Birthday/Fernando1965/000019650002.jpg`,
