@@ -7,6 +7,8 @@ import vm from 'vm';
 
 const PHOTOGRAPHER = 'Raveen Fernando';
 const DESCRIPTION = 'Photography by Raveen Fernando.';
+const SITE_URL = 'https://raveenfernando.com';
+const DEFAULT_OG_IMAGE = `${SITE_URL}/images/hero.jpg`;
 
 let albumsCache = null;
 
@@ -62,17 +64,20 @@ function escapeHtml(value) {
   }[char]));
 }
 
-function withShareTitle(html, title) {
+function withShareTitle(html, title, ogImage) {
   const full = `${title} — ${PHOTOGRAPHER}`;
   const safe = escapeHtml(full);
+  const img = escapeHtml(ogImage || DEFAULT_OG_IMAGE);
   const head = [
     `<title>${safe}</title>`,
     `<meta name="description" content="${escapeHtml(DESCRIPTION)}" />`,
     `<meta property="og:title" content="${safe}" />`,
     `<meta property="og:description" content="${escapeHtml(DESCRIPTION)}" />`,
     `<meta property="og:type" content="website" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta property="og:image" content="${img}" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${safe}" />`,
+    `<meta name="twitter:image" content="${img}" />`,
   ].join('\n  ');
   return html.replace(/<title>[^<]*<\/title>/, head);
 }
@@ -90,7 +95,7 @@ export default function handler(req, res) {
 
   try {
     const album = findAlbum(req.query);
-    if (album?.title) html = withShareTitle(html, album.title);
+    if (album?.title) html = withShareTitle(html, album.title, album.coverImage || null);
   } catch (err) {
     console.error('gallery-shell title lookup failed', err);
   }
