@@ -9,6 +9,20 @@ const PHOTOGRAPHER = 'Raveen Fernando';
 const DESCRIPTION = 'Photography by Raveen Fernando.';
 const SITE_URL = 'https://raveenfernando.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/images/hero.jpg`;
+const PUBLIC_R2 = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
+
+// Private-bucket covers can't be fetched by crawlers. For albums whose
+// coverImage is in the private bucket, check whether a public OG copy
+// exists under portfolio-images/og-covers/<albumId>.jpg and use that.
+function resolveOgImage(album) {
+  if (!album) return DEFAULT_OG_IMAGE;
+  const cover = album.coverImage || '';
+  // Public cover — use it directly
+  if (cover && !cover.includes('portfolio-images-private')) return cover || DEFAULT_OG_IMAGE;
+  // Private cover — point at the public og-covers copy (uploaded manually per album)
+  if (album.id) return `${PUBLIC_R2}/og-covers/${album.id}.jpg`;
+  return DEFAULT_OG_IMAGE;
+}
 
 let albumsCache = null;
 
@@ -95,7 +109,7 @@ export default function handler(req, res) {
 
   try {
     const album = findAlbum(req.query);
-    if (album?.title) html = withShareTitle(html, album.title, album.coverImage || null);
+    if (album?.title) html = withShareTitle(html, album.title, resolveOgImage(album));
   } catch (err) {
     console.error('gallery-shell title lookup failed', err);
   }
