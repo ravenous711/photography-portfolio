@@ -35,7 +35,7 @@ function loadAlbums() {
     const source = fs.readFileSync(path.join(dir, file), 'utf8');
     const match = source.match(/const (ALBUMS_[A-Z0-9_]+)\s*=/);
     if (!match) continue;
-    const sandbox = { R2_BASE_URL: '' };
+    const sandbox = { R2_BASE_URL: PUBLIC_R2 };
     vm.createContext(sandbox);
     vm.runInContext(`${source}\nthis.__albums = ${match[1]};`, sandbox);
     if (Array.isArray(sandbox.__albums)) albums.push(...sandbox.__albums);
