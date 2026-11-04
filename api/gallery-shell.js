@@ -11,17 +11,19 @@ const SITE_URL = 'https://raveenfernando.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/images/hero.jpg`;
 const PUBLIC_R2 = 'https://pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev';
 
-// Private-bucket covers can't be fetched by crawlers. For albums whose
-// coverImage is in the private bucket, check whether a public OG copy
-// exists under portfolio-images/og-covers/<albumId>.jpg and use that.
+// Private-bucket covers can't be fetched by crawlers. Family/client albums
+// have audience 'family' or 'client:*'. For those, use the public og-covers
+// copy uploaded to portfolio-images/og-covers/<albumId>.jpg.
 function resolveOgImage(album) {
   if (!album) return DEFAULT_OG_IMAGE;
-  const cover = album.coverImage || '';
-  // Public cover — use it directly
-  if (cover && !cover.includes('portfolio-images-private')) return cover || DEFAULT_OG_IMAGE;
-  // Private cover — point at the public og-covers copy (uploaded manually per album)
-  if (album.id) return `${PUBLIC_R2}/og-covers/${album.id}.jpg`;
-  return DEFAULT_OG_IMAGE;
+  const audience = album.audience || 'public';
+  const isPrivate = audience === 'family' || audience.startsWith('client:');
+  if (isPrivate) {
+    // Use public og-covers copy (uploaded per album)
+    return album.id ? `${PUBLIC_R2}/og-covers/${album.id}.jpg` : DEFAULT_OG_IMAGE;
+  }
+  // Public album — cover is accessible directly
+  return album.coverImage || DEFAULT_OG_IMAGE;
 }
 
 let albumsCache = null;
