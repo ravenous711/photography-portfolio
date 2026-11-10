@@ -59,7 +59,7 @@ done, move it out of Open, add a Changelog line.
 
 | State | Album | Notes |
 |-------|-------|-------|
-| In progress | **Greece 2026** | Full set, unlisted (`/gallery/greece-2026-all/`). Kalymnos is one continuous album (299 frames). Uploaded and verified on public R2 `Greece/Kalymnos/` (originals, grid, view, download). Naxos is one continuous album (280 frames, rolls 11–19 rated ≥ 1; 37 use `Naxos/Edited` exports; roll 10 skipped because it is already on Kalymnos). Uploaded and verified on public R2 `Greece/Naxos/<NN-Stock>/` (originals, grid, view, download; 1,120 objects). Source scans and Edited exports were unchanged. Athens is one continuous album (100 frames, rolls 20–23 rated ≥ 1; 3 use `Athens/edited` exports), uploaded and verified on public R2 `Greece/Athens/<NN-Stock>/` (originals, grid, view, download). Lightroom-only rotations were not exported, so those frames show as the JPEG on disk. Athena is one continuous album (388 frames, rolls 1–5, every JPEG; no Edited folder). Uploaded and verified on public R2 `Greece/Athena/<NN-Stock>/` (originals, grid, view, download; 1,552 objects). Source bytes unchanged. On main; still unlisted |
+| In progress | **Greece 2026** | Branch `feature/greece-public-album`: public trip `greece-2026` on Personal (`/gallery/greece-2026/`) — Kalymnos live from `Kalymnos Export` (289 renamed frames on R2 rolls 01–09; hidden album 300 incl. roll 10); Naxos/Athens title cards TBD. Unlisted full set still `/gallery/greece-2026-all/`. Old Kalymnos R2 keys (Noritsu names) stay until post-merge cleanup. Naxos/Athens/Athena hidden albums unchanged on R2 |
 | Done recently | **Elena's 2nd Birthday** | Family album; private R2 `Elena-2nd-Birthday/` (37 + 20 frames). `/familyalbums/2026/elenas-2nd-birthday/` |
 | Done recently | **Remington Homecoming** | Private R2; first album in the hidden **Brown Family** client group (`/gallery/brown-family/`). One D1 code for `client:brown-family` covers future albums — add them to the group's `subAlbums` |
 | Queued | **London 2025** | Empty hidden shell — **ALBUM-1** |
@@ -255,6 +255,11 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **Greece 2026 — public Kalymnos** — Nov 2026 (branch `feature/greece-public-album`).
+  Re-uploaded 289 renamed `Kalymnos Export` frames to `Greece/Kalymnos/<01–09-Stock>/` (all tiers).
+  Public group `greece-2026` on Personal: 24 four-star highlights, Kalymnos sub-album (66 ≥3★ default,
+  138 ≥2★ with View all), Naxos/Athens coming-soon cards. Hidden `greece-2026-all/kalymnos` updated to new URLs + roll 10.
 
 - **FEAT-3 select-to-download** — Oct 2026.
   Album Download control is a menu: Download all, Select, and — once anything is checked —

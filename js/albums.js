@@ -12,6 +12,7 @@
 //   misc-2026.js        — standalone 2026 public albums (Film Rolls, Red Rock)
 //   italy-2026.js       — Italy 2026 trip (cities + film rolls)
 //   morgan-alden-2026.js — unlisted public album (Morgan and Alden)
+//   greece-2026.js       — public Greece 2026 trip (Personal)
 //   greece-2026-all.js   — unlisted Greece 2026 full set
 //
 // ── To add a new trip or album group ──────────────────────────
@@ -63,5 +64,6 @@ const ALBUMS = [
   ...ALBUMS_MISC_2026,
   ...ALBUMS_ITALY_2026,
   ...ALBUMS_MORGAN_ALDEN_2026,
+  ...ALBUMS_GREECE_2026,
   ...ALBUMS_GREECE_2026_ALL,
 ];
