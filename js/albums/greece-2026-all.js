@@ -21,7 +21,7 @@ const ALBUMS_GREECE_2026_ALL = [
     protected: false,
     showFilmRolls: false,
     subAlbums: ['greece-kalymnos', 'greece-naxos', 'greece-athens', 'greece-athena'],
-    coverImage: `${R2_BASE_URL}/Kalymnos/01-Ultramax400/1_9_20_ultamax400_19.jpg`,
+    coverImage: `${R2_BASE_URL}/Greece/Kalymnos/01-Ultramax400/1_9_20_ultamax400_19.jpg`,
   },
 
   {
@@ -35,7 +35,7 @@ const ALBUMS_GREECE_2026_ALL = [
     audience: 'public',
     hidden: false,
     protected: false,
-    coverImage: `${R2_BASE_URL}/Kalymnos/01-Ultramax400/1_9_20_ultamax400_19.jpg`,
+    coverImage: `${R2_BASE_URL}/Greece/Kalymnos/01-Ultramax400/1_9_20_ultamax400_19.jpg`,
     coverPosition: 'center top',
     photos: [
       `${R2_BASE_URL}/Greece/Kalymnos/01-Ultramax400/1_9_20_ultamax400_05.jpg`,
