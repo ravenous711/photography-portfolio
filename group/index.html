@@ -53,6 +53,10 @@
     <p class="group-page-dateline" id="group-dateline"></p>
     <h1 class="page-title" id="group-title">–</h1>
     <nav id="group-sibling-nav" class="album-sibling-nav" aria-label="Albums in this trip" hidden></nav>
+    <a href="#group-highlights-heading" id="group-highlights-jump" class="group-highlights-jump" hidden>
+      Trip highlights
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </a>
   </header>
 
   <!-- ── Password Modal (shown for protected groups) ── -->
@@ -81,12 +85,6 @@
     <div class="film-library-toolbar" id="film-library-toolbar" hidden>
       <h2 class="group-chapters-heading group-highlights-heading" id="group-highlights-heading" hidden>Highlights</h2>
       <a class="favorites-more film-view-switch" id="film-view-switch" href="#" hidden></a>
-      <label class="film-frame-toggle" id="film-frame-toggle" hidden>
-        <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
-        <input type="checkbox" id="film-frame-input" role="switch" aria-label="Original aspect ratio">
-        <span class="film-frame-switch" aria-hidden="true"></span>
-        <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
-      </label>
     </div>
 
     <!-- Highlights mode: trailer above the city albums -->
@@ -276,20 +274,17 @@
       document.getElementById('back-link-label').textContent = 'Personal';
 
       const switchLink = document.getElementById('film-view-switch');
-      const frameToggle = document.getElementById('film-frame-toggle');
       document.getElementById('film-library-toolbar').hidden = false;
       switchLink.hidden = false;
 
       if (isChaptersIndex) {
         switchLink.href = Routes.group(group.id);
         switchLink.textContent = 'See all';
-        frameToggle.hidden = true;
         return false;
       }
 
       switchLink.href = Routes.groupChapters(group);
       switchLink.textContent = 'Organize by film rolls';
-      frameToggle.hidden = false;
 
       const frames = filmLibraryPhotos();
       const photos = frames.map(frame => frame.url);
@@ -322,68 +317,6 @@
         button.addEventListener('click', () => openAt(index));
         grid.appendChild(button);
       });
-
-      const frameInput = document.getElementById('film-frame-input');
-      const layoutFilmFrames = () => {
-        const full = frameInput.checked;
-        grid.classList.toggle('is-full-frame', full);
-        if (!full) {
-          grid.style.height = '';
-          [...grid.children].forEach(button => {
-            button.style.left = '';
-            button.style.top = '';
-            button.style.width = '';
-            button.style.height = '';
-          });
-          return;
-        }
-        const width = grid.clientWidth;
-        if (!width || typeof justifiedLayout !== 'function') return;
-        const ratios = [...grid.children].map(button => {
-          const img = button.querySelector('img');
-          if (img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
-          return 3 / 2;
-        });
-        const layout = justifiedLayout(ratios, {
-          containerWidth: width,
-          targetRowHeight: window.innerWidth <= 640 ? 160 : 280,
-          boxSpacing: 4,
-          containerPadding: 0,
-        });
-        grid.style.height = `${layout.containerHeight}px`;
-        [...grid.children].forEach((button, i) => {
-          const box = layout.boxes[i];
-          button.style.left = `${box.left}px`;
-          button.style.top = `${box.top}px`;
-          button.style.width = `${box.width}px`;
-          button.style.height = `${box.height}px`;
-        });
-      };
-      try {
-        frameInput.checked = localStorage.getItem('film-library-full-frame') === '1';
-      } catch { /* private mode */ }
-      frameInput.addEventListener('change', () => {
-        try {
-          localStorage.setItem('film-library-full-frame', frameInput.checked ? '1' : '0');
-        } catch { /* private mode */ }
-        layoutFilmFrames();
-        syncMonth();
-      });
-      grid.querySelectorAll('img').forEach(img => {
-        if (img.complete) return;
-        img.addEventListener('load', () => {
-          if (frameInput.checked) {
-            layoutFilmFrames();
-            syncMonth();
-          }
-        }, { once: true });
-      });
-      if (typeof ResizeObserver === 'function') {
-        new ResizeObserver(() => {
-          if (frameInput.checked) layoutFilmFrames();
-        }).observe(grid);
-      }
-      layoutFilmFrames();
 
       const monthStarts = [...grid.children].filter((el, i, all) =>
         i === 0 || el.dataset.month !== all[i - 1].dataset.month
@@ -509,72 +442,24 @@
         });
 
         const toolbar = document.getElementById('film-library-toolbar');
-        const frameToggle = document.getElementById('film-frame-toggle');
         const switchLink = document.getElementById('film-view-switch');
-        const frameInput = document.getElementById('film-frame-input');
         toolbar.hidden = false;
+        // City cards first, then the Highlights grid below them.
+        toolbar.parentNode.insertBefore(sectionsRoot, toolbar);
+        toolbar.classList.add('film-library-toolbar--below-cards');
         switchLink.hidden = true;
-        frameToggle.hidden = false;
+        // Highlights are always square tiles with the whole photo letterboxed
+        // on the page background.
         document.getElementById('group-highlights-heading').hidden = false;
+        highlightsGrid.classList.add('is-square', 'is-fit');
 
-        const layoutHighlights = () => {
-          const full = frameInput.checked;
-          highlightsGrid.classList.toggle('is-full-frame', full);
-          highlightsGrid.classList.toggle('is-square', !full);
-          if (!full) {
-            highlightsGrid.style.height = '';
-            [...highlightsGrid.children].forEach(button => {
-              button.style.left = '';
-              button.style.top = '';
-              button.style.width = '';
-              button.style.height = '';
-            });
-            return;
-          }
-          const width = highlightsGrid.clientWidth;
-          if (!width || typeof justifiedLayout !== 'function') return;
-          const ratios = [...highlightsGrid.children].map(button => {
-            const img = button.querySelector('img');
-            if (img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
-            return 1.5;
-          });
-          const layout = justifiedLayout(ratios, {
-            containerWidth: width,
-            targetRowHeight: window.innerWidth <= 640 ? 140 : 200,
-            boxSpacing: 4,
-            containerPadding: 0,
-          });
-          highlightsGrid.style.height = `${layout.containerHeight}px`;
-          [...highlightsGrid.children].forEach((button, i) => {
-            const box = layout.boxes[i];
-            button.style.left = `${box.left}px`;
-            button.style.top = `${box.top}px`;
-            button.style.width = `${box.width}px`;
-            button.style.height = `${box.height}px`;
-          });
-        };
-
-        try {
-          frameInput.checked = localStorage.getItem('trip-highlights-full-frame') === '1';
-        } catch { /* private mode */ }
-        frameInput.addEventListener('change', () => {
-          try {
-            localStorage.setItem('trip-highlights-full-frame', frameInput.checked ? '1' : '0');
-          } catch { /* private mode */ }
-          layoutHighlights();
+        // Small jump button in the header that scrolls down to the highlights.
+        const jump = document.getElementById('group-highlights-jump');
+        jump.hidden = false;
+        jump.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById('group-highlights-heading').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-        highlightsGrid.querySelectorAll('img').forEach(img => {
-          if (img.complete && img.naturalWidth) return;
-          img.addEventListener('load', () => {
-            if (frameInput.checked) layoutHighlights();
-          });
-        });
-        if (typeof ResizeObserver === 'function') {
-          new ResizeObserver(() => {
-            if (frameInput.checked) layoutHighlights();
-          }).observe(highlightsGrid);
-        }
-        layoutHighlights();
 
         const linked = new URLSearchParams(window.location.search).get('photo');
         if (linked) {
@@ -646,13 +531,6 @@
         more.textContent = 'View all rolls';
         sectionsRoot.appendChild(more);
       } else {
-        if (showStrip) {
-          const bandHeading = document.createElement('h2');
-          bandHeading.className = 'group-chapters-heading';
-          bandHeading.textContent = 'View all photos from each city';
-          sectionsRoot.appendChild(bandHeading);
-        }
-
         if (group.subAlbumSections?.length) {
           group.subAlbumSections.forEach((sec, i) => {
             renderSection(sec.title, resolveSubAlbums(sec.albums), { first: i === 0 });

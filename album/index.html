@@ -136,17 +136,15 @@
           <span id="back-label-sticky">Personal</span>
         </a>
         <div class="album-toolbar-main">
+        <div id="album-view-switch" class="album-view-switch album-view-switch--toolbar" hidden>
+          <span id="album-view-switch-label" class="album-view-switch-label"></span>
+          <button type="button" id="album-view-switch-btn" class="album-view-switch-btn"></button>
+        </div>
         <div class="album-toolbar-title-group">
           <span id="album-toolbar-title" class="album-toolbar-title"></span>
           <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
         </div>
         <div class="album-header-actions">
-          <label class="film-frame-toggle album-aspect-toggle">
-            <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
-            <input type="checkbox" class="album-aspect-input" role="switch" aria-label="Original aspect ratio" checked>
-            <span class="film-frame-switch" aria-hidden="true"></span>
-            <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
-          </label>
           <div class="album-dl-wrap">
             <button type="button" id="album-dl-menu-btn" class="btn-primary" aria-haspopup="menu" aria-expanded="false" aria-controls="album-dl-menu">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -178,12 +176,6 @@
           <div id="album-nav-menu-sections" class="album-nav-menu-group" hidden></div>
           <div id="album-nav-menu-siblings" class="album-nav-menu-group" hidden></div>
           <div class="album-nav-menu-actions">
-            <label class="film-frame-toggle album-aspect-toggle album-aspect-toggle--menu">
-              <span class="film-frame-toggle-label" aria-hidden="true">Square</span>
-              <input type="checkbox" class="album-aspect-input" role="switch" aria-label="Original aspect ratio" checked>
-              <span class="film-frame-switch" aria-hidden="true"></span>
-              <span class="film-frame-toggle-label" aria-hidden="true">Original</span>
-            </label>
             <button type="button" id="album-nav-download-btn" class="album-nav-menu-action album-nav-menu-action--primary">Download all</button>
             <button type="button" id="album-nav-select-btn" class="album-nav-menu-action" aria-pressed="false">Select</button>
             <button type="button" id="album-nav-liked-btn" class="album-nav-menu-action" hidden>Download selected</button>
@@ -209,8 +201,9 @@
       <div id="film-section" class="album-film-section" hidden>
         <!-- Film subsections populated by JS -->
       </div>
-      <div id="album-view-controls-bottom" class="album-view-controls album-view-controls--bottom px-6 md:px-12" hidden>
-        <button type="button" id="album-view-toggle-bottom" class="album-view-toggle-btn"></button>
+      <div id="album-view-switch-bottom" class="album-view-switch album-view-switch--bottom px-6 md:px-12" hidden>
+        <span class="album-view-switch-label"></span>
+        <button type="button" class="album-view-switch-btn"></button>
       </div>
       <nav id="album-next-nav" class="album-next-nav" aria-label="Next album" hidden></nav>
     </main>
@@ -1306,6 +1299,18 @@
       return thumb;
     }
 
+    /** Grid density shared site-wide: 3 columns below 900px, 5 above; 4px gutters. */
+    function albumGridCols() {
+      return window.innerWidth >= 900 ? 5 : 3;
+    }
+    const ALBUM_GRID_GAP = 4;
+
+    /** Square tile edge length for this grid width. */
+    function squareGridCellSize(containerWidth) {
+      const cols = albumGridCols();
+      return (containerWidth - ALBUM_GRID_GAP * (cols - 1)) / cols;
+    }
+
     function runJustifiedLayout(grid) {
       const items = Array.from(grid.querySelectorAll('.photo-thumb'));
       if (!items.length) {
@@ -1316,65 +1321,21 @@
       const containerWidth = grid.offsetWidth;
       if (!containerWidth) return;
 
-      if (squareGrid) {
-        const spacing = window.innerWidth <= 640 ? 6 : 12;
-        const target = window.innerWidth <= 640 ? 120 : window.innerWidth <= 1024 ? 200 : 260;
-        const cols = Math.max(3, Math.round(containerWidth / target));
-        const size = (containerWidth - spacing * (cols - 1)) / cols;
-        items.forEach((item, i) => {
-          item.style.left   = (i % cols) * (size + spacing) + 'px';
-          item.style.top    = Math.floor(i / cols) * (size + spacing) + 'px';
-          item.style.width  = size + 'px';
-          item.style.height = size + 'px';
-        });
-        const rows = Math.ceil(items.length / cols);
-        grid.style.height = rows * size + (rows - 1) * spacing + 'px';
-        return;
-      }
-
-      const aspectRatios = items.map(item => {
-        const img = item.querySelector('img');
-        if (img.naturalWidth && img.naturalHeight) {
-          return img.naturalWidth / img.naturalHeight;
-        }
-        return 1.5;
-      });
-
-      const layout = justifiedLayout(aspectRatios, {
-        containerWidth: containerWidth,
-        targetRowHeight: window.innerWidth <= 640 ? 175 : window.innerWidth <= 1024 ? 235 : 340,
-        boxSpacing: window.innerWidth <= 640 ? 6 : 12,
-        containerPadding: 0,
-      });
-
-      grid.style.height = layout.containerHeight + 'px';
-
+      // Square-tile grid; each photo fits whole inside its tile, letterboxed on the
+      // page background (CSS: .photo-grid--fit).
+      grid.classList.add('photo-grid--fit');
+      const spacing = ALBUM_GRID_GAP;
+      const cols = albumGridCols();
+      const size = squareGridCellSize(containerWidth);
       items.forEach((item, i) => {
-        const box = layout.boxes[i];
-        item.style.left   = box.left + 'px';
-        item.style.top    = box.top  + 'px';
-        item.style.width  = box.width + 'px';
-        item.style.height = box.height + 'px';
+        item.style.left   = (i % cols) * (size + spacing) + 'px';
+        item.style.top    = Math.floor(i / cols) * (size + spacing) + 'px';
+        item.style.width  = size + 'px';
+        item.style.height = size + 'px';
       });
+      const rows = Math.ceil(items.length / cols);
+      grid.style.height = rows * size + (rows - 1) * spacing + 'px';
     }
-
-    let squareGrid = localStorage.getItem('album-grid-square') === '1';
-
-    function syncAspectInputs() {
-      document.querySelectorAll('.album-aspect-input').forEach(input => {
-        input.checked = !squareGrid;
-      });
-    }
-
-    document.querySelectorAll('.album-aspect-input').forEach(input => {
-      input.addEventListener('change', () => {
-        squareGrid = !input.checked;
-        localStorage.setItem('album-grid-square', squareGrid ? '1' : '0');
-        syncAspectInputs();
-        document.querySelectorAll('.photo-grid').forEach(runJustifiedLayout);
-      });
-    });
-    syncAspectInputs();
 
     function bindGridLayout(grid) {
       if (!grid._layoutBound) {
@@ -1459,16 +1420,18 @@
 
     function updateViewControls(showingFull) {
       const topControls = document.getElementById('album-view-controls-top');
-      const bottomControls = document.getElementById('album-view-controls-bottom');
       const curatedLabel = document.getElementById('album-curated-label');
       const note = document.getElementById('album-favorites-note');
-      const toggleBottom = document.getElementById('album-view-toggle-bottom');
-      const label = showingFull ? 'Back to favorites' : 'View all photos';
+      const viewSwitch = document.getElementById('album-view-switch');
       const showToggle = hasCurated && !album.curatedOnly;
 
-      if (bottomControls) bottomControls.hidden = !showToggle;
+      [viewSwitch, document.getElementById('album-view-switch-bottom')].forEach(el => {
+        if (!el) return;
+        el.hidden = !showToggle;
+        el.querySelector('.album-view-switch-label').textContent = showingFull ? 'All' : 'Favorites';
+        el.querySelector('.album-view-switch-btn').textContent = showingFull ? 'View favorites' : 'View all';
+      });
       if (curatedLabel) curatedLabel.hidden = true;
-      if (toggleBottom) toggleBottom.textContent = label;
       // Favorites note only when hearts are enabled (client galleries never offer favorites)
       const favoritesOff = heartsPaused
         || album.gridFavorites === false
@@ -1483,8 +1446,6 @@
       fullView = next;
       syncFullViewUrl();
       renderPhotoSections();
-      const anchor = document.getElementById('digital-section') || document.querySelector('#album-content main');
-      if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function buildCuratedSections(album) {
@@ -1670,7 +1631,6 @@
           document.getElementById('album-header-toolbar'),
           document.getElementById('album-toolbar-sentinel'),
           document.getElementById('album-view-controls-top'),
-          document.getElementById('album-view-controls-bottom'),
         ].filter(Boolean);
         const reveal = document.getElementById('album-view-all');
         if (rest.length && reveal) {
@@ -1710,8 +1670,13 @@
       scrollToLinkedPhoto();
     }
 
-    document.getElementById('album-view-toggle-bottom')?.addEventListener('click', () => {
-      setFullView(!fullView);
+    document.querySelectorAll('.album-view-switch-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const atBottom = !!btn.closest('.album-view-switch--bottom');
+        setFullView(!fullView);
+        // Bottom button: jump back to the top so the new view starts from the beginning.
+        if (atBottom) window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     });
 
     // Visible "More in <trip>" switcher in the page header so a visitor can hop
@@ -3289,24 +3254,67 @@
       line-height: 1.45;
       color: var(--color-text);
     }
-    .album-view-controls--bottom {
+    .album-view-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding-top: 1rem;
+      padding-bottom: 0.25rem;
+    }
+    .album-view-switch[hidden] { display: none; }
+    /* In the toolbar row: sits left, same row as Download / Navigate. The sticky
+       state swaps it for back link + title, so row height never changes. */
+    .album-view-switch--toolbar {
+      padding: 0;
+      margin-right: auto;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+    .album-view-switch--toolbar .album-view-switch-label {
+      font-size: 1.4rem;
+    }
+    .album-view-switch--toolbar .album-view-switch-btn {
+      padding: 0.32rem 0.85rem;
+      font-size: 1rem;
+    }
+    .album-header-toolbar { min-height: 2.9rem; }
+    .album-header-toolbar.is-stuck .album-view-switch--toolbar { display: none; }
+    @media (max-width: 640px) {
+      .album-view-switch--toolbar { gap: 0.55rem; }
+      .album-view-switch--toolbar .album-view-switch-label { font-size: 1.15rem; }
+      .album-view-switch--toolbar .album-view-switch-btn { padding: 0.28rem 0.6rem; font-size: 0.9rem; }
+    }
+    .album-view-switch--bottom {
+      justify-content: center;
+      margin-top: 3rem;
       padding-top: 2rem;
       padding-bottom: 1rem;
+      border-top: 1px solid var(--color-border);
     }
-    .album-view-toggle-btn {
-      display: inline-block;
-      background: var(--color-gold);
+    .album-view-switch-label {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      line-height: 1;
+      color: var(--color-text);
+    }
+    .album-view-switch-btn {
+      background: transparent;
       border: 1px solid var(--color-gold);
-      color: #1a1a1a;
-      padding: 0.55rem 1.35rem;
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      color: var(--color-gold);
+      padding: 0.4rem 1rem;
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      line-height: 1;
       cursor: pointer;
-      transition: filter 0.2s;
+      transition: background 0.2s, color 0.2s;
     }
-    .album-view-toggle-btn:hover {
-      filter: brightness(0.92);
+    .album-view-switch-btn:hover {
+      background: var(--color-gold);
+      color: #1a1a1a;
     }
     .album-favorites-note {
       margin: 0.85rem auto 0;
