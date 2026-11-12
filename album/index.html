@@ -1388,8 +1388,12 @@
         fullView = true;
         return;
       }
-      // Standalone albums with highlights[]: favorites grid, then the rest behind View all photos.
-      if (!album.parentId && Array.isArray(album.highlights) && album.highlights.length) {
+      // Standalone highlights trailer — not when curated + filmSections use sectioned Favorites.
+      if (
+        !album.parentId
+        && Array.isArray(album.highlights) && album.highlights.length
+        && !albumUsesSectionedCurated(album)
+      ) {
         hasCurated = false;
         fullView = true;
         return;
@@ -1448,6 +1452,15 @@
       renderPhotoSections();
     }
 
+    // Digital + filmSections + curated → Favorites/All sectioned grids (Venice / Red Rock).
+    function albumUsesSectionedCurated(album) {
+      return (
+        !!album
+        && Array.isArray(album.curated) && album.curated.length > 0
+        && getAlbumFilmSections(album).length > 0
+      );
+    }
+
     function buildCuratedSections(album) {
       const allFilmSections = getAlbumFilmSections(album);
       const assigned = new Set();
@@ -1467,14 +1480,19 @@
     function renderPhotoSections() {
       const showingFull = fullView || !hasCurated;
       isCuratedView = hasCurated && !fullView;
+      const squashFavoritesGrid = isCuratedView && albumUsesSectionedCurated(album);
 
       // In curated view, split curated URLs back into digital vs per-film-stock groups
-      const curatedSections = isCuratedView ? buildCuratedSections(album) : null;
+      const curatedSections = isCuratedView && !squashFavoritesGrid
+        ? buildCuratedSections(album)
+        : (isCuratedView ? { digital: album.curated || [], filmSections: [] } : null);
 
       const fullPhotos = getAlbumAllPhotos(album);
       allPhotos = showingFull
         ? fullPhotos
-        : [...curatedSections.digital, ...curatedSections.filmSections.flatMap(s => s.photos)];
+        : squashFavoritesGrid
+          ? [...(album.curated || [])]
+          : [...curatedSections.digital, ...curatedSections.filmSections.flatMap(s => s.photos)];
       if (_privateToken) {
         allPhotos = allPhotos.map(url => toImageUrl(url, _privateToken));
       }
@@ -1491,8 +1509,10 @@
       digitalGrid.innerHTML = '';
       filmSection.innerHTML = '';
 
-      const digitalPhotos = showingFull ? (album.photos || []) : curatedSections.digital;
-      const hasCuratedFilm = isCuratedView && curatedSections.filmSections.length > 0;
+      const digitalPhotos = showingFull
+        ? (album.photos || [])
+        : (squashFavoritesGrid ? (album.curated || []) : curatedSections.digital);
+      const hasCuratedFilm = isCuratedView && !squashFavoritesGrid && curatedSections.filmSections.length > 0;
       const digitalLabelEl = document.getElementById('digital-section-label');
       const digitalLabelRow = document.getElementById('digital-section-label-row');
       const digitalDlBtn = document.getElementById('digital-section-dl-btn');
@@ -1519,7 +1539,9 @@
         digitalGrid.appendChild(createPhotoThumb(thumbUrl, i, album.title));
       });
 
-      const filmSections = showingFull ? getAlbumFilmSections(album) : (curatedSections?.filmSections || []);
+      const filmSections = showingFull
+        ? getAlbumFilmSections(album)
+        : (squashFavoritesGrid ? [] : (curatedSections?.filmSections || []));
       let photoOffset = digitalPhotos.length;
 
       if (filmSections.length) {
@@ -1609,7 +1631,11 @@
       // Standalone project trailer (highlights → full album below)
       const albumHighlights = document.getElementById('album-highlights');
       const albumHighlightsGrid = document.getElementById('album-highlights-grid');
-      const trailer = (!album.parentId && Array.isArray(album.highlights))
+      const trailer = (
+        !album.parentId
+        && Array.isArray(album.highlights)
+        && !albumUsesSectionedCurated(album)
+      )
         ? album.highlights.filter(Boolean)
         : [];
       if (albumHighlights && albumHighlightsGrid && trailer.length) {

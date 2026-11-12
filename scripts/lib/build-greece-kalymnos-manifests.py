@@ -25,6 +25,7 @@ ROLL_MAP = [
     ("7_9_24_HP5400", "07-HP5400"),
     ("8_9_24_tmax400", "08-TMax400"),
     ("9_9_25_ektar100", "09-Ektar100"),
+    ("10_9_25_portra_400", "10-Portra400"),
 ]
 
 
@@ -91,15 +92,9 @@ def main() -> int:
     }
     (OUT / "summary.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
-    if len(entries) != 289:
-        print("ERROR: expected 289 files", file=sys.stderr)
+    if len(entries) != 300:
+        print(f"ERROR: expected 300 files in export, got {len(entries)}", file=sys.stderr)
         return 1
-    if summary["ge4"] != 26 or summary["ge3"] != 65 or summary["ge2"] != 138:
-        print(
-            "WARNING: rating tier counts differ from plan "
-            f"(got ge4={summary['ge4']} ge3={summary['ge3']} ge2={summary['ge2']})",
-            file=sys.stderr,
-        )
     return 0
 
 

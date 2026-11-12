@@ -40,6 +40,7 @@ done, move it out of Open, add a Changelog line.
 |----|-----------|--------|-------|
 | **FEAT-4** | Roll out Large (~5 MB) download tier | M | Worker `d5993742…` live; frontend commit/push pending |
 | **ADMIN-1** | Drag-and-drop reorder in `/admin` | M–L | |
+| **ADMIN-2** | Admin visibility tiers (replace star-driven album JS edits) | M–L | Greece/Kalymnos first; see ticket |
 
 ### 5 — Code health (when touching album code)
 | ID | One-liner | Effort | Notes |
@@ -169,6 +170,19 @@ Jump here after picking an ID from Open tickets.
 - **Fix:** Phase 1 Venice digital + `/api/admin-reorder` (GitHub API updates album shard). Phase 2 other albums / film sections.
 - **Files:** `admin/index.html`, new `api/admin-reorder.js`, `js/albums/*.js`
 - **Done when:** Reorder in admin → save → redeploy reflects order.
+
+### ADMIN-2 — Admin visibility tiers (visual curation without Lightroom/code)
+- **Effort:** M–L · **Risk:** Med · **Status:** TODO
+- **Why:** Greece Kalymnos public layout is driven today by Lightroom `Rating` on export JPGs + `build-greece-kalymnos-manifests.py` → `generate-greece-kalymnos-album-js.py`. Changing what appears on which page means re-export XMP or rerunning scripts. `/admin` already has a visual **curated** picker (`/api/admin-curate`) but only writes one list.
+- **Goal:** In `/admin`, set each photo’s **visibility tier** from a grid (not code). Site config becomes source of truth for web presentation; optional one-way “sync from export folder” later.
+- **Tier model (match Greece / Lightroom intent — not the album UI’s “Favorites” label):**
+  - **1★** — hidden full album only (e.g. `greece-2026-all` / personal deliverable), not on public sub-album
+  - **≥2★** — public album `photos[]` (“View all” = entire public set)
+  - **≥3★** — public default grid `curated[]`
+  - **≥4★** — parent group `highlights[]` (trip hero strip)
+- **Fix:** Phase 1 — `greece-public-kalymnos` + parent `greece-2026` highlights: extend admin UI (badges / 1–4 cycle) and new API (pattern `admin-curate`: GitHub commit to `js/albums/greece-2026.js` + hidden `greece-2026-all.js` full list as needed). Phase 2 — other trips, group-level rules, ADMIN-1 reorder within tiers. Phase 3 (optional) — pull ratings from export XMP to seed admin, not required for saves.
+- **Files:** `admin/index.html`, new `api/admin-album-tiers.js` (or broaden `admin-curate`), `js/albums/greece-2026.js`, `js/albums/greece-2026-all.js`; retire or demote `scripts/lib/build-greece-kalymnos-manifests.py` for day-to-day edits once admin ships.
+- **Done when:** Change tiers in admin → save → deploy updates curated / photos / highlights correctly; no R2 re-upload for tier-only changes; Kalymnos smoke-tested on prod.
 
 ### MNT-1 — Shared password gate
 - **Effort:** M · **Risk:** Med · **Status:** TODO

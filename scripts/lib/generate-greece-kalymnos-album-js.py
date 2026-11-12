@@ -24,33 +24,16 @@ def main() -> None:
     ge4 = json.loads((MANIFEST / "highlights-ge4.json").read_text())
 
     src = ALL_JS.read_text()
-    roll10 = re.findall(
-        r"`\$\{R2_BASE_URL\}/Greece/Kalymnos/10-Portra400/[^`]+`",
-        src,
-    )
-    roll10_urls = [m.strip("`") for m in roll10]
-    # Convert template to literal for json merge - they're still with ${R2_BASE_URL}
-    roll10_lines = [ln.strip().strip(",") for ln in roll10]
-    # Extract path suffix after R2_BASE_URL/
-    roll10_paths = []
-    for ln in roll10_lines:
-        m = re.search(r"\$\{R2_BASE_URL\}/(.+)`", ln)
-        if m:
-            roll10_paths.append(m.group(1))
+    entries = json.loads((MANIFEST / "entries.json").read_text())
+    roll10_paths = [
+        e["url"].split("pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/", 1)[1]
+        for e in entries
+        if e.get("r2Roll") == "10-Portra400"
+    ]
 
-    def r2(path: str) -> str:
-        return f"${{R2_BASE_URL}}/{path}"
-
-    hidden_photos = all_photos + [r2(p) for p in roll10_paths]
-
-    cover = ge4[0] if ge4 else all_photos[0]
-    cover_expr = (
-        "${R2_BASE_URL}/" + cover.split("/Greece/", 1)[1]
-        if "/Greece/" in cover
-        else cover
-    )
-    # Use template form
-    cover_js = f"`${{R2_BASE_URL}}/{cover.split('/Greece/', 1)[1]}`"
+    r2_host = "pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev"
+    kalymnos_cover_path = "Greece/Kalymnos/04-FP4Plus125/4_9_22_FP4+_125_24.jpg"
+    cover_js = f"`${{R2_BASE_URL}}/{kalymnos_cover_path}`"
 
     # Patch kalymnos photos array in greece-2026-all.js
     start = src.index("    photos: [", src.index("id: 'greece-kalymnos'"))
@@ -61,10 +44,7 @@ def main() -> None:
     for u in all_photos:
         path = u.split("pub-d6285edfbb3747a9bbfc77b32aac2baa.r2.dev/", 1)[1]
         fixed_all.append(f"${{R2_BASE_URL}}/{path}")
-    new_block = "    photos: [\n" + js_urls(fixed_all)
-    for p in roll10_paths:
-        new_block += f"\n      `${{R2_BASE_URL}}/{p}`,"
-    new_block += "\n    ],"
+    new_block = "    photos: [\n" + js_urls(fixed_all) + "\n    ],"
     updated = src[:start] + new_block + src[end + len("    ],") :]
 
     # Update covers (group + kalymnos)
@@ -176,7 +156,7 @@ const ALBUMS_GREECE_2026 = [
 """
     PUBLIC_JS.write_text(public_js)
     print(f"Wrote {PUBLIC_JS}")
-    print(f"Patched {ALL_JS} — hidden kalymnos photos: {len(fixed_all) + len(roll10_paths)}")
+    print(f"Patched {ALL_JS} — hidden kalymnos photos: {len(fixed_all)} (roll 10: {len(roll10_paths)} frames)")
 
 
 if __name__ == "__main__":
