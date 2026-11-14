@@ -190,26 +190,30 @@
     };
     const without = (arr, url) => { const i = arr.indexOf(url); if (i >= 0) arr.splice(i, 1); };
 
-    function insertInPhotos(key, url) {
-      const photos = lists.loc[key].photos;
-      if (photos.includes(url)) return;
-      const order = universe[key];
+    // Shoot order for the whole trip: locations in trip order, frames in each location's order.
+    const tripOrder = trip.locations.flatMap((l) => universe[l.key]);
+
+    // Insert `url` into `list` right after the nearest earlier frame (in `order`) that is already in
+    // the list, so new photos land where they belong chronologically instead of at the end.
+    // If you have hand-ordered the list, it still goes next to its chronological neighbour.
+    function insertInOrder(list, url, order) {
+      if (list.includes(url)) return;
       const idx = order.indexOf(url);
       let at = 0;
       for (let i = idx - 1; i >= 0; i--) {
-        const p = photos.indexOf(order[i]);
+        const p = list.indexOf(order[i]);
         if (p >= 0) { at = p + 1; break; }
       }
-      photos.splice(at, 0, url);
+      list.splice(at, 0, url);
     }
 
     function setTier(url, tier) {
       const key = locOf.get(url);
-      if (tier >= 4) { if (!lists.highlights.includes(url)) lists.highlights.push(url); } else without(lists.highlights, url);
+      if (tier >= 4) insertInOrder(lists.highlights, url, tripOrder); else without(lists.highlights, url);
       if (!key) return;
       const loc = lists.loc[key];
-      if (tier >= 3) { if (!loc.curated.includes(url)) loc.curated.push(url); } else without(loc.curated, url);
-      if (tier >= 2) insertInPhotos(key, url); else without(loc.photos, url);
+      if (tier >= 3) insertInOrder(loc.curated, url, universe[key]); else without(loc.curated, url);
+      if (tier >= 2) insertInOrder(loc.photos, url, universe[key]); else without(loc.photos, url);
     }
 
     function removePhoto(url) {
@@ -439,7 +443,7 @@
     }
 
     // After switching tabs, scroll to the most recently moved photo if it is on this tab
-    // (new 4-star photos are appended to the END of the trip strip, which can be far down).
+    // (a promoted photo can land far down a long list).
     function revealRecent() {
       const el = gridWrap.querySelector('.le-tile.is-recent');
       if (el) el.scrollIntoView({ block: 'center' });
