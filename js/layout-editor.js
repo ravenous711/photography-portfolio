@@ -242,6 +242,10 @@
         sections: () => [{ items: lists.loc[key].curated, list: lists.loc[key].curated }],
       });
       tabs.push({
+        id: 'four', label: () => `4\u2605 Trip highlights (${fours(key).length})`,
+        sections: () => [{ items: fours(key) }],
+      });
+      tabs.push({
         id: 'two', label: () => `2\u2605 View all (${twoOnly(key).length})`,
         sections: () => [{ items: twoOnly(key) }],
       });
@@ -254,6 +258,8 @@
       id: 'removed', label: () => `Removed (${removed.size})`, removedTab: true,
       sections: () => [{ items: [...removed.keys()] }],
     });
+    // 4-star photos from one location (their order is set on the trip page).
+    function fours(key) { return lists.highlights.filter((u) => locOf.get(u) === key); }
     function candidates(key) { return lists.loc[key].curated.filter((u) => !lists.highlights.includes(u)); }
     function twoOnly(key) {
       const l = lists.loc[key];
@@ -273,7 +279,7 @@
     // Where does a photo at a given star level show up in this editor?
     function tabForTier(tier) {
       if (kind === 'group') return tier >= 4 ? 'highlights' : (tier === 3 ? 'candidates' : null);
-      return tier >= 3 ? 'curated' : (tier === 2 ? 'two' : 'one');
+      return tier >= 4 ? 'four' : (tier === 3 ? 'curated' : (tier === 2 ? 'two' : 'one'));
     }
     const tabLabelText = (id) => tabs.find((t) => t.id === id)?.label().replace(/\s*\(\d+\)$/, '');
 
@@ -327,7 +333,7 @@
     function renderChrome() {
       tabBar.replaceChildren(...tabs.map((t) => h('button', {
         class: 'le-tab' + (t.id === activeTab ? ' is-active' : ''), type: 'button',
-        onclick: () => { activeTab = t.id; render(); },
+        onclick: () => { activeTab = t.id; render(); revealRecent(); },
       }, t.label())));
       chips.replaceChildren(...counters().map((c) => h('span', {
         class: 'le-chip' + (c.over ? ' is-over' : '') + (c.current ? ' is-current' : ''),
@@ -443,6 +449,13 @@
       if (!total) nodes.push(h('div', { class: 'le-empty' }, tab.removedTab ? 'Nothing removed in this session.' : 'No photos at this level.'));
       gridWrap.replaceChildren(...nodes);
       gridWrap.scrollTop = scroll;
+    }
+
+    // After switching tabs, scroll to the most recently moved photo if it is on this tab
+    // (new 4-star photos are appended to the END of the trip strip, which can be far down).
+    function revealRecent() {
+      const el = gridWrap.querySelector('.le-tile.is-recent');
+      if (el) el.scrollIntoView({ block: 'center' });
     }
 
     function zoom(url) {
