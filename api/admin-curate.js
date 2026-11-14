@@ -12,6 +12,7 @@
  * Requires a valid admin session cookie (set by api/admin-login.js).
  */
 import { requireSession } from './_admin-session.js';
+import { MANAGED_ALBUM_IDS } from './_layout-core.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -41,6 +42,12 @@ export default async function handler(req, res) {
   }
   if (!Array.isArray(photos)) {
     return res.status(400).json({ error: 'photos must be an array' });
+  }
+  // These albums keep their lists in a LAYOUT block owned by the on-site layout editor.
+  if (MANAGED_ALBUM_IDS.has(albumId)) {
+    return res.status(409).json({
+      error: `'${albumId}' is managed by the on-site layout editor. Open the album page while logged in as admin and use Edit layout.`,
+    });
   }
 
   // Allowlist: every URL must be from the known R2 public bucket.

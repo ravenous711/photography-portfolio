@@ -67,3 +67,18 @@ const ALBUMS = [
   ...ALBUMS_GREECE_2026,
   ...ALBUMS_GREECE_2026_ALL,
 ];
+
+// Photos removed from the manifest by the on-site layout editor (files stay in R2).
+// The editor also strips them from the album files; this keeps them out even if a
+// list is regenerated or edited by hand later.
+(function applyLayoutRemovals() {
+  if (typeof GREECE_LAYOUT === 'undefined' || !GREECE_LAYOUT.removed?.length) return;
+  const gone = new Set(GREECE_LAYOUT.removed);
+  ALBUMS.forEach((album) => {
+    ['photos', 'curated', 'highlights'].forEach((key) => {
+      if (Array.isArray(album[key]) && album[key].some((u) => gone.has(u))) {
+        album[key] = album[key].filter((u) => !gone.has(u));
+      }
+    });
+  });
+})();
