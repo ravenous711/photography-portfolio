@@ -172,7 +172,10 @@ Jump here after picking an ID from Open tickets.
 - **Done when:** Reorder in admin → save → redeploy reflects order.
 
 ### ADMIN-2 — Admin visibility tiers (visual curation without Lightroom/code)
-- **Effort:** M–L · **Risk:** Med · **Status:** TODO
+- **Effort:** M–L · **Risk:** Med · **Status:** IN PROGRESS — built and tested locally on `feat/layout-editor` (not merged, not deployed)
+- **What was built (supersedes the plan below):** admin-only **Edit layout** overlay on the real trip + location pages (`js/layout-editor.js`). Drag to reorder, 1–4 stars, remove-from-manifest (R2 untouched), budget counters. Save → `POST /api/admin-layout` → **one commit** (Git Data API) that rewrites the marked `LAYOUT` block in `js/albums/greece-2026.js` and strips removed photos from `greece-2026-all.js`; `git revert` undoes a save. Helpers in `api/_layout-core.js`. `admin-curate` refuses the managed Greece albums.
+- **Env:** prod needs `GITHUB_TOKEN`, `GITHUB_REPO`, and an explicit `GITHUB_BRANCH` (no default; `main` publishes). Local dev: `LAYOUT_WRITE_MODE=local` writes the working tree instead (see the dev-server skill).
+- **Not done / next:** GitHub-mode save is untested end to end (only the local write path was exercised); trip budgets (12 / 18) are placeholders; other trips; inline (on-grid) dragging instead of the overlay.
 - **Why:** Greece Kalymnos public layout is driven today by Lightroom `Rating` on export JPGs + `build-greece-kalymnos-manifests.py` → `generate-greece-kalymnos-album-js.py`. Changing what appears on which page means re-export XMP or rerunning scripts. `/admin` already has a visual **curated** picker (`/api/admin-curate`) but only writes one list.
 - **Goal:** In `/admin`, set each photo’s **visibility tier** from a grid (not code). Site config becomes source of truth for web presentation; optional one-way “sync from export folder” later.
 - **Tier model (match Greece / Lightroom intent — not the album UI’s “Favorites” label):**

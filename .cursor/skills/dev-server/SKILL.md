@@ -39,6 +39,19 @@ All four values live in `.env.local` at the repo root — copy them from there. 
 
 > **Note — admin-curate writes to GitHub:** The `/api/admin-curate` endpoint always writes to the default branch of the linked `GITHUB_REPO`. When testing locally on a feature branch, the curated changes are committed to the wrong branch. After saving a curated set locally, run `git pull` to pull any new commits in, then cherry-pick or manually re-apply the curated change to your feature branch.
 
+### Testing the on-site layout editor (ADMIN-2)
+
+`/api/admin-layout` can write the working tree instead of GitHub, so you can try Save locally and review with `git diff`. Use throwaway admin creds so no real secrets or `GITHUB_TOKEN` are involved:
+
+```bash
+SESSION_SECRET=dev-local-secret \
+ADMIN_PASSWORD_HASH=$(printf 'dev-test' | shasum -a 256 | cut -d' ' -f1) \
+LAYOUT_WRITE_MODE=local \
+vercel dev --listen 8081
+```
+
+Log in at `/admin/` with password `dev-test` (this also sets the hint that shows **Edit layout** on public pages), then open `/gallery/greece-2026/` or `/gallery/greece-2026/naxos/`. After testing, `git checkout js/albums` to discard the written changes. If port 8080 is already taken by another server, `vercel dev` silently moves to the next port — read its "Available at" line.
+
 ## Key URLs once running
 
 | Page | URL |

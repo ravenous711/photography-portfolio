@@ -15,8 +15,8 @@
  * }
  *
  * Write targets:
- *   - Production / preview: GitHub Git Data API (one commit). Branch = GITHUB_BRANCH,
- *     else the repo's default branch.
+ *   - Production / preview: GitHub Git Data API (one commit) on GITHUB_BRANCH. GITHUB_BRANCH
+ *     is required (no default) so nothing commits to main unless you set GITHUB_BRANCH=main.
  *   - Local dev: set LAYOUT_WRITE_MODE=local to write the files in the working tree instead
  *     (refused when VERCEL_ENV=production).
  *
@@ -210,6 +210,11 @@ function githubStore() {
   if (!GITHUB_TOKEN || !GITHUB_REPO) {
     throw new Error('Server not configured — missing GITHUB_TOKEN or GITHUB_REPO');
   }
+  // Explicit opt-in so a dev server that happens to have GITHUB_TOKEN can never commit to
+  // the production branch by accident. Set GITHUB_BRANCH=main on Vercel to publish from the site.
+  if (!GITHUB_BRANCH) {
+    throw new Error('Server not configured — set GITHUB_BRANCH (use the branch to commit to; "main" publishes)');
+  }
   const [owner, repo] = GITHUB_REPO.split('/');
   const api = `https://api.github.com/repos/${owner}/${repo}`;
   const headers = {
@@ -230,11 +235,7 @@ function githubStore() {
     return r.json();
   };
 
-  const resolveBranch = async () => {
-    if (GITHUB_BRANCH) return GITHUB_BRANCH;
-    const info = await gh(api);
-    return info.default_branch;
-  };
+  const resolveBranch = async () => GITHUB_BRANCH;
 
   const readFile = async (p, branch) => {
     const data = await gh(`${api}/contents/${p}?ref=${encodeURIComponent(branch)}`);
