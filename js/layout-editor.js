@@ -427,20 +427,7 @@
       const tab = tabs.find((t) => t.id === activeTab);
       const nodes = [];
       let total = 0;
-      let sections = tab.sections();
-      // In list tabs (not the ordered ones), pull photos you just moved to the top so they are easy to find.
-      if (!tab.ordered && !tab.removedTab) {
-        const here = new Set(sections.flatMap((s) => s.items));
-        const justMoved = recent.filter((u) => here.has(u));
-        if (justMoved.length) {
-          const moved = new Set(justMoved);
-          sections = [
-            { title: 'Just moved', items: justMoved },
-            ...sections.map((s) => ({ ...s, items: s.items.filter((u) => !moved.has(u)) })),
-          ];
-        }
-      }
-      sections.forEach((section) => {
+      tab.sections().forEach((section) => {
         if (section.title) nodes.push(h('div', { class: 'le-section-title' }, `${section.title} (${section.items.length})`));
         if (!section.items.length) return;
         total += section.items.length;
