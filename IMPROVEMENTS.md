@@ -40,7 +40,7 @@ done, move it out of Open, add a Changelog line.
 |----|-----------|--------|-------|
 | **FEAT-4** | Roll out Large (~5 MB) download tier | M | Worker `d5993742…` live; frontend commit/push pending |
 | **ADMIN-1** | Drag-and-drop reorder in `/admin` | M–L | |
-| **ADMIN-2** | Admin visibility tiers (replace star-driven album JS edits) | M–L | Greece/Kalymnos first; see ticket |
+| **ADMIN-2** | On-site layout editor: set `GITHUB_BRANCH` on Vercel, smoke-test a prod save, then roll out to other trips | S–M | Phase 1 (Greece) shipped; see ticket |
 
 ### 5 — Code health (when touching album code)
 | ID | One-liner | Effort | Notes |
@@ -171,21 +171,14 @@ Jump here after picking an ID from Open tickets.
 - **Files:** `admin/index.html`, new `api/admin-reorder.js`, `js/albums/*.js`
 - **Done when:** Reorder in admin → save → redeploy reflects order.
 
-### ADMIN-2 — Admin visibility tiers (visual curation without Lightroom/code)
-- **Effort:** M–L · **Risk:** Med · **Status:** IN PROGRESS — built and tested locally on `feat/layout-editor` (not merged, not deployed)
-- **What was built (supersedes the plan below):** admin-only **Edit layout** overlay on the real trip + location pages (`js/layout-editor.js`). Drag to reorder, 1–4 stars, remove-from-manifest (R2 untouched), budget counters. Save → `POST /api/admin-layout` → **one commit** (Git Data API) that rewrites the marked `LAYOUT` block in `js/albums/greece-2026.js` and strips removed photos from `greece-2026-all.js`; `git revert` undoes a save. Helpers in `api/_layout-core.js`. `admin-curate` refuses the managed Greece albums.
-- **Env:** prod needs `GITHUB_TOKEN`, `GITHUB_REPO`, and an explicit `GITHUB_BRANCH` (no default; `main` publishes). Local dev: `LAYOUT_WRITE_MODE=local` writes the working tree instead (see the dev-server skill).
-- **Not done / next:** GitHub-mode save is untested end to end (only the local write path was exercised); trip budgets (12 / 18) are placeholders; other trips; inline (on-grid) dragging instead of the overlay.
-- **Why:** Greece Kalymnos public layout is driven today by Lightroom `Rating` on export JPGs + `build-greece-kalymnos-manifests.py` → `generate-greece-kalymnos-album-js.py`. Changing what appears on which page means re-export XMP or rerunning scripts. `/admin` already has a visual **curated** picker (`/api/admin-curate`) but only writes one list.
-- **Goal:** In `/admin`, set each photo’s **visibility tier** from a grid (not code). Site config becomes source of truth for web presentation; optional one-way “sync from export folder” later.
-- **Tier model (match Greece / Lightroom intent — not the album UI’s “Favorites” label):**
-  - **1★** — hidden full album only (e.g. `greece-2026-all` / personal deliverable), not on public sub-album
-  - **≥2★** — public album `photos[]` (“View all” = entire public set)
-  - **≥3★** — public default grid `curated[]`
-  - **≥4★** — parent group `highlights[]` (trip hero strip)
-- **Fix:** Phase 1 — `greece-public-kalymnos` + parent `greece-2026` highlights: extend admin UI (badges / 1–4 cycle) and new API (pattern `admin-curate`: GitHub commit to `js/albums/greece-2026.js` + hidden `greece-2026-all.js` full list as needed). Phase 2 — other trips, group-level rules, ADMIN-1 reorder within tiers. Phase 3 (optional) — pull ratings from export XMP to seed admin, not required for saves.
-- **Files:** `admin/index.html`, new `api/admin-album-tiers.js` (or broaden `admin-curate`), `js/albums/greece-2026.js`, `js/albums/greece-2026-all.js`; retire or demote `scripts/lib/build-greece-kalymnos-manifests.py` for day-to-day edits once admin ships.
-- **Done when:** Change tiers in admin → save → deploy updates curated / photos / highlights correctly; no R2 re-upload for tier-only changes; Kalymnos smoke-tested on prod.
+### ADMIN-2 — On-site layout editor (Greece shipped; follow-ups)
+- **Effort:** S–M · **Risk:** Low · **Status:** Phase 1 SHIPPED to `main` (Nov 2026); prod saves need one env var
+- **Shipped:** admin-only **Edit layout** overlay on the Greece trip + location pages (`js/layout-editor.js`). Drag to reorder, 1–4 stars, remove-from-manifest (R2 untouched), budget counters. Save → `POST /api/admin-layout` → **one commit** (Git Data API) that rewrites the marked `LAYOUT` block in `js/albums/greece-2026.js` and strips removed photos from `greece-2026-all.js`; `git revert` undoes a save. Helpers in `api/_layout-core.js`. `admin-curate` refuses the managed Greece albums.
+- **Stars (derived from list membership):** 4 = `GREECE_LAYOUT.highlights`, 3 = `<loc>.curated`, 2 = `<loc>.photos`, 1 = only in `greece-2026-all.js`.
+- **To enable saves on prod:** add `GITHUB_BRANCH=main` to the Vercel env (alongside `GITHUB_TOKEN`, `GITHUB_REPO`). It has no default on purpose, so a dev server with a token can never commit to `main` by accident. Without it, Save shows a red "set GITHUB_BRANCH" error and nothing is written.
+- **Local dev:** `LAYOUT_WRITE_MODE=local` writes the working tree instead of GitHub (see the dev-server skill). GitHub-mode saves were trialled on a throwaway branch (3 commits, single-file, revertable) and then discarded.
+- **Next:** (1) set `GITHUB_BRANCH`, smoke-test one real save, `git revert` it; (2) trip budgets (12 trip / 18 per location) are placeholders; (3) roll the `LAYOUT` block out to other trips (add them to `TRIPS` in `api/_layout-core.js` and `LAYOUT_TRIPS` in `js/layout-editor.js`); (4) optional inline dragging on the page grid instead of the overlay; (5) retire `scripts/lib/build-greece-kalymnos-manifests.py` for day-to-day edits (it can re-add removed photos unless it skips `GREECE_LAYOUT.removed`).
+- **Done when:** one prod save verified and reverted; second trip onboarded.
 
 ### MNT-1 — Shared password gate
 - **Effort:** M · **Risk:** Med · **Status:** TODO
@@ -272,6 +265,11 @@ Jump here after picking an ID from Open tickets.
 ---
 
 ## Changelog
+
+- **On-site layout editor (ADMIN-2 phase 1)** — Nov 2026.
+  Greece lists moved into a marked `GREECE_LAYOUT` block; admin-only Edit layout overlay on the trip and
+  location pages; `/api/admin-layout` saves as one revertable commit; remove-from-manifest never touches R2.
+  Prod saves need `GITHUB_BRANCH=main` set on Vercel.
 
 - **Greece 2026 — public Kalymnos** — Nov 2026 (branch `feature/greece-public-album`).
   Re-uploaded 289 renamed `Kalymnos Export` frames to `Greece/Kalymnos/<01–09-Stock>/` (all tiers).
