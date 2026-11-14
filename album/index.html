@@ -399,6 +399,7 @@
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
   <script src="/js/photo-viewer.js"></script>
+  <script src="/js/layout-editor.js"></script>
   <script>
     // ════════════════════════════════════════════════════════
     // ALBUM PAGE LOGIC
@@ -1694,6 +1695,16 @@
       renderSiblingNav();
       renderNextAlbumNav();
       scrollToLinkedPhoto();
+
+      // Admin-only layout editor: after a save, re-render the grid from the updated lists.
+      window.LayoutEditor?.mount({
+        kind: 'album',
+        item: album,
+        refresh: () => {
+          hasCurated = Array.isArray(album.curated) && album.curated.length > 0 && !isFilmRollAlbum(album);
+          renderPhotoSections();
+        },
+      });
     }
 
     document.querySelectorAll('.album-view-switch-btn').forEach(btn => {

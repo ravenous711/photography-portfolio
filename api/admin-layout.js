@@ -154,11 +154,13 @@ export default async function handler(req, res) {
     });
   }
 
-  const message = [
-    `Admin: layout ${tripId} — trip ${summary.highlights}`,
-    trip.locations.map((l) => `${l} ${summary.locations[l].curated}/${summary.locations[l].photos}`).join(', '),
-    newlyRemoved.length ? `; remove ${newlyRemoved.length} photo(s) from manifest (R2 untouched)` : '',
-  ].join(' ').replace(/\s+;/g, ';');
+  const counts = trip.locations
+    .map((l) => `${l} ${summary.locations[l].curated}/${summary.locations[l].photos}`)
+    .join(', ');
+  let message = `Admin: layout ${tripId} (trip ${summary.highlights}; ${counts})`;
+  if (newlyRemoved.length) {
+    message += `; remove ${newlyRemoved.length} photo(s) from manifest, R2 untouched`;
+  }
 
   try {
     const result = await store.write(changes, message);

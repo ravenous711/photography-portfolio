@@ -827,6 +827,7 @@
 
     async function signOut() {
       await fetch('/api/admin-login', { method: 'DELETE', credentials: 'same-origin' });
+      localStorage.removeItem('portfolio_admin_hint');
       document.getElementById('admin-ui').style.display = 'none';
       document.getElementById('auth-screen').classList.remove('hidden');
       document.getElementById('auth-input').value = '';
@@ -834,6 +835,8 @@
     }
 
     function showAdminUI() {
+      // Tells public pages (js/layout-editor.js) to check for an admin session and show Edit layout.
+      localStorage.setItem('portfolio_admin_hint', '1');
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('admin-ui').style.display = 'block';
       renderAlbums();

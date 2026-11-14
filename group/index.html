@@ -154,6 +154,7 @@
   <script src="/js/main.js"></script>
   <script src="/js/justified-layout.js"></script>
   <script src="/js/photo-viewer.js"></script>
+  <script src="/js/layout-editor.js"></script>
   <script>
     document.getElementById('footer-copyright').textContent =
       `© ${new Date().getFullYear()} ${SITE_CONFIG.photographerName}`;
@@ -435,10 +436,23 @@
           syncUrl: true,
         });
 
-        renderFavoritesGrid(highlightsGrid, highlights, {
-          alt: group.title,
-          eagerCount: 2,
-          onActivate: openHighlight,
+        const drawStrip = () => {
+          renderFavoritesGrid(highlightsGrid, highlights, {
+            alt: group.title,
+            eagerCount: 2,
+            onActivate: openHighlight,
+          });
+        };
+        drawStrip();
+
+        // Admin-only layout editor: after a save, refresh the strip in place.
+        window.LayoutEditor?.mount({
+          kind: 'group',
+          item: group,
+          refresh: () => {
+            highlights.splice(0, highlights.length, ...(group.highlights || []).filter(Boolean));
+            drawStrip();
+          },
         });
 
         const toolbar = document.getElementById('film-library-toolbar');
