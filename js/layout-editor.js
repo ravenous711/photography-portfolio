@@ -104,9 +104,13 @@
   .le-btn{background:#1d1d1d;border:1px solid #444;color:#eee;padding:7px 14px;border-radius:6px;cursor:pointer;font:inherit;font-size:13px}
   .le-btn:disabled{opacity:.4;cursor:default}
   .le-btn.primary{background:#c9a45c;border-color:#c9a45c;color:#111;font-weight:600}
-  .le-status{font-size:12px;color:#9ad29a;min-height:16px;max-width:520px}
-  .le-status.is-error{color:#ff9b9b}
+  .le-banner{padding:9px 18px;font-size:13px;border-bottom:1px solid #222;background:#16201a;color:#9ad29a}
+  .le-banner[hidden]{display:none}
+  .le-banner.is-info{background:#1a1a1a;color:#ddd}
+  .le-banner.is-error{background:#2a1515;color:#ffb3b3}
   .le-hint{padding:8px 18px;font-size:12px;color:#888;border-bottom:1px solid #1f1f1f}
+  .le-tile.is-recent{outline:2px solid #5ac8fa;outline-offset:-2px}
+  .le-new-badge{position:absolute;left:4px;bottom:30px;font-size:10px;background:#5ac8fa;color:#06222e;padding:1px 6px;border-radius:3px;font-weight:600}
   .le-grid-wrap{flex:1;overflow:auto;padding:16px 18px 60px}
   .le-section-title{margin:18px 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#999}
   .le-section-title:first-child{margin-top:0}
@@ -264,9 +268,34 @@
     let activeTab = tabs[0].id;
     let hoverUrl = null;
     let dragUrl = null;
+    const recent = []; // urls changed this session, newest first
+
+    // Where does a photo at a given star level show up in this editor?
+    function tabForTier(tier) {
+      if (kind === 'group') return tier >= 4 ? 'highlights' : (tier === 3 ? 'candidates' : null);
+      return tier >= 3 ? 'curated' : (tier === 2 ? 'two' : 'one');
+    }
+    const tabLabelText = (id) => tabs.find((t) => t.id === id)?.label().replace(/\s*\(\d+\)$/, '');
+
+    // Single entry point for star changes from the UI (click or key).
+    function changeTier(url, tier) {
+      const from = tierOf(url);
+      if (from === tier) return;
+      setTier(url, tier);
+      const at = recent.indexOf(url);
+      if (at >= 0) recent.splice(at, 1);
+      recent.unshift(url);
+      const id = tabForTier(tier);
+      const dest = id
+        ? `now under \u201C${tabLabelText(id)}\u201D (marked in blue)`
+        : (kind === 'group'
+          ? `now only on its location page (${tier}\u2605 ${TIER_LABEL[tier]})`
+          : '');
+      setStatus(`${from}\u2605 \u2192 ${tier}\u2605${dest ? `: ${dest}` : ''}`, 'info', 5000);
+    }
 
     // ── chrome ──
-    const status = h('span', { class: 'le-status' });
+    const banner = h('div', { class: 'le-banner', hidden: true, role: 'status' });
     const saveBtn = h('button', { class: 'le-btn primary', type: 'button', onclick: save }, 'Save');
     const tabBar = h('div', { class: 'le-tabs' });
     const chips = h('div', { class: 'le-chips' });
@@ -276,10 +305,10 @@
         h('span', { class: 'le-title' }, kind === 'group' ? `Edit layout \u2014 ${ctx.item.title}` : `Edit layout \u2014 ${pageLoc.title}`),
         tabBar,
         chips,
-        status,
         saveBtn,
         h('button', { class: 'le-btn', type: 'button', onclick: close }, 'Close'),
       ),
+      banner,
       h('div', { class: 'le-hint' },
         'Drag to reorder (ordered tabs). Hover a photo: 1\u20134 sets stars, X removes from the manifest (file stays in R2), F moves to front. Nothing is published until Save.'),
       gridWrap,
@@ -319,7 +348,8 @@
       const t = removed.has(url) ? 0 : tierOf(url);
       const ordered = tab.ordered && section.list;
       const el = h('div', {
-        class: `le-tile is-t${t}` + (ordered ? ' is-draggable' : '') + (tab.removedTab ? ' is-removed' : ''),
+        class: `le-tile is-t${t}` + (ordered ? ' is-draggable' : '') + (tab.removedTab ? ' is-removed' : '')
+          + (!tab.removedTab && recent.includes(url) ? ' is-recent' : ''),
         draggable: ordered ? 'true' : null,
         title: shortName(url),
         'data-url': url,
@@ -328,6 +358,7 @@
       },
       h('img', { src: thumb(url), alt: shortName(url), loading: 'lazy', decoding: 'async', draggable: 'false' }),
       ordered && h('span', { class: 'le-pos' }, index + 1),
+      !tab.removedTab && recent.includes(url) && h('span', { class: 'le-new-badge' }, 'moved'),
       h('div', { class: 'le-tools' },
         h('button', { class: 'le-icon', type: 'button', title: 'Zoom', onclick: () => zoom(url) }, '\u2315'),
         tab.removedTab
@@ -338,7 +369,7 @@
       !tab.removedTab && h('div', { class: 'le-stars' }, [1, 2, 3, 4].map((n) => h('button', {
         class: 'le-star' + (n <= t ? ' on' : ''), type: 'button',
         title: `${n}\u2605 ${TIER_LABEL[n]}`,
-        onclick: () => { setTier(url, n); render(); },
+        onclick: () => { changeTier(url, n); render(); },
       }, '\u2605'))));
 
       if (ordered) wireDrag(el, section.list, url);
@@ -390,7 +421,20 @@
       const tab = tabs.find((t) => t.id === activeTab);
       const nodes = [];
       let total = 0;
-      tab.sections().forEach((section) => {
+      let sections = tab.sections();
+      // In list tabs (not the ordered ones), pull photos you just moved to the top so they are easy to find.
+      if (!tab.ordered && !tab.removedTab) {
+        const here = new Set(sections.flatMap((s) => s.items));
+        const justMoved = recent.filter((u) => here.has(u));
+        if (justMoved.length) {
+          const moved = new Set(justMoved);
+          sections = [
+            { title: 'Just moved', items: justMoved },
+            ...sections.map((s) => ({ ...s, items: s.items.filter((u) => !moved.has(u)) })),
+          ];
+        }
+      }
+      sections.forEach((section) => {
         if (section.title) nodes.push(h('div', { class: 'le-section-title' }, `${section.title} (${section.items.length})`));
         if (!section.items.length) return;
         total += section.items.length;
@@ -406,9 +450,14 @@
       document.body.append(z);
     }
 
-    function setStatus(msg, isError) {
-      status.textContent = msg || '';
-      status.classList.toggle('is-error', !!isError);
+    // kind: 'ok' (green), 'info' (grey, auto-clears), 'error' (red, stays until the next message)
+    let bannerTimer = null;
+    function setStatus(msg, type, clearAfterMs) {
+      clearTimeout(bannerTimer);
+      banner.textContent = msg || '';
+      banner.hidden = !msg;
+      banner.className = 'le-banner' + (type === 'error' ? ' is-error' : type === 'info' ? ' is-info' : '');
+      if (msg && clearAfterMs) bannerTimer = setTimeout(() => { banner.hidden = true; }, clearAfterMs);
     }
 
     async function save() {
@@ -444,7 +493,7 @@
           : (data.changed === false ? 'No changes to save.' : (data.message || 'Saved.'));
         setStatus([where, ...(data.warnings || [])].join(' '));
       } catch (err) {
-        setStatus(err.message, true);
+        setStatus(`Save failed: ${err.message}`, 'error');
       }
       renderChrome();
     }
@@ -474,7 +523,7 @@
       if (e.key === 'Escape') { close(); return; }
       if (!hoverUrl || e.metaKey || e.ctrlKey || e.altKey) return;
       const tab = tabs.find((t) => t.id === activeTab);
-      if (['1', '2', '3', '4'].includes(e.key) && !tab.removedTab) { setTier(hoverUrl, Number(e.key)); render(); }
+      if (['1', '2', '3', '4'].includes(e.key) && !tab.removedTab) { changeTier(hoverUrl, Number(e.key)); render(); }
       else if ((e.key === 'x' || e.key === 'X') && !tab.removedTab) { removePhoto(hoverUrl); hoverUrl = null; render(); }
       else if ((e.key === 'f' || e.key === 'F') && tab.ordered) {
         const list = tab.sections()[0].list;
