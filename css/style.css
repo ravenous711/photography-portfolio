@@ -1422,6 +1422,14 @@ a.album-sibling-link:hover {
   justify-content: flex-end;
 }
 
+/* Download is just the icon (the menu still opens beneath it). */
+.album-header-toolbar .album-header-actions .album-dl-icon-btn {
+  width: 1.9rem;
+  height: 1.7rem;
+  padding: 0;
+  justify-content: center;
+}
+
 /* − / + photo size control in the album toolbar */
 .album-zoom {
   display: inline-flex;

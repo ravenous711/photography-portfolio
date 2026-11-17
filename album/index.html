@@ -150,15 +150,11 @@
         </div>
         <div class="album-header-actions">
           <div class="album-dl-wrap">
-            <button type="button" id="album-dl-menu-btn" class="btn-primary" aria-haspopup="menu" aria-expanded="false" aria-controls="album-dl-menu">
+            <button type="button" id="album-dl-menu-btn" class="btn-primary album-dl-icon-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="album-dl-menu" aria-label="Download" title="Download">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Download
-              <svg class="album-dl-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <path d="M6 9l6 6 6-6"/>
               </svg>
             </button>
             <div id="album-dl-menu" class="album-dl-menu" hidden role="menu" aria-labelledby="album-dl-menu-btn">
@@ -3757,8 +3753,6 @@
     .album-nav-menu-action.is-active {
       border-color: var(--color-gold);
     }
-    #album-dl-menu-btn .album-dl-chevron { transition: transform 0.2s ease; }
-    #album-dl-menu-btn[aria-expanded="true"] .album-dl-chevron { transform: rotate(180deg); }
 
     /* Checkbox on each thumb — only while select mode is on. */
     .photo-select-check {
