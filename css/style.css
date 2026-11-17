@@ -3364,69 +3364,176 @@ body.group-catalog .group-highlights .favorites-grid.is-fit .favorites-frame img
   }
 }
 
-/* ── Split trip page: albums left (1/3), highlights right (2/3) ───────────────
-   Opt-in per group with `layout: 'split'`; group/index.html adds body.group-split.
-   Below 900px nothing changes (cards stack above the highlights). */
+/* ── Trip rail: shared left navigation for a split trip ───────────────────────
+   Opt-in per group with `layout: 'split'`. js/trip-rail.js renders the same rail on the
+   trip page (body.group-split) and on each city album (body.trip-split), so moving
+   between "whole trip" and "one place" only swaps the right-hand pane.
+   Below 900px the rail becomes a swipeable row of thumbnails above the content. */
+body.trip-split { --trip-top: calc(var(--nav-height) + 1.25rem); }
+
+.trip-rail {
+  padding: var(--trip-top) 1.5rem 0;
+}
+
+.trip-rail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.trip-rail-back:hover { color: var(--color-text); }
+
+.trip-rail-title {
+  margin: 1.1rem 0 1.4rem;
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 300;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: #f3f0e9;
+}
+
+.trip-rail-nav {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: 0.25rem;
+}
+.trip-rail-nav::-webkit-scrollbar { display: none; }
+
+.trip-rail-link {
+  flex: 0 0 auto;
+  width: 7.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  scroll-snap-align: start;
+  text-decoration: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(243, 240, 233, 0.55);
+  transition: color 0.2s;
+}
+
+.trip-rail-thumb {
+  display: block;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #161615;
+  opacity: 0.6;
+  transition: opacity 0.25s;
+}
+.trip-rail-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.trip-rail-link:hover,
+.trip-rail-link.is-active { color: #f3f0e9; }
+.trip-rail-link:hover .trip-rail-thumb,
+.trip-rail-link.is-active .trip-rail-thumb { opacity: 1; }
+
+.trip-rail-label {
+  padding-bottom: 0.3rem;
+  box-shadow: inset 0 -1px 0 transparent;
+}
+.trip-rail-link.is-active .trip-rail-label { box-shadow: inset 0 -1px 0 var(--color-gold); }
+
+/* City album: the rail carries the back link and the trip tabs. */
+body.trip-split #back-link,
+body.trip-split #back-link-sticky,
+body.trip-split #album-sibling-nav { display: none !important; }
+
+/* Trip page: the rail replaces the header, sibling tabs and city cards. */
+body.group-split .group-catalog-header,
+body.group-split .film-library-toolbar { display: none; }
+
+@media (max-width: 899px) {
+  body.group-split .trip-rail { padding-inline: 0; }
+  body.group-split .group-catalog-main { padding-top: 0; }
+  body.group-split .group-highlights { margin-top: 1.5rem; }
+}
+
 @media (min-width: 900px) {
-  body.group-split .group-catalog-header,
-  body.group-split .group-catalog-main {
-    width: min(100% - 4rem, 1440px);
-  }
+  body.trip-split { --trip-rail-w: clamp(240px, 24vw, 340px); }
 
-  body.group-split .group-catalog-header {
-    padding-bottom: clamp(1rem, 2vw, 1.5rem);
-  }
-
-  body.group-split .group-catalog-main {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
-    column-gap: clamp(1.5rem, 3vw, 3rem);
-    row-gap: 0;
-    align-items: start;
-  }
-
-  /* The "Highlights" heading is redundant next to the albums. */
-  body.group-split .film-library-toolbar { display: none; }
-
-  body.group-split #group-highlights {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    margin: 0;
-  }
-
-  /* Albums stay in view while the highlights scroll. */
-  body.group-split #chapters {
-    grid-column: 1;
-    grid-row: 1 / span 2;
+  .trip-rail {
     position: sticky;
-    top: calc(var(--nav-height) + 1.25rem);
+    top: 0;
     align-self: start;
-    max-height: calc(100vh - var(--nav-height) - 2.5rem);
+    grid-column: 1;
+    grid-row: 1 / span 30;
+    padding: var(--trip-top) 0 2rem;
+    max-height: 100vh;
     overflow-y: auto;
     scrollbar-width: none;
   }
-  body.group-split #chapters::-webkit-scrollbar { display: none; }
+  .trip-rail::-webkit-scrollbar { display: none; }
 
-  body.group-split .group-film-rolls {
-    grid-column: 1;
-    margin-top: 2rem;
+  .trip-rail-nav {
+    flex-direction: column;
+    gap: 0.35rem;
+    overflow: visible;
   }
 
-  body.group-split .group-sub-album-grid { gap: clamp(0.75rem, 1.2vw, 1rem); }
-
-  body.group-split .group-sub-album-grid .album-card {
-    aspect-ratio: 2 / 1;
+  .trip-rail-link {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.95rem;
+    padding: 0.4rem 0;
   }
+  .trip-rail-thumb { flex: 0 0 5.5rem; }
+  .trip-rail-label { padding-bottom: 0.15rem; }
 
-  body.group-split .group-sub-album-grid .album-card-overlay { padding: 1rem 6%; }
-
-  body.group-split .group-sub-album-grid .album-card-title {
-    font-size: clamp(0.95rem, 1.45vw, 1.3rem);
-    letter-spacing: 0.2em;
+  /* Trip page */
+  body.group-split .group-catalog-main {
+    display: grid;
+    grid-template-columns: var(--trip-rail-w) minmax(0, 1fr);
+    column-gap: clamp(1.5rem, 3vw, 3rem);
+    row-gap: 0;
+    align-items: start;
+    width: min(100% - 4rem, 1440px);
+    padding-top: 0;
   }
-
+  body.group-split #group-highlights {
+    grid-column: 2;
+    grid-row: 1 / span 30;
+    margin: 0;
+    padding-top: var(--trip-top);
+  }
   body.group-split .group-highlights .favorites-grid.is-square {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* City album: rail beside the existing header, toolbar and grid. */
+  body.trip-split:not(.group-split) #album-content {
+    display: grid !important;
+    grid-template-columns: var(--trip-rail-w) minmax(0, 1fr);
+    column-gap: clamp(1.5rem, 3vw, 3rem);
+    row-gap: 0;
+    align-items: start;
+    width: min(100% - 4rem, 1440px);
+    margin-inline: auto;
+  }
+  body.trip-split:not(.group-split) #album-content > :not(.trip-rail) {
+    grid-column: 2;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  body.trip-split:not(.group-split) #album-content > .album-page-header {
+    padding-top: var(--trip-top);
   }
 }
 

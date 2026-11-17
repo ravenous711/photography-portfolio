@@ -399,6 +399,7 @@
   <script src="/js/routes.js"></script>
   <script src="/js/main.js"></script>
   <script src="/js/photo-viewer.js"></script>
+  <script src="/js/trip-rail.js"></script>
   <script src="/js/layout-editor.js"></script>
   <script>
     // ════════════════════════════════════════════════════════
@@ -1301,14 +1302,19 @@
     }
 
     /** Grid density shared site-wide: 3 columns below 900px, 5 above; 4px gutters. */
-    function albumGridCols() {
+    function albumGridCols(containerWidth) {
+      // Trip pages with the left rail give the grid only ~2/3 of the screen, so size
+      // the columns from the pane itself rather than the window.
+      if (document.body.classList.contains('trip-split') && containerWidth && window.innerWidth >= 900) {
+        return containerWidth >= 700 ? 4 : 3;
+      }
       return window.innerWidth >= 900 ? 5 : 3;
     }
     const ALBUM_GRID_GAP = 4;
 
     /** Square tile edge length for this grid width. */
     function squareGridCellSize(containerWidth) {
-      const cols = albumGridCols();
+      const cols = albumGridCols(containerWidth);
       return (containerWidth - ALBUM_GRID_GAP * (cols - 1)) / cols;
     }
 
@@ -1326,7 +1332,7 @@
       // page background (CSS: .photo-grid--fit).
       grid.classList.add('photo-grid--fit');
       const spacing = ALBUM_GRID_GAP;
-      const cols = albumGridCols();
+      const cols = albumGridCols(containerWidth);
       const size = squareGridCellSize(containerWidth);
       items.forEach((item, i) => {
         item.style.left   = (i % cols) * (size + spacing) + 'px';
@@ -1674,6 +1680,7 @@
       }
 
       document.getElementById('album-content').style.display = 'block';
+      mountTripRail();
       document.getElementById('album-title').textContent        = albumDisplayTitle(album);
       document.getElementById('album-dateline').textContent     = albumDateline(album);
       document.getElementById('album-toolbar-title').textContent = albumDisplayTitle(album);
@@ -1715,6 +1722,17 @@
         if (atBottom) window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
+
+    // Split trips (group.layout === 'split'): the same left rail as the trip page, so going
+    // trip → city only swaps the right-hand pane. Replaces the back link and sibling tabs.
+    function mountTripRail() {
+      const trip = album.parentId ? ALBUMS.find(a => a.id === album.parentId) : null;
+      if (!window.TripRail?.isSplitTrip(trip) || isFilmRollAlbum(album)) return;
+      const content = document.getElementById('album-content');
+      if (content.querySelector('.trip-rail')) return;
+      document.body.classList.add('trip-split');
+      content.prepend(TripRail.build({ trip, activeId: album.id }));
+    }
 
     // Visible "More in <trip>" switcher in the page header so a visitor can hop
     // straight to a sibling city without backing out to the group page (UX-8).

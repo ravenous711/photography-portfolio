@@ -154,6 +154,7 @@
   <script src="/js/main.js"></script>
   <script src="/js/justified-layout.js"></script>
   <script src="/js/photo-viewer.js"></script>
+  <script src="/js/trip-rail.js"></script>
   <script src="/js/layout-editor.js"></script>
   <script>
     document.getElementById('footer-copyright').textContent =
@@ -467,15 +468,22 @@
         document.getElementById('group-highlights-heading').hidden = false;
         highlightsGrid.classList.add('is-square', 'is-fit');
 
-        // Split layout (group.layout === 'split'): album cards in a left column, highlights on the
-        // right, side by side from 900px up. Pure CSS keyed off this class; narrower screens stack.
-        const splitLayout = group.layout === 'split';
-        document.body.classList.toggle('group-split', splitLayout);
+        // Split trip (group.layout === 'split'): a left rail (title + Highlights + cities,
+        // shared with the city album pages) beside the highlights. The rail replaces the
+        // page header, sibling tabs and city cards; stacks on narrow screens.
+        const splitLayout = window.TripRail?.isSplitTrip(group);
+        if (splitLayout) {
+          document.body.classList.add('group-split', 'trip-split');
+          document.querySelector('.group-catalog-header').hidden = true;
+          sectionsRoot.hidden = true;
+          document.querySelector('.group-catalog-main')
+            .prepend(TripRail.build({ trip: group, activeId: 'overview', isTripPage: true }));
+        }
 
         // Small jump button in the header that scrolls down to the highlights.
         // Not needed when the highlights already sit beside the albums.
         const jump = document.getElementById('group-highlights-jump');
-        jump.hidden = splitLayout;
+        jump.hidden = !!splitLayout;
         jump.addEventListener('click', (e) => {
           e.preventDefault();
           document.getElementById('group-highlights-heading').scrollIntoView({ behavior: 'smooth', block: 'start' });
