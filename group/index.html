@@ -493,19 +493,19 @@
           // into its top-right corner.
           const head = document.createElement('div');
           head.className = 'trip-pane-head';
-          const headText = document.createElement('div');
           const headline = document.createElement('h1');
           headline.className = 'trip-pane-title';
           headline.textContent = group.headline || group.title;
-          headText.appendChild(headline);
-          if (group.tagline) {
-            const tagline = document.createElement('p');
-            tagline.className = 'trip-pane-tagline';
-            tagline.textContent = group.tagline;
-            headText.appendChild(tagline);
-          }
+          // Same shape as a city album page: big title, then a quiet row with a label on the
+          // left (here the tagline) and the controls on the right.
+          const bar = document.createElement('div');
+          bar.className = 'trip-pane-bar';
+          const tagline = document.createElement('p');
+          tagline.className = 'trip-pane-tagline';
+          tagline.textContent = group.tagline || '';
           const zoomControl = TripRail.buildZoomControl();
-          head.append(headText, zoomControl);
+          bar.append(tagline, zoomControl);
+          head.append(headline, bar);
           highlightsSection.prepend(head);
           document.title = `${group.headline || group.title} — ${SITE_CONFIG.photographerName}`;
 

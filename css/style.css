@@ -3474,39 +3474,35 @@ body.trip-split { --trip-top: calc(var(--nav-height) + 1.25rem); }
 }
 .trip-rail-link.is-active .trip-rail-label { box-shadow: inset 0 -1px 0 var(--color-gold); }
 
-/* Trip page: headline block at the top of the highlights pane, size control top-right. */
-.trip-pane-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: clamp(1.1rem, 2vw, 1.6rem);
-}
+/* Trip page: title block in the same language as a city album page (see Kalymnos): big light
+   serif title, then a quiet row — label left, size control right — above the photos. */
+.trip-pane-head { margin-bottom: 1.1rem; }
 .trip-pane-title {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(1.9rem, 3.4vw, 2.9rem);
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
   font-weight: 300;
-  line-height: 1.08;
-  letter-spacing: -0.01em;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: #f3f0e9;
 }
+.trip-pane-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+}
 .trip-pane-tagline {
-  margin: 0.55rem 0 0;
-  max-width: 44rem;
+  margin: 0;
   font-family: var(--font-serif);
   font-size: clamp(1.05rem, 1.6vw, 1.3rem);
   font-weight: 300;
-  line-height: 1.35;
-  color: rgba(243, 240, 233, 0.62);
+  line-height: 1.3;
+  color: rgba(243, 240, 233, 0.78);
 }
-.trip-pane-head .album-zoom {
-  margin-top: 0.3rem;
-  opacity: 0.55;
-  transition: opacity 0.2s;
-}
-.trip-pane-head .album-zoom:hover,
-.trip-pane-head .album-zoom:focus-within { opacity: 1; }
+.trip-pane-tagline:empty { display: none; }
+.trip-pane-bar .album-zoom { margin-left: auto; }
 
 /* Narrow (stacked): the rail title is the page title, so the pane only adds the tagline. */
 @media (max-width: 719px) {
