@@ -3751,6 +3751,8 @@ body.group-split .film-library-toolbar { display: none; }
   flex: none;
 }
 
+.film-library-toolbar .album-zoom { margin-left: auto; }
+
 .group-highlights-jump {
   display: inline-flex;
   align-items: center;
@@ -3789,8 +3791,9 @@ body.group-split .film-library-toolbar { display: none; }
 
 .film-library-month {
   position: sticky;
+  /* --month-inset (set in group/index.html) lines the label up with the first visible photo. */
   top: calc(var(--nav-height) + 1rem);
-  margin: 0;
+  margin: var(--month-inset, 0px) 0 0;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-size: 0.65rem;

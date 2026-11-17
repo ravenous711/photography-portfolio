@@ -268,6 +268,40 @@
       );
     }
 
+    /**
+     * Photo size − / + for a CSS grid. Each step adds or drops one column relative to the
+     * default (`defaultCols(gridWidth)`); the setting is shared with the album pages and
+     * remembered on this device. "+" = bigger photos = fewer columns.
+     */
+    function setupPhotoSizeControl(control, grid, defaultCols) {
+      const KEY = 'portfolio_album_zoom';
+      const MIN = -3, MAX = 3;
+      let zoom = 0;
+      try {
+        const saved = parseInt(localStorage.getItem(KEY), 10);
+        if (Number.isFinite(saved)) zoom = Math.max(MIN, Math.min(MAX, saved));
+      } catch (e) { /* private mode */ }
+      const outBtn = control.querySelector('[data-zoom="out"]');
+      const inBtn = control.querySelector('[data-zoom="in"]');
+      const layout = () => {
+        outBtn.disabled = zoom <= MIN;
+        inBtn.disabled = zoom >= MAX;
+        const width = grid.clientWidth;
+        if (!width) return;
+        const cols = Math.max(1, Math.min(10, defaultCols(width) - zoom));
+        grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      };
+      const setZoom = (next) => {
+        zoom = Math.max(MIN, Math.min(MAX, next));
+        try { localStorage.setItem(KEY, String(zoom)); } catch (e) { /* private mode */ }
+        layout();
+      };
+      outBtn.addEventListener('click', () => setZoom(zoom - 1));
+      inBtn.addEventListener('click', () => setZoom(zoom + 1));
+      new ResizeObserver(layout).observe(grid);
+      layout();
+    }
+
     function showFilmLibrary() {
       document.getElementById('group-dateline').hidden = true;
       document.getElementById('group-title').textContent = group.title;
@@ -287,6 +321,20 @@
 
       switchLink.href = Routes.groupChapters(group);
       switchLink.textContent = 'Organize by film rolls';
+
+      // Hidden for now. To bring the "Organize by film rolls" button back, set
+      // `showRollsSwitch: true` on the group in js/albums/misc-2026.js. (The rolls page
+      // itself, /gallery/misc-film-rolls-2026/rolls/, still works and still has "See all".)
+      if (!group.showRollsSwitch) switchLink.hidden = true;
+
+      // Photo size − / + sits where the button was, top right above the photos.
+      const filmZoom = TripRail.buildZoomControl();
+      document.getElementById('film-library-toolbar').appendChild(filmZoom);
+      setupPhotoSizeControl(
+        filmZoom,
+        document.getElementById('film-library-grid'),
+        () => (window.innerWidth >= 900 ? 5 : 3)
+      );
 
       const frames = filmLibraryPhotos();
       const photos = frames.map(frame => frame.url);
@@ -342,6 +390,20 @@
       }, { passive: true });
       window.addEventListener('resize', syncMonth);
       syncMonth();
+
+      // Photos sit whole inside square tiles, so a landscape first frame starts well below the
+      // tile's top edge. Nudge the month label down to line up with that first visible photo.
+      const alignMonthLabel = () => {
+        const first = grid.firstElementChild;
+        const img = first?.querySelector('img');
+        if (!img || !img.naturalWidth) return;
+        const tile = first.clientWidth;
+        const shownHeight = Math.min(tile, tile * img.naturalHeight / img.naturalWidth);
+        tag.style.setProperty('--month-inset', `${Math.max(0, (tile - shownHeight) / 2)}px`);
+      };
+      grid.firstElementChild?.querySelector('img')?.addEventListener('load', alignMonthLabel);
+      new ResizeObserver(alignMonthLabel).observe(grid);
+      alignMonthLabel();
 
       const linked = new URLSearchParams(window.location.search).get('photo');
       if (linked) {
@@ -479,16 +541,6 @@
           const rail = TripRail.build({ trip: group, activeId: 'overview', isTripPage: true });
           document.querySelector('.group-catalog-main').prepend(rail);
 
-          // Photo size − / +. Same saved setting and column maths as the city album pages
-          // (album/index.html): ~170px tiles beside the rail, ~110px when stacked; each step
-          // adds or drops one column.
-          const ZOOM_KEY = 'portfolio_album_zoom';
-          const ZOOM_MIN = -3, ZOOM_MAX = 3, GAP = 4;
-          let zoom = 0;
-          try {
-            const saved = parseInt(localStorage.getItem(ZOOM_KEY), 10);
-            if (Number.isFinite(saved)) zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, saved));
-          } catch (e) { /* private mode */ }
           // Headline block at the top of the highlights pane, with the size control tucked
           // into its top-right corner.
           const head = document.createElement('div');
@@ -509,27 +561,12 @@
           highlightsSection.prepend(head);
           document.title = `${group.headline || group.title} — ${SITE_CONFIG.photographerName}`;
 
-          const outBtn = zoomControl.querySelector('[data-zoom="out"]');
-          const inBtn = zoomControl.querySelector('[data-zoom="in"]');
-          const layoutHighlights = () => {
-            outBtn.disabled = zoom <= ZOOM_MIN;
-            inBtn.disabled = zoom >= ZOOM_MAX;
-            const width = highlightsGrid.clientWidth;
-            if (!width) return;
+          // Photo size − / +: same saved setting and column maths as the city album pages
+          // (album/index.html) — ~170px tiles beside the rail, ~110px when stacked.
+          setupPhotoSizeControl(zoomControl, highlightsGrid, (width) => {
             const target = window.innerWidth >= 720 ? 170 : 110;
-            const base = Math.max(2, Math.floor((width + GAP) / (target + GAP)));
-            const cols = Math.max(1, Math.min(10, base - zoom));
-            highlightsGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-          };
-          const setZoom = (next) => {
-            zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, next));
-            try { localStorage.setItem(ZOOM_KEY, String(zoom)); } catch (e) { /* private mode */ }
-            layoutHighlights();
-          };
-          outBtn.addEventListener('click', () => setZoom(zoom - 1));
-          inBtn.addEventListener('click', () => setZoom(zoom + 1));
-          new ResizeObserver(layoutHighlights).observe(highlightsGrid);
-          layoutHighlights();
+            return Math.max(2, Math.floor((width + 4) / (target + 4)));
+          });
         }
 
         // Small jump button in the header that scrolls down to the highlights.

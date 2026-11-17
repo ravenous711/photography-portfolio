@@ -23,6 +23,8 @@ const ALBUMS_MISC_2026 = [
     audience: 'public',
     protected: false,
     includeHiddenSubAlbums: true,
+    // The "Organize by film rolls" button on this page is switched off. Set true to bring it back.
+    showRollsSwitch: false,
     chaptersTitle: 'Albums',
     chaptersPath: 'rolls',
     // Favorite misc frames. Trip rolls stay on their trip pages.
