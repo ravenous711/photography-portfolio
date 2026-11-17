@@ -476,7 +476,7 @@
           document.body.classList.add('group-split', 'trip-split');
           document.querySelector('.group-catalog-header').hidden = true;
           sectionsRoot.hidden = true;
-          const rail = TripRail.build({ trip: group, activeId: 'overview', isTripPage: true, zoomControl: true });
+          const rail = TripRail.build({ trip: group, activeId: 'overview', isTripPage: true });
           document.querySelector('.group-catalog-main').prepend(rail);
 
           // Photo size − / +. Same saved setting and column maths as the city album pages
@@ -489,8 +489,28 @@
             const saved = parseInt(localStorage.getItem(ZOOM_KEY), 10);
             if (Number.isFinite(saved)) zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, saved));
           } catch (e) { /* private mode */ }
-          const outBtn = rail.querySelector('[data-zoom="out"]');
-          const inBtn = rail.querySelector('[data-zoom="in"]');
+          // Headline block at the top of the highlights pane, with the size control tucked
+          // into its top-right corner.
+          const head = document.createElement('div');
+          head.className = 'trip-pane-head';
+          const headText = document.createElement('div');
+          const headline = document.createElement('h1');
+          headline.className = 'trip-pane-title';
+          headline.textContent = group.headline || group.title;
+          headText.appendChild(headline);
+          if (group.tagline) {
+            const tagline = document.createElement('p');
+            tagline.className = 'trip-pane-tagline';
+            tagline.textContent = group.tagline;
+            headText.appendChild(tagline);
+          }
+          const zoomControl = TripRail.buildZoomControl();
+          head.append(headText, zoomControl);
+          highlightsSection.prepend(head);
+          document.title = `${group.headline || group.title} — ${SITE_CONFIG.photographerName}`;
+
+          const outBtn = zoomControl.querySelector('[data-zoom="out"]');
+          const inBtn = zoomControl.querySelector('[data-zoom="in"]');
           const layoutHighlights = () => {
             outBtn.disabled = zoom <= ZOOM_MIN;
             inBtn.disabled = zoom >= ZOOM_MAX;

@@ -59,10 +59,8 @@
    * @param {object}  opts.trip       group album object (layout: 'split')
    * @param {string}  opts.activeId   'overview' for the trip page, else a city album id
    * @param {boolean} opts.isTripPage true on /gallery/<trip>/ — the rail title is then the page <h1>
-   * @param {boolean} opts.zoomControl add a Photo size − / + row (the caller wires the buttons:
-   *                  .trip-rail-zoom [data-zoom="out"|"in"])
    */
-  function build({ trip, activeId, isTripPage = false, zoomControl = false }) {
+  function build({ trip, activeId, isTripPage = false }) {
     const aside = el('aside', 'trip-rail');
     aside.setAttribute('aria-label', `${trip.title} navigation`);
 
@@ -100,25 +98,24 @@
 
     aside.append(back, title, nav);
 
-    if (zoomControl) {
-      const zoom = el('div', 'trip-rail-zoom');
-      zoom.append(el('span', 'trip-rail-zoom-label', 'Photo size'));
-      const group = el('div', 'album-zoom');
-      group.setAttribute('role', 'group');
-      group.setAttribute('aria-label', 'Photo size');
-      [['out', '\u2212', 'Smaller photos'], ['in', '+', 'Larger photos']].forEach(([dir, glyph, label]) => {
-        const btn = el('button', 'album-zoom-btn', glyph);
-        btn.type = 'button';
-        btn.dataset.zoom = dir;
-        btn.setAttribute('aria-label', label);
-        btn.title = label;
-        group.appendChild(btn);
-      });
-      zoom.appendChild(group);
-      aside.appendChild(zoom);
-    }
     return aside;
   }
 
-  window.TripRail = { isSplitTrip, build, tripCities };
+  /** Photo size − / + buttons (caller wires [data-zoom="out"|"in"]). */
+  function buildZoomControl() {
+    const group = el('div', 'album-zoom');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Photo size');
+    [['out', '\u2212', 'Smaller photos'], ['in', '+', 'Larger photos']].forEach(([dir, glyph, label]) => {
+      const btn = el('button', 'album-zoom-btn', glyph);
+      btn.type = 'button';
+      btn.dataset.zoom = dir;
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+      group.appendChild(btn);
+    });
+    return group;
+  }
+
+  window.TripRail = { isSplitTrip, build, buildZoomControl, tripCities };
 })();

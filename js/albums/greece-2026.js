@@ -581,6 +581,9 @@ const ALBUMS_GREECE_2026 = [
     id: 'greece-2026',
     title: 'Greece 2026',
     description: 'Kalymnos, Naxos, and Athens.',
+    // Trip page headline block (split layout). Edit freely.
+    headline: 'Greek Islands 2026',
+    tagline: 'Climbing on Kalymnos, and some R&R in Naxos and Athens',
     location: 'Greece',
     date: 'September 2026',
     type: 'group',
