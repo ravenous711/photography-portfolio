@@ -2687,7 +2687,7 @@ body.gallery-year-chapters .gallery-album-grid--count-1 {
 
 /* Width-driven ratio keeps the same visual weight across viewport heights and zoom levels. */
 body.gallery-year-chapters .album-card {
-  aspect-ratio: 4 / 1;
+  aspect-ratio: 2.8 / 1;
   width: 100%;
   height: auto;
 }
