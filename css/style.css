@@ -3462,6 +3462,31 @@ body.group-split .film-library-toolbar { display: none; }
   body.group-split .trip-rail { padding-inline: 0; }
   body.group-split .group-catalog-main { padding-top: 0; }
   body.group-split .group-highlights { margin-top: 1.5rem; }
+
+  /* The rail already clears the fixed nav; don't add the header's nav offset again. */
+  body.trip-split:not(.group-split) .album-page-header { padding-top: 1.75rem; }
+  body.trip-split .trip-rail { padding-bottom: 0.5rem; }
+  /* Photo grid on the same edges as the header and rail. */
+  body.trip-split:not(.group-split) #album-content > main { padding-inline: 1.5rem; }
+}
+
+/* Tablet and small laptop windows: the albums become one even row of buttons that fills
+   the width, instead of a few small chips hugging the left edge. */
+@media (min-width: 600px) and (max-width: 899px) {
+  .trip-rail-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 0.6rem;
+    overflow: visible;
+  }
+  .trip-rail-link { width: auto; }
+  .trip-rail-thumb { aspect-ratio: 16 / 10; }
+}
+
+/* Album pages pad their content 3rem from 768px up; keep the rail on the same edge. */
+@media (min-width: 768px) and (max-width: 899px) {
+  body.trip-split:not(.group-split) .trip-rail { padding-inline: 3rem; }
+  body.trip-split:not(.group-split) #album-content > main { padding-inline: 3rem; }
 }
 
 @media (min-width: 900px) {
