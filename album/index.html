@@ -1305,8 +1305,12 @@
     function albumGridCols(containerWidth) {
       // Trip pages with the left rail give the grid only ~2/3 of the screen, so size
       // the columns from the pane itself rather than the window.
-      if (document.body.classList.contains('trip-split') && containerWidth && window.innerWidth >= 900) {
-        return containerWidth >= 700 ? 4 : 3;
+      // Tiles stay about one size and the column count changes as the pane resizes — the
+      // same rule as the trip page's highlights grid in style.css (170px beside the rail,
+      // 110px when stacked), so resizing adds or drops a column instead of shrinking photos.
+      if (document.body.classList.contains('trip-split') && containerWidth) {
+        const target = window.innerWidth >= 720 ? 170 : 110;
+        return Math.max(2, Math.floor((containerWidth + ALBUM_GRID_GAP) / (target + ALBUM_GRID_GAP)));
       }
       return window.innerWidth >= 900 ? 5 : 3;
     }
