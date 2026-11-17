@@ -75,7 +75,8 @@
       ? (ALBUMS.find(a => a.id === trip.parentId)?.title || 'Back')
       : 'Personal'));
 
-    const title = el(isTripPage ? 'h1' : 'p', 'trip-rail-title', trip.title);
+    // City albums have their own big title; only the trip page (stacked) uses this one.
+    const title = isTripPage ? el('h1', 'trip-rail-title', trip.title) : null;
     const nav = el('nav', 'trip-rail-nav');
     nav.setAttribute('aria-label', `${trip.title} albums`);
 
@@ -96,7 +97,7 @@
       }));
     });
 
-    aside.append(back, title, nav);
+    aside.append(back, ...(title ? [title] : []), nav);
 
     return aside;
   }
