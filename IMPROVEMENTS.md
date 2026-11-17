@@ -266,6 +266,15 @@ Jump here after picking an ID from Open tickets.
 
 ## Changelog
 
+- **Split trip layout + album polish** — Nov 2026 (branch `feat/group-split-layout`).
+  Trip pages with `layout: 'split'` (Greece, Italy, California) get a left rail of city buttons
+  (`js/trip-rail.js`) beside the highlights; city album pages reuse the same rail. Optional `headline` /
+  `tagline` on the group set the title block. New − / + photo-size control (localStorage
+  `portfolio_album_zoom`) on album pages, trip highlights and Life on Film; album download is icon-only.
+  Personal/Family catalog cards are 4:1 (slimmer). Life on Film: "Organize by film rolls" is hidden —
+  **to bring it back set `showRollsSwitch: true` on the `misc-film-rolls-2026` group in
+  `js/albums/misc-2026.js`**. Family covers don't load on dev ports other than 8080/3000 (Worker CORS).
+
 - **On-site layout editor (ADMIN-2 phase 1)** — Nov 2026.
   Greece lists moved into a marked `GREECE_LAYOUT` block; admin-only Edit layout overlay on the trip and
   location pages; `/api/admin-layout` saves as one revertable commit; remove-from-manifest never touches R2.
