@@ -3474,13 +3474,13 @@ body.trip-split { --trip-top: calc(var(--nav-height) + 1.25rem); }
 }
 .trip-rail-link.is-active .trip-rail-label { box-shadow: inset 0 -1px 0 var(--color-gold); }
 
-/* Trip page: centred headline block at the top of the highlights pane. The size control
-   sits in its bottom-right corner, just above the photos. */
+/* Trip page: headline block at the top of the highlights pane, size control top-right. */
 .trip-pane-head {
-  position: relative;
-  text-align: center;
-  margin-bottom: 0.9rem;
-  padding-bottom: 2.2rem; /* room for the control under a wrapped tagline on narrow screens */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: clamp(1.1rem, 2vw, 1.6rem);
 }
 .trip-pane-title {
   margin: 0;
@@ -3492,7 +3492,7 @@ body.trip-split { --trip-top: calc(var(--nav-height) + 1.25rem); }
   color: #f3f0e9;
 }
 .trip-pane-tagline {
-  margin: 0.55rem auto 0;
+  margin: 0.55rem 0 0;
   max-width: 44rem;
   font-family: var(--font-serif);
   font-size: clamp(1.05rem, 1.6vw, 1.3rem);
@@ -3501,9 +3501,7 @@ body.trip-split { --trip-top: calc(var(--nav-height) + 1.25rem); }
   color: rgba(243, 240, 233, 0.62);
 }
 .trip-pane-head .album-zoom {
-  position: absolute;
-  right: 0;
-  bottom: 0;
+  margin-top: 0.3rem;
   opacity: 0.55;
   transition: opacity 0.2s;
 }
@@ -3518,8 +3516,6 @@ body.trip-split { --trip-top: calc(var(--nav-height) + 1.25rem); }
 @media (min-width: 720px) {
   body.group-split .trip-rail-title { display: none; }
   body.group-split .trip-rail-back { margin-bottom: 1.5rem; }
-  /* One row: text centred, control in the corner; side padding keeps them apart. */
-  .trip-pane-head { padding: 0 4.5rem; }
 }
 
 /* City album: the rail carries the back link and the trip tabs. */
