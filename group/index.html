@@ -476,8 +476,40 @@
           document.body.classList.add('group-split', 'trip-split');
           document.querySelector('.group-catalog-header').hidden = true;
           sectionsRoot.hidden = true;
-          document.querySelector('.group-catalog-main')
-            .prepend(TripRail.build({ trip: group, activeId: 'overview', isTripPage: true }));
+          const rail = TripRail.build({ trip: group, activeId: 'overview', isTripPage: true, zoomControl: true });
+          document.querySelector('.group-catalog-main').prepend(rail);
+
+          // Photo size − / +. Same saved setting and column maths as the city album pages
+          // (album/index.html): ~170px tiles beside the rail, ~110px when stacked; each step
+          // adds or drops one column.
+          const ZOOM_KEY = 'portfolio_album_zoom';
+          const ZOOM_MIN = -3, ZOOM_MAX = 3, GAP = 4;
+          let zoom = 0;
+          try {
+            const saved = parseInt(localStorage.getItem(ZOOM_KEY), 10);
+            if (Number.isFinite(saved)) zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, saved));
+          } catch (e) { /* private mode */ }
+          const outBtn = rail.querySelector('[data-zoom="out"]');
+          const inBtn = rail.querySelector('[data-zoom="in"]');
+          const layoutHighlights = () => {
+            outBtn.disabled = zoom <= ZOOM_MIN;
+            inBtn.disabled = zoom >= ZOOM_MAX;
+            const width = highlightsGrid.clientWidth;
+            if (!width) return;
+            const target = window.innerWidth >= 720 ? 170 : 110;
+            const base = Math.max(2, Math.floor((width + GAP) / (target + GAP)));
+            const cols = Math.max(1, Math.min(10, base - zoom));
+            highlightsGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+          };
+          const setZoom = (next) => {
+            zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, next));
+            try { localStorage.setItem(ZOOM_KEY, String(zoom)); } catch (e) { /* private mode */ }
+            layoutHighlights();
+          };
+          outBtn.addEventListener('click', () => setZoom(zoom - 1));
+          inBtn.addEventListener('click', () => setZoom(zoom + 1));
+          new ResizeObserver(layoutHighlights).observe(highlightsGrid);
+          layoutHighlights();
         }
 
         // Small jump button in the header that scrolls down to the highlights.
