@@ -144,6 +144,10 @@
           <span id="album-toolbar-title" class="album-toolbar-title"></span>
           <nav id="album-section-nav" class="album-section-nav" aria-label="Jump to section" hidden></nav>
         </div>
+        <div class="album-zoom" role="group" aria-label="Photo size">
+          <button type="button" id="album-zoom-out" class="album-zoom-btn" aria-label="Smaller photos" title="Smaller photos">&minus;</button>
+          <button type="button" id="album-zoom-in" class="album-zoom-btn" aria-label="Larger photos" title="Larger photos">+</button>
+        </div>
         <div class="album-header-actions">
           <div class="album-dl-wrap">
             <button type="button" id="album-dl-menu-btn" class="btn-primary" aria-haspopup="menu" aria-expanded="false" aria-controls="album-dl-menu">
@@ -1301,8 +1305,20 @@
       return thumb;
     }
 
-    /** Grid density shared site-wide: 3 columns below 900px, 5 above; 4px gutters. */
-    function albumGridCols(containerWidth) {
+    // Reader-controlled photo size (the − / + in the toolbar). Each step adds or drops one
+    // column; remembered across albums on this device. 0 = default density.
+    const GRID_ZOOM_KEY = 'portfolio_album_zoom';
+    const GRID_ZOOM_MIN = -3;
+    const GRID_ZOOM_MAX = 3;
+    let gridZoom = (() => {
+      try {
+        const saved = parseInt(localStorage.getItem(GRID_ZOOM_KEY), 10);
+        return Number.isFinite(saved) ? Math.max(GRID_ZOOM_MIN, Math.min(GRID_ZOOM_MAX, saved)) : 0;
+      } catch (e) { return 0; }
+    })();
+
+    /** Default grid density: 3 columns below 900px, 5 above; 4px gutters. */
+    function defaultGridCols(containerWidth) {
       // Trip pages with the left rail give the grid only ~2/3 of the screen, so size
       // the columns from the pane itself rather than the window.
       // Tiles stay about one size and the column count changes as the pane resizes — the
@@ -1315,6 +1331,23 @@
       return window.innerWidth >= 900 ? 5 : 3;
     }
     const ALBUM_GRID_GAP = 4;
+
+    function albumGridCols(containerWidth) {
+      // "+" = bigger photos = fewer columns.
+      return Math.max(1, Math.min(10, defaultGridCols(containerWidth) - gridZoom));
+    }
+
+    function setGridZoom(next) {
+      gridZoom = Math.max(GRID_ZOOM_MIN, Math.min(GRID_ZOOM_MAX, next));
+      try { localStorage.setItem(GRID_ZOOM_KEY, String(gridZoom)); } catch (e) { /* private mode */ }
+      syncZoomButtons();
+      document.querySelectorAll('.photo-grid').forEach(runJustifiedLayout);
+    }
+
+    function syncZoomButtons() {
+      document.getElementById('album-zoom-out').disabled = gridZoom <= GRID_ZOOM_MIN;
+      document.getElementById('album-zoom-in').disabled = gridZoom >= GRID_ZOOM_MAX;
+    }
 
     /** Square tile edge length for this grid width. */
     function squareGridCellSize(containerWidth) {
@@ -1347,6 +1380,10 @@
       const rows = Math.ceil(items.length / cols);
       grid.style.height = rows * size + (rows - 1) * spacing + 'px';
     }
+
+    document.getElementById('album-zoom-out').addEventListener('click', () => setGridZoom(gridZoom - 1));
+    document.getElementById('album-zoom-in').addEventListener('click', () => setGridZoom(gridZoom + 1));
+    syncZoomButtons();
 
     function bindGridLayout(grid) {
       if (!grid._layoutBound) {
