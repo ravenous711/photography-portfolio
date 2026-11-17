@@ -467,9 +467,15 @@
         document.getElementById('group-highlights-heading').hidden = false;
         highlightsGrid.classList.add('is-square', 'is-fit');
 
+        // Split layout (group.layout === 'split'): album cards in a left column, highlights on the
+        // right, side by side from 900px up. Pure CSS keyed off this class; narrower screens stack.
+        const splitLayout = group.layout === 'split';
+        document.body.classList.toggle('group-split', splitLayout);
+
         // Small jump button in the header that scrolls down to the highlights.
+        // Not needed when the highlights already sit beside the albums.
         const jump = document.getElementById('group-highlights-jump');
-        jump.hidden = false;
+        jump.hidden = splitLayout;
         jump.addEventListener('click', (e) => {
           e.preventDefault();
           document.getElementById('group-highlights-heading').scrollIntoView({ behavior: 'smooth', block: 'start' });

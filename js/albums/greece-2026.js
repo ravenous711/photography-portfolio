@@ -587,6 +587,7 @@ const ALBUMS_GREECE_2026 = [
     audience: 'public',
     protected: false,
     showFilmRolls: false,
+    layout: 'split', // trip page: album cards on the left, highlights on the right (desktop)
     subAlbums: ['greece-public-kalymnos', 'greece-public-naxos', 'greece-public-athens'],
     coverImage: `${R2_BASE_URL}/Greece/Naxos/15-TMax100/15_9_29_tmax100_29.jpg`,
     chaptersTitle: 'Albums',
