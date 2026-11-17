@@ -3465,7 +3465,7 @@ body.group-split .film-library-toolbar { display: none; }
 }
 
 @media (min-width: 900px) {
-  body.trip-split { --trip-rail-w: clamp(240px, 24vw, 340px); }
+  body.trip-split { --trip-rail-w: clamp(240px, 22vw, 320px); }
 
   .trip-rail {
     position: sticky;
@@ -3480,21 +3480,54 @@ body.group-split .film-library-toolbar { display: none; }
   }
   .trip-rail::-webkit-scrollbar { display: none; }
 
+  /* Full-width image buttons that fill the rail, title centred on the photo. */
   .trip-rail-nav {
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.6rem;
     overflow: visible;
   }
 
   .trip-rail-link {
+    position: relative;
+    display: block;
     width: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.95rem;
-    padding: 0.4rem 0;
+    aspect-ratio: 5 / 2;
+    overflow: hidden;
+    color: #f3f0e9;
   }
-  .trip-rail-thumb { flex: 0 0 5.5rem; }
-  .trip-rail-label { padding-bottom: 0.15rem; }
+  .trip-rail-thumb {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    opacity: 0.8;
+    transition: opacity 0.25s, transform 0.5s ease;
+  }
+  .trip-rail-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    transition: background 0.25s;
+  }
+  .trip-rail-link:hover .trip-rail-thumb { transform: scale(1.04); }
+  .trip-rail-link:hover::after { background: rgba(0, 0, 0, 0.3); }
+  .trip-rail-label {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+    letter-spacing: 0.22em;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: none;
+  }
+  .trip-rail-link.is-active { outline: 2px solid var(--color-gold); outline-offset: -2px; }
+  .trip-rail-link.is-active::after { background: rgba(0, 0, 0, 0.28); }
+  .trip-rail-link.is-active .trip-rail-thumb { opacity: 1; }
+  .trip-rail-link.is-active .trip-rail-label { box-shadow: none; }
 
   /* Trip page */
   body.group-split .group-catalog-main {
