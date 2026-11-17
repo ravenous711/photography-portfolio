@@ -502,7 +502,7 @@
           bar.className = 'trip-pane-bar';
           const tagline = document.createElement('p');
           tagline.className = 'trip-pane-tagline';
-          tagline.textContent = group.tagline || '';
+          tagline.textContent = group.tagline || group.description || '';
           const zoomControl = TripRail.buildZoomControl();
           bar.append(tagline, zoomControl);
           head.append(headline, bar);

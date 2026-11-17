@@ -22,6 +22,7 @@ const ALBUMS_ITALY_2026 = [
     audience: 'public',
     protected: false,
     showFilmRolls: false,
+    layout: 'split', // trip page + city albums share a left rail (js/trip-rail.js)
     curatePasswordHash: '0705fe0ca5eef5e42cbee84e7721b22565f303248adbbc21342bfd9d901db572',
     subAlbums: ['italy-venice', 'italy-pisa', 'italy-florence', 'italy-assisi', 'italy-rome'],
     coverImage: `${R2_BASE_URL}/Italy/Venice/Digital/venice_284.jpg`,

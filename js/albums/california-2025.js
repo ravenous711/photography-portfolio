@@ -17,6 +17,7 @@ const ALBUMS_CALIFORNIA = [
     type: 'group',
     audience: 'public',
     protected: false,
+    layout: 'split', // trip page + city albums share a left rail (js/trip-rail.js)
     subAlbums: ['california-santa-cruz', 'california-yosemite'],
     coverImage: `${R2_BASE_URL}/California/Santa-Cruz-Big-Sur/California-188.jpg`,
     chaptersTitle: 'Albums',
